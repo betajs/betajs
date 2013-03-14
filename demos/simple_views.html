@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Simple Views</title>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../dist/beta.js"></script>
+		<script src="../dist/beta-ui.js"></script>
+	</head>
+	<body>
+		<div id="main"></div>
+		<script>
+			$(document).ready(function () {
+				var main = new BetaJS.Views.View({
+					el: "#main",
+					render_string: "<div id='input'></div><div id='button'></div><div id='list'></div>"
+				});
+				var InputView = BetaJS.Views.View.extend("InputView", {
+					constructor: function(options) {
+						this._inherited(InputView, "constructor", options);
+						this._setOption(options, "value", "");
+					},
+					_render: function () {
+						this.$el.html("<input value='" + this.__value + "' />");
+					},
+					getValue: function () {
+						return this.$el.find("input").val();
+					},
+					setValue: function (value) {
+						this.$el.find("input").val(value);
+					}
+				});
+				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
+					constructor: function(options) {
+						this._inherited(ButtonView, "constructor", options);
+						this._setOption(options, "label", "");
+					},
+					_render: function () {
+						this.$el.html("<button>" + this.__label + "</button>");
+					},
+					_events: function () {
+						return this._inherited(ButtonView, "_events").concat([{
+							"click button": "__clickButton"
+						}]);
+					},
+					__clickButton: function () {
+						this.trigger("click");
+					}
+				});
+				var ListView = BetaJS.Views.View.extend("ListView", {
+					constructor: function(options) {
+						this._inherited(ListView, "constructor", options);
+						this._setOption(options, "items", []);
+					},
+					_render: function () {
+						this.$el.html("<ul></ul>");
+						var self = this;
+						BetaJS.Objs.iter(this.__items, function (item) {
+							self.$el.find("ul").append("<li>" + item + "</li>");
+						});
+					},
+					add: function (item) {
+						this.__items.push(item);
+						//this.invalidate();
+						this.$el.find("ul").append("<li>" + item + "</li>");
+					}
+				});
+				var input = new InputView({
+					el: "#input",
+					value: "Text"
+				});
+				main.addChild(input);
+				var button = new ButtonView({
+					el: "#button",
+					label: "Click Me"
+				});
+				main.addChild(button);
+				var list = new ListView({
+					el: "#list",
+					items: ["Example 1", "Example 2"]
+				});
+				main.addChild(list);
+				button.on("click", function () {
+					list.add(input.getValue());
+					input.setValue("");
+				});
+				main.activate();
+			});
+		</script>
+	</body>
+</html>
