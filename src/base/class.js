@@ -1,6 +1,4 @@
-BetaJS.Class = function () {
-	//this.constructor();
-};
+BetaJS.Class = function () {};
 
 BetaJS.Class.classname = "Class";
 

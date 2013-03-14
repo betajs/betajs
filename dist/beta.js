@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-13
+  betajs - v0.0.1 - 2013-03-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -41,6 +41,16 @@ BetaJS.Types = {
 			return true;
 		}
 		return false; 
+	}
+
+};
+
+BetaJS.Functions = {
+	
+	as_method: function (func, instance) {
+		return function() {
+			return func.apply(instance, arguments);
+		};
 	}
 
 };
@@ -124,9 +134,7 @@ BetaJS.Ids.ClientIdMixin = {
 	
 }
 
-BetaJS.Class = function () {
-	//this.constructor();
-};
+BetaJS.Class = function () {};
 
 BetaJS.Class.classname = "Class";
 

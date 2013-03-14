@@ -7,6 +7,8 @@ Copyright (c) Oliver Friedmann & Victor Lingenthal.
 
 MIT Software License.
 
+The system is inspired by Backbone & Underscore.
+
 
 
 This is a preliminary version. It is neither complete nor ready for production.
