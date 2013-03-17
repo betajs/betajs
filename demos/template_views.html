@@ -6,19 +6,36 @@
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../dist/beta.js"></script>
 		<script src="../dist/beta-ui.js"></script>
+		<script type="text/template" id="main-view-template">
+			<div id='input'></div>
+			<div id='button'></div>
+			<div id='list'></div>
+		</script>		
+		<script type="text/template" id="input-view-template">
+			<input value='{%= value %}' />
+		</script>		
+		<script type="text/template" id="button-view-template">
+			<button>{%= label %}</button>
+		</script>		
+		<script type="text/template" id="list-view-template">
+			<ul data-selector="inner"></ul>
+		</script>		
+		<script type="text/template" id="list-view-item-template">
+			<li>{%= label %}</li>
+		</script>		
 		<script>
 			$(document).ready(function () {
 				var main = new BetaJS.Views.View({
 					el: "#main",
-					render_string: "<div id='input'></div><div id='button'></div><div id='list'></div>"
+					template: $("#main-view-template")
 				});
 				var InputView = BetaJS.Views.View.extend("InputView", {
+					_templates: {
+						"default": $("#input-view-template")
+					},
 					constructor: function(options) {
 						this._inherited(InputView, "constructor", options);
-						this._setOption(options, "value", "");
-					},
-					_render: function () {
-						this.$el.html("<input value='" + this.__value + "' />");
+						this._setOptionProperty(options, "value", "");
 					},
 					getValue: function () {
 						return this.$el.find("input").val();
@@ -28,12 +45,12 @@
 					}
 				});
 				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
+					_templates: {
+						"default": $("#button-view-template")
+					},
 					constructor: function(options) {
 						this._inherited(ButtonView, "constructor", options);
-						this._setOption(options, "label", "");
-					},
-					_render: function () {
-						this.$el.html("<button>" + this.__label + "</button>");
+						this._setOptionProperty(options, "label", "");
 					},
 					_events: function () {
 						return this._inherited(ButtonView, "_events").concat([{
@@ -45,21 +62,24 @@
 					}
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
+					_templates: {
+						"default": $("#list-view-template"),
+						"item": $("#list-view-item-template")
+					},
 					constructor: function(options) {
 						this._inherited(ListView, "constructor", options);
 						this._setOption(options, "items", []);
 					},
 					_render: function () {
-						this.$el.html("<ul></ul>");
-						var self = this;
+						this.$el.html(this.getTemplate("default").evaluate());
+						var container = this.$("[data-selector='inner']");
 						BetaJS.Objs.iter(this.__items, function (item) {
-							self.$el.find("ul").append("<li>" + item + "</li>");
-						});
+							container.append(this.getTemplate("item").evaluate({label: item}));
+						}, this);
 					},
 					add: function (item) {
 						this.__items.push(item);
-						//this.invalidate();
-						this.$el.find("ul").append("<li>" + item + "</li>");
+						this.$("[data-selector='inner']").append(this.getTemplate("item").evaluate({label: item}));
 					}
 				});
 				var input = new InputView({

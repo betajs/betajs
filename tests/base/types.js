@@ -53,3 +53,8 @@ test("test is_empty object", function () {
 test("test ! is_empty object", function () {
 	ok(!BetaJS.Types.is_empty({k:1}));
 });
+
+test("test is_string", function () {
+	ok(BetaJS.Types.is_string("test"));
+	ok(BetaJS.Types.is_string(""));
+});

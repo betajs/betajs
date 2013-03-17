@@ -58,3 +58,40 @@ BetaJS.Events.EventsMixin = {
 };
 
 BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
+
+BetaJS.Events.PropertiesMixin = BetaJS.Objs.extend({
+	
+	get: function (key) {
+		return this.__properties ? this.__properties[key] : null;
+	},
+	
+	set: function (key, value) {
+		if (!this.__properties) 
+			this.__properties = {};
+		if ((! key in this.__properties) || (this.__properties[key] != value)) {
+			this.__properties[key] = value;
+			this.trigger("change");
+			this.trigger("change:" + key);
+		}
+	},
+	
+	getAll: function () {
+		return BetaJS.Objs.clone(this.__properties || {}, 1);
+	},
+	
+	setAll: function (obj) {
+		for (var key in obj)
+			this.set(key, obj[key]);
+	}
+	
+}, BetaJS.Events.EventsMixin);
+
+BetaJS.Events.Properties = BetaJS.Class.extend("Properties", [BetaJS.Events.PropertiesMixin, {
+	
+	constructor: function (obj) {
+		this._inherited(BetaJS.Events.Properties, "constructor");
+		if (obj)
+			this.setAll(obj);
+	}
+	
+}]);

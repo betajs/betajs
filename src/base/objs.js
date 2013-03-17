@@ -40,16 +40,16 @@ BetaJS.Objs = {
 			return obj1 == obj2;
 	},
 	
-	iter: function (obj, f) {
+	iter: function (obj, f, context) {
 		if (BetaJS.Types.is_array(obj))
 			for (var i = 0; i < obj.length; ++i) {
-				var result = f(obj[i], i)
+				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i)
 				if (BetaJS.Types.is_defined(result) && !result)
 					return;
 			}
 		else
 			for (var key in obj) {
-				f(obj[key], key);
+				var result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
 				if (BetaJS.Types.is_defined(result) && !result)
 					return;
 			}

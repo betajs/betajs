@@ -35,6 +35,14 @@ BetaJS.Types = {
 			return true;
 		}
 		return false; 
+	},
+	
+	is_string: function (x) {
+		return typeof x == "string";
+	},
+	
+	is_function: function (x) {
+		return typeof x == "function";
 	}
 
 };
