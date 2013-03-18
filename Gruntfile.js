@@ -14,6 +14,7 @@ module.exports = function(grunt) {
 						src : [
 							'src/base/base.js', 
 							'src/base/types.js',
+							'src/base/strings.js',
 							'src/base/functions.js', 
 							'src/base/objs.js',
 							'src/base/ids.js', 
@@ -27,6 +28,8 @@ module.exports = function(grunt) {
 					dist_beta_ui : {
 						dest : 'dist/beta-ui.js',
 						src : [
+							'src/views/templates.js', 
+							'src/views/template.js', 
 							'src/views/views.js' 
 						]
 					}
