@@ -40,6 +40,7 @@ BetaJS.Objs = {
 			return obj1 == obj2;
 	},
 	
+	// Iterates over all object properties or array entries 
 	iter: function (obj, f) {
 		if (BetaJS.Types.is_array(obj))
 			for (var i = 0; i < obj.length; ++i) {

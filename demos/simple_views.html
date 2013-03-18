@@ -6,9 +6,6 @@
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../dist/beta.js"></script>
 		<script src="../dist/beta-ui.js"></script>
-	</head>
-	<body>
-		<div id="main"></div>
 		<script>
 			$(document).ready(function () {
 				var main = new BetaJS.Views.View({
@@ -44,7 +41,7 @@
 						}]);
 					},
 					__clickButton: function () {
-						this.trigger("click");
+						this.trigger("clicked");
 					}
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
@@ -80,12 +77,15 @@
 					items: ["Example 1", "Example 2"]
 				});
 				main.addChild(list);
-				button.on("click", function () {
+				button.on("clicked", function () {
 					list.add(input.getValue());
 					input.setValue("");
 				});
 				main.activate();
 			});
 		</script>
+	</head>
+	<body>
+		<div id="main"></div>
 	</body>
 </html>

@@ -1,0 +1,17 @@
+
+.outer-container-fh {
+    overflow: hidden;
+}
+
+.left-container-fh {
+    float:left;
+}
+
+.center-container-fh{
+    overflow:hidden;
+    //text-align:center;
+}
+
+.right-container-fh {
+    float:right;
+}
