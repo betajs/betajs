@@ -75,13 +75,8 @@
 					el: "#list",
 					items: ["Example 1", "Example 2"]
 				});
-<<<<<<< HEAD
-				main.addChild(list);
-				button.on("clicked", function () {
-=======
 				main.addChildren([input, button, list]);
-				button.on("click", function () {
->>>>>>> 84b2649b029ede7f1f73a0f2d1484d7230ef1618
+				button.on("clicked", function () {
 					list.add(input.getValue());
 					input.setValue("");
 				});
