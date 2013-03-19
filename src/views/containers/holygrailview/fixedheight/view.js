@@ -1,9 +1,9 @@
 var HolygrailView;
 
 $(document).ready(function () {
-	HolygrailView = RichView.extend({
+	HolygrailView = View.extend({
 		
-		template: _.template($("#holygrail-view-template").html()),
+		template: _.template($("#holygrailview-template").html()),
 		
 		_afterInitialize: function () {
 			

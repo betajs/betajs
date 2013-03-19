@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Simple Views</title>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../dist/beta.js"></script>
+		<script src="../dist/beta-ui.js"></script>
+		
+		<!-- Holy Grail View Template-->
+		<script type="text/template" id="holygrailview-template">
+			<div data-selector="left" class='left-container-fixed-height'></div>
+			<div data-selector="center"></div>
+			<div data-selector="right" class='right-container-fixed-height'></div>
+		</script>	
+		
+		
+	
+		<script>
+			$(document).ready(function () {
+				var main = new BetaJS.Views.View({
+					el: "#main",
+					template: $("#main-view-template")
+				});
+				var InputView = BetaJS.Views.View.extend("InputView", {
+					_templates: {
+						"default": $("#input-view-template")
+					},
+					constructor: function(options) {
+						this._inherited(InputView, "constructor", options);
+						this._setOptionProperty(options, "value", "");
+					},
+					getValue: function () {
+						return this.$el.find("input").val();
+					},
+					setValue: function (value) {
+						this.$el.find("input").val(value);
+					}
+				});
+				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
+					_templates: {
+						"default": $("#button-view-template")
+					},
+					constructor: function(options) {
+						this._inherited(ButtonView, "constructor", options);
+						this._setOptionProperty(options, "label", "");
+					},
+					_events: function () {
+						return this._inherited(ButtonView, "_events").concat([{
+							"click button": "__clickButton"
+						}]);
+					},
+					__clickButton: function () {
+						this.trigger("click");
+					}
+				});
+				var ListView = BetaJS.Views.View.extend("ListView", {
+					_templates: {
+						"default": $("#list-view-template"),
+						"item": $("#list-view-item-template")
+					},
+					constructor: function(options) {
+						this._inherited(ListView, "constructor", options);
+						this._setOption(options, "items", []);
+					},
+					_render: function () {
+						this.$el.html(this.getTemplate("default").evaluate());
+						var container = this.$("[data-selector='inner']");
+						BetaJS.Objs.iter(this.__items, function (item) {
+							container.append(this.getTemplate("item").evaluate({label: item}));
+						}, this);
+					},
+					add: function (item) {
+						this.__items.push(item);
+						this.$("[data-selector='inner']").append(this.getTemplate("item").evaluate({label: item}));
+					}
+				});
+				var input = new InputView({
+					el: "#input",
+					value: "Text"
+				});
+				var button = new ButtonView({
+					el: "#button",
+					label: "Click Me"
+				});
+				var list = new ListView({
+					css_styles: {color: "blue"},
+					el: "#list",
+					items: ["Example 1", "Example 2"]
+				});
+				main.addChildren([input, button, list]);
+				button.on("click", function () {
+					list.add(input.getValue());
+					input.setValue("");
+				});
+				main.activate();
+			});
+		</script>
+	</head>
+	<body>
+		<div id="main"></div>
+	</body>
+</html>
