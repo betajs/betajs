@@ -445,30 +445,6 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
-BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
-	_templates: {
-		"item": $("#list-container-view-item-template")
-	},
-	_notifications: {
-		"addChild": "__addChildContainer",
-		"removeChild": "__removeChildContainer"
-	},
-	_render: function () {
-		this.$el.html("");
-		BetaJS.Objs.iter(this.children(), function (child) {
-			this.__addChildContainer(child);
-		}, this);
-	},
-	__addChildContainer: function (child) {
-		if (this.isActive())
-			this.$el.append(this.getTemplate("item").evaluate({cid: child.cid()}));
-		child.setEl("[data-view-id='" + child.cid() + "']");
-	},
-	__removeChildContainer: function (child) {
-		this.$data("view-id", child.cid()).remove();
-	}
-});
-
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
 		"default": $("#holygrail-view-template")
@@ -505,4 +481,45 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 			this["__" + key] = this.addChild(view);
 		}
 	},
+});
+BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
+	_templates: {
+		"item": $("#list-container-view-item-template")
+	},
+	_notifications: {
+		"addChild": "__addChildContainer",
+		"removeChild": "__removeChildContainer"
+	},
+	_render: function () {
+		this.$el.html("");
+		BetaJS.Objs.iter(this.children(), function (child) {
+			this.__addChildContainer(child);
+		}, this);
+	},
+	__addChildContainer: function (child) {
+		if (this.isActive())
+			this.$el.append(this.getTemplate("item").evaluate({cid: child.cid()}));
+		child.setEl("[data-view-id='" + child.cid() + "']");
+	},
+	__removeChildContainer: function (child) {
+		this.$data("view-id", child.cid()).remove();
+	}
+});
+
+BetaJS.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+	constructor: function(options) {
+		this._inherited(ButtonView, "constructor", options);
+		this._setOption(options, "label", "");
+	},
+	_render: function () {
+		this.$el.html("<button>" + this.__label + "</button>");
+	},
+	_events: function () {
+		return this._inherited(ButtonView, "_events").concat([{
+			"click button": "__clickButton"
+		}]);
+	},
+	__clickButton: function () {
+		this.trigger("clicked");
+	}
 });
