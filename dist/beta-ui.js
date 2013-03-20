@@ -507,6 +507,9 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 });
 
 BetaJS.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+	_templates: {
+		"default": $("#button-view-template")
+	},
 	constructor: function(options) {
 		this._inherited(ButtonView, "constructor", options);
 		this._setOption(options, "label", "");
