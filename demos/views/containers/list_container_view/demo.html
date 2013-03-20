@@ -3,39 +3,17 @@
 	<head>
 		<meta charset="utf-8">
 		<title>BetaJS ListContainer View</title>
+		<!-- Templates must come before beta-ui.js -->
+		<script type="text/template" id="list-container-view-item-template">
+			<div data-view-id="{%= cid %}"></div>
+		</script>	
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../../../../dist/beta.js"></script>
 		<script src="../../../../dist/beta-ui.js"></script>
 		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
-		<script type="text/template" id="list-container-view-item-template">
-			<div data-view-id="{%= cid %}"></div>
-		</script>	
 		<script>
 			$(document).ready(function () {
-				var ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
-					_templates: {
-						"item": $("#list-container-view-item-template")
-					},
-					_notifications: {
-						"addChild": "__addChildContainer",
-						"removeChild": "__removeChildContainer"
-					},
-					_render: function () {
-						this.$el.html("");
-						BetaJS.Objs.iter(this.children(), function (child) {
-							this.__addChildContainer(child);
-						}, this);
-					},
-					__addChildContainer: function (child) {
-						if (this.isActive())
-							this.$el.append(this.getTemplate("item").evaluate({cid: child.cid()}));
-						child.setEl("[data-view-id='" + child.cid() + "']");
-					},
-					__removeChildContainer: function (child) {
-						this.$data("view-id", child.cid()).remove();
-					}
-				});
-				var main = new ListContainerView({
+				var main = new BetaJS.Views.ListContainerView({
 					el: "#main"
 				});
 				var InputView = BetaJS.Views.View.extend("InputView", {

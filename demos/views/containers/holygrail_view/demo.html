@@ -3,55 +3,19 @@
 	<head>
 		<meta charset="utf-8">
 		<title>BetaJS Holygrail View</title>
-		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-		<script src="../../../../dist/beta.js"></script>
-		<script src="../../../../dist/beta-ui.js"></script>
-		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
+		<!-- Templates must come before beta-ui.js -->
 		<script type="text/template" id="holygrail-view-template">
 			<div data-selector="right" class='holygrail-right-container'></div>
 			<div data-selector="left" class='holygrail-left-container'></div>
 			<div data-selector="center" class='holygrail-center-container'></div>
 		</script>	
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../../../../dist/beta.js"></script>
+		<script src="../../../../dist/beta-ui.js"></script>
+		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
 		<script>
 			$(document).ready(function () {
-				var HolygrailView = BetaJS.Views.View.extend("ListContainerView", {
-					_templates: {
-						"default": $("#holygrail-view-template")
-					},
-					constructor: function (options) {
-						this._inherited(HolygrailView, "constructor", options);
-						this.__left = null;
-						this.__center = null;
-						this.__right = null;
-					},
-					getLeft: function () {
-						return this.__left;
-					},
-					setLeft: function (view) {
-						this.__setView("left", view);
-					},
-					getCenter: function () {
-						return this.__center;
-					},
-					setCenter: function (view) {
-						this.__setView("center", view);
-					},
-					getRight: function () {
-						return this.__right;
-					},
-					setRight: function (view) {
-						this.__setView("right", view);
-					},
-					__setView: function(key, view) {
-						this.removeChild(this["__" + key]);
-						this["__" + key] = null;
-						if (view) {
-							view.setEl('[data-selector="' + key + '"]');
-							this["__" + key] = this.addChild(view);
-						}
-					},
-				});
-				var main = new HolygrailView({
+				var main = new BetaJS.Views.HolygrailView({
 					el: "#main"
 				});
 				var InputView = BetaJS.Views.View.extend("InputView", {
