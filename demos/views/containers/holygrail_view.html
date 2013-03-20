@@ -18,6 +18,7 @@
 				var main = new BetaJS.Views.HolygrailView({
 					el: "#main"
 				});
+				
 				var InputView = BetaJS.Views.View.extend("InputView", {
 					constructor: function(options) {
 						this._inherited(InputView, "constructor", options);
@@ -31,23 +32,6 @@
 					},
 					setValue: function (value) {
 						this.$el.find("input").val(value);
-					}
-				});
-				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
-					constructor: function(options) {
-						this._inherited(ButtonView, "constructor", options);
-						this._setOption(options, "label", "");
-					},
-					_render: function () {
-						this.$el.html("<button>" + this.__label + "</button>");
-					},
-					_events: function () {
-						return this._inherited(ButtonView, "_events").concat([{
-							"click button": "__clickButton"
-						}]);
-					},
-					__clickButton: function () {
-						this.trigger("clicked");
 					}
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
@@ -72,7 +56,7 @@
 					css_styles: {"background-color": "purple"},
 					value: "Text"
 				});
-				var button = new ButtonView({
+				var button = new BetaJS.Views.ButtonView({
 					css_styles: {"background-color": "red"},
 					label: "Click Me"
 				});

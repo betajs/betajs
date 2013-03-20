@@ -31,8 +31,11 @@ module.exports = function(grunt) {
 					'src/views/templates.js', 
 					'src/views/template.js', 
 					'src/views/views.js', 
+					
+					'src/views/containers/holygrail_view/view.js',
 					'src/views/containers/list_container_view/view.js', 
-					'src/views/containers/holygrail_view/view.js' 
+					 
+					'src/views/controls/button_view/view.js',
 				]
 			}
 		},
@@ -53,7 +56,9 @@ module.exports = function(grunt) {
 		    dist: {
 		    	files: {
 			        'dist/beta-ui.css': [
-			            'src/views/containers/holygrail_view/styles.scss'
+			            'src/views/containers/holygrail_view/styles.scss',
+			            
+			            'src/views/controls/button_view/styles.scss',
 			        ]
 		    	}
 		    }
