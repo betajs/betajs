@@ -6,6 +6,8 @@
     "grunt-contrib-jshint": "",
     "grunt-contrib-nodeunit": "",
     "grunt-contrib-concat": "",
+    "grunt-contrib-sass": "",
+    "grunt-contrib-cssmin": "",
     "grunt-contrib-uglify": ""
   }
 }

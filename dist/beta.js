@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-19
+  betajs - v0.0.1 - 2013-03-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -108,6 +108,13 @@ BetaJS.Objs = {
 				result[key] = mapped;
 			return result;
 		}
+	},
+	
+	values: function (obj) {
+		var result = [];
+		for (var key in obj)
+			result.push(obj[key]);
+		return result;
 	},
 	
 	equals: function (obj1, obj2, depth) {
