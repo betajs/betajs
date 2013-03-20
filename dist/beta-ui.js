@@ -11,15 +11,16 @@
 BetaJS.Templates = {
 	
 	tokenize: function (s) {
+		// Already tokenized?
+		if (BetaJS.Types.is_array(s))
+			return s;
 		var tokens = [];
 		var index = 0;
 		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, int, code, offset) {
 			if (index + 1 < offset) 
 				tokens.push({
 					type: BetaJS.Templates.TOKEN_STRING,
-					data: s.slice(index, offset).replace(BetaJS.Templates.ESCAPER_REGEX(), function(match) {
-						return '\\' + BetaJS.Templates.ESCAPES[match];
-					})
+					data: BetaJS.Strings.js_escape(s.slice(index, offset))
 				});
 			if (code)
 				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
@@ -67,9 +68,7 @@ BetaJS.Templates = {
 					with (callbacks) {
 						var ret = eval(source[i].data);
 						if (BetaJS.Types.is_defined(ret))
-							result += ret.replace(BetaJS.Templates.ESCAPER_REGEX(), function(match) {
-								return '\\' + BetaJS.Templates.ESCAPES[match];
-							});
+							result += BetaJS.Strings.js_escape(ret);
 					}
 					break;
 			}	
@@ -109,22 +108,6 @@ BetaJS.Templates.SYNTAX_REGEX = function () {
 			"$",
 		'g');
 	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
-}
-
-BetaJS.Templates.ESCAPES = {
-	"'":      "'",
-	'\\':     '\\',
-	'\r':     'r',
-	'\n':     'n',
-	'\t':     't',
-	'\u2028': 'u2028',
-	'\u2029': 'u2029'
-};
-
-BetaJS.Templates.ESCAPER_REGEX = function () {
-	if (!BetaJS.Templates.ESCAPER_REGEX_CACHED)
-		BetaJS.Templates.ESCAPER_REGEX_CACHED = new RegExp(BetaJS.Objs.keys(BetaJS.Templates.ESCAPES).join("|"), 'g');
-	return BetaJS.Templates.ESCAPER_REGEX_CACHED;
 }
 
 BetaJS.Templates.TOKEN_STRING = 1;
@@ -304,7 +287,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 	},
 	
 	$data: function(key, value) {
-		return this.$("[" + key + "='" + value + "']");
+		return this.$("[data-" + key + "='" + value + "']");
 	},
 	
 	destroy: function () {
@@ -445,9 +428,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
+BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
+BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-right-container\'></div><div data-selector="left" class=\'holygrail-left-container\'></div><div data-selector="center" class=\'holygrail-center-container\'></div>';
+BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}"></div>';
+BetaJS.Templates.Cached['button-view-template'] = '<button>{%= label %}</button>';
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
-		"default": $("#holygrail-view-template")
+		"default": BetaJS.Templates.Cached["holygrail-view-template"]
 	},
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.HolygrailView, "constructor", options);
@@ -484,7 +471,7 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 });
 BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	_templates: {
-		"item": $("#list-container-view-item-template")
+		"item": BetaJS.Templates.Cached["list-container-view-item-template"]
 	},
 	_notifications: {
 		"addChild": "__addChildContainer",
@@ -506,16 +493,19 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	}
 });
 
-BetaJS.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+	_templates: {
+		"default": BetaJS.Templates.Cached["button-view-template"]
+	},
 	constructor: function(options) {
-		this._inherited(ButtonView, "constructor", options);
+		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
 		this._setOption(options, "label", "");
 	},
 	_render: function () {
 		this.$el.html("<button>" + this.__label + "</button>");
 	},
 	_events: function () {
-		return this._inherited(ButtonView, "_events").concat([{
+		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
 			"click button": "__clickButton"
 		}]);
 	},

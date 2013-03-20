@@ -1,6 +1,6 @@
 BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	_templates: {
-		"item": $("#list-container-view-item-template")
+		"item": BetaJS.Templates.Cached["list-container-view-item-template"]
 	},
 	_notifications: {
 		"addChild": "__addChildContainer",

@@ -6,15 +6,16 @@
 BetaJS.Templates = {
 	
 	tokenize: function (s) {
+		// Already tokenized?
+		if (BetaJS.Types.is_array(s))
+			return s;
 		var tokens = [];
 		var index = 0;
 		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, int, code, offset) {
 			if (index + 1 < offset) 
 				tokens.push({
 					type: BetaJS.Templates.TOKEN_STRING,
-					data: s.slice(index, offset).replace(BetaJS.Templates.ESCAPER_REGEX(), function(match) {
-						return '\\' + BetaJS.Templates.ESCAPES[match];
-					})
+					data: BetaJS.Strings.js_escape(s.slice(index, offset))
 				});
 			if (code)
 				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
@@ -62,9 +63,7 @@ BetaJS.Templates = {
 					with (callbacks) {
 						var ret = eval(source[i].data);
 						if (BetaJS.Types.is_defined(ret))
-							result += ret.replace(BetaJS.Templates.ESCAPER_REGEX(), function(match) {
-								return '\\' + BetaJS.Templates.ESCAPES[match];
-							});
+							result += BetaJS.Strings.js_escape(ret);
 					}
 					break;
 			}	
@@ -104,22 +103,6 @@ BetaJS.Templates.SYNTAX_REGEX = function () {
 			"$",
 		'g');
 	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
-}
-
-BetaJS.Templates.ESCAPES = {
-	"'":      "'",
-	'\\':     '\\',
-	'\r':     'r',
-	'\n':     'n',
-	'\t':     't',
-	'\u2028': 'u2028',
-	'\u2029': 'u2029'
-};
-
-BetaJS.Templates.ESCAPER_REGEX = function () {
-	if (!BetaJS.Templates.ESCAPER_REGEX_CACHED)
-		BetaJS.Templates.ESCAPER_REGEX_CACHED = new RegExp(BetaJS.Objs.keys(BetaJS.Templates.ESCAPES).join("|"), 'g');
-	return BetaJS.Templates.ESCAPER_REGEX_CACHED;
 }
 
 BetaJS.Templates.TOKEN_STRING = 1;
