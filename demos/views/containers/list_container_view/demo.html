@@ -4,14 +4,12 @@
 		<meta charset="utf-8">
 		<title>BetaJS ListContainer View</title>
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-		<script src="../dist/beta.js"></script>
-		<script src="../dist/beta-ui.js"></script>
-		<link rel="stylesheet" href="../dist/beta-ui.css" type="text/css" />
-		
+		<script src="../../../../dist/beta.js"></script>
+		<script src="../../../../dist/beta-ui.js"></script>
+		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
 		<script type="text/template" id="list-container-view-item-template">
 			<div data-view-id="{%= cid %}"></div>
 		</script>	
-		
 		<script>
 			$(document).ready(function () {
 				var ListContainerView = BetaJS.Views.View.extend("ListContainerView", {

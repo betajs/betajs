@@ -444,3 +444,65 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 }]);
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
+
+BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
+	_templates: {
+		"item": $("#list-container-view-item-template")
+	},
+	_notifications: {
+		"addChild": "__addChildContainer",
+		"removeChild": "__removeChildContainer"
+	},
+	_render: function () {
+		this.$el.html("");
+		BetaJS.Objs.iter(this.children(), function (child) {
+			this.__addChildContainer(child);
+		}, this);
+	},
+	__addChildContainer: function (child) {
+		if (this.isActive())
+			this.$el.append(this.getTemplate("item").evaluate({cid: child.cid()}));
+		child.setEl("[data-view-id='" + child.cid() + "']");
+	},
+	__removeChildContainer: function (child) {
+		this.$data("view-id", child.cid()).remove();
+	}
+});
+
+BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
+	_templates: {
+		"default": $("#holygrail-view-template")
+	},
+	constructor: function (options) {
+		this._inherited(BetaJS.Views.HolygrailView, "constructor", options);
+		this.__left = null;
+		this.__center = null;
+		this.__right = null;
+	},
+	getLeft: function () {
+		return this.__left;
+	},
+	setLeft: function (view) {
+		this.__setView("left", view);
+	},
+	getCenter: function () {
+		return this.__center;
+	},
+	setCenter: function (view) {
+		this.__setView("center", view);
+	},
+	getRight: function () {
+		return this.__right;
+	},
+	setRight: function (view) {
+		this.__setView("right", view);
+	},
+	__setView: function(key, view) {
+		this.removeChild(this["__" + key]);
+		this["__" + key] = null;
+		if (view) {
+			view.setEl('[data-selector="' + key + '"]');
+			this["__" + key] = this.addChild(view);
+		}
+	},
+});
