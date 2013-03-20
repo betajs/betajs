@@ -146,6 +146,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 		return this.$el.find(selector);
 	},
 	
+	$data: function(key, value) {
+		return this.$("[" + key + "='" + value + "']");
+	},
+	
 	destroy: function () {
 		this.deactivate();
 		BetaJS.Objs.iter(this.__children, function (child) {
@@ -211,12 +215,22 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 		});
 	},
 	
+	setEl: function (el) {
+		if (this.isActive()) {
+			this.deactivate();
+			this.__el = el;
+			this.activate();
+		}
+		else
+			this.__el = el;
+	},
+	
 	getParent: function () {
 		return this.__parent;
 	},
 	
 	hasChild: function (child) {
-		return child.cid() in this.__children;
+		return child && child.cid() in this.__children;
 	},
 	
 	setParent: function (parent) {
@@ -236,6 +250,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 		}
 	},
 	
+	children: function () {
+		return BetaJS.Objs.values(this.__children);
+	},
+	
 	addChildren: function (children) {
 		BetaJS.Objs.iter(children, function (child) {
 			this.addChild(child);
@@ -245,8 +263,11 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 	addChild: function (child) {
 		if (!this.hasChild(child)) {
 			this.__children[child.cid()] = child;
+			this._notify("addChild", child);
 			child.setParent(this);
+			return child;
 		}
+		return null;
 	},
 	
 	removeChildren: function (children) {
@@ -259,6 +280,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 		if (this.hasChild(child)) {
 			delete this.__children[child.cid()];
 			child.setParent(null);
+			this._notify("removeChild", child);
 		}
 	}
 	

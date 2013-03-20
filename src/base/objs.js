@@ -27,6 +27,13 @@ BetaJS.Objs = {
 		}
 	},
 	
+	values: function (obj) {
+		var result = [];
+		for (var key in obj)
+			result.push(obj[key]);
+		return result;
+	},
+	
 	equals: function (obj1, obj2, depth) {
 		if (depth && depth > 0) {
 			for (var key in obj1)
