@@ -147,7 +147,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 	},
 	
 	$data: function(key, value) {
-		return this.$("[" + key + "='" + value + "']");
+		return this.$("[data-" + key + "='" + value + "']");
 	},
 	
 	destroy: function () {

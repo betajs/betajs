@@ -70,14 +70,28 @@ module.exports = function(grunt) {
 					'dist/beta-ui.min.css' : [ 'dist/beta-ui.css' ]
 				}
 			}
-		}
+		},
+		jst: {
+			  compile: {
+			    options: {
+			      templateSettings: {
+			        interpolate : /\{\{(.+?)\}\}/g
+			      }
+			    },
+			    files: {
+			      "dist/templates.js": ["src/views/containers/**/*.html"]
+			    }
+			  }
+			}		
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-sass');	
 	grunt.loadNpmTasks('grunt-contrib-cssmin');	
+	grunt.loadNpmTasks('grunt-contrib-jst');
+	
 
-	grunt.registerTask('default', ['concat', 'uglify', 'sass', 'cssmin']);
+	grunt.registerTask('default', ['concat', 'uglify', 'sass', 'cssmin', 'jst']);
 
 };
