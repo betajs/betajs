@@ -73,6 +73,10 @@ BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
 
 BetaJS.Events.ListenMixin = {
 		
+	_notifications: {
+		"destroy": "listenOff" 
+	},
+		
 	listenOn: function (target, events, callback) {
 		if (!this.__listen) this.__listen = {};
 		this.__listen[BetaJS.Ids.objectId(target)] = target;
