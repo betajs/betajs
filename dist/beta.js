@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /*!
   betajs - v0.0.1 - 2013-03-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 var BetaJS = BetaJS || {};
+=======
+/*!
+  betajs - v0.0.1 - 2013-03-21
+  Copyright (c) Oliver Friedmann & Victor Lingenthal
+  MIT Software License.
+*/
+var BetaJS = BetaJS || {};
+>>>>>>> 37291ea40ff6bdd7cd2ee5e0cb0e93e7da00a886
 BetaJS.Types = {
 	
 	is_object: function (x) {

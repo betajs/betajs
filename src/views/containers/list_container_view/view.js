@@ -7,7 +7,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		"removeChild": "__removeChildContainer"
 	},
 	_render: function () {
-		this.$el.html("");
+		this.$el.html("<div></div>");
 		BetaJS.Objs.iter(this.children(), function (child) {
 			this.__addChildContainer(child);
 		}, this);
@@ -21,3 +21,5 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		this.$data("view-id", child.cid()).remove();
 	}
 });
+
+
