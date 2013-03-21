@@ -1,4 +1,0 @@
-BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
-BetaJS.Templates.Cached['src/views/containers/holygrail_view/template.html'] = '<script type="text/template" id="holygrail-view-template">\n\t<div data-selector="right" class=\'holygrail-right-container\'></div>\n\t<div data-selector="left" class=\'holygrail-left-container\'></div>\n\t<div data-selector="center" class=\'holygrail-center-container\'></div>\n</script>\t\n';
-BetaJS.Templates.Cached['src/views/containers/list_container_view/template.html'] = '<script type="text/template" id="list-container-view-item-template">\n\t<div data-view-id="{%= cid %}"></div>\n</script>\t\n';
-BetaJS.Templates.Cached['src/views/controls/button_view/template.html'] = '';
