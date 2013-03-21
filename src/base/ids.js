@@ -4,6 +4,12 @@ BetaJS.Ids = {
 	
 	uniqueId: function (prefix) {
 		return (prefix || "") + (this.__uniqueId++);
+	},
+	
+	objectId: function (object) {
+		if (!object.__cid)
+			object.__cid = this.uniqueId("cid_");
+		return object.__cid;
 	}
 	
 }
@@ -11,9 +17,7 @@ BetaJS.Ids = {
 BetaJS.Ids.ClientIdMixin = {
 	
 	cid: function () {
-		if (!this.__cid)
-			this.__cid = BetaJS.Ids.uniqueId("cid_");
-		return this.__cid;
+		return BetaJS.Ids.objectId(this);
 	}
 	
 }

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-20
+  betajs - v0.0.1 - 2013-03-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -140,7 +140,10 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 });
 BetaJS.Views = BetaJS.Views || {};
 
-BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, BetaJS.Ids.ClientIdMixin, {
+BetaJS.Views.View = BetaJS.Class.extend("View", [
+	BetaJS.Events.EventsMixin,
+	BetaJS.Events.ListenMixin,
+	BetaJS.Ids.ClientIdMixin, {
 	
 	_templates: function () {
 		// {"name": "string" or jquery selector}

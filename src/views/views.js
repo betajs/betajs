@@ -1,6 +1,9 @@
 BetaJS.Views = BetaJS.Views || {};
 
-BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, BetaJS.Ids.ClientIdMixin, {
+BetaJS.Views.View = BetaJS.Class.extend("View", [
+	BetaJS.Events.EventsMixin,
+	BetaJS.Events.ListenMixin,
+	BetaJS.Ids.ClientIdMixin, {
 	
 	_templates: function () {
 		// {"name": "string" or jquery selector}
