@@ -1,6 +1,6 @@
 BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	_templates: {
-		"default": $("#button-view-template")
+		"default": BetaJS.Templates.Cached["button-view-template"]
 	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ButtonView, "constructor", options);

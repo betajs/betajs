@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .holygrail-left-container {
   float: left; }
 
@@ -21,3 +22,13 @@
   height: 50px;
   width: 50px;
   background: blue; }
+=======
+.holygrail-left-container {
+  float: left; }
+
+.holygrail-right-container {
+  float: right; }
+
+.holygrail-center-container {
+  overflow: hidden; }
+>>>>>>> 37291ea40ff6bdd7cd2ee5e0cb0e93e7da00a886

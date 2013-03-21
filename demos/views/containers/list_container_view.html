@@ -3,14 +3,10 @@
 	<head>
 		<meta charset="utf-8">
 		<title>BetaJS ListContainer View</title>
-		<!-- Templates must come before beta-ui.js -->
-		<script type="text/template" id="list-container-view-item-template">
-			<div data-view-id="{%= cid %}"></div>
-		</script>	
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-		<script src="../../../../dist/beta.js"></script>
-		<script src="../../../../dist/beta-ui.js"></script>
-		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
+		<script src="../../../dist/beta.js"></script>
+		<script src="../../../dist/beta-ui.js"></script>
+		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
 		<script>
 			$(document).ready(function () {
 				var main = new BetaJS.Views.ListContainerView({
@@ -29,23 +25,6 @@
 					},
 					setValue: function (value) {
 						this.$el.find("input").val(value);
-					}
-				});
-				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
-					constructor: function(options) {
-						this._inherited(ButtonView, "constructor", options);
-						this._setOption(options, "label", "");
-					},
-					_render: function () {
-						this.$el.html("<button>" + this.__label + "</button>");
-					},
-					_events: function () {
-						return this._inherited(ButtonView, "_events").concat([{
-							"click button": "__clickButton"
-						}]);
-					},
-					__clickButton: function () {
-						this.trigger("clicked");
 					}
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
@@ -69,7 +48,7 @@
 				var input = new InputView({
 					value: "Text"
 				});
-				var button = new ButtonView({
+				var button = new BetaJS.Views.ButtonView({
 					label: "Click Me"
 				});
 				var list = new ListView({

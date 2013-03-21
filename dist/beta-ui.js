@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 /*!
   betajs - v0.0.1 - 2013-03-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
+=======
+/*!
+  betajs - v0.0.1 - 2013-03-21
+  Copyright (c) Oliver Friedmann & Victor Lingenthal
+  MIT Software License.
+*/
+>>>>>>> 37291ea40ff6bdd7cd2ee5e0cb0e93e7da00a886
 /*
  * Inspired by Underscore's Templating Engine
  * (which itself is inspired by John Resig's implementation)
@@ -11,15 +19,16 @@
 BetaJS.Templates = {
 	
 	tokenize: function (s) {
+		// Already tokenized?
+		if (BetaJS.Types.is_array(s))
+			return s;
 		var tokens = [];
 		var index = 0;
 		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, int, code, offset) {
 			if (index + 1 < offset) 
 				tokens.push({
 					type: BetaJS.Templates.TOKEN_STRING,
-					data: s.slice(index, offset).replace(BetaJS.Templates.ESCAPER_REGEX(), function(match) {
-						return '\\' + BetaJS.Templates.ESCAPES[match];
-					})
+					data: BetaJS.Strings.js_escape(s.slice(index, offset))
 				});
 			if (code)
 				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
@@ -67,9 +76,7 @@ BetaJS.Templates = {
 					with (callbacks) {
 						var ret = eval(source[i].data);
 						if (BetaJS.Types.is_defined(ret))
-							result += ret.replace(BetaJS.Templates.ESCAPER_REGEX(), function(match) {
-								return '\\' + BetaJS.Templates.ESCAPES[match];
-							});
+							result += BetaJS.Strings.js_escape(ret);
 					}
 					break;
 			}	
@@ -111,22 +118,6 @@ BetaJS.Templates.SYNTAX_REGEX = function () {
 	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
 }
 
-BetaJS.Templates.ESCAPES = {
-	"'":      "'",
-	'\\':     '\\',
-	'\r':     'r',
-	'\n':     'n',
-	'\t':     't',
-	'\u2028': 'u2028',
-	'\u2029': 'u2029'
-};
-
-BetaJS.Templates.ESCAPER_REGEX = function () {
-	if (!BetaJS.Templates.ESCAPER_REGEX_CACHED)
-		BetaJS.Templates.ESCAPER_REGEX_CACHED = new RegExp(BetaJS.Objs.keys(BetaJS.Templates.ESCAPES).join("|"), 'g');
-	return BetaJS.Templates.ESCAPER_REGEX_CACHED;
-}
-
 BetaJS.Templates.TOKEN_STRING = 1;
 BetaJS.Templates.TOKEN_CODE = 2;
 BetaJS.Templates.TOKEN_EXPR = 3;
@@ -157,7 +148,10 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 });
 BetaJS.Views = BetaJS.Views || {};
 
-BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, BetaJS.Ids.ClientIdMixin, {
+BetaJS.Views.View = BetaJS.Class.extend("View", [
+	BetaJS.Events.EventsMixin,
+	BetaJS.Events.ListenMixin,
+	BetaJS.Ids.ClientIdMixin, {
 	
 	_templates: function () {
 		// {"name": "string" or jquery selector}
@@ -304,7 +298,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 	},
 	
 	$data: function(key, value) {
-		return this.$("[" + key + "='" + value + "']");
+		return this.$("[data-" + key + "='" + value + "']");
 	},
 	
 	destroy: function () {
@@ -445,9 +439,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
+BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
+BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-right-container\'></div><div data-selector="left" class=\'holygrail-left-container\'></div><div data-selector="center" class=\'holygrail-center-container\'></div>';
+BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}"></div>';
+BetaJS.Templates.Cached['button-view-template'] = '<button>{%= label %}</button>';
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
-		"default": $("#holygrail-view-template")
+		"default": BetaJS.Templates.Cached["holygrail-view-template"]
 	},
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.HolygrailView, "constructor", options);
@@ -484,7 +482,7 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 });
 BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	_templates: {
-		"item": $("#list-container-view-item-template")
+		"item": BetaJS.Templates.Cached["list-container-view-item-template"]
 	},
 	_notifications: {
 		"addChild": "__addChildContainer",
@@ -506,11 +504,14 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	}
 });
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 37291ea40ff6bdd7cd2ee5e0cb0e93e7da00a886
 BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	_templates: {
-		"default": $("#button-view-template")
+		"default": BetaJS.Templates.Cached["button-view-template"]
 	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ButtonView, "constructor", options);

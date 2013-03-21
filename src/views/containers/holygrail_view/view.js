@@ -1,6 +1,6 @@
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
-		"default": $("#holygrail-view-template")
+		"default": BetaJS.Templates.Cached["holygrail-view-template"]
 	},
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.HolygrailView, "constructor", options);

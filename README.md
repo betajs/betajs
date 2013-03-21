@@ -10,10 +10,10 @@ This is a preliminary version. It is neither complete nor ready for production.
 
 ## Roadmap
 - Documentation
-- Templating [Depends, Watch, Template = Partial Invalidation, Partial Templating]
-- Event System: Listen
+- Templating [Depends, Watch, Template = Partial Invalidation, Partial Templating, Precompiling & Caching]
 - View Library
 - Model System
+- Profiling
 - Operational Transformation
 
 

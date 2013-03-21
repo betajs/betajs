@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /*!
   betajs - v0.0.1 - 2013-03-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 var BetaJS = BetaJS || {};
+=======
+/*!
+  betajs - v0.0.1 - 2013-03-21
+  Copyright (c) Oliver Friedmann & Victor Lingenthal
+  MIT Software License.
+*/
+var BetaJS = BetaJS || {};
+>>>>>>> 37291ea40ff6bdd7cd2ee5e0cb0e93e7da00a886
 BetaJS.Types = {
 	
 	is_object: function (x) {
@@ -67,6 +76,29 @@ BetaJS.Strings = {
 			replace(/"/g, '&quot;').
 			replace(/'/g, '&#x27;').
 			replace(/\//g, '&#x2F;');
+	},
+	
+	JS_ESCAPES: {
+		"'":      "'",
+		'\\':     '\\',
+		'\r':     'r',
+		'\n':     'n',
+		'\t':     't',
+		'\u2028': 'u2028',
+		'\u2029': 'u2029'
+	},
+	
+	JS_ESCAPER_REGEX: function () {
+		if (!this.JS_ESCAPER_REGEX_CACHED)
+			this.JS_ESCAPER_REGEX_CACHED = new RegExp(BetaJS.Objs.keys(this.JS_ESCAPES).join("|"), 'g');
+		return this.JS_ESCAPER_REGEX_CACHED;
+	},
+	
+	js_escape: function (s) {
+		var self = this;
+		return s.replace(this.JS_ESCAPER_REGEX(), function(match) {
+			return '\\' + self.JS_ESCAPES[match];
+		});
 	}
 
 };
@@ -77,6 +109,19 @@ BetaJS.Functions = {
 		return function() {
 			return func.apply(instance, arguments);
 		};
+	},
+	
+	once: function (func) {
+		var result;
+		var executed = false;
+		return function () {
+			if (executed)
+				return result;
+			executed = true;
+			result = func.apply(this, arguments);
+			func = null;
+			return result;
+		}
 	}
 
 };
@@ -153,6 +198,12 @@ BetaJS.Ids = {
 	
 	uniqueId: function (prefix) {
 		return (prefix || "") + (this.__uniqueId++);
+	},
+	
+	objectId: function (object) {
+		if (!object.__cid)
+			object.__cid = this.uniqueId("cid_");
+		return object.__cid;
 	}
 	
 }
@@ -160,13 +211,10 @@ BetaJS.Ids = {
 BetaJS.Ids.ClientIdMixin = {
 	
 	cid: function () {
-		if (!this.__cid)
-			this.__cid = BetaJS.Ids.uniqueId("cid_");
-		return this.__cid;
+		return BetaJS.Ids.objectId(this);
 	}
 	
 }
-
 BetaJS.Class = function () {};
 
 BetaJS.Class.classname = "Class";
@@ -560,11 +608,58 @@ BetaJS.Events.EventsMixin = {
     			});
     	};
     	return this;
-    }
+    },
+    
+    once: function (events, callback, context) {
+        var self = this;
+        var once = BetaJS.Functions.once(function() {
+          self.off(events, once);
+          callback.apply(this, arguments);
+        });
+        once._callback = callback;
+        return this.on(name, once, context);
+    }    
 	
 };
 
 BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
+
+
+
+BetaJS.Events.ListenMixin = {
+		
+	listenOn: function (target, events, callback) {
+		if (!this.__listen) this.__listen = {};
+		this.__listen[BetaJS.Ids.objectId(target)] = target;
+		target.on(events, callback, this);
+	},
+	
+	listenOnce: function (target, events, callback) {
+		if (!this.__listen) this.__listen = {};
+		this.__listen[BetaJS.Ids.objectId(target)] = target;
+		target.once(events, callback, this);
+	},
+	
+	listenOff: function (target, events, callback) {
+		if (!this.__listen)
+			return;
+		if (target) {
+			target.off(events, callback, this);
+			if (!events && !callback)
+				delete this.__listen[BetaJS.Ids.objectId(target)];
+		}
+		else
+			BetaJS.Objs.iter(this.__listen, function (obj) {
+				obj.off(events, callback, this);
+				if (!events && !callback)
+					delete this.__listen[BetaJS.Ids.objectId(obj)];
+			}, this);
+	}
+	
+}
+
+BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin)
+
 
 BetaJS.Events.PropertiesMixin = BetaJS.Objs.extend({
 	

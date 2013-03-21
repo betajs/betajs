@@ -1,6 +1,9 @@
 BetaJS.Views = BetaJS.Views || {};
 
-BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, BetaJS.Ids.ClientIdMixin, {
+BetaJS.Views.View = BetaJS.Class.extend("View", [
+	BetaJS.Events.EventsMixin,
+	BetaJS.Events.ListenMixin,
+	BetaJS.Ids.ClientIdMixin, {
 	
 	_templates: function () {
 		// {"name": "string" or jquery selector}
@@ -147,7 +150,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [BetaJS.Events.EventsMixin, Beta
 	},
 	
 	$data: function(key, value) {
-		return this.$("[" + key + "='" + value + "']");
+		return this.$("[data-" + key + "='" + value + "']");
 	},
 	
 	destroy: function () {

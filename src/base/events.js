@@ -53,11 +53,58 @@ BetaJS.Events.EventsMixin = {
     			});
     	};
     	return this;
-    }
+    },
+    
+    once: function (events, callback, context) {
+        var self = this;
+        var once = BetaJS.Functions.once(function() {
+          self.off(events, once);
+          callback.apply(this, arguments);
+        });
+        once._callback = callback;
+        return this.on(name, once, context);
+    }    
 	
 };
 
 BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
+
+
+
+BetaJS.Events.ListenMixin = {
+		
+	listenOn: function (target, events, callback) {
+		if (!this.__listen) this.__listen = {};
+		this.__listen[BetaJS.Ids.objectId(target)] = target;
+		target.on(events, callback, this);
+	},
+	
+	listenOnce: function (target, events, callback) {
+		if (!this.__listen) this.__listen = {};
+		this.__listen[BetaJS.Ids.objectId(target)] = target;
+		target.once(events, callback, this);
+	},
+	
+	listenOff: function (target, events, callback) {
+		if (!this.__listen)
+			return;
+		if (target) {
+			target.off(events, callback, this);
+			if (!events && !callback)
+				delete this.__listen[BetaJS.Ids.objectId(target)];
+		}
+		else
+			BetaJS.Objs.iter(this.__listen, function (obj) {
+				obj.off(events, callback, this);
+				if (!events && !callback)
+					delete this.__listen[BetaJS.Ids.objectId(obj)];
+			}, this);
+	}
+	
+}
+
+BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin)
+
 
 BetaJS.Events.PropertiesMixin = BetaJS.Objs.extend({
 	
