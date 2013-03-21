@@ -5,10 +5,14 @@
 		<title>BetaJS Holygrail View</title>
 		<!-- Templates must come before beta-ui.js -->
 		<script type="text/template" id="holygrail-view-template">
-			<div data-selector="right" class='holygrail-right-container'></div>
 			<div data-selector="left" class='holygrail-left-container'></div>
 			<div data-selector="center" class='holygrail-center-container'></div>
+			<div data-selector="right" class='holygrail-right-container'></div>
 		</script>	
+		<script type="text/template" id="button-view-template">
+			<div class='button-control'></div>
+			<button>How do I apply the label?</button>
+		</script>
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../../../dist/beta.js"></script>
 		<script src="../../../dist/beta-ui.js"></script>
@@ -16,7 +20,9 @@
 		<script>
 			$(document).ready(function () {
 				var main = new BetaJS.Views.HolygrailView({
-					el: "#main"
+					el: "#main",
+				});
+				var center = new BetaJS.Views.ListContainerView({
 				});
 
 				var InputView = BetaJS.Views.View.extend("InputView", {
@@ -65,7 +71,7 @@
 					items: ["Example 1", "Example 2"]
 				});
 				main.setLeft(input);
-				main.setCenter(button);
+				main.setCenter(center);
 				main.setRight(list);
 				button.on("clicked", function () {
 					list.add(input.getValue());

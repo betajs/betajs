@@ -6,3 +6,18 @@
 
 .holygrail-center-container {
   overflow: hidden; }
+
+.list-container-container {
+  background-color: green; }
+
+.list-container-item {
+  float: left;
+  height: 50px;
+  width: 50px;
+  background-color: blue; }
+
+.button-control {
+  float: left;
+  height: 50px;
+  width: 50px;
+  background: blue; }

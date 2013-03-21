@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-20
+  betajs - v0.0.1 - 2013-03-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -491,7 +491,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		"removeChild": "__removeChildContainer"
 	},
 	_render: function () {
-		this.$el.html("");
+		this.$el.html("<div></div>");
 		BetaJS.Objs.iter(this.children(), function (child) {
 			this.__addChildContainer(child);
 		}, this);
@@ -506,19 +506,18 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	}
 });
 
-BetaJS.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+
+
+BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	_templates: {
 		"default": $("#button-view-template")
 	},
 	constructor: function(options) {
-		this._inherited(ButtonView, "constructor", options);
+		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
 		this._setOption(options, "label", "");
 	},
-	_render: function () {
-		this.$el.html("<button>" + this.__label + "</button>");
-	},
 	_events: function () {
-		return this._inherited(ButtonView, "_events").concat([{
+		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
 			"click button": "__clickButton"
 		}]);
 	},
