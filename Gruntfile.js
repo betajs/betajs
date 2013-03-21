@@ -141,15 +141,17 @@ module.exports = function(grunt) {
 					'dist/beta-ui.min.css' : [ 'dist/beta-ui.css' ]
 				}
 			}
-		}
+		},
+		clean: ["dist/beta-ui-templates.js"]
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-sass');	
 	grunt.loadNpmTasks('grunt-contrib-cssmin');	
+	grunt.loadNpmTasks('grunt-contrib-clean');	
 	
 
-	grunt.registerTask('default', ['templates', 'concat', 'uglify', 'sass', 'cssmin']);
+	grunt.registerTask('default', ['templates', 'concat', 'uglify', 'sass', 'cssmin', 'clean']);
 
 };
