@@ -4,7 +4,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
-		this._setOption(options, "label", "");
+		this._setOptionProperty(options, "label", "");
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
