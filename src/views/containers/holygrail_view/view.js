@@ -27,10 +27,15 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 		this.__setView("right", view);
 	},
 	__setView: function(key, view) {
+		// Remove old child in case we had one
 		this.removeChild(this["__" + key]);
+		// Set old child attribute to null
 		this["__" + key] = null;
+		// If we have a new view (i.e. set view was not called with null)
 		if (view) {
+			// bind new view to selector
 			view.setEl('[data-selector="' + key + '"]');
+			// store new view as child attribute and add the view
 			this["__" + key] = this.addChild(view);
 		}
 	},

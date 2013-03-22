@@ -10,7 +10,7 @@ This is a preliminary version. It is neither complete nor ready for production.
 
 ## Roadmap
 - Documentation
-- Templating [Depends, Watch, Template = Partial Invalidation, Partial Templating, Precompiling & Caching]
+- Templating [Depends, Watch, Template = Partial Invalidation, Partial Templating, Property Binding, Precompiling & Caching]
 - View Library
 - Model System
 - Profiling

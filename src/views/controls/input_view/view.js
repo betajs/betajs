@@ -3,7 +3,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 		"default": BetaJS.Templates.Cached["input-view-template"]
 	},
 	constructor: function(options) {
-		this._inherited(InputView, "constructor", options);
+		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOption(options, "value", "");
 		this._setOption(options, "placeholder", "");
 	},
