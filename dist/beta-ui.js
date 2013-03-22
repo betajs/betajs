@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-21
+  betajs - v0.0.1 - 2013-03-22
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -435,6 +435,7 @@ BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-right-container\'></div><div data-selector="left" class=\'holygrail-left-container\'></div><div data-selector="center" class=\'holygrail-center-container\'></div>';
 BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
 BetaJS.Templates.Cached['button-view-template'] = '<button>{%= label %}</button>';
+
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["holygrail-view-template"]
@@ -495,9 +496,6 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		this.$data("view-id", child.cid()).remove();
 	}
 });
-
-
-
 BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["button-view-template"]

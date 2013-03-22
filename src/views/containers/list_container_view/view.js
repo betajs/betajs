@@ -21,5 +21,3 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		this.$data("view-id", child.cid()).remove();
 	}
 });
-
-

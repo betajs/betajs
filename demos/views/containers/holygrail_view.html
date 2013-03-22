@@ -13,21 +13,7 @@
 					el: "#main",
 				});
 				var center = new BetaJS.Views.ListContainerView({
-				});
-				var InputView = BetaJS.Views.View.extend("InputView", {
-					constructor: function(options) {
-						this._inherited(InputView, "constructor", options);
-						this._setOption(options, "value", "");
-					},
-					_render: function () {
-						this.$el.html("<input value='" + this.__value + "' />");
-					},
-					getValue: function () {
-						return this.$el.find("input").val();
-					},
-					setValue: function (value) {
-						this.$el.find("input").val(value);
-					}
+					css_styles: {background: "purple"},
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
@@ -47,7 +33,7 @@
 						this.$el.find("ul").append("<li>" + item + "</li>");
 					}
 				});
-				var input = new InputView({
+				var input = new BetaJS.Views.InputView({
 					css_styles: {"background-color": "purple"},
 					value: "Text"
 				});
@@ -55,11 +41,16 @@
 					css_styles: {"background-color": "red"},
 					label: "Click Me"
 				});
+				var button2 = new BetaJS.Views.ButtonView({
+					css_styles: {"background-color": "blue"},
+					label: "Click Me"
+				});
 				var list = new ListView({
 					css_styles: {"background-color": "yellow"},
 					items: ["Example 1", "Example 2"]
 				});
 				center.addChild(button);
+				center.addChild(button2);
 				main.setLeft(input);
 				main.setCenter(center);
 				main.setRight(list);
