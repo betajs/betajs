@@ -65,8 +65,12 @@ module.exports = function(grunt) {
 				      "dist/beta-ui-templates.js": [ 
 							'src/views/containers/holygrail_view/template.html',
 							'src/views/containers/list_container_view/template.html', 
+							
 							'src/views/controls/button_view/template.html',
 							'src/views/controls/input_view/template.html',
+							'src/views/controls/textarea_view/template.html',
+							
+							//'src/views/lists/list_view/template.html',
 						]
 				}
 			}
@@ -107,6 +111,9 @@ module.exports = function(grunt) {
 					
 					'src/views/controls/button_view/view.js',
 					'src/views/controls/input_view/view.js',
+					'src/views/controls/textarea_view/view.js',
+					
+					//'src/views/lists/list_view/view.js',
 				]
 			}
 		},
@@ -127,11 +134,16 @@ module.exports = function(grunt) {
 		    dist: {
 		    	files: {
 			        'dist/beta-ui.css': [
+			            'src/views/layoutvariables.scss',
+			            
 			            'src/views/containers/holygrail_view/styles.scss',
 			            'src/views/containers/list_container_view/styles.scss',
 			            
 			            'src/views/controls/button_view/styles.scss',
 			            'src/views/controls/input_view/styles.scss',
+			            'src/views/controls/textarea_view/styles.scss',
+			            
+			            //'src/views/lists/list_view/styles.scss',
 			        ]
 		    	}
 		    }
