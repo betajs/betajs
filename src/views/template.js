@@ -1,15 +1,34 @@
 BetaJS.Templates = BetaJS.Templates || {};
 
 
-BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
+BetaJS.Templates.AbstractTemplate = BetaJS.Class.extend("AbstractTemplate", {
 	
 	constructor: function (template_string) {
-		this._inherited(BetaJS.Templates.Template, "constructor");
+		this._inherited(BetaJS.Templates.AbstractTemplate, "constructor");
+		this.__template_string = template_string;
 		this.__tokens = BetaJS.Templates.tokenize(template_string);
-		this.__compiled = BetaJS.Templates.compile(this.__tokens);
+	},
+	
+	template_string: function () {
+		return this.__template_string;
+	},
+	
+	tokens: function () {
+		return this.__tokens;
 	},
 	
 	evaluate: function () {
+		return this.__compiled.apply(this, arguments);
+	}
+	
+});
+
+
+BetaJS.Templates.Template = BetaJS.Templates.AbstractTemplate.extend("Template", {
+	
+	evaluate: function () {
+		if (!this.__compiled)
+			this.__compiled = BetaJS.Templates.compile(this.tokens());
 		return this.__compiled.apply(this, arguments);
 	}
 	
