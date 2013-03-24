@@ -29,21 +29,6 @@
 					el: "#main",
 					template: $("#main-view-template")
 				});
-				var InputView = BetaJS.Views.View.extend("InputView", {
-					_templates: {
-						"default": $("#input-view-template")
-					},
-					constructor: function(options) {
-						this._inherited(InputView, "constructor", options);
-						this._setOptionProperty(options, "value", "");
-					},
-					getValue: function () {
-						return this.$el.find("input").val();
-					},
-					setValue: function (value) {
-						this.$el.find("input").val(value);
-					}
-				});
 				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
 					_templates: {
 						"default": $("#button-view-template")
@@ -82,11 +67,11 @@
 						this.$("[data-selector='inner']").append(this.getTemplate("item").evaluate({label: item}));
 					}
 				});
-				var input = new InputView({
+				var input = new BetaJS.Views.InputView({
 					el: "#input",
 					placeholder: "Enter Text here"
 				});
-				var button = new ButtonView({
+				var button = new BetaJS.Views.ButtonView({
 					el: "#button",
 					label: "Click Me"
 				});

@@ -21,3 +21,8 @@
   height: 50px;
   width: 50px;
   background: blue; }
+
+.input-control {
+  margin: 5px 7.14286px;
+  height: 65%;
+  width: 95%; }

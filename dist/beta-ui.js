@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-23
+  betajs - v0.0.1 - 2013-03-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -435,7 +435,8 @@ BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-right-container\'></div><div data-selector="left" class=\'holygrail-left-container\'></div><div data-selector="center" class=\'holygrail-center-container\'></div>';
 BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
 BetaJS.Templates.Cached['button-view-template'] = '<button>{%= label %}</button>';
-BetaJS.Templates.Cached['input-view-template'] = '<input class="input-control"></input>';
+BetaJS.Templates.Cached['input-view-template'] = '<input class="input-control" placeholder=\'{%= placeholder %}\' value=\'{%= value %}\'></input>';
+
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["holygrail-view-template"]
@@ -521,6 +522,23 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
+	},
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.InputView, "constructor", options);
+		this._setOption(options, "value", "");
+		this._setOption(options, "placeholder", "");
+	},
+
+	getValue: function () {
+		return this.$el.find("input").val();
+	},
+	setValue: function (value) {
+		this.$el.find("input").val(value);
+	}
+});
+BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
+	_templates: {
+		"default": BetaJS.Templates.Cached["textarea-view-template"]
 	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
