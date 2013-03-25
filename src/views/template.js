@@ -1,41 +1,29 @@
 BetaJS.Templates = BetaJS.Templates || {};
 
 
-BetaJS.Templates.AbstractTemplate = BetaJS.Class.extend("AbstractTemplate", {
+BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 	
 	constructor: function (template_string) {
-		this._inherited(BetaJS.Templates.AbstractTemplate, "constructor");
-		this.__template_string = template_string;
+		this._inherited(BetaJS.Templates.Template, "constructor");
 		this.__tokens = BetaJS.Templates.tokenize(template_string);
+		this.__compiled = BetaJS.Templates.compile(this.__tokens);
 	},
 	
-	template_string: function () {
-		return this.__template_string;
+	evaluate: function (obj, _context) {
+		var args = BetaJS.Objs.extend(BetaJS.Objs.clone(obj, 1), this._internals());
+		if (_context)
+			args._context = _context;
+		return this.__compiled.apply(this, [args]);
 	},
 	
-	tokens: function () {
-		return this.__tokens;
-	},
-	
-	evaluate: function () {
-		return this.__compiled.apply(this, arguments);
-	}
-	
-});
-
-
-BetaJS.Templates.Template = BetaJS.Templates.AbstractTemplate.extend("Template", {
-	
-	evaluate: function () {
-		if (!this.__compiled)
-			this.__compiled = BetaJS.Templates.compile(this.tokens());
-		return this.__compiled.apply(this, arguments);
+	_internals: function () {
+		return {};
 	}
 	
 }, {
 	
 	bySelector: function (selector) {
-		return new BetaJS.Templates.Template($(selector).html());
+		return new this($(selector).html());
 	}
 	
 });

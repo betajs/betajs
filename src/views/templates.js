@@ -11,8 +11,8 @@ BetaJS.Templates = {
 			return s;
 		var tokens = [];
 		var index = 0;
-		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, int, code, offset) {
-			if (index + 1 < offset) 
+		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, code, offset) {
+			if (index < offset) 
 				tokens.push({
 					type: BetaJS.Templates.TOKEN_STRING,
 					data: BetaJS.Strings.js_escape(s.slice(index, offset))
@@ -21,8 +21,6 @@ BetaJS.Templates = {
 				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
 			if (expr)
 				tokens.push({type: BetaJS.Templates.TOKEN_EXPR, data: expr});
-			if (int)
-				tokens.push({type: BetaJS.Templates.TOKEN_INT, data: int});
 			if (esc)
 				tokens.push({type: BetaJS.Templates.TOKEN_ESC, data: esc});
 		    index = offset + match.length;
@@ -59,13 +57,6 @@ BetaJS.Templates = {
 				case BetaJS.Templates.TOKEN_ESC:
 					result += "'+\n((__t=(" + source[i].data + "))==null?'':BetaJS.Strings.htmlentities(__t))+\n'";
 					break;
-				case BetaJS.Templates.TOKEN_INT:
-					with (callbacks) {
-						var ret = eval(source[i].data);
-						if (BetaJS.Types.is_defined(ret))
-							result += BetaJS.Strings.js_escape(ret);
-					}
-					break;
 			}	
 		}
 		result += "';\n";
@@ -88,8 +79,7 @@ BetaJS.Templates.SYNTAX = {
 	CLOSE: "%}",
 	MODIFIER_CODE: "",
 	MODIFIER_EXPR: "=",
-	MODIFIER_ESC: "-",
-	MODIFIER_INT: "!"
+	MODIFIER_ESC: "-"
 };
 
 BetaJS.Templates.SYNTAX_REGEX = function () {
@@ -98,7 +88,6 @@ BetaJS.Templates.SYNTAX_REGEX = function () {
 		BetaJS.Templates.SYNTAX_REGEX_CACHED = new RegExp(
 			syntax.OPEN + syntax.MODIFIER_EXPR + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
 			syntax.OPEN + syntax.MODIFIER_ESC + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_INT + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
 			syntax.OPEN + syntax.MODIFIER_CODE + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
 			"$",
 		'g');
@@ -109,4 +98,3 @@ BetaJS.Templates.TOKEN_STRING = 1;
 BetaJS.Templates.TOKEN_CODE = 2;
 BetaJS.Templates.TOKEN_EXPR = 3;
 BetaJS.Templates.TOKEN_ESC = 4;
-BetaJS.Templates.TOKEN_INT = 5;

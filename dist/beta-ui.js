@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-24
+  betajs - v0.0.1 - 2013-03-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -16,8 +16,8 @@ BetaJS.Templates = {
 			return s;
 		var tokens = [];
 		var index = 0;
-		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, int, code, offset) {
-			if (index + 1 < offset) 
+		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, code, offset) {
+			if (index < offset) 
 				tokens.push({
 					type: BetaJS.Templates.TOKEN_STRING,
 					data: BetaJS.Strings.js_escape(s.slice(index, offset))
@@ -26,8 +26,6 @@ BetaJS.Templates = {
 				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
 			if (expr)
 				tokens.push({type: BetaJS.Templates.TOKEN_EXPR, data: expr});
-			if (int)
-				tokens.push({type: BetaJS.Templates.TOKEN_INT, data: int});
 			if (esc)
 				tokens.push({type: BetaJS.Templates.TOKEN_ESC, data: esc});
 		    index = offset + match.length;
@@ -64,13 +62,6 @@ BetaJS.Templates = {
 				case BetaJS.Templates.TOKEN_ESC:
 					result += "'+\n((__t=(" + source[i].data + "))==null?'':BetaJS.Strings.htmlentities(__t))+\n'";
 					break;
-				case BetaJS.Templates.TOKEN_INT:
-					with (callbacks) {
-						var ret = eval(source[i].data);
-						if (BetaJS.Types.is_defined(ret))
-							result += BetaJS.Strings.js_escape(ret);
-					}
-					break;
 			}	
 		}
 		result += "';\n";
@@ -93,8 +84,7 @@ BetaJS.Templates.SYNTAX = {
 	CLOSE: "%}",
 	MODIFIER_CODE: "",
 	MODIFIER_EXPR: "=",
-	MODIFIER_ESC: "-",
-	MODIFIER_INT: "!"
+	MODIFIER_ESC: "-"
 };
 
 BetaJS.Templates.SYNTAX_REGEX = function () {
@@ -103,7 +93,6 @@ BetaJS.Templates.SYNTAX_REGEX = function () {
 		BetaJS.Templates.SYNTAX_REGEX_CACHED = new RegExp(
 			syntax.OPEN + syntax.MODIFIER_EXPR + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
 			syntax.OPEN + syntax.MODIFIER_ESC + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_INT + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
 			syntax.OPEN + syntax.MODIFIER_CODE + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
 			"$",
 		'g');
@@ -114,7 +103,6 @@ BetaJS.Templates.TOKEN_STRING = 1;
 BetaJS.Templates.TOKEN_CODE = 2;
 BetaJS.Templates.TOKEN_EXPR = 3;
 BetaJS.Templates.TOKEN_ESC = 4;
-BetaJS.Templates.TOKEN_INT = 5;
 
 BetaJS.Templates = BetaJS.Templates || {};
 
@@ -127,14 +115,36 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 		this.__compiled = BetaJS.Templates.compile(this.__tokens);
 	},
 	
-	evaluate: function () {
-		return this.__compiled.apply(this, arguments);
+	evaluate: function (obj, _context) {
+		var args = BetaJS.Objs.extend(BetaJS.Objs.clone(obj, 1), this._internals());
+		if (_context)
+			args._context = _context;
+		return this.__compiled.apply(this, [args]);
+	},
+	
+	_internals: function () {
+		return {};
 	}
 	
 }, {
 	
 	bySelector: function (selector) {
-		return new BetaJS.Templates.Template($(selector).html());
+		return new this($(selector).html());
+	}
+	
+});
+BetaJS.Templates.HtmlTemplate = BetaJS.Templates.Template.extend("HtmlTemplate", {
+	
+	_internals: function () {
+		return {
+			attributes: function (arr) {
+				var s = "";
+				for (var key in arr) {
+					s += key + "='" + /*eval(arr[key])*/ arr[key] + "' ";
+				}
+				return s;
+			}
+		};
 	}
 	
 });
@@ -198,9 +208,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__templates = {};
 		for (var key in templates)
 			if (BetaJS.Types.is_string(templates[key]))
-				this.__templates[key] = new BetaJS.Templates.Template(templates[key])
+				this.__templates[key] = new BetaJS.Templates.HtmlTemplate(templates[key])
 			else
-				this.__templates[key] = new BetaJS.Templates.Template(templates[key].html());
+				this.__templates[key] = new BetaJS.Templates.HtmlTemplate(templates[key].html());
 		this.__properties = new BetaJS.Events.Properties(options["properties"] || {});
 		this._setOption(options, "objects", {});
 	},
@@ -434,7 +444,7 @@ BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-right-container\'></div><div data-selector="left" class=\'holygrail-left-container\'></div><div data-selector="center" class=\'holygrail-center-container\'></div>';
 BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
-BetaJS.Templates.Cached['button-view-template'] = '<button>{%= label %}</button>';
+BetaJS.Templates.Cached['button-view-template'] = '<button {%= attributes({style: "color:red"}) %}>{%= label %}</button>';
 BetaJS.Templates.Cached['input-view-template'] = '<input class="input-control" placeholder=\'{%= placeholder %}\' value=\'{%= value %}\'></input>';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
@@ -528,7 +538,6 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 		this._setOption(options, "value", "");
 		this._setOption(options, "placeholder", "");
 	},
-
 	getValue: function () {
 		return this.$el.find("input").val();
 	},
