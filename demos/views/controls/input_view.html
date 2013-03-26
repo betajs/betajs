@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Input View</title>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../../../dist/beta.js"></script>
+		<script src="../../../dist/beta-ui.js"></script>
+		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
+		<script>
+			$(document).ready(function () {
+				var main = BetaJS.Views.View({
+					el: "#main",
+					render_string: "<div id='input' style='height: 100px; width: 400px;'></div><div id='button'></div><div id='list'></div>"
+				});
+				var input = new BetaJS.Views.InputView({
+					el: "#input",
+					css_styles: {"background-color": "purple"},
+					placeholder: "Please put something in here",
+				});
+				var button = new BetaJS.Views.ButtonView({
+					el: "#button",
+					label: "Add Item",
+				});
+				
+				var ListView = BetaJS.Views.View.extend("ListView", {
+					constructor: function(options) {
+						this._inherited(ListView, "constructor", options);
+						this._setOption(options, "items", []);
+					},
+					_render: function () {
+						this.$el.html("<ul></ul>");
+						var self = this;
+						BetaJS.Objs.iter(this.__items, function (item) {
+							self.$el.find("ul").append("<li>" + item + "</li>");
+						});
+					},
+					add: function (item) {
+						this.__items.push(item);
+						//this.invalidate();
+						this.$el.find("ul").append("<li>" + item + "</li>");
+					}
+				});
+				var list = new ListView({
+					css_styles: {color: "blue"},
+					el: "#list",
+					items: ["Example 1", "Example 2"]
+				});
+
+
+				main.addChildren([input, button, list]);
+				button.on("clicked", function () {
+					list.add(input.getValue());
+					input.setValue("");
+				});
+				main.activate();
+			});
+		</script>
+	</head>
+	<body>
+		<div id="main"></div>
+	</body>
+</html>

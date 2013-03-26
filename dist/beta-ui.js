@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-24
+  betajs - v0.0.1 - 2013-03-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -525,10 +525,9 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
-		this._setOption(options, "value", "");
-		this._setOption(options, "placeholder", "");
+		this._setOptionProperty(options, "value", "");
+		this._setOptionProperty(options, "placeholder", "");
 	},
-
 	getValue: function () {
 		return this.$el.find("input").val();
 	},
