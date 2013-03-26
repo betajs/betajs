@@ -31,7 +31,6 @@ BetaJS.Templates = {
 	
 	/*
 	 * options
-	 * 	- callbacks (for internal operations)
 	 *  - start_index: token start index
 	 *  - end_index: token end index
 	 */
@@ -39,7 +38,6 @@ BetaJS.Templates = {
 		if (BetaJS.Types.is_string(source))
 			source = this.tokenize(source);
 		options = options || {};
-		var callbacks = options.callbacks || {};
 		var start_index = options.start_index || 0;
 		var end_index = options.end_index || source.length;
 		var result = "__p+='";

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-25
+  betajs - v0.0.1 - 2013-03-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -36,7 +36,6 @@ BetaJS.Templates = {
 	
 	/*
 	 * options
-	 * 	- callbacks (for internal operations)
 	 *  - start_index: token start index
 	 *  - end_index: token end index
 	 */
@@ -44,7 +43,6 @@ BetaJS.Templates = {
 		if (BetaJS.Types.is_string(source))
 			source = this.tokenize(source);
 		options = options || {};
-		var callbacks = options.callbacks || {};
 		var start_index = options.start_index || 0;
 		var end_index = options.end_index || source.length;
 		var result = "__p+='";
@@ -133,21 +131,24 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 	}
 	
 });
-BetaJS.Templates.HtmlTemplate = BetaJS.Templates.Template.extend("HtmlTemplate", {
+BetaJS.Templates.ViewTemplate = BetaJS.Templates.Template.extend("ViewTemplate", {
 	
 	_internals: function () {
 		return {
 			attributes: function (arr) {
 				var s = "";
-				for (var key in arr) {
-					s += key + "='" + /*eval(arr[key])*/ arr[key] + "' ";
-				}
+				for (var key in arr) 
+					s += this.attribute(key, arr[key]) + " ";
 				return s;
+			},
+			attribute: function (key, value) {
+				return key + "='" + eval("this." + value) + "'";				
 			}
 		};
 	}
 	
 });
+
 BetaJS.Views = BetaJS.Views || {};
 
 BetaJS.Views.View = BetaJS.Class.extend("View", [
@@ -208,9 +209,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__templates = {};
 		for (var key in templates)
 			if (BetaJS.Types.is_string(templates[key]))
-				this.__templates[key] = new BetaJS.Templates.HtmlTemplate(templates[key])
+				this.__templates[key] = new BetaJS.Templates.ViewTemplate(templates[key])
 			else
-				this.__templates[key] = new BetaJS.Templates.HtmlTemplate(templates[key].html());
+				this.__templates[key] = new BetaJS.Templates.ViewTemplate(templates[key].html());
 		this.__properties = new BetaJS.Events.Properties(options["properties"] || {});
 		this._setOption(options, "objects", {});
 	},
@@ -444,7 +445,7 @@ BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-right-container\'></div><div data-selector="left" class=\'holygrail-left-container\'></div><div data-selector="center" class=\'holygrail-center-container\'></div>';
 BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
-BetaJS.Templates.Cached['button-view-template'] = '<button {%= attributes({style: "color:red"}) %}>{%= label %}</button>';
+BetaJS.Templates.Cached['button-view-template'] = '<button {%= attribute("data-id", "label") %}>{%= label %}</button>';
 BetaJS.Templates.Cached['input-view-template'] = '<input class="input-control" placeholder=\'{%= placeholder %}\' value=\'{%= value %}\'></input>';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {

@@ -103,7 +103,7 @@ module.exports = function(grunt) {
 				src : [
 					'src/views/templates.js', 
 					'src/views/template.js', 
-					'src/views/html_template.js', 
+					'src/views/view_template.js', 
 					'src/views/views.js', 
 					'dist/beta-ui-templates.js',
 					

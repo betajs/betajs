@@ -58,9 +58,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__templates = {};
 		for (var key in templates)
 			if (BetaJS.Types.is_string(templates[key]))
-				this.__templates[key] = new BetaJS.Templates.HtmlTemplate(templates[key])
+				this.__templates[key] = new BetaJS.Templates.ViewTemplate(templates[key])
 			else
-				this.__templates[key] = new BetaJS.Templates.HtmlTemplate(templates[key].html());
+				this.__templates[key] = new BetaJS.Templates.ViewTemplate(templates[key].html());
 		this.__properties = new BetaJS.Events.Properties(options["properties"] || {});
 		this._setOption(options, "objects", {});
 	},
