@@ -1,28 +1,8 @@
-.holygrail-left-container {
+.holygrail-view-left-container {
   float: left; }
 
-.holygrail-right-container {
+.holygrail-view-right-container {
   float: right; }
 
-.holygrail-center-container {
+.holygrail-view-center-container {
   overflow: hidden; }
-
-.list-container-container {
-  background-color: green; }
-
-.list-container-item {
-  float: left;
-  height: 50px;
-  width: 50px;
-  background-color: blue; }
-
-.button-control {
-  float: left;
-  height: 50px;
-  width: 50px;
-  background: blue; }
-
-.input-control {
-  margin: 5px 7.14286px;
-  height: 65%;
-  width: 95%; }

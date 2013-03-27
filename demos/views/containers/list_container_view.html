@@ -12,21 +12,6 @@
 				var main = new BetaJS.Views.ListContainerView({
 					el: "#main"
 				});
-				var InputView = BetaJS.Views.View.extend("InputView", {
-					constructor: function(options) {
-						this._inherited(InputView, "constructor", options);
-						this._setOption(options, "value", "");
-					},
-					_render: function () {
-						this.$el.html("<input value='" + this.__value + "' />");
-					},
-					getValue: function () {
-						return this.$el.find("input").val();
-					},
-					setValue: function (value) {
-						this.$el.find("input").val(value);
-					}
-				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
 						this._inherited(ListView, "constructor", options);
@@ -45,8 +30,12 @@
 						this.$el.find("ul").append("<li>" + item + "</li>");
 					}
 				});
-				var input = new InputView({
-					value: "Text"
+				var input = new BetaJS.Views.InputView({
+					placeholder: "Enter here"
+				});
+				var label = new BetaJS.Views.LabelView({
+					label: input.binding("value"),
+					css_styles: {color: "red", "font-weight": "bold"}
 				});
 				var button = new BetaJS.Views.ButtonView({
 					label: "Click Me"
@@ -55,11 +44,10 @@
 					css_styles: {color: "blue"},
 					items: ["Example 1", "Example 2"]
 				});
-				main.addChildren([input, button, list]);
+				main.addChildren([input, button, list, label]);
 				button.on("clicked", function () {
-					list.add(input.getValue());
-					button.set("label", input.getValue());
-					input.setValue("");
+					list.add(input.get("value"));
+					input.set("value", "");
 				});
 				main.activate();
 			});

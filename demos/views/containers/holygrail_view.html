@@ -12,9 +12,6 @@
 				var main = new BetaJS.Views.HolygrailView({
 					el: "#main",
 				});
-				var center = new BetaJS.Views.ListContainerView({
-					css_styles: {background: "purple"},
-				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
 						this._inherited(ListView, "constructor", options);
@@ -41,22 +38,16 @@
 					css_styles: {"background-color": "red"},
 					label: "Click Me",
 				});
-				var button2 = new BetaJS.Views.ButtonView({
-					css_styles: {"background-color": "blue"},
-					label: "Click Me"
-				});
 				var list = new ListView({
 					css_styles: {"background-color": "yellow"},
 					items: ["Example 1", "Example 2"]
 				});
-				center.addChild(button);
-				center.addChild(button2);
 				main.setLeft(input);
-				main.setCenter(center);
+				main.setCenter(button);
 				main.setRight(list);
 				button.on("clicked", function () {
-					list.add(input.getValue());
-					input.setValue("");
+					list.add(input.get("value"));
+					input.set("value", "");
 				});
 				main.activate();
 			});

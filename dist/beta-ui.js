@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-26
+  betajs - v0.0.1 - 2013-03-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -128,9 +128,10 @@ BetaJS.Views = BetaJS.Views || {};
 
 
 BetaJS.Views.View = BetaJS.Class.extend("View", [
-	BetaJS.Events.EventsMixin,
+    BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
-	BetaJS.Ids.ClientIdMixin, {
+	BetaJS.Ids.ClientIdMixin,
+	BetaJS.Properties.BindablePropertiesMixin, {
 	
 	_templates: function () {
 		// {"name": "string" or jquery selector}
@@ -151,7 +152,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (this.__render_string)
 			this.$el.html(this.__render_string)
 		else if (this.__templates["default"])
-			this.$el.html(this.__templates["default"].evaluate(this.__properties.getAll()));
+			this.$el.html(this.__templates["default"].evaluate(this.getAll()));
 		else if (this.__dynamics["default"])
 			this.__dynamics["default"].renderInstance(this.$el, {name: "default"});
 	},
@@ -205,20 +206,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		for (var key in dynamics)
 			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html())
 
-		this.__properties = new BetaJS.Events.Properties(options["properties"] || {});
-		this._setOption(options, "objects", {});
-	},
-	
-	get: function (key) {
-		return this.__properties.get(key);
-	},
-	
-	set: function (key, value) {
-		this.__properties.set(key, value);
-	},
-	
-	properties: function () {
-		return this.__properties;
+		this.setAll(options["properties"] || {});
 	},
 	
 	isActive: function () {
@@ -281,6 +269,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			child.deactivate();
 		});
 		this.__active = false;
+		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
+			dynamic.reset();
+		}, this);
 		this.__unbind();
 		this.$el.html("");
 		for (var key in this.__old_attributes) 
@@ -306,6 +297,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.destroy();
 		});
+		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
+			dynamic.destroy();
+		}, this);
+		BetaJS.Objs.iter(this.__templates, function (template) {
+			template.destroy();
+		}, this);
 		this._inherited(BetaJS.Views.View, "destroy");
 	},
 	
@@ -360,6 +357,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.deactivate();
 		});
+		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
+			dynamic.reset();
+		}, this);
 		this.__render();
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.activate();
@@ -433,13 +433,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			child.setParent(null);
 			this._notify("removeChild", child);
 		}
-	},
-	
-
+	}
 	
 }]);
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
+
+
 
 BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 	
@@ -449,6 +449,17 @@ BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 		this.__template = new BetaJS.Templates.Template(template_string);
 		this.__instances = {};
 		this.__instances_by_name = {};
+	},
+	
+	reset: function () {
+		BetaJS.Objs.iter(this.__instances, function (instance) {
+			this.removeInstance(instance);
+		}, this);
+	},
+	
+	destroy: function () {
+		this.reset();
+		this._inherited(BetaJS.Views.DynamicTemplate, "destroy");
 	},
 	
 	renderInstance: function (binder, options) {
@@ -469,6 +480,7 @@ BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 	removeInstance: function (instance) {
 		delete this.__instances[instance.cid()];
 		delete this.__instances_by_name[instance.name()];
+		instance.destroy();
 	},
 	
 	view: function () {
@@ -486,10 +498,19 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		
 	__bind: {
 		attribute: function (attribute, variable) {
-			return this.__context.__bind_attribute(attribute, variable)
+			return this.__context.__bind_attribute(attribute, variable);
+		},
+		attributes: function (attributes) {
+			var s = "";
+			for (attribute in attributes)
+				s += this.attribute(attribute, attributes[attribute]) + " ";
+			return s;
+		},
+		value: function (variable) {
+			return this.__context.__bind_value(variable);
 		},
 		inner: function (variable) {
-			return this.__context.__bind_inner(variable)
+			return this.__context.__bind_inner(variable);
 		}
 	},
 	
@@ -502,6 +523,27 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		return this.__elements[id];
 	},
 	
+	__update_element: function (element) {
+		var value = this.__parent.view().get(element.variable);
+		if (element.type == "inner")
+			element.$el.html(value)
+		else if (element.type == "value")
+			element.$el.val(value)
+		else if (element.type == "attribute")
+			element.$el.attr(element.attribute, value);
+	},
+	
+	__prepare_element: function (element) {
+		var self = this;
+		element.$el = this.$el.find(element.selector);
+		if (element.type == "inner")
+			this.__update_element(element);
+		else if (element.type == "value")
+			element.$el.on("change input keyup paste", function () {
+				self.__parent.view().set(element.variable, element.$el.val());
+			});
+	},
+	
 	__bind_attribute: function (attribute, variable) {
 		var element = this.__new_element({
 			type: "attribute",
@@ -510,13 +552,23 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		});
 		var selector = "data-bind-" + attribute + "='" + element.id + "'";
 		element.selector = "[" + selector + "]";
-		var props = this.__parent.view().properties();
-		props.on("change:" + variable, function () {
-			element.$el.attr(attribute, props.get(variable));
-		}, this);
+		var props = this.__parent.view();
+		props.on("change:" + variable, function () { this.__update_element(element); }, this);
 		return selector + " " + attribute + "='" + props.get(variable) + "'";
 	},
 	
+	__bind_value: function (variable) {
+		var element = this.__new_element({
+			type: "value",
+			variable: variable
+		});
+		var selector = "data-bind-value='" + element.id + "'";
+		element.selector = "[" + selector + "]";
+		var props = this.__parent.view();
+		props.on("change:" + variable, function () { this.__update_element(element); }, this);
+		return selector + " value='" + props.get(variable) + "'";
+	},
+
 	__bind_inner: function (variable) {
 		var element = this.__new_element({
 			type: "inner",
@@ -524,10 +576,8 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		});
 		var selector = "data-bind-inner='" + element.id + "'";
 		element.selector = "[" + selector + "]";
-		var props = this.__parent.view().properties();
-		props.on("change:" + variable, function () {
-			element.$el.html(props.get(variable));
-		}, this);
+		var props = this.__parent.view();
+		props.on("change:" + variable, function () { this.__update_element(element); }, this);
 		return selector;
 	},
 
@@ -540,29 +590,29 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 			this.__name = name;
 		this.__parent = parent;
 		this.$el = binder;
-		var args = BetaJS.Objs.extend(options["args"] || {}, this.__parent.view().properties().getAll());
+		var args = BetaJS.Objs.extend(options["args"] || {}, this.__parent.view().getAll());
 		args.bind = BetaJS.Objs.extend({__context: this}, this.__bind);
 		this.$el.html(parent.template().evaluate(args));
-		BetaJS.Objs.iter(this.__elements, function (element) {
-			element.$el = this.$el.find(element.selector);
-			if (element.type == "inner")
-				element.$el.html(this.__parent.view().properties().get(element.variable))
-		}, this);
+		BetaJS.Objs.iter(this.__elements, function (element) { this.__prepare_element(element); }, this);
 	},
 	
 	destroy: function () {
-		this.__parent.view().off(this);
+		BetaJS.Objs.iter(this.__elements, function (element) {
+			element.$el.off();
+		}, this);
+		this.__parent.view().off(null, null, this);
 		this._inherited(BetaJS.Views.DynamicTemplateInstance, "destroy");
 	}
 	
 }]);
 
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
-BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-right-container\'></div><div data-selector="left" class=\'holygrail-left-container\'></div><div data-selector="center" class=\'holygrail-center-container\'></div>';
+BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-view-right-container\'></div><div data-selector="left" class=\'holygrail-view-left-container\'></div><div data-selector="center" class=\'holygrail-view-center-container\'></div>';
 BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
-BetaJS.Templates.Cached['button-view-template'] = '<button {%= bind.inner("label") %}></button>';
-BetaJS.Templates.Cached['input-view-template'] = '<input class="input-control" placeholder=\'{%= placeholder %}\' value=\'{%= value %}\'></input>';
-
+BetaJS.Templates.Cached['button-view-template'] = '<button class="button-view" {%= bind.inner("label") %}></button>';
+BetaJS.Templates.Cached['input-view-template'] = '<input class="input-view" {%= bind.value("value") %} {%= bind.attribute("placeholder", "placeholder") %} />';
+BetaJS.Templates.Cached['label-view-template'] = '<label class="label-view" {%= bind.inner("label") %}></label>';
+BetaJS.Templates.Cached['text-area-template'] = '<textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attribute("placeholder", "placeholder") %}></textarea>';
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["holygrail-view-template"]
@@ -646,37 +696,31 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	}
 });
 BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
-	_templates: {
+	_dynamics: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
 	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
-		this._setOption(options, "value", "");
-		this._setOption(options, "placeholder", "");
+		this._setOptionProperty(options, "value", "");
+		this._setOptionProperty(options, "placeholder", "");
+	}
+});
+BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["label-view-template"]
 	},
-	getValue: function () {
-		return this.$el.find("input").val();
-	},
-	setValue: function (value) {
-		this.$el.find("input").val(value);
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.LabelView, "constructor", options);
+		this._setOptionProperty(options, "label", "");
 	}
 });
 BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
-	_templates: {
-		"default": BetaJS.Templates.Cached["textarea-view-template"]
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["text-area-template"]
 	},
 	constructor: function(options) {
-		this._inherited(BetaJS.Views.InputView, "constructor", options);
-		this._setOption(options, "value", "");
-		this._setOption(options, "placeholder", "");
-	},
-	_render: function () {
-		this.$el.html("<input placeholder='" + this.__placeholder + "' value='" + this.__value + "' />");
-	},
-	getValue: function () {
-		return this.$el.find("input").val();
-	},
-	setValue: function (value) {
-		this.$el.find("input").val(value);
+		this._inherited(BetaJS.Views.TextAreaView, "constructor", options);
+		this._setOptionProperty(options, "value", "");
+		this._setOptionProperty(options, "placeholder", "");
 	}
 });

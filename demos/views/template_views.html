@@ -11,9 +11,6 @@
 			<div id='button'></div>
 			<div id='list'></div>
 		</script>		
-		<script type="text/template" id="input-view-template">
-			<input value='{%= value %}' />
-		</script>		
 		<script type="text/template" id="button-view-template">
 			<button>{%= label %}</button>
 		</script>		
@@ -56,22 +53,22 @@
 						this._setOption(options, "items", []);
 					},
 					_render: function () {
-						this.$el.html(this.getTemplate("default").evaluate());
+						this.$el.html(this.templates("default").evaluate());
 						var container = this.$("[data-selector='inner']");
 						BetaJS.Objs.iter(this.__items, function (item) {
-							container.append(this.getTemplate("item").evaluate({label: item}));
+							container.append(this.templates("item").evaluate({label: item}));
 						}, this);
 					},
 					add: function (item) {
 						this.__items.push(item);
-						this.$("[data-selector='inner']").append(this.getTemplate("item").evaluate({label: item}));
+						this.$("[data-selector='inner']").append(this.templates("item").evaluate({label: item}));
 					}
 				});
 				var input = new BetaJS.Views.InputView({
 					el: "#input",
 					placeholder: "Enter Text here"
 				});
-				var button = new BetaJS.Views.ButtonView({
+				var button = new ButtonView({
 					el: "#button",
 					label: "Click Me"
 				});
@@ -82,8 +79,8 @@
 				});
 				main.addChildren([input, button, list]);
 				button.on("click", function () {
-					list.add(input.getValue());
-					input.setValue("");
+					list.add(input.get("value"));
+					input.set("value", "");
 				});
 				main.activate();
 			});
