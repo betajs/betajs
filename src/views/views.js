@@ -1,11 +1,17 @@
 BetaJS.Views = BetaJS.Views || {};
 
+
 BetaJS.Views.View = BetaJS.Class.extend("View", [
 	BetaJS.Events.EventsMixin,
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin, {
 	
 	_templates: function () {
+		// {"name": "string" or jquery selector}
+		return {};
+	},
+	
+	_dynamics: function () {
 		// {"name": "string" or jquery selector}
 		return {};
 	},
@@ -20,10 +26,16 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.html(this.__render_string)
 		else if (this.__templates["default"])
 			this.$el.html(this.__templates["default"].evaluate(this.__properties.getAll()));
+		else if (this.__dynamics["default"])
+			this.__dynamics["default"].renderInstance(this.$el, {name: "default"});
 	},
 	
-	getTemplate: function (key) {
+	templates: function (key) {
 		return this.__templates[key];
+	},
+
+	dynamics: function (key) {
+		return this.__dynamics[key];
 	},
 
 	_setOption: function (options, key, value, prefix) {
@@ -52,15 +64,21 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__active = false;
 		this.$el = null;
 		this.__events = this._events().concat(this.__events);
+
 		var templates = BetaJS.Objs.extend(BetaJS.Types.is_function(this._templates) ? this._templates() : this._templates, options["templates"] || {});
 		if ("template" in options)
 			templates["default"] = options["template"];
 		this.__templates = {};
 		for (var key in templates)
-			if (BetaJS.Types.is_string(templates[key]))
-				this.__templates[key] = new BetaJS.Templates.ViewTemplate(templates[key])
-			else
-				this.__templates[key] = new BetaJS.Templates.ViewTemplate(templates[key].html());
+			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html())
+
+		var dynamics = BetaJS.Objs.extend(BetaJS.Types.is_function(this._dynamics) ? this._dynamics() : this._dynamics, options["dynamics"] || {});
+		if ("dynamic" in options)
+			dynamics["default"] = options["dynamic"];
+		this.__dynamics = {};
+		for (var key in dynamics)
+			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html())
+
 		this.__properties = new BetaJS.Events.Properties(options["properties"] || {});
 		this._setOption(options, "objects", {});
 	},
@@ -71,6 +89,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	
 	set: function (key, value) {
 		this.__properties.set(key, value);
+	},
+	
+	properties: function () {
+		return this.__properties;
 	},
 	
 	isActive: function () {
@@ -285,8 +307,126 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			child.setParent(null);
 			this._notify("removeChild", child);
 		}
-	}
+	},
+	
+
 	
 }]);
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
+
+BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
+	
+	constructor: function (parent, template_string) {
+		this._inherited(BetaJS.Views.DynamicTemplate, "constructor");
+		this.__parent = parent;
+		this.__template = new BetaJS.Templates.Template(template_string);
+		this.__instances = {};
+		this.__instances_by_name = {};
+	},
+	
+	renderInstance: function (binder, options) {
+		options = options || {};
+		if (options["name"])
+			this.removeInstanceByName(options["name"]);
+		var instance = new BetaJS.Views.DynamicTemplateInstance(this, binder, options);
+		this.__instances[instance.cid()] = instance;
+		if (options["name"])
+			this.__instances_by_name[name] = instance;
+	},
+	
+	removeInstanceByName: function (name) {
+		if (this.__instances_by_name[name])
+			this.removeInstance(this.__instances_by_name[name]);
+	},
+	
+	removeInstance: function (instance) {
+		delete this.__instances[instance.cid()];
+		delete this.__instances_by_name[instance.name()];
+	},
+	
+	view: function () {
+		return this.__parent;
+	},
+	
+	template: function () {
+		return this.__template;
+	}
+	
+});
+
+BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInstance", [
+	BetaJS.Ids.ClientIdMixin, {
+		
+	__bind: {
+		attribute: function (attribute, variable) {
+			return this.__context.__bind_attribute(attribute, variable)
+		},
+		inner: function (variable) {
+			return this.__context.__bind_inner(variable)
+		}
+	},
+	
+	__new_element: function (base) {
+		var id = BetaJS.Ids.uniqueId();
+		this.__elements[id] = BetaJS.Objs.extend({
+			id: id,
+			$el: null
+		}, base);
+		return this.__elements[id];
+	},
+	
+	__bind_attribute: function (attribute, variable) {
+		var element = this.__new_element({
+			type: "attribute",
+			attribute: attribute,
+			variable: variable
+		});
+		var selector = "data-bind-" + attribute + "='" + element.id + "'";
+		element.selector = "[" + selector + "]";
+		var props = this.__parent.view().properties();
+		props.on("change:" + variable, function () {
+			element.$el.attr(attribute, props.get(variable));
+		}, this);
+		return selector + " " + attribute + "='" + props.get(variable) + "'";
+	},
+	
+	__bind_inner: function (variable) {
+		var element = this.__new_element({
+			type: "inner",
+			variable: variable
+		});
+		var selector = "data-bind-inner='" + element.id + "'";
+		element.selector = "[" + selector + "]";
+		var props = this.__parent.view().properties();
+		props.on("change:" + variable, function () {
+			element.$el.html(props.get(variable));
+		}, this);
+		return selector;
+	},
+
+	constructor: function (parent, binder, options) {
+		this._inherited(BetaJS.Views.DynamicTemplateInstance, "constructor");
+		this.__elements = {};
+		this.__inners = {};
+		options = options || {};
+		if (options["name"])
+			this.__name = name;
+		this.__parent = parent;
+		this.$el = binder;
+		var args = BetaJS.Objs.extend(options["args"] || {}, this.__parent.view().properties().getAll());
+		args.bind = BetaJS.Objs.extend({__context: this}, this.__bind);
+		this.$el.html(parent.template().evaluate(args));
+		BetaJS.Objs.iter(this.__elements, function (element) {
+			element.$el = this.$el.find(element.selector);
+			if (element.type == "inner")
+				element.$el.html(this.__parent.view().properties().get(element.variable))
+		}, this);
+	},
+	
+	destroy: function () {
+		this.__parent.view().off(this);
+		this._inherited(BetaJS.Views.DynamicTemplateInstance, "destroy");
+	}
+	
+}]);

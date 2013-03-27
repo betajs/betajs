@@ -14,7 +14,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	},
 	__addChildContainer: function (child) {
 		if (this.isActive())
-			this.$el.append(this.getTemplate("item").evaluate({cid: child.cid()}));
+			this.$el.append(this.templates("item").evaluate({cid: child.cid()}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
 	},
 	__removeChildContainer: function (child) {

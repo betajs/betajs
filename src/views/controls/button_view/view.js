@@ -1,5 +1,5 @@
 BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
-	_templates: {
+	_dynamics: {
 		"default": BetaJS.Templates.Cached["button-view-template"]
 	},
 	constructor: function(options) {

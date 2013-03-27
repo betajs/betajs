@@ -58,6 +58,7 @@
 				main.addChildren([input, button, list]);
 				button.on("clicked", function () {
 					list.add(input.getValue());
+					button.set("label", input.getValue());
 					input.setValue("");
 				});
 				main.activate();
