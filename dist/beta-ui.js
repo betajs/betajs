@@ -126,18 +126,27 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 });
 BetaJS.Views = BetaJS.Views || {};
 
-
+/** @class */
 BetaJS.Views.View = BetaJS.Class.extend("View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
-	BetaJS.Properties.BindablePropertiesMixin, {
-	
+	BetaJS.Properties.BindablePropertiesMixin,
+	/** @lends BetaJS.Views.View.prototype */
+	{
+    
+    /** Returns all templates to be pre-loaded.
+     * It should return an associative array of templates. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.
+     * @return associative array of templates
+     */
 	_templates: function () {
-		// {"name": "string" or jquery selector}
 		return {};
 	},
 	
+    /** Returns all dynamics to be pre-loaded.
+     * It should return an associative array of dynamics. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.
+     * @return associative array of dynamics
+     */
 	_dynamics: function () {
 		// {"name": "string" or jquery selector}
 		return {};
@@ -157,6 +166,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.__dynamics["default"].renderInstance(this.$el, {name: "default"});
 	},
 	
+	/** Returns a template associated with the view
+	 * @param key identifier of template
+	 */
 	templates: function (key) {
 		return this.__templates[key];
 	},

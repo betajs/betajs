@@ -112,6 +112,12 @@ module.exports = function(grunt) {
 					'src/views/controls/label_view/view.js',
 					'src/views/controls/textarea_view/view.js',
 				]
+			},
+			dist_profiler: {
+				dest : 'dist/beta-profiler.js',
+				src : [
+				    'src/tools/profiling/profiler.js'
+				]
 			}
 		},
 		uglify : {

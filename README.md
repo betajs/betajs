@@ -10,10 +10,7 @@ This is a preliminary version. It is neither complete nor ready for production.
 
 ## Roadmap
 - Documentation
-- Templating
-- View Library
 - Model System
-- Profiling
 - Operational Transformation
 
 
