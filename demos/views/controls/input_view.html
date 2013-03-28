@@ -44,10 +44,9 @@
 				var list = new ListView({
 					css_styles: {color: "blue"},
 					el: "#list",
-					items: ["Example 1", "Example 2"]
+					items: ["Example 1", "Example 2"],
 				});
-
-
+				
 				main.addChildren([input, button, list]);
 				button.on("clicked", function () {
 					list.add(input.getValue());
