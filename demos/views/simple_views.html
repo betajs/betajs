@@ -77,8 +77,8 @@
 				});
 				main.addChildren([input, button, list]);
 				button.on("clicked", function () {
-					list.add(input.get("value"));
-					input.set("value", "");
+					list.add(input.getValue());
+					input.setValue("");
 				});
 				main.activate();
 			});

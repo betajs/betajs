@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-03-27
+  betajs - v0.0.1 - 2013-04-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -157,13 +157,38 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return [];
 	},
 	
+	/** Returns all default css classes that should be used for this view. 
+	 * They can be overwritten by the parent view or by options.
+	 */
+	_css: function () {
+		// {"identifier": "css-class"}
+		return {};
+	},
+	
+	/** Returns css class by identifier. The return strategy has the following priorities: options, parent, defaults.
+	 * @param ident identifier of class 
+	 */
+	css: function (ident) {
+		if (this.__css[ident])
+			return this.__css[ident];
+		if (this.__parent) {
+			var css = this.__parent.css(ident);
+			if (css)
+				return css;
+		}
+		var css = this._css();
+		if (css[ident])
+			return css[ident];
+		return null;
+	},
+	
 	_render: function () {
 		if (this.__render_string)
 			this.$el.html(this.__render_string)
 		else if (this.__templates["default"])
-			this.$el.html(this.__templates["default"].evaluate(this.getAll()));
+			this.$el.html(this.evaluateTemplate("default", {}));
 		else if (this.__dynamics["default"])
-			this.__dynamics["default"].renderInstance(this.$el, {name: "default"});
+			this.evaluateDynamics("default", this.$el, {}, {name: "default"});
 	},
 	
 	/** Returns a template associated with the view
@@ -171,6 +196,35 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 */
 	templates: function (key) {
 		return this.__templates[key];
+	},
+	
+	__supp: {
+		css: function (key) {
+			return this.__context.css(key);
+		},
+		attrs: function (obj) {
+			var s = "";
+			for (var key in obj)
+				s += key + "='" + obj[key] + "' ";
+			return s;
+		},
+		selector: function (name) {
+			return "data-selector='" + name + "' ";
+		}
+	},
+	
+	templateArguments: function () {
+		return BetaJS.Objs.extend({
+			supp: BetaJS.Objs.extend({__context: this}, this.__supp)
+		}, this.getAll());
+	},
+	
+	evaluateTemplate: function (key, args) {
+		return this.__templates[key].evaluate(BetaJS.Objs.extend(args, this.templateArguments()));
+	},
+	
+	evaluateDynamics: function (key, element, args, options) {
+		this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, args || {}));
 	},
 
 	dynamics: function (key) {
@@ -198,6 +252,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__added_css_classes = [];
 		this._setOption(options, "css_styles", {});
 		this.__old_css_styles = {};
+		this._setOption(options, "css", {});
 		this.__parent = null;
 		this.__children = {};
 		this.__active = false;
@@ -506,16 +561,17 @@ BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 });
 
 BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInstance", [
-	BetaJS.Ids.ClientIdMixin, {
+	BetaJS.Ids.ClientIdMixin,
+	BetaJS.Events.ListenMixin, {
 		
 	__bind: {
-		attribute: function (attribute, variable) {
+		attr: function (attribute, variable) {
 			return this.__context.__bind_attribute(attribute, variable);
 		},
-		attributes: function (attributes) {
+		attrs: function (attributes) {
 			var s = "";
 			for (attribute in attributes)
-				s += this.attribute(attribute, attributes[attribute]) + " ";
+				s += this.attr(attribute, attributes[attribute]) + " ";
 			return s;
 		},
 		value: function (variable) {
@@ -535,8 +591,26 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		return this.__elements[id];
 	},
 	
+	__decompose_variable: function (variable) {
+		var parts = variable.split(".");
+		return {
+			object: parts.length == 1 ? this.__parent.view() : this.__args[parts[0]],
+			key: parts.length == 1 ? variable : parts[1]
+		};
+	},
+	
+	__get_variable: function (variable) {
+		var dec = this.__decompose_variable(variable);
+		return dec.object.get(dec.key);
+	},
+	
+	__set_variable: function (variable, value) {
+		var dec = this.__decompose_variable(variable);
+		return dec.object.set(dec.key, value);
+	},
+
 	__update_element: function (element) {
-		var value = this.__parent.view().get(element.variable);
+		var value = this.__get_variable(element.variable);
 		if (element.type == "inner")
 			element.$el.html(value)
 		else if (element.type == "value")
@@ -552,7 +626,7 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 			this.__update_element(element);
 		else if (element.type == "value")
 			element.$el.on("change input keyup paste", function () {
-				self.__parent.view().set(element.variable, element.$el.val());
+				self.__set_variable(element.variable, element.$el.val());
 			});
 	},
 	
@@ -564,9 +638,9 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		});
 		var selector = "data-bind-" + attribute + "='" + element.id + "'";
 		element.selector = "[" + selector + "]";
-		var props = this.__parent.view();
-		props.on("change:" + variable, function () { this.__update_element(element); }, this);
-		return selector + " " + attribute + "='" + props.get(variable) + "'";
+		var dec = this.__decompose_variable(variable);
+		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
+		return selector + " " + attribute + "='" + dec.object.get(dec.key) + "'";
 	},
 	
 	__bind_value: function (variable) {
@@ -576,9 +650,9 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		});
 		var selector = "data-bind-value='" + element.id + "'";
 		element.selector = "[" + selector + "]";
-		var props = this.__parent.view();
-		props.on("change:" + variable, function () { this.__update_element(element); }, this);
-		return selector + " value='" + props.get(variable) + "'";
+		var dec = this.__decompose_variable(variable);
+		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
+		return selector + " value='" + dec.object.get(dec.key) + "'";
 	},
 
 	__bind_inner: function (variable) {
@@ -588,8 +662,8 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		});
 		var selector = "data-bind-inner='" + element.id + "'";
 		element.selector = "[" + selector + "]";
-		var props = this.__parent.view();
-		props.on("change:" + variable, function () { this.__update_element(element); }, this);
+		var dec = this.__decompose_variable(variable);
+		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
 		return selector;
 	},
 
@@ -602,9 +676,9 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 			this.__name = name;
 		this.__parent = parent;
 		this.$el = binder;
-		var args = BetaJS.Objs.extend(options["args"] || {}, this.__parent.view().getAll());
-		args.bind = BetaJS.Objs.extend({__context: this}, this.__bind);
-		this.$el.html(parent.template().evaluate(args));
+		this.__args = BetaJS.Objs.extend(options["args"] || {}, this.__parent.view().templateArguments());
+		this.__args.bind = BetaJS.Objs.extend({__context: this}, this.__bind);
+		this.$el.html(parent.template().evaluate(this.__args));
 		BetaJS.Objs.iter(this.__elements, function (element) { this.__prepare_element(element); }, this);
 	},
 	
@@ -612,7 +686,6 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		BetaJS.Objs.iter(this.__elements, function (element) {
 			element.$el.off();
 		}, this);
-		this.__parent.view().off(null, null, this);
 		this._inherited(BetaJS.Views.DynamicTemplateInstance, "destroy");
 	}
 	
@@ -622,9 +695,9 @@ BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-view-right-container\'></div><div data-selector="left" class=\'holygrail-view-left-container\'></div><div data-selector="center" class=\'holygrail-view-center-container\'></div>';
 BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
 BetaJS.Templates.Cached['button-view-template'] = '<button class="button-view" {%= bind.inner("label") %}></button>';
-BetaJS.Templates.Cached['input-view-template'] = '<input class="input-view" {%= bind.value("value") %} {%= bind.attribute("placeholder", "placeholder") %} />';
+BetaJS.Templates.Cached['input-view-template'] = '<input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} />';
 BetaJS.Templates.Cached['label-view-template'] = '<label class="label-view" {%= bind.inner("label") %}></label>';
-BetaJS.Templates.Cached['text-area-template'] = '<textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attribute("placeholder", "placeholder") %}></textarea>';
+BetaJS.Templates.Cached['text-area-template'] = '<textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>';
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["holygrail-view-template"]
@@ -683,7 +756,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	},
 	__addChildContainer: function (child) {
 		if (this.isActive())
-			this.$el.append(this.templates("item").evaluate({cid: child.cid()}));
+			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
 	},
 	__removeChildContainer: function (child) {
