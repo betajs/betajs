@@ -79,7 +79,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		attrs: function (obj) {
 			var s = "";
 			for (var key in obj)
-				s += key + "='" + obj[key] + "' ";
+				s += (obj[key] == null ? key : (key + "='" + obj[key] + "'")) + " ";
 			return s;
 		},
 		selector: function (name) {

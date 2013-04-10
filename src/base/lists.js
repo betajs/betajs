@@ -7,9 +7,31 @@ BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
 	_get: function (ident) {},
 	_iterate: function (callback) {},
 	
-	constructor: function () {
+	get_ident: function (object) {
+		var ident = null;
+		this._iterate(function (obj, id) {
+			if (obj == object) {
+				ident = id;
+				return false;
+			}
+			return true;	
+		});
+		return ident;
+	},
+	
+	exists: function (object) {
+		return this.get_ident(object) != null;
+	},
+	
+	_ident_changed: function (object, new_ident) {},
+	
+	constructor: function (objects) {
 		this._inherited(BetaJS.Lists.AbstractList, "constructor");
 		this.__count = 0;
+		if (objects)
+			BetaJS.Objs.iter(objects, function (object) {
+				this.add(object);
+			}, this);
 	},
 	
 	add: function (object) {
@@ -38,20 +60,8 @@ BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
 		return ret;
 	},
 	
-	getIdent: function (object) {
-		var id = null;
-		this._iterate(function (obj, id) {
-			if (obj == object) {
-				ident = id;
-				return false;
-			}
-			return true;	
-		});
-		return id;
-	},
-	
 	remove: function (object) {
-		return this.remove_by_ident(this.getIdent(object));
+		return this.remove_by_ident(this.get_ident(object));
 	},
 	
 	remove_by_filter: function (filter) {
@@ -76,44 +86,12 @@ BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
 
 });
 
-BetaJS.Lists.IdObjectList = BetaJS.Lists.AbstractList.extend("IdObjectList", {
-	
-	constructor: function () {
-		this._inherited(BetaJS.Lists.IdObjectList, "constructor");
-		this.__objects = {};
-		this.__last_id = 0;
-	},
-	
-	_add: function (object) {
-		var id = this.__last_id++;
-		this.__objects[id] = object;
-		return id;
-	},
-	
-	_get: function (id) {
-		return this.__objects[id];
-	},
-	
-	_remove: function (id) {
-		var obj = this.__objects[id];
-		delete this.__objects[id];
-		return obj;
-	},
-	
-	_iterate: function (cb) {
-		for (var key in this.__objects) 
-			if (!cb(this.__objects[key], key))
-				return;
-	}
-	
-});
-
 BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
 	
-	constructor: function () {
-		this._inherited(BetaJS.Lists.LinkedList, "constructor");
+	constructor: function (objects) {
 		this.__first = null;
 		this.__last = null;
+		this._inherited(BetaJS.Lists.LinkedList, "constructor", objects);
 	},
 	
 	_add: function (obj) {
@@ -154,4 +132,165 @@ BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
 				return;
 		}
 	}
+});
+
+BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
+	
+	constructor: function (objects) {
+		this.__map = {};
+		this._inherited(BetaJS.Lists.ObjectIdList, "constructor", objects);
+	},
+
+	_add: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		this.__map[id] = object;
+		return id;
+	},
+	
+	_remove: function (ident) {
+		var obj = this.__map[ident];
+		delete this.__map[ident];
+		return obj;
+	},
+	
+	_get: function (ident) {
+		return this.__map[ident];
+	},
+	
+	_iterate: function (callback) {
+		for (var key in this.__map)
+			callback(this.__map[key], key);
+	},
+	
+	get_ident: function (object) {
+		return BetaJS.Ids.objectId(object);
+	}
+	
+});
+
+
+
+BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
+	
+	constructor: function (objects, options) {
+		this.__items = [];
+		options = options || {};
+		if ("compare" in options)
+			this._compare = options["compare"];
+		this._inherited(BetaJS.Lists.ArrayList, "constructor", objects);
+	},
+	
+	set_sompare: function (compare) {
+		this._compare = compare;
+		if (compare)
+			this.sort();
+	},
+	
+	get_compare: function () {
+		return this._compare;
+	},
+	
+	sort: function (compare) {
+		compare = compare || this._compare;
+		if (!compare)
+			return;
+		this.__items.sort(compare);
+		for (var i = 0; i < this.__items.length; ++i)
+			this._ident_changed(this.__items[i], i);
+	},
+	
+	re_index: function (index) {
+		if (!"compare" in this)
+			return index;
+		var min = 0;
+		var max = this.__items.length - 1;
+		var object = this.__items[index];
+		if (index > 0 && this._compare(object, this.__items[index-1]) >= 0)
+			min = index;
+		if (index < last && this._compare(object, this.__items[index+1]) <= 0)
+			max = index;
+		while (max - min > 1) {
+			var i = Math.floor((max + min) / 2);
+			if (this._compare(object, this.__items[i]) >= 0)
+				min = i
+			else
+				max = i;
+		}
+		var i = min;
+		while (this._compare(object, this.__items[i]) > 0)
+			++i;
+		if (i < index)
+			for (var j = index; j > i; --j) {
+				this.__items[j] = this.__items[j-1];
+				this._ident_changed(this.__items[j], j);
+			}
+		else if (i > index)
+			for (var j = index; j < i; ++j) {
+				this.__items[j] = this.__items[j+1];
+				this._ident_changed(this.__items[j], j);
+			}
+		this.__items[i] = object;
+		return i;
+	},
+	
+	_add: function (object) {
+		var last = this.__items.length;
+		this.items.push(object);
+		return this.re_index(last);
+	},
+	
+	_remove: function (ident) {
+		var obj = this.__items[ident];
+		for (var i = ident + 1; i < this.__items.length; ++i) {
+			this.__items[i-1] = this.__items[i];
+			this._ident_changed(this.__items[i-1], i-1);
+		}
+		delete this.__items[this.__items.length - 1];
+		return obj;
+	},
+	
+	_get: function (ident) {
+		return this.__items[ident];
+	},
+	
+	_iterate: function (callback) {
+		for (var i = 0; i < this.__items.length; ++i)
+			callback(this.__items[i], i);
+	},
+	
+});
+
+
+BetaJS.Lists.IdArrayList = BetaJS.Lists.ArrayList.extend("IdArrayList", {
+	
+	constructor: function (objects, options) {
+		this.__idToIndex = {};
+		this._inherited(BetaJS.Lists.IdArrayList, "constructor", objects, options);
+	},
+	
+	_ident_changed: function (object, index) {
+		this.__idToIndex[BetaJS.Ids.objectId(object)] = index;
+	},
+
+	_add: function (object) {
+		var i = this._inherited(BetaJS.Lists.IdArrayList, "_add", object);
+		this.__idToIndex[BetaJS.Ids.objectId(object)] = i;
+		return i;
+	},
+	
+	_remove: function (ident) {
+		var obj = this._inherited(BetaJS.Lists.IdArrayList, "_remove", ident);
+		delete this.__idToIndex[BetaJS.Ids.objectId(object)];
+		return obj;
+	},
+	
+	get_ident: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		return id in this.__idToIndex ? this.__idToIndex[id] : null;
+	},
+	
+	ident_by_id: function (id) {
+		return this.__idToIndex[id];
+	}
+
 });

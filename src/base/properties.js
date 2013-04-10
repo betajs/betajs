@@ -4,7 +4,7 @@ BetaJS.Properties = {};
 BetaJS.Properties.PropertiesMixin = {
 	
 	get: function (key) {
-		return this.__properties ? this.__properties[key] : null;
+		return this.__properties[key];
 	},
 	
 	set: function (key, value) {
@@ -12,8 +12,8 @@ BetaJS.Properties.PropertiesMixin = {
 			this.__properties = {};
 		if ((! key in this.__properties) || (this.__properties[key] != value)) {
 			this.__properties[key] = value;
-			this.trigger("change");
-			this.trigger("change:" + key);
+			this.trigger("change", key, value);
+			this.trigger("change:" + key, value);
 		}
 	},
 	

@@ -80,8 +80,8 @@ module.exports = function(grunt) {
 						+ '  Copyright (c) Oliver Friedmann & Victor Lingenthal\n'
 						+ '  MIT Software License.\n' + '*/\n'
 			},
-			dist_beta : {
-				dest : 'dist/beta.js',
+			dist_beta_base : {
+				dest : 'dist/beta-base.js',
 				src : [
 					'src/base/base.js', 
 					'src/base/types.js',
@@ -94,7 +94,19 @@ module.exports = function(grunt) {
 					'src/base/lists.js',
 					'src/base/iterators.js', 
 					'src/base/events.js',
-					'src/base/properties.js'
+					'src/base/properties.js',
+					'src/base/collections.js'
+				]
+			},
+			dist_beta_data : {
+				dest : 'dist/beta-data.js',
+				src : [
+					'src/data/queries/queries.js', 
+					'src/data/stores/base_store.js',
+					'src/data/stores/dumb_store.js',
+					'src/data/stores/assoc_store.js',
+					'src/data/stores/local_store.js',
+					'src/data/stores/memory_store.js'
 				]
 			},
 			dist_beta_ui : {
@@ -113,6 +125,14 @@ module.exports = function(grunt) {
 					'src/views/controls/textarea_view/view.js',
 				]
 			},
+			dist_beta : {
+				dest : 'dist/beta.js',
+				src : [
+					'dist/beta-base.js', 
+					'dist/beta-data.js',
+					'dist/beta-ui.js'
+				]
+			},
 			dist_profiler: {
 				dest : 'dist/beta-profiler.js',
 				src : [
@@ -128,8 +148,10 @@ module.exports = function(grunt) {
 			},
 			dist : {
 				files : {
-					'dist/beta.min.js' : [ 'dist/beta.js' ],
-					'dist/beta-ui.min.js' : [ 'dist/beta-ui.js' ]
+					'dist/beta-base.min.js' : [ 'dist/beta-base.js' ],
+					'dist/beta-data.min.js' : [ 'dist/beta-data.js' ],
+					'dist/beta-ui.min.js' : [ 'dist/beta-ui.js' ],
+					'dist/beta.min.js' : [ 'dist/beta.js' ]					
 				}
 			}
 		},

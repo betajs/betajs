@@ -107,4 +107,4 @@ BetaJS.Events.ListenMixin = {
 	
 }
 
-BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin)
+BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin);
