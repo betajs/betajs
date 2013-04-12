@@ -20,10 +20,21 @@ BetaJS.Events.EventsMixin = {
 	
 	off: function(events, callback, context) {
 		this.__events = this.__events || {};
-		events = events.split(BetaJS.Events.EVENT_SPLITTER);
-		var event;
-		while (event = events.shift())
-			if (this.__events[event]) {
+		if (events) {
+			events = events.split(BetaJS.Events.EVENT_SPLITTER);
+			var event;
+			while (event = events.shift())
+				if (this.__events[event]) {
+					this.__events[event].remove_by_filter(function (object) {
+						return (!callback || object.callback == callback) && (!context || object.context == context);
+					});
+					if (this.__events[event].count() == 0) {
+						this.__events[event].destroy();
+						delete this.__events[event];
+					}
+				}
+		} else {
+			for (event in this.__events) {
 				this.__events[event].remove_by_filter(function (object) {
 					return (!callback || object.callback == callback) && (!context || object.context == context);
 				});
@@ -32,6 +43,7 @@ BetaJS.Events.EventsMixin = {
 					delete this.__events[event];
 				}
 			}
+		}
 		return this;
 	},
 

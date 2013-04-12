@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-04-11
+  betajs - v0.0.1 - 2013-04-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -594,7 +594,7 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 			this.__items[i-1] = this.__items[i];
 			this._ident_changed(this.__items[i-1], i-1);
 		}
-		delete this.__items[this.__items.length - 1];
+		this.__items.pop();
 		return obj;
 	},
 	
@@ -628,9 +628,9 @@ BetaJS.Lists.IdArrayList = BetaJS.Lists.ArrayList.extend("IdArrayList", {
 	},
 	
 	_remove: function (ident) {
-		var obj = this._inherited(BetaJS.Lists.IdArrayList, "_remove", ident);
+		var object = this._inherited(BetaJS.Lists.IdArrayList, "_remove", ident);
 		delete this.__idToIndex[BetaJS.Ids.objectId(object)];
-		return obj;
+		return object;
 	},
 	
 	get_ident: function (object) {
@@ -704,10 +704,21 @@ BetaJS.Events.EventsMixin = {
 	
 	off: function(events, callback, context) {
 		this.__events = this.__events || {};
-		events = events.split(BetaJS.Events.EVENT_SPLITTER);
-		var event;
-		while (event = events.shift())
-			if (this.__events[event]) {
+		if (events) {
+			events = events.split(BetaJS.Events.EVENT_SPLITTER);
+			var event;
+			while (event = events.shift())
+				if (this.__events[event]) {
+					this.__events[event].remove_by_filter(function (object) {
+						return (!callback || object.callback == callback) && (!context || object.context == context);
+					});
+					if (this.__events[event].count() == 0) {
+						this.__events[event].destroy();
+						delete this.__events[event];
+					}
+				}
+		} else {
+			for (event in this.__events) {
 				this.__events[event].remove_by_filter(function (object) {
 					return (!callback || object.callback == callback) && (!context || object.context == context);
 				});
@@ -716,6 +727,7 @@ BetaJS.Events.EventsMixin = {
 					delete this.__events[event];
 				}
 			}
+		}
 		return this;
 	},
 
@@ -934,7 +946,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		if ("compare" in options)
 			list_options["compare"] = options["compare"];
 		this.__data = new BetaJS.Lists.IdArrayList({}, list_options);
+		var self = this;
+		var old_ident_changed = this.__data._ident_changed;
 		this.__data._ident_changed = function (object, index) {
+			old_ident_changed.apply(self.__data, arguments);
 			self._index_changed(object, index);
 		};
 		if (options["objects"])
@@ -958,6 +973,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		this._inherited(BetaJS.Collections.Collection, "destroy");
 	},
 	
+	count: function () {
+		return this.__data.count();
+	},
+	
 	_index_changed: function (object, index) {
 		this.trigger("index", object, index);
 	},
@@ -972,7 +991,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		if (this.exists(object))
 			return null;
 		var ident = this.__data.add(object);
-		if (ident) {
+		if (ident != null) {
 			this.trigger("add", object);
 			if ("on" in object)
 				object.on("change", function (key, value) {
@@ -995,13 +1014,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	remove: function (object) {
 		if (!this.exists(object))
 			return null;
-		var obj = this.__data.remove(object);
-		if (obj) {
-			this.trigger("remove", object);
-			if ("off" in object)
-				object.off(null, null, this);
-		}
-		return object;
+		this.trigger("remove", object);
+		if ("off" in object)
+			object.off(null, null, this);
+		return this.__data.remove(object);
 	},
 	
 	getByIndex: function (index) {

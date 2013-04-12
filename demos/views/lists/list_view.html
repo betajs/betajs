@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS List View</title>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../../../dist/beta.js"></script>
+		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
+		<script>
+			$(document).ready(function () {
+				var input = new BetaJS.Views.InputView({
+					placeholder: "Enter here"
+				});
+				var button = new BetaJS.Views.ButtonView({
+					label: "Click Me"
+				});
+				var button_remove = new BetaJS.Views.ButtonView({
+					label: "Remove First Element"
+				});
+				var button_reload = new BetaJS.Views.ButtonView({
+					label: "Reload"
+				});
+				var list = new BetaJS.Views.ListView({
+					item_label: "text",
+					compare: function (x, y) {
+						return x.get("text").localeCompare(y.get("text"));
+					},
+					objects: [new BetaJS.Properties.Properties({"text": "Example 1"}),
+					          new BetaJS.Properties.Properties({"text": "Example 2"}),
+					          new BetaJS.Properties.Properties({"text": "Example 3"}),
+					          new BetaJS.Properties.Properties({"text": "Example 4"}),
+					          new BetaJS.Properties.Properties({"text": "Example 5"})]
+				});
+				var main = new BetaJS.Views.ListContainerView({
+					el: "body"
+				});
+				main.addChildren([input, button, list, button_remove, button_reload]);
+				button.on("clicked", function () {
+					list.add(new BetaJS.Properties.Properties({"text": input.get("value")}));
+					input.set("value", "");
+				});
+				button_remove.on("clicked", function () {
+					list.getCollection().remove(list.getCollection().getByIndex(0));
+				});
+				button_reload.on("clicked", function () {
+					list.invalidate();
+				});
+				main.activate();
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

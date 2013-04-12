@@ -1,0 +1,17 @@
+<script type="text/template" id="list-view-template">
+	<{%= list_container_element %}
+	 {%= supp.attrs(list_container_attrs) %}
+	 data-selector="list">
+	</{%= list_container_element %}>
+</script>
+
+<script type="text/template" id="list-view-item-container-template">
+	<{%= item_container_element %}
+	 {%= supp.attrs(item_container_attrs) %}
+	 {%= supp.list_item_attr(item) %}>
+	</{%= item_container_element %}>
+</script>
+
+<script type="text/template" id="list-view-item-template">
+	{%= item.get(item_label) %}
+</script>

@@ -236,6 +236,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return this.$("[data-" + key + "='" + value + "']");
 	},
 	
+	$subdata: function (elem, selectors) {
+		var s = "";
+		for (var key in selectors)
+			s += "[data-" + key + "='" + selectors[key] + "']";
+		return elem.find(s);
+	},
+	
 	destroy: function () {
 		this.deactivate();
 		BetaJS.Objs.iter(this.__children, function (child) {

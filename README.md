@@ -10,6 +10,7 @@ This is a preliminary version. It is neither complete nor ready for production.
 
 ## Roadmap
 - Documentation
+- Improve List View
 - Model System
 - Operational Transformation
 

@@ -34,7 +34,7 @@ module.exports = function(grunt) {
  				}
 		 			
 		 	};
-		 	var script_regex = /<script\s+type\s*=\s*["']text\/template["']\s+id\s*=\s*["']([^"']*)["']\s*>([\w\W]*)<\/script>/ig;
+		 	var script_regex = /<script\s+type\s*=\s*["']text\/template["']\s+id\s*=\s*["']([^"']*)["']\s*>([\w\W]*?)<\/script>/ig;
 		 	this.files.forEach(function(fileObj) {
 			      var files = grunt.file.expand({nonull: true}, fileObj.src);
 			      var namespace = "BetaJS.Templates.Cached";
@@ -48,7 +48,7 @@ module.exports = function(grunt) {
 			    	  source = source.replace(new RegExp('[\n\t\r]', 'g'), '');
 			    	  var result = "";
 			    	  source.replace(script_regex, function (match, id, content) {
-			    		  result += namespace + "['" + id + "'] = '" + Helper.js_escape(content) + "';";
+			    		  result += namespace + "['" + id + "'] = '" + Helper.js_escape(content) + "';\n";
 			    	  });
 			    	  return result;
 			      }).join("\n");
@@ -69,6 +69,7 @@ module.exports = function(grunt) {
 							'src/views/controls/input_view/template.html',
 							'src/views/controls/label_view/template.html',
 							'src/views/controls/textarea_view/template.html',
+							'src/views/lists/list_view/template.html',
 						]
 				}
 			}
@@ -123,6 +124,7 @@ module.exports = function(grunt) {
 					'src/views/controls/input_view/view.js',
 					'src/views/controls/label_view/view.js',
 					'src/views/controls/textarea_view/view.js',
+					'src/views/lists/list_view/view.js',
 				]
 			},
 			dist_beta : {

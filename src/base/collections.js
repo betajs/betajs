@@ -12,7 +12,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		if ("compare" in options)
 			list_options["compare"] = options["compare"];
 		this.__data = new BetaJS.Lists.IdArrayList({}, list_options);
+		var self = this;
+		var old_ident_changed = this.__data._ident_changed;
 		this.__data._ident_changed = function (object, index) {
+			old_ident_changed.apply(self.__data, arguments);
 			self._index_changed(object, index);
 		};
 		if (options["objects"])
@@ -36,6 +39,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		this._inherited(BetaJS.Collections.Collection, "destroy");
 	},
 	
+	count: function () {
+		return this.__data.count();
+	},
+	
 	_index_changed: function (object, index) {
 		this.trigger("index", object, index);
 	},
@@ -50,7 +57,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		if (this.exists(object))
 			return null;
 		var ident = this.__data.add(object);
-		if (ident) {
+		if (ident != null) {
 			this.trigger("add", object);
 			if ("on" in object)
 				object.on("change", function (key, value) {
@@ -73,13 +80,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	remove: function (object) {
 		if (!this.exists(object))
 			return null;
-		var obj = this.__data.remove(object);
-		if (obj) {
-			this.trigger("remove", object);
-			if ("off" in object)
-				object.off(null, null, this);
-		}
-		return object;
+		this.trigger("remove", object);
+		if ("off" in object)
+			object.off(null, null, this);
+		return this.__data.remove(object);
 	},
 	
 	getByIndex: function (index) {

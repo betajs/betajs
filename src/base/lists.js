@@ -245,7 +245,7 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 			this.__items[i-1] = this.__items[i];
 			this._ident_changed(this.__items[i-1], i-1);
 		}
-		delete this.__items[this.__items.length - 1];
+		this.__items.pop();
 		return obj;
 	},
 	
@@ -279,9 +279,9 @@ BetaJS.Lists.IdArrayList = BetaJS.Lists.ArrayList.extend("IdArrayList", {
 	},
 	
 	_remove: function (ident) {
-		var obj = this._inherited(BetaJS.Lists.IdArrayList, "_remove", ident);
+		var object = this._inherited(BetaJS.Lists.IdArrayList, "_remove", ident);
 		delete this.__idToIndex[BetaJS.Ids.objectId(object)];
-		return obj;
+		return object;
 	},
 	
 	get_ident: function (object) {
