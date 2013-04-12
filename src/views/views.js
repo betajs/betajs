@@ -72,25 +72,28 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return this.__templates[key];
 	},
 	
-	__supp: {
-		css: function (key) {
-			return this.__context.css(key);
-		},
-		attrs: function (obj) {
-			var s = "";
-			for (var key in obj)
-				s += (obj[key] == null ? key : (key + "='" + obj[key] + "'")) + " ";
-			return s;
-		},
-		selector: function (name) {
-			return "data-selector='" + name + "' ";
+	_supp: function () {
+		return {
+			__context: this,
+			css: function (key) {
+				return this.__context.css(key);
+			},
+			attrs: function (obj) {
+				var s = "";
+				for (var key in obj)
+					s += (obj[key] == null ? key : (key + "='" + obj[key] + "'")) + " ";
+				return s;
+			},
+			selector: function (name) {
+				return "data-selector='" + name + "' ";
+			}
 		}
 	},
 	
 	templateArguments: function () {
-		return BetaJS.Objs.extend({
-			supp: BetaJS.Objs.extend({__context: this}, this.__supp)
-		}, this.getAll());
+		var args = this.getAll();
+		args.supp = this._supp();
+		return args;
 	},
 	
 	evaluateTemplate: function (key, args) {

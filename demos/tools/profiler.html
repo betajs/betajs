@@ -4,12 +4,16 @@
 		<meta charset="utf-8">
 		<title>BetaJS ListContainer View</title>
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-		<script src="../../../dist/beta.js"></script>
-		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
+		<script src="../../dist/beta.js"></script>
+		<script src="../../dist/beta-profiler.js"></script>
+		<link rel="stylesheet" href="../../dist/beta-ui.css" type="text/css" />
 		<script>
 			$(document).ready(function () {
+				var profiler = new BetaJS.Profiling.Profiler();
+				var profiler_viewer = new BetaJS.Profiling.ProfilerHtmlViewer(profiler);
+				profiler_viewer.render($("#profiler"));
 				var main = new BetaJS.Views.ListContainerView({
-					el: "body"
+					el: "#main"
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
@@ -53,5 +57,8 @@
 		</script>
 	</head>
 	<body>
+		<div id="main"></div>
+		<hr />
+		<div id="profiler"></div>
 	</body>
 </html>

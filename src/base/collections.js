@@ -8,7 +8,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	constructor: function (options) {
 		this._inherited(BetaJS.Collections.Collection, "constructor");
 		options = options || {};
-		this.__data = new BetaJS.Objs.IdArrayList({}, {compare: options["compare"]});
+		var list_options = {};
+		if ("compare" in options)
+			list_options["compare"] = options["compare"];
+		this.__data = new BetaJS.Lists.IdArrayList({}, list_options);
 		this.__data._ident_changed = function (object, index) {
 			self._index_changed(object, index);
 		};

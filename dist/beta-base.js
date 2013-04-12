@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-04-10
+  betajs - v0.0.1 - 2013-04-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -549,14 +549,14 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 	},
 	
 	re_index: function (index) {
-		if (!"compare" in this)
+		if (!("_compare" in this))
 			return index;
 		var min = 0;
 		var max = this.__items.length - 1;
 		var object = this.__items[index];
 		if (index > 0 && this._compare(object, this.__items[index-1]) >= 0)
 			min = index;
-		if (index < last && this._compare(object, this.__items[index+1]) <= 0)
+		if (index < max && this._compare(object, this.__items[index+1]) <= 0)
 			max = index;
 		while (max - min > 1) {
 			var i = Math.floor((max + min) / 2);
@@ -584,7 +584,7 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 	
 	_add: function (object) {
 		var last = this.__items.length;
-		this.items.push(object);
+		this.__items.push(object);
 		return this.re_index(last);
 	},
 	
@@ -930,7 +930,10 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	constructor: function (options) {
 		this._inherited(BetaJS.Collections.Collection, "constructor");
 		options = options || {};
-		this.__data = new BetaJS.Objs.IdArrayList({}, {compare: options["compare"]});
+		var list_options = {};
+		if ("compare" in options)
+			list_options["compare"] = options["compare"];
+		this.__data = new BetaJS.Lists.IdArrayList({}, list_options);
 		this.__data._ident_changed = function (object, index) {
 			self._index_changed(object, index);
 		};
