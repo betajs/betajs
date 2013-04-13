@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Template Views</title>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../../dist/beta.js"></script>
+		<script type="text/template" id="main-view-template">
+			<div id='button1'></div>
+			<div id='button2'></div>
+		</script>		
+		<script type="text/template" id="button-view-template">
+			<button class="{%= supp.css('button-view') %}">{%= label %}</button>
+		</script>		
+		<style>
+			.button-view-default {
+				color:red
+			}
+			.button-view-other {
+				color:blue
+			}
+		</style>
+		<script>
+			$(document).ready(function () {
+				var main = new BetaJS.Views.View({
+					el: "body",
+					template: $("#main-view-template")
+				});
+				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
+					_css: function () {
+						return {
+							"button-view": "button-view-default"
+						};
+					},					
+					_templates: {
+						"default": $("#button-view-template")
+					},
+					constructor: function(options) {
+						this._inherited(ButtonView, "constructor", options);
+						this._setOptionProperty(options, "label", "");
+					},
+					_events: function () {
+						return this._inherited(ButtonView, "_events").concat([{
+							"click button": "__clickButton"
+						}]);
+					},
+					__clickButton: function () {
+						this.trigger("click");
+					}
+				});
+				var button1 = new ButtonView({
+					el: "#button1",
+					label: "Button 1"
+				});
+				var button2 = new ButtonView({
+					el: "#button2",
+					css: {
+						"button-view": "button-view-other"
+					},
+					label: "Button 2"
+				});
+				main.addChildren([button1, button2]);
+				main.activate();
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
