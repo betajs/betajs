@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-04-12
+  betajs - v0.0.1 - 2013-04-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-04-12
+  betajs - v0.0.1 - 2013-04-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -125,7 +125,11 @@ BetaJS.Functions = {
 BetaJS.Objs = {
 	
 	clone: function (item, depth) {
-		if (BetaJS.Types.is_object(item) && depth && depth > 0)
+		if (!depth || depth <= 0)
+			return item;
+		if (BetaJS.Types.is_array(item))
+			return item.slice(0);
+		else if (BetaJS.Types.is_object(item))
 			return this.extend({}, item, depth-1)
 		else
 			return item;
@@ -527,6 +531,7 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 	
 	constructor: function (objects, options) {
+		this.__idToIndex = {};
 		this.__items = [];
 		options = options || {};
 		if ("compare" in options)
@@ -550,56 +555,49 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 			return;
 		this.__items.sort(compare);
 		for (var i = 0; i < this.__items.length; ++i)
-			this._ident_changed(this.__items[i], i);
+			this.__ident_changed(this.__items[i], i);
 	},
-	
+		
 	re_index: function (index) {
 		if (!("_compare" in this))
 			return index;
-		var min = 0;
-		var max = this.__items.length - 1;
+		var last = this.__items.length - 1;
 		var object = this.__items[index];
-		if (index > 0 && this._compare(object, this.__items[index-1]) >= 0)
-			min = index;
-		if (index < max && this._compare(object, this.__items[index+1]) <= 0)
-			max = index;
-		while (max - min > 1) {
-			var i = Math.floor((max + min) / 2);
-			if (this._compare(object, this.__items[i]) >= 0)
-				min = i
-			else
-				max = i;
-		}
-		var i = min;
-		while (this._compare(object, this.__items[i]) > 0)
+		var i = index;	
+		while (i < last && this._compare(this.__items[i], this.__items[i + 1]) > 0) {
+			this.__items[i] = this.__items[i + 1];
+			this.__ident_changed(this.__items[i], i);
+			this.__items[i + 1] = object;
 			++i;
-		if (i < index)
-			for (var j = index; j > i; --j) {
-				this.__items[j] = this.__items[j-1];
-				this._ident_changed(this.__items[j], j);
+		}
+		if (i == index)
+			while (i > 0 && this._compare(this.__items[i], this.__items[i - 1]) < 0) {
+				this.__items[i] = this.__items[i - 1];
+				this.__ident_changed(this.__items[i], i);
+				this.__items[i - 1] = object;
+				--i;
 			}
-		else if (i > index)
-			for (var j = index; j < i; ++j) {
-				this.__items[j] = this.__items[j+1];
-				this._ident_changed(this.__items[j], j);
-			}
-		this.__items[i] = object;
+		if (i != index)
+			this.__ident_changed(object, i);
 		return i;
 	},
 	
 	_add: function (object) {
 		var last = this.__items.length;
 		this.__items.push(object);
-		return this.re_index(last);
+		var i = this.re_index(last);
+		this.__idToIndex[BetaJS.Ids.objectId(object)] = i;
+		return i;
 	},
 	
 	_remove: function (ident) {
 		var obj = this.__items[ident];
 		for (var i = ident + 1; i < this.__items.length; ++i) {
 			this.__items[i-1] = this.__items[i];
-			this._ident_changed(this.__items[i-1], i-1);
+			this.__ident_changed(this.__items[i-1], i-1);
 		}
 		this.__items.pop();
+		delete this.__idToIndex[BetaJS.Ids.objectId(obj)];
 		return obj;
 	},
 	
@@ -608,36 +606,16 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 	},
 	
 	_iterate: function (callback) {
-		for (var i = 0; i < this.__items.length; ++i)
-			callback(this.__items[i], i);
+		var items = BetaJS.Objs.clone(this.__items, 1);
+		for (var i = 0; i < items.length; ++i)
+			callback(items[i], this.get_ident(items[i]));
 	},
-	
-});
 
-
-BetaJS.Lists.IdArrayList = BetaJS.Lists.ArrayList.extend("IdArrayList", {
-	
-	constructor: function (objects, options) {
-		this.__idToIndex = {};
-		this._inherited(BetaJS.Lists.IdArrayList, "constructor", objects, options);
-	},
-	
-	_ident_changed: function (object, index) {
+	__ident_changed: function (object, index) {
 		this.__idToIndex[BetaJS.Ids.objectId(object)] = index;
+		this._ident_changed(object, index);
 	},
 
-	_add: function (object) {
-		var i = this._inherited(BetaJS.Lists.IdArrayList, "_add", object);
-		this.__idToIndex[BetaJS.Ids.objectId(object)] = i;
-		return i;
-	},
-	
-	_remove: function (ident) {
-		var object = this._inherited(BetaJS.Lists.IdArrayList, "_remove", ident);
-		delete this.__idToIndex[BetaJS.Ids.objectId(object)];
-		return object;
-	},
-	
 	get_ident: function (object) {
 		var id = BetaJS.Ids.objectId(object);
 		return id in this.__idToIndex ? this.__idToIndex[id] : null;
@@ -950,15 +928,17 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		var list_options = {};
 		if ("compare" in options)
 			list_options["compare"] = options["compare"];
-		this.__data = new BetaJS.Lists.IdArrayList({}, list_options);
+		this.__data = new BetaJS.Lists.ArrayList([], list_options);
 		var self = this;
 		var old_ident_changed = this.__data._ident_changed;
 		this.__data._ident_changed = function (object, index) {
 			old_ident_changed.apply(self.__data, arguments);
 			self._index_changed(object, index);
 		};
-		if (options["objects"])
-			this.addArray(options["objects"]);
+		if ("objects" in options)
+			BetaJS.Objs.iter(options["objects"], function (object) {
+				this.add(object);
+			}, this);
 	},
 	
 	set_compare: function (compare) {
@@ -989,7 +969,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	_object_changed: function (object, key, value) {
 		this.trigger("change", object, key, value);
 		this.trigger("change:" + key, object, value);
-		this.__data.re_index(object);
+		this.__data.re_index(this.getIndex(object));
 	},
 	
 	add: function (object) {
@@ -1004,12 +984,6 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 				}, this);
 		}
 		return ident;
-	},
-	
-	addArray: function (objects) {
-		BetaJS.Objs.iter(objects, function (object) {
-			this.add(object);
-		}, this);
 	},
 	
 	exists: function (object) {
@@ -1107,7 +1081,7 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 });
 
 /*!
-  betajs - v0.0.1 - 2013-04-12
+  betajs - v0.0.1 - 2013-04-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1422,7 +1396,7 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 });
 
 /*!
-  betajs - v0.0.1 - 2013-04-12
+  betajs - v0.0.1 - 2013-04-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1618,7 +1592,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @param key identifier of template
 	 */
 	templates: function (key) {
-		return this.__templates[key];
+		return key in this.__templates ? this.__templates[key] : null;
 	},
 	
 	_supp: function () {
@@ -1650,11 +1624,11 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	},
 	
 	evaluateDynamics: function (key, element, args, options) {
-		this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, args || {}));
+		this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, {args: args || {}}));
 	},
 
 	dynamics: function (key) {
-		return this.__dynamics[key];
+		return key in this.__dynamics ? this.__dynamics[key] : null;
 	},
 
 	_setOption: function (options, key, value, prefix) {
@@ -1973,7 +1947,7 @@ BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 	},
 	
 	removeInstanceByName: function (name) {
-		if (this.__instances_by_name[name])
+		if (name in this.__instances_by_name)
 			this.removeInstance(this.__instances_by_name[name]);
 	},
 	
@@ -2120,6 +2094,10 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 			element.$el.off();
 		}, this);
 		this._inherited(BetaJS.Views.DynamicTemplateInstance, "destroy");
+	},
+	
+	name: function () {
+		return this.__name;
 	}
 	
 }]);
@@ -2139,7 +2117,6 @@ BetaJS.Templates.Cached['text-area-template'] = '<textarea class="text-area-view
 
 BetaJS.Templates.Cached['list-view-template'] = '<{%= list_container_element %} {%= supp.attrs(list_container_attrs) %} data-selector="list"></{%= list_container_element %}>';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '<{%= item_container_element %} {%= supp.attrs(item_container_attrs) %} {%= supp.list_item_attr(item) %}></{%= item_container_element %}>';
-BetaJS.Templates.Cached['list-view-item-template'] = '{%= item.get(item_label) %}';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
@@ -2252,15 +2229,17 @@ BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 		this._setOptionProperty(options, "placeholder", "");
 	}
 });
-// TODO: Dynamics, Settings Per Item, Change, SubView instead of Template, Animations
-BetaJS.Views.ListView = BetaJS.Views.View.extend("ListView", {
-	_templates: {
-		"default": BetaJS.Templates.Cached["list-view-template"],
-		"item-container": BetaJS.Templates.Cached["list-view-item-container-template"],
-		"item": BetaJS.Templates.Cached["list-view-item-template"],
+BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
+	
+	_templates: function () {
+		return {
+			"default": BetaJS.Templates.Cached["list-view-template"],
+			"item-container": BetaJS.Templates.Cached["list-view-item-container-template"],
+		};
 	},
+	
 	_supp: function () {
-		return BetaJS.Objs.extend(this._inherited(BetaJS.Views.ListView, "_supp"), {
+		return BetaJS.Objs.extend(this._inherited(BetaJS.Views.CustomListView, "_supp"), {
 			list_item_attr: function (item) {
 				return this.attrs({
 					"data-view-id": this.__context.cid(),
@@ -2270,54 +2249,97 @@ BetaJS.Views.ListView = BetaJS.Views.View.extend("ListView", {
 			}
 		});
 	},
+	
 	constructor: function(options) {
-		this._inherited(BetaJS.Views.ListView, "constructor", options);
+		this._inherited(BetaJS.Views.CustomListView, "constructor", options);
 		this._setOption(options, "list_container_element", "ul");
 		this._setOption(options, "list_container_attrs", {});
 		this._setOption(options, "item_container_element", "li");
 		this._setOption(options, "item_container_attrs", {});
-		this._setOption(options, "item_label", "label");
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = false;
 		} else {
-			this.__collection = new BetaJS.Collections.Collection({
-				objects: options["objects"],
-				compare: options["compare"]
-			});
+			var col_options = {};
+			if ("objects" in options) 
+				col_options["objects"] = options["objects"];
+			if ("compare" in options) 
+				col_options["compare"] = options["compare"];
+			this.__collection = new BetaJS.Collections.Collection(col_options);
 			this.__destroy_collection = true;
 		}
 		this.__collection.on("add", function (item) {
-			this.__renderAdd(item);
+			this.__addItem(item, true);
 		}, this);
 		this.__collection.on("remove", function (item) {
-			this.__renderRemove(item);
+			this.__removeItem(item);
+		}, this);
+		this.__collection.on("change", function (item) {
+			this.__changeItem(item);
 		}, this);
 		this.__collection.on("index", function (item, index) {
-			this.__renderUpdateIndex(item, index);
+			this.__updateItemIndex(item, index);
 		}, this);
 	},
+	
 	destroy: function () {
 		this.__collection.off(null, null, this);
 		if (this.__destroy_collection)
 			this.__collection.destroy();
-		this._inherited(BetaJS.Views.ListView, "destroy");
+		this._inherited(BetaJS.Views.CustomListView, "destroy");
 	},
+	
 	getCollection: function () {
 		return this.__collection;
 	},
+	
+	add: function (item) {
+		this.__collection.add(item);						
+	},
+	
+	remove: function (item) {
+		this.__collection.remove(item);
+	},
+	
 	_render: function () {
+		this.$selector_list = this._renderListContainer();
+		var self = this;
+		this.__collection.iterate(function (item) {
+			self.__addItem(item, false);
+		});
+	},
+	
+	_renderListContainer: function () {
 		this.$el.html(this.evaluateTemplate("default", {
 			list_container_element: this.__list_container_element,
 			list_container_attrs: this.__list_container_attrs
 		}));
-		this.$selector_list = this.$data("selector", "list");
-		var self = this;
-		this.__collection.iterate(function (item) {
-			self.__renderAdd(item);
+		return this.$data("selector", "list");
+	},
+
+	_findItemElement: function (item) {
+		return this.$subdata(this.$selector_list, {
+			"view-id": this.cid(),
+			"cid": BetaJS.Ids.objectId(item)
 		});
 	},
-	__renderAdd: function (item) {
+	
+	_findIndexElement: function (index) {
+		return this.$subdata(this.$selector_list, {
+			"view-id": this.cid(),
+			"index": index
+		});
+	},
+
+	__changeItem: function (item) {
+		if (!this.isActive())
+			return;
+		this._changeItem(item);
+	},
+
+	_changeItem: function (item) {},
+
+	__addItem: function (item, is_new_item) {
 		if (!this.isActive())
 			return;
 		var container = this.evaluateTemplate("item-container", {
@@ -2329,60 +2351,92 @@ BetaJS.Views.ListView = BetaJS.Views.View.extend("ListView", {
 		if (index == 0)
 			this.$selector_list.prepend(container)
 		else {
-			var before = this.__findIndexElement(index - 1);
+			var before = this._findIndexElement(index - 1);
 			if (before.length > 0) 
 				before.after(container)
 			else {
-				var after = this.__findIndexElement(index + 1);
+				var after = this._findIndexElement(index + 1);
 				if (after.length > 0)
 					after.before(container)
 				else
 					this.$selector_list.append(container);
 			}
 		}
-		var element = this.__findItemElement(item);
-		element.html(this.evaluateTemplate("item", {
-			item_label: this.__item_label,
-			item: item
-		}));
+		var element = this._findItemElement(item);
+		this._addItem(item, element, is_new_item);
 	},
-	__renderRemove: function (item) {
+	
+	_addItem: function (item, element, is_new_item) {},
+	
+	__removeItem: function (item) {
 		if (!this.isActive())
 			return;
-		this.__findItemElement(item).remove();
+		var element = this._findItemElement(item);
+		this._removeItem(item, element);
+		element.remove();
 	},
-	__renderUpdateIndex: function (item, index) {
-		var element = this.__findItemElement(item);
+	
+	_removeItem: function (item, element) {},
+
+	__updateItemIndex: function (item, index) {
+		var element = this._findItemElement(item);
 		var old_index = element.attr("data-index");
-		element.attr("data-index", index);
-		if (old_index <= index + 1 || old_index >= index - 1)
+		if (old_index == index)
+			return;
+		if (old_index <= index + 1 || old_index >= index - 1) 
 			return;
 		if (index == 0)
 			this.$selector_list.prepend(element)
 		else {
-			var before = this.__findIndexElement(index - 1);
+			var before = this._findIndexElement(index - 1);
 			if (before.length > 0) 
 				before.insertAfter(element)
 			else {
-				var after = this.__findIndexElement(index + 1);
+				var after = this._findIndexElement(index + 1);
 				if (after.length > 0)
 					after.insertBefore(element);
 			}
 		}
+		this._updateItemIndex(item, element);
 	},
-	__findItemElement: function (item) {
-		return this.$subdata(this.$selector_list, {
-			"view-id": this.cid(),
-			"cid": BetaJS.Ids.objectId(item)
-		});
+	
+	_updateItemIndex: function (item, index) {}
+	
+});
+
+
+
+BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
+	
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.ListView, "constructor", options);
+		this._setOption(options, "item_label", "label");
+		this._setOption(options, "render_item_on_change", this.dynamics("item") == null);
 	},
-	__findIndexElement: function (index) {
-		return this.$subdata(this.$selector_list, {
-			"view-id": this.cid(),
-			"index": index
-		});
+	
+	_changeItem: function (item) {
+		if (this.__render_item_on_change) {
+			var element = this._findItemElement(item);
+			this._renderItem(item, element, false);
+		}
 	},
-	add: function (item) {
-		this.__collection.add(item);						
-	}
+	
+	_addItem: function (item, element, is_new_item) {
+		this._renderItem(item, element, is_new_item);
+	},
+	
+	_renderItem: function (item, element, is_new_item) {
+		if (this.templates("item") != null)
+			element.html(this.evaluateTemplate("item", {item: item}))
+		else if (this.dynamics("item") != null)
+			this.evaluateDynamics("item", element, {item: item}, {name: "item-" + BetaJS.Ids.objectId(item)})
+		else
+			element.html(item.get(this.__item_label)); 
+	},
+	
+	_removeItem: function (item, element) {
+		if (this.dynamics("item") != null)
+			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
+	},
+	
 });

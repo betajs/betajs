@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-04-12
+  betajs - v0.0.1 - 2013-04-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -120,7 +120,11 @@ BetaJS.Functions = {
 BetaJS.Objs = {
 	
 	clone: function (item, depth) {
-		if (BetaJS.Types.is_object(item) && depth && depth > 0)
+		if (!depth || depth <= 0)
+			return item;
+		if (BetaJS.Types.is_array(item))
+			return item.slice(0);
+		else if (BetaJS.Types.is_object(item))
 			return this.extend({}, item, depth-1)
 		else
 			return item;
@@ -522,6 +526,7 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 	
 	constructor: function (objects, options) {
+		this.__idToIndex = {};
 		this.__items = [];
 		options = options || {};
 		if ("compare" in options)
@@ -545,56 +550,49 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 			return;
 		this.__items.sort(compare);
 		for (var i = 0; i < this.__items.length; ++i)
-			this._ident_changed(this.__items[i], i);
+			this.__ident_changed(this.__items[i], i);
 	},
-	
+		
 	re_index: function (index) {
 		if (!("_compare" in this))
 			return index;
-		var min = 0;
-		var max = this.__items.length - 1;
+		var last = this.__items.length - 1;
 		var object = this.__items[index];
-		if (index > 0 && this._compare(object, this.__items[index-1]) >= 0)
-			min = index;
-		if (index < max && this._compare(object, this.__items[index+1]) <= 0)
-			max = index;
-		while (max - min > 1) {
-			var i = Math.floor((max + min) / 2);
-			if (this._compare(object, this.__items[i]) >= 0)
-				min = i
-			else
-				max = i;
-		}
-		var i = min;
-		while (this._compare(object, this.__items[i]) > 0)
+		var i = index;	
+		while (i < last && this._compare(this.__items[i], this.__items[i + 1]) > 0) {
+			this.__items[i] = this.__items[i + 1];
+			this.__ident_changed(this.__items[i], i);
+			this.__items[i + 1] = object;
 			++i;
-		if (i < index)
-			for (var j = index; j > i; --j) {
-				this.__items[j] = this.__items[j-1];
-				this._ident_changed(this.__items[j], j);
+		}
+		if (i == index)
+			while (i > 0 && this._compare(this.__items[i], this.__items[i - 1]) < 0) {
+				this.__items[i] = this.__items[i - 1];
+				this.__ident_changed(this.__items[i], i);
+				this.__items[i - 1] = object;
+				--i;
 			}
-		else if (i > index)
-			for (var j = index; j < i; ++j) {
-				this.__items[j] = this.__items[j+1];
-				this._ident_changed(this.__items[j], j);
-			}
-		this.__items[i] = object;
+		if (i != index)
+			this.__ident_changed(object, i);
 		return i;
 	},
 	
 	_add: function (object) {
 		var last = this.__items.length;
 		this.__items.push(object);
-		return this.re_index(last);
+		var i = this.re_index(last);
+		this.__idToIndex[BetaJS.Ids.objectId(object)] = i;
+		return i;
 	},
 	
 	_remove: function (ident) {
 		var obj = this.__items[ident];
 		for (var i = ident + 1; i < this.__items.length; ++i) {
 			this.__items[i-1] = this.__items[i];
-			this._ident_changed(this.__items[i-1], i-1);
+			this.__ident_changed(this.__items[i-1], i-1);
 		}
 		this.__items.pop();
+		delete this.__idToIndex[BetaJS.Ids.objectId(obj)];
 		return obj;
 	},
 	
@@ -603,36 +601,16 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 	},
 	
 	_iterate: function (callback) {
-		for (var i = 0; i < this.__items.length; ++i)
-			callback(this.__items[i], i);
+		var items = BetaJS.Objs.clone(this.__items, 1);
+		for (var i = 0; i < items.length; ++i)
+			callback(items[i], this.get_ident(items[i]));
 	},
-	
-});
 
-
-BetaJS.Lists.IdArrayList = BetaJS.Lists.ArrayList.extend("IdArrayList", {
-	
-	constructor: function (objects, options) {
-		this.__idToIndex = {};
-		this._inherited(BetaJS.Lists.IdArrayList, "constructor", objects, options);
-	},
-	
-	_ident_changed: function (object, index) {
+	__ident_changed: function (object, index) {
 		this.__idToIndex[BetaJS.Ids.objectId(object)] = index;
+		this._ident_changed(object, index);
 	},
 
-	_add: function (object) {
-		var i = this._inherited(BetaJS.Lists.IdArrayList, "_add", object);
-		this.__idToIndex[BetaJS.Ids.objectId(object)] = i;
-		return i;
-	},
-	
-	_remove: function (ident) {
-		var object = this._inherited(BetaJS.Lists.IdArrayList, "_remove", ident);
-		delete this.__idToIndex[BetaJS.Ids.objectId(object)];
-		return object;
-	},
-	
 	get_ident: function (object) {
 		var id = BetaJS.Ids.objectId(object);
 		return id in this.__idToIndex ? this.__idToIndex[id] : null;
@@ -945,15 +923,17 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		var list_options = {};
 		if ("compare" in options)
 			list_options["compare"] = options["compare"];
-		this.__data = new BetaJS.Lists.IdArrayList({}, list_options);
+		this.__data = new BetaJS.Lists.ArrayList([], list_options);
 		var self = this;
 		var old_ident_changed = this.__data._ident_changed;
 		this.__data._ident_changed = function (object, index) {
 			old_ident_changed.apply(self.__data, arguments);
 			self._index_changed(object, index);
 		};
-		if (options["objects"])
-			this.addArray(options["objects"]);
+		if ("objects" in options)
+			BetaJS.Objs.iter(options["objects"], function (object) {
+				this.add(object);
+			}, this);
 	},
 	
 	set_compare: function (compare) {
@@ -984,7 +964,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	_object_changed: function (object, key, value) {
 		this.trigger("change", object, key, value);
 		this.trigger("change:" + key, object, value);
-		this.__data.re_index(object);
+		this.__data.re_index(this.getIndex(object));
 	},
 	
 	add: function (object) {
@@ -999,12 +979,6 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 				}, this);
 		}
 		return ident;
-	},
-	
-	addArray: function (objects) {
-		BetaJS.Objs.iter(objects, function (object) {
-			this.add(object);
-		}, this);
 	},
 	
 	exists: function (object) {
