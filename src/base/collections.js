@@ -13,10 +13,14 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 			list_options["compare"] = options["compare"];
 		this.__data = new BetaJS.Lists.ArrayList([], list_options);
 		var self = this;
-		var old_ident_changed = this.__data._ident_changed;
 		this.__data._ident_changed = function (object, index) {
-			old_ident_changed.apply(self.__data, arguments);
 			self._index_changed(object, index);
+		};
+		this.__data._re_indexed = function (object) {
+			self._re_indexed(object);
+		};
+		this.__data._sorted = function () {
+			self._sorted();
 		};
 		if ("objects" in options)
 			BetaJS.Objs.iter(options["objects"], function (object) {
@@ -47,6 +51,14 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	
 	_index_changed: function (object, index) {
 		this.trigger("index", object, index);
+	},
+	
+	_re_indexed: function (object) {
+		this.trigger("reindexed", object);
+	},
+	
+	_sorted: function () {
+		this.trigger("sorted");
 	},
 	
 	_object_changed: function (object, key, value) {

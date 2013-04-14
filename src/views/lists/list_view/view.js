@@ -25,6 +25,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		this._setOption(options, "list_container_attrs", {});
 		this._setOption(options, "item_container_element", "li");
 		this._setOption(options, "item_container_attrs", {});
+		this.__itemData = {};
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = false;
@@ -49,9 +50,18 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		this.__collection.on("index", function (item, index) {
 			this.__updateItemIndex(item, index);
 		}, this);
+		this.__collection.on("reindexed", function (item) {
+			this.__reIndexItem(item);
+		}, this);
+		this.__collection.on("sorted", function () {
+			this.__sorted();
+		}, this);
 	},
 	
 	destroy: function () {
+		for (var key in this.__itemData)
+			this._destroyItemData(this.__itemData[key]);
+		this.__itemData = null;
 		this.__collection.off(null, null, this);
 		if (this.__destroy_collection)
 			this.__collection.destroy();
@@ -105,6 +115,17 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			return;
 		this._changeItem(item);
 	},
+	
+	_newItemData: function (item) {
+		return {};
+	},
+	
+	_destroyItemData: function (data) {
+	},
+	
+	itemData: function (item) {
+		return this.__itemData[BetaJS.Ids.objectId(item)];
+	},
 
 	_changeItem: function (item) {},
 
@@ -132,8 +153,12 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			}
 		}
 		var element = this._findItemElement(item);
+		this.__itemData[BetaJS.Ids.objectId(item)] = this._newItemData(item);
 		this._addItem(item, element, is_new_item);
+		this._addElement(element, is_new_item);
 	},
+	
+	_addElement: function (element, is_new_item) {},
 	
 	_addItem: function (item, element, is_new_item) {},
 	
@@ -142,6 +167,12 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			return;
 		var element = this._findItemElement(item);
 		this._removeItem(item, element);
+		this._destroyItemData(this.__itemData[BetaJS.Ids.objectId(item)]);
+		delete this.__itemData[BetaJS.Ids.objectId(item)];
+		this._removeElement(element);
+	},
+	
+	_removeElement: function (element) {
 		element.remove();
 	},
 	
@@ -149,27 +180,27 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 
 	__updateItemIndex: function (item, index) {
 		var element = this._findItemElement(item);
-		var old_index = element.attr("data-index");
-		if (old_index == index)
-			return;
-		if (old_index <= index + 1 || old_index >= index - 1) 
-			return;
+		element.attr("data-index", index);
+		this._updateItemIndex(item, element);
+	},
+
+	__reIndexItem: function (item) {
+		var element = this._findItemElement(item);
+		var index = this.getCollection().getIndex(item);
 		if (index == 0)
 			this.$selector_list.prepend(element)
 		else {
 			var before = this._findIndexElement(index - 1);
-			if (before.length > 0) 
-				before.insertAfter(element)
-			else {
-				var after = this._findIndexElement(index + 1);
-				if (after.length > 0)
-					after.insertBefore(element);
-			}
+			before.after(element);
 		}
-		this._updateItemIndex(item, element);
 	},
 	
-	_updateItemIndex: function (item, index) {}
+	_updateItemIndex: function (item, index) {},
+	
+	__sort: function () {
+		for (var index = this.getCollection().count() - 1; index >= 0; index--)
+			this.$selector_list.prepend(this._findIndexElement(index));
+	},
 	
 });
 
@@ -206,6 +237,43 @@ BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
 	_removeItem: function (item, element) {
 		if (this.dynamics("item") != null)
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
+	},
+	
+});
+
+
+
+BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListView", {
+	
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.SubViewListView, "constructor", options);
+		if ("create_view" in options)
+			this._create_view = options["create_view"];
+		this._setOption(options, "sub_view", BetaJS.Views.LabelView);
+		this._setOption(options, "item_label", "label");
+		var self = this;
+		this._setOption(options, "sub_view_options", function (item) {
+			return {
+				label: item.binding(self.__item_label)
+			};
+		});
+	},
+	
+	_create_view: function (item, element) {
+		var options = this.__sub_view_options(item);
+		options.el = element;
+		return new this.__sub_view(options);
+	},
+	
+	_addItem: function (item, element, is_new_item) {
+		var view = this._create_view(item, element); 
+		this.itemData(item).view = view;
+		this.addChild(view);
+	},
+	
+	_destroyItemData: function (data) {
+		this.removeChild(data.view);
+		data.view.destroy();
 	},
 	
 });

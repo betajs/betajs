@@ -198,7 +198,10 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 		this.__items.sort(compare);
 		for (var i = 0; i < this.__items.length; ++i)
 			this.__ident_changed(this.__items[i], i);
+		this._sorted();
 	},
+	
+	_sorted: function () {},
 		
 	re_index: function (index) {
 		if (!("_compare" in this))
@@ -219,10 +222,14 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 				this.__items[i - 1] = object;
 				--i;
 			}
-		if (i != index)
+		if (i != index) {
 			this.__ident_changed(object, i);
+			this._re_indexed(object);
+		}
 		return i;
 	},
+	
+	_re_indexed: function (object) {},
 	
 	_add: function (object) {
 		var last = this.__items.length;

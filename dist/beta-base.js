@@ -551,7 +551,10 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 		this.__items.sort(compare);
 		for (var i = 0; i < this.__items.length; ++i)
 			this.__ident_changed(this.__items[i], i);
+		this._sorted();
 	},
+	
+	_sorted: function () {},
 		
 	re_index: function (index) {
 		if (!("_compare" in this))
@@ -572,10 +575,14 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 				this.__items[i - 1] = object;
 				--i;
 			}
-		if (i != index)
+		if (i != index) {
 			this.__ident_changed(object, i);
+			this._re_indexed(object);
+		}
 		return i;
 	},
+	
+	_re_indexed: function (object) {},
 	
 	_add: function (object) {
 		var last = this.__items.length;
@@ -925,10 +932,14 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 			list_options["compare"] = options["compare"];
 		this.__data = new BetaJS.Lists.ArrayList([], list_options);
 		var self = this;
-		var old_ident_changed = this.__data._ident_changed;
 		this.__data._ident_changed = function (object, index) {
-			old_ident_changed.apply(self.__data, arguments);
 			self._index_changed(object, index);
+		};
+		this.__data._re_indexed = function (object) {
+			self._re_indexed(object);
+		};
+		this.__data._sorted = function () {
+			self._sorted();
 		};
 		if ("objects" in options)
 			BetaJS.Objs.iter(options["objects"], function (object) {
@@ -959,6 +970,14 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	
 	_index_changed: function (object, index) {
 		this.trigger("index", object, index);
+	},
+	
+	_re_indexed: function (object) {
+		this.trigger("reindexed", object);
+	},
+	
+	_sorted: function () {
+		this.trigger("sorted");
 	},
 	
 	_object_changed: function (object, key, value) {
