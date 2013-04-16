@@ -6,6 +6,9 @@
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../../../dist/beta.js"></script>
 		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
+		<script type="text/template" id="item-template">
+			{%= item.get("text") %}
+		</script>
 		<script>
 			$(document).ready(function () {
 				var input = new BetaJS.Views.InputView({
@@ -24,7 +27,9 @@
 					label: "Reload"
 				});
 				var list = new BetaJS.Views.ListView({
-					item_label: "text",
+					templates: {
+						"item": $("#item-template")
+					},
 					compare: function (x, y) {
 						return x.get("text").localeCompare(y.get("text"));
 					},
@@ -34,6 +39,17 @@
 					          new BetaJS.Properties.Properties({"text": "D Example W"}),
 					          new BetaJS.Properties.Properties({"text": "E Example V"})]
 				});
+				list._addElement = function (element, is_new_item) {
+					if (is_new_item) {
+						element.css("display", "none");
+						element.fadeIn();
+					}
+				};
+				list._removeElement = function (element) {
+					element.fadeOut(function () {
+						element.remove();
+					});
+				};
 				var main = new BetaJS.Views.ListContainerView({
 					el: "body"
 				});

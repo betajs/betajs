@@ -6,6 +6,9 @@
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../../../dist/beta.js"></script>
 		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
+		<script type="text/template" id="item-template">
+			<label {%= bind.inner("item.text") %}></label>
+		</script>
 		<script>
 			$(document).ready(function () {
 				var input = new BetaJS.Views.InputView({
@@ -24,7 +27,9 @@
 					label: "Reload"
 				});
 				var list = new BetaJS.Views.ListView({
-					item_label: "text",
+					dynamics: {
+						"item": $("#item-template")
+					},
 					compare: function (x, y) {
 						return x.get("text").localeCompare(y.get("text"));
 					},

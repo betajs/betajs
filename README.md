@@ -11,7 +11,6 @@ This is a preliminary version. It is neither complete nor ready for production.
 ## Roadmap
 - Documentation
 - Cached Compile Template
-- Improve List View
 - Model System
 - Operational Transformation
 

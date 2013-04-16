@@ -69,7 +69,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @param key identifier of template
 	 */
 	templates: function (key) {
-		return this.__templates[key];
+		return key in this.__templates ? this.__templates[key] : null;
 	},
 	
 	_supp: function () {
@@ -101,11 +101,11 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	},
 	
 	evaluateDynamics: function (key, element, args, options) {
-		this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, args || {}));
+		this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, {args: args || {}}));
 	},
 
 	dynamics: function (key) {
-		return this.__dynamics[key];
+		return key in this.__dynamics ? this.__dynamics[key] : null;
 	},
 
 	_setOption: function (options, key, value, prefix) {
@@ -424,7 +424,7 @@ BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 	},
 	
 	removeInstanceByName: function (name) {
-		if (this.__instances_by_name[name])
+		if (name in this.__instances_by_name)
 			this.removeInstance(this.__instances_by_name[name]);
 	},
 	
@@ -571,6 +571,10 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 			element.$el.off();
 		}, this);
 		this._inherited(BetaJS.Views.DynamicTemplateInstance, "destroy");
+	},
+	
+	name: function () {
+		return this.__name;
 	}
 	
 }]);

@@ -11,15 +11,21 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		var list_options = {};
 		if ("compare" in options)
 			list_options["compare"] = options["compare"];
-		this.__data = new BetaJS.Lists.IdArrayList({}, list_options);
+		this.__data = new BetaJS.Lists.ArrayList([], list_options);
 		var self = this;
-		var old_ident_changed = this.__data._ident_changed;
 		this.__data._ident_changed = function (object, index) {
-			old_ident_changed.apply(self.__data, arguments);
 			self._index_changed(object, index);
 		};
-		if (options["objects"])
-			this.addArray(options["objects"]);
+		this.__data._re_indexed = function (object) {
+			self._re_indexed(object);
+		};
+		this.__data._sorted = function () {
+			self._sorted();
+		};
+		if ("objects" in options)
+			BetaJS.Objs.iter(options["objects"], function (object) {
+				this.add(object);
+			}, this);
 	},
 	
 	set_compare: function (compare) {
@@ -47,10 +53,18 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		this.trigger("index", object, index);
 	},
 	
+	_re_indexed: function (object) {
+		this.trigger("reindexed", object);
+	},
+	
+	_sorted: function () {
+		this.trigger("sorted");
+	},
+	
 	_object_changed: function (object, key, value) {
 		this.trigger("change", object, key, value);
 		this.trigger("change:" + key, object, value);
-		this.__data.re_index(object);
+		this.__data.re_index(this.getIndex(object));
 	},
 	
 	add: function (object) {
@@ -65,12 +79,6 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 				}, this);
 		}
 		return ident;
-	},
-	
-	addArray: function (objects) {
-		BetaJS.Objs.iter(objects, function (object) {
-			this.add(object);
-		}, this);
 	},
 	
 	exists: function (object) {

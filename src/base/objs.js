@@ -1,7 +1,11 @@
 BetaJS.Objs = {
 	
 	clone: function (item, depth) {
-		if (BetaJS.Types.is_object(item) && depth && depth > 0)
+		if (!depth || depth <= 0)
+			return item;
+		if (BetaJS.Types.is_array(item))
+			return item.slice(0);
+		else if (BetaJS.Types.is_object(item))
 			return this.extend({}, item, depth-1)
 		else
 			return item;
