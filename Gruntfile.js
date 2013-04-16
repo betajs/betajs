@@ -45,7 +45,7 @@ module.exports = function(grunt) {
 			    		  return '';
 			    	  }
 			    	  var source = grunt.file.read(filepath);
-			    	  source = source.replace(new RegExp('[\n\t\r]', 'g'), '');
+			    	  source = source.replace(new RegExp('[\n\t\r]', 'g'), ' ');
 			    	  var result = "";
 			    	  source.replace(script_regex, function (match, id, content) {
 			    		  result += namespace + "['" + id + "'] = '" + Helper.js_escape(content) + "';\n";

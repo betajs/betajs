@@ -706,20 +706,20 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 }]);
 
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
-BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right" class=\'holygrail-view-right-container\'></div><div data-selector="left" class=\'holygrail-view-left-container\'></div><div data-selector="center" class=\'holygrail-view-center-container\'></div>';
+BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="right" class=\'holygrail-view-right-container\'></div>  <div data-selector="left" class=\'holygrail-view-left-container\'></div>  <div data-selector="center" class=\'holygrail-view-center-container\'></div> ';
 
-BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
+BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="list-container-item"></div> ';
 
-BetaJS.Templates.Cached['button-view-template'] = '<{%= button_container_element %}class="button-view" {%= bind.inner("label") %}></{%= button_container_element %}>';
+BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    class="button-view" {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
-BetaJS.Templates.Cached['input-view-template'] = '<input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} />';
+BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
-BetaJS.Templates.Cached['label-view-template'] = '<label class="label-view" {%= bind.inner("label") %}></label>';
+BetaJS.Templates.Cached['label-view-template'] = '  <label class="label-view" {%= bind.inner("label") %}></label> ';
 
-BetaJS.Templates.Cached['text-area-template'] = '<textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>';
+BetaJS.Templates.Cached['text-area-template'] = '   <textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>  ';
 
-BetaJS.Templates.Cached['list-view-template'] = '<{%= list_container_element %} {%= supp.attrs(list_container_attrs) %} {%= supp.css("list-view-function")%} {%= supp.css("list-view-layout")%} {%= supp.css("list-view-styling")%} data-selector="list"></{%= list_container_element %}>';
-BetaJS.Templates.Cached['list-view-item-container-template'] = '<{%= item_container_element %} {%= supp.attrs(item_container_attrs) %} {%= supp.list_item_attr(item) %}></{%= item_container_element %}>';
+BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    {%= supp.css("list-view-function")%}    {%= supp.css("list-view-layout")%}    {%= supp.css("list-view-styling")%}    data-selector="list">   </{%= list_container_element %}>  ';
+BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
