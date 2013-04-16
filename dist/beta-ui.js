@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-04-12
+  betajs - v0.0.1 - 2013-04-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -706,7 +706,7 @@ BetaJS.Templates.Cached['holygrail-view-template'] = '<div data-selector="right"
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '<div data-view-id="{%= cid %}" class="list-container-item"></div>';
 
-BetaJS.Templates.Cached['button-view-template'] = '<button class="button-view" {%= bind.inner("label") %}></button>';
+BetaJS.Templates.Cached['button-view-template'] = '<{%= button_container_element %}class="button-view" {%= bind.inner("label") %}></{%= button_container_element %}>';
 
 BetaJS.Templates.Cached['input-view-template'] = '<input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} />';
 
@@ -714,7 +714,7 @@ BetaJS.Templates.Cached['label-view-template'] = '<label class="label-view" {%= 
 
 BetaJS.Templates.Cached['text-area-template'] = '<textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>';
 
-BetaJS.Templates.Cached['list-view-template'] = '<{%= list_container_element %} {%= supp.attrs(list_container_attrs) %} data-selector="list"></{%= list_container_element %}>';
+BetaJS.Templates.Cached['list-view-template'] = '<{%= list_container_element %} {%= supp.attrs(list_container_attrs) %} {%= supp.css("list-view-function")%} {%= supp.css("list-view-layout")%} {%= supp.css("list-view-styling")%} data-selector="list"></{%= list_container_element %}>';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '<{%= item_container_element %} {%= supp.attrs(item_container_attrs) %} {%= supp.list_item_attr(item) %}></{%= item_container_element %}>';
 BetaJS.Templates.Cached['list-view-item-template'] = '{%= item.get(item_label) %}';
 
@@ -790,6 +790,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
 		this._setOptionProperty(options, "label", "");
+		this._setOptionProperty(options, "button_container_element", "button");
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
@@ -798,7 +799,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	},
 	__clickButton: function () {
 		this.trigger("clicked");
-	}
+	},
 });
 BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	_dynamics: {

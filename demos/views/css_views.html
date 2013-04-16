@@ -10,7 +10,7 @@
 			<div id='button2'></div>
 		</script>		
 		<script type="text/template" id="button-view-template">
-			<button class="{%= supp.css('button-view') %}">{%= label %}</button>
+			<{%= containera %} class="{%= supp.css('button-view') %}">{%= label %}</{%= containera %}>
 		</script>		
 		<style>
 			.button-view-default {
@@ -38,6 +38,12 @@
 					constructor: function(options) {
 						this._inherited(ButtonView, "constructor", options);
 						this._setOptionProperty(options, "label", "");
+						this._setOptionProperty(options, "containera", "button");
+					},
+					_render: function () {
+						this.$el.html(this.evaluateTemplate("default", {
+							containera: this.__containera,
+						}));
 					},
 					_events: function () {
 						return this._inherited(ButtonView, "_events").concat([{

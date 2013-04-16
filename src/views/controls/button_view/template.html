@@ -1,3 +1,5 @@
 <script type="text/template" id="button-view-template">
-	<button class="button-view" {%= bind.inner("label") %}></button>
-</script>		
+	<{%= button_container_element %}
+		class="button-view" {%= bind.inner("label") %}>
+	</{%= button_container_element %}>
+</script>

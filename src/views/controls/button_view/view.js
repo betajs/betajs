@@ -5,6 +5,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
 		this._setOptionProperty(options, "label", "");
+		this._setOptionProperty(options, "button_container_element", "button");
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
@@ -13,5 +14,5 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	},
 	__clickButton: function () {
 		this.trigger("clicked");
-	}
+	},
 });
