@@ -207,6 +207,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>templates: (default {}) templates that should be overwritten</li>
 	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
 	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
+	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -221,6 +222,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._setOption(options, "css_classes", []);
 		this.__added_css_classes = [];
 		this._setOption(options, "css_styles", {});
+		this._setOption(options, "invalidate_on_change", false);
 		this.__old_css_styles = {};
 		this._setOption(options, "css", {});
 		this.__parent = null;
@@ -244,6 +246,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html())
 
 		this.setAll(options["properties"] || {});
+		if (this.__invalidate_on_change)
+			this.on("change", function () {
+				this.invalidate();
+			}, this);
 	},
 	
 	/** Returns whether this view is active (i.e. bound and rendered) 

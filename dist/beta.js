@@ -54,6 +54,27 @@ BetaJS.Types = {
 	
 	is_function: function (x) {
 		return typeof x == "function";
+	},
+	
+	is_boolean: function (x) {
+		return typeof x == "boolean";
+	},
+	
+	compare: function (x, y) {
+		if (BetaJS.Types.is_boolean(x) && BetaJS.Types.is_boolean(y))
+			return x == y ? 0 : (x ? 1 : -1);
+		if (BetaJS.Types.is_array(x) && BetaJS.Types.is_array(y)) {
+			var len_x = x.length;
+			var len_y = y.length;
+			var len = Math.min(len_x, len_y);
+			for (var i=0; i < len; ++i) {
+				var c = this.compare(x[i], y[i]);
+				if (c != 0)
+					return c;
+			}
+			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
+		}
+		return x.localeCompare(y);			
 	}
 
 };
@@ -1749,6 +1770,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>templates: (default {}) templates that should be overwritten</li>
 	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
 	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
+	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -1763,6 +1785,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._setOption(options, "css_classes", []);
 		this.__added_css_classes = [];
 		this._setOption(options, "css_styles", {});
+		this._setOption(options, "invalidate_on_change", false);
 		this.__old_css_styles = {};
 		this._setOption(options, "css", {});
 		this.__parent = null;
@@ -1786,6 +1809,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html())
 
 		this.setAll(options["properties"] || {});
+		if (this.__invalidate_on_change)
+			this.on("change", function () {
+				this.invalidate();
+			}, this);
 	},
 	
 	/** Returns whether this view is active (i.e. bound and rendered) 
@@ -2328,6 +2355,8 @@ BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view
 
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    class="button-view" {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
+BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" class="check-box-view" {%= checked ? "checked" : "" %} />  {%= label %} ';
+
 BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <label class="label-view" {%= bind.inner("label") %}></label> ';
@@ -2424,10 +2453,41 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
 	},
+	_events: function () {
+		return [{
+			"keyup input": "__keyupEvent"		
+		}];
+	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");
+	},
+	__keyupEvent: function (e) {
+		 var key = e.keyCode || e.which;
+         if (key == 13)
+         	this.trigger("enter_key");
+	}
+});
+BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
+	_templates: {
+		"default": BetaJS.Templates.Cached["check-box-view-template"]
+	},
+	_events: function () {
+		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
+			"click input": "__click"
+		}]);
+	},
+	constructor: function(options) {
+		options = options || {};
+		options["invalidate_on_change"] = true;
+		this._inherited(BetaJS.Views.CheckBoxView, "constructor", options);
+		this._setOptionProperty(options, "checked", false);
+		this._setOptionProperty(options, "label", "");
+	},
+	__click: function () {
+		this.set("checked", this.$("input").is(":checked"));
+		this.trigger("check", this.get("checked"));
 	}
 });
 BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {

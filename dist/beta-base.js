@@ -49,6 +49,27 @@ BetaJS.Types = {
 	
 	is_function: function (x) {
 		return typeof x == "function";
+	},
+	
+	is_boolean: function (x) {
+		return typeof x == "boolean";
+	},
+	
+	compare: function (x, y) {
+		if (BetaJS.Types.is_boolean(x) && BetaJS.Types.is_boolean(y))
+			return x == y ? 0 : (x ? 1 : -1);
+		if (BetaJS.Types.is_array(x) && BetaJS.Types.is_array(y)) {
+			var len_x = x.length;
+			var len_y = y.length;
+			var len = Math.min(len_x, len_y);
+			for (var i=0; i < len; ++i) {
+				var c = this.compare(x[i], y[i]);
+				if (c != 0)
+					return c;
+			}
+			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
+		}
+		return x.localeCompare(y);			
 	}
 
 };
