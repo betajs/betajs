@@ -23,23 +23,7 @@
 				var button_reload = new BetaJS.Views.ButtonView({
 					label: "Reload"
 				});
-				var list = new BetaJS.Views.SubViewListView({
-					sub_view: BetaJS.Views.ButtonView,
-<<<<<<< HEAD
-					sub_view_options: function (item) { 
-						return { 
-							label: item.binding("text"),
-							button_container_element: "div",
-							css_styles: {"font-size": (10+list.getCollection().getIndex(item) * 5) + "px"} 
-						}; 
-=======
-					sub_view_options: function (item) {
-						return {
-							label: item.binding("text")
-						};
->>>>>>> 518a5eee6ade8a75befd05960360c9b7e0d0c09a
-					},
-					item_label: "text",
+				var collection = new BetaJS.Collections.Collection({
 					compare: function (x, y) {
 						return x.get("text").localeCompare(y.get("text"));
 					},
@@ -49,24 +33,35 @@
 					          new BetaJS.Properties.BindableProperties({"text": "D Example W"}),
 					          new BetaJS.Properties.BindableProperties({"text": "E Example V"})]
 				});
+				var list = new BetaJS.Views.SubViewListView({
+					sub_view: BetaJS.Views.ButtonView,
+					item_label: "text",
+					collection: collection
+				});
+				var list2 = new BetaJS.Views.SubViewListView({
+					sub_view: BetaJS.Views.InputView,
+					sub_view_options: function (item) {
+						return {
+							value: item.binding("text")
+						};
+					},
+					collection: collection
+				});
 				var main = new BetaJS.Views.ListContainerView({
 					el: "body"
 				});
-				main.addChildren([input, button, list, button_remove, button_reverse, button_reload]);
+				main.addChildren([input, button, list, button_remove, button_reverse, button_reload, list2]);
 				button.on("clicked", function () {
 					list.add(new BetaJS.Properties.BindableProperties({"text": input.get("value")}));
 					input.set("value", "");
 				});
 				button_remove.on("clicked", function () {
-					list.getCollection().remove(list.getCollection().getByIndex(0));
+					collection.remove(collection.getByIndex(0));
 				});
 				button_reverse.on("clicked", function () {
-					list.getCollection().iterate(function (item) {
+					collection.iterate(function (item) {
 						item.set("text", item.get("text").split("").reverse().join(""));
 					});
-				});
-				button_reload.on("clicked", function () {
-					list.invalidate();
 				});
 				main.activate();
 			});

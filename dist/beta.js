@@ -54,6 +54,27 @@ BetaJS.Types = {
 	
 	is_function: function (x) {
 		return typeof x == "function";
+	},
+	
+	is_boolean: function (x) {
+		return typeof x == "boolean";
+	},
+	
+	compare: function (x, y) {
+		if (BetaJS.Types.is_boolean(x) && BetaJS.Types.is_boolean(y))
+			return x == y ? 0 : (x ? 1 : -1);
+		if (BetaJS.Types.is_array(x) && BetaJS.Types.is_array(y)) {
+			var len_x = x.length;
+			var len_y = y.length;
+			var len = Math.min(len_x, len_y);
+			for (var i=0; i < len; ++i) {
+				var c = this.compare(x[i], y[i]);
+				if (c != 0)
+					return c;
+			}
+			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
+		}
+		return x.localeCompare(y);			
 	}
 
 };
@@ -679,12 +700,12 @@ BetaJS.Events.EVENT_SPLITTER = /\s+/;
 BetaJS.Events.EventsMixin = {
 	
 	on: function(events, callback, context) {
-		this.__events = this.__events || {};
+		this.__events_mixin_events = this.__events_mixin_events || {};
 		events = events.split(BetaJS.Events.EVENT_SPLITTER);
 		var event;
 		while (event = events.shift()) {
-			this.__events[event] = this.__events[event] || new BetaJS.Lists.LinkedList();
-			this.__events[event].add({
+			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
+			this.__events_mixin_events[event].add({
 				callback: callback,
 				context: context
 			});
@@ -693,28 +714,28 @@ BetaJS.Events.EventsMixin = {
 	},
 	
 	off: function(events, callback, context) {
-		this.__events = this.__events || {};
+		this.__events_mixin_events = this.__events_mixin_events || {};
 		if (events) {
 			events = events.split(BetaJS.Events.EVENT_SPLITTER);
 			var event;
 			while (event = events.shift())
-				if (this.__events[event]) {
-					this.__events[event].remove_by_filter(function (object) {
+				if (this.__events_mixin_events[event]) {
+					this.__events_mixin_events[event].remove_by_filter(function (object) {
 						return (!callback || object.callback == callback) && (!context || object.context == context);
 					});
-					if (this.__events[event].count() == 0) {
-						this.__events[event].destroy();
-						delete this.__events[event];
+					if (this.__events_mixin_events[event].count() == 0) {
+						this.__events_mixin_events[event].destroy();
+						delete this.__events_mixin_events[event];
 					}
 				}
 		} else {
-			for (event in this.__events) {
-				this.__events[event].remove_by_filter(function (object) {
+			for (event in this.__events_mixin_events) {
+				this.__events_mixin_events[event].remove_by_filter(function (object) {
 					return (!callback || object.callback == callback) && (!context || object.context == context);
 				});
-				if (this.__events[event].count() == 0) {
-					this.__events[event].destroy();
-					delete this.__events[event];
+				if (this.__events_mixin_events[event].count() == 0) {
+					this.__events_mixin_events[event].destroy();
+					delete this.__events_mixin_events[event];
 				}
 			}
 		}
@@ -726,15 +747,15 @@ BetaJS.Events.EventsMixin = {
     	events = events.split(BetaJS.Events.EVENT_SPLITTER);
     	var rest = Array.prototype.slice.call(arguments, 1);
 		var event;
-		if (!this.__events)
+		if (!this.__events_mixin_events)
 			return;
     	while (event = events.shift()) {
-    		if (this.__events[event])
-    			this.__events[event].iterate(function (object) {
+    		if (this.__events_mixin_events[event])
+    			this.__events_mixin_events[event].iterate(function (object) {
     				object.callback.apply(object.context || self, rest);
     			});
-    		if (this.__events["all"])
-    			this.__events["all"].iterate(function (object) {
+    		if (this.__events_mixin_events["all"])
+    			this.__events_mixin_events["all"].iterate(function (object) {
     				object.callback.apply(object.context || self, rest);
     			});
     	};
@@ -764,30 +785,30 @@ BetaJS.Events.ListenMixin = {
 	},
 		
 	listenOn: function (target, events, callback) {
-		if (!this.__listen) this.__listen = {};
-		this.__listen[BetaJS.Ids.objectId(target)] = target;
+		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
+		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
 		target.on(events, callback, this);
 	},
 	
 	listenOnce: function (target, events, callback) {
-		if (!this.__listen) this.__listen = {};
-		this.__listen[BetaJS.Ids.objectId(target)] = target;
+		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
+		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
 		target.once(events, callback, this);
 	},
 	
 	listenOff: function (target, events, callback) {
-		if (!this.__listen)
+		if (!this.__listen_mixin_listen)
 			return;
 		if (target) {
 			target.off(events, callback, this);
 			if (!events && !callback)
-				delete this.__listen[BetaJS.Ids.objectId(target)];
+				delete this.__listen_mixin_listen[BetaJS.Ids.objectId(target)];
 		}
 		else
-			BetaJS.Objs.iter(this.__listen, function (obj) {
+			BetaJS.Objs.iter(this.__listen_mixin_listen, function (obj) {
 				obj.off(events, callback, this);
 				if (!events && !callback)
-					delete this.__listen[BetaJS.Ids.objectId(obj)];
+					delete this.__listen_mixin_listen[BetaJS.Ids.objectId(obj)];
 			}, this);
 	}
 	
@@ -1552,15 +1573,21 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	{
     
     /** Returns all templates to be pre-loaded.
-     * It should return an associative array of templates. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.
+     * <p>It should return an associative array of templates. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.</p>
      * @return associative array of templates
+     * @example
+     * return {
+     * 	"default": BetaJS.Templates.Cached["my-view-template"],
+     *  "inner": $("#inner-template"),
+     *  "item": '< p >{%= item.get("text") %}< /p >'
+     * }
      */
 	_templates: function () {
 		return {};
 	},
 	
     /** Returns all dynamics to be pre-loaded.
-     * It should return an associative array of dynamics. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.
+     * <p>It should return an associative array of dynamics. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.</p>
      * @return associative array of dynamics
      */
 	_dynamics: function () {
@@ -1568,21 +1595,42 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return {};
 	},
 	
+	/** Returns all events that the view is listening to.
+	 * <p>It should return an associative array of event bindings. The keys are strings composed of the event name and the jquery selector that specifies to which elements the event should be bound to. The value is the name of the method that should be called when the event is fired.</p>
+	 * <p>Note: It is also possible to return an array of associative arrays. You should do that if you want to bind more than one method to a single key.</p> 
+	 * @return associative array of events
+	 * @example
+	 * return {
+	 * 	"click #button": "_clickButton",
+	 *  "change #input": "_inputChanged"
+	 * }  
+	 */
 	_events: function () {
 		// [{"event selector": "function"}]
 		return [];
 	},
 	
 	/** Returns all default css classes that should be used for this view. 
-	 * They can be overwritten by the parent view or by options.
+	 * <p>They can be overwritten by the parent view or by options.
+	 * The keys are internal identifiers that the view uses to lookup the css classed that are to be used.
+	 * The values are the actual names of the css classes.</p>
+	 * @return associative array of css classes
+	 * @example
+	 * return {
+	 * 	"main-class": "default-main-class",
+	 *  "item-class": "default-item-class"
+	 * }
 	 */
 	_css: function () {
 		// {"identifier": "css-class"}
 		return {};
 	},
 	
-	/** Returns css class by identifier. The return strategy has the following priorities: options, parent, defaults.
-	 * @param ident identifier of class 
+	/** Returns css class by identifier.
+	 * <p>The return strategy has the following priorities: options, parent, defaults.</p>
+	 * @param ident identifier of class
+	 * @example
+	 * this.css("main_class")
 	 */
 	css: function (ident) {
 		if (this.__css[ident])
@@ -1598,6 +1646,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return null;
 	},
 	
+	/** Is called by the view when the view needs to be rendered.
+	 * <p>By default, the function renders the template or dynamic named "default" and passes the default arguments to it.</p>
+	 * 
+	 */
 	_render: function () {
 		if (this.__render_string)
 			this.$el.html(this.__render_string)
@@ -1609,11 +1661,31 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	
 	/** Returns a template associated with the view
 	 * @param key identifier of template
+	 * @return template object
 	 */
 	templates: function (key) {
 		return key in this.__templates ? this.__templates[key] : null;
 	},
 	
+	/** Returns a dynamic associated with the view
+	 * @param key identifier of dynamic
+	 * @return template object
+	 */
+	dynamics: function (key) {
+		return key in this.__dynamics ? this.__dynamics[key] : null;
+	},
+
+	/** Support Routines for Templates and Dynamics
+	 * <ul>
+	 *  <li>supp.css(key): Returns css class associated with key</li>
+	 *  <li>supp.attrs(obj): Returns html code for all html attributes specified by obj</li>
+	 *  <li>supp.selector(name): Returns html code for data-selector='name'</li>
+	 * </ul>
+	 * @example
+	 * < label {%= supp.css("main-class") %} {%= supp.attrs({id: "test", title: "foo"}) %} {%= supp.selector("bar") %} > < /label >
+	 * results in
+	 * < label class="default-main-class" id="test" title="foo" data-selector="bar" > < /label >
+	 */
 	_supp: function () {
 		return {
 			__context: this,
@@ -1632,33 +1704,76 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		}
 	},
 	
+	/** Returns all arguments that are passed to every template by default.
+	 * <p>By default, this function returns the support routines supp and all properties that have been set via this.set or that have been set via this._setOptionProperty</p>
+	 * @return associative array of template arguments  
+	 */
 	templateArguments: function () {
 		var args = this.getAll();
 		args.supp = this._supp();
 		return args;
 	},
 	
+	/** Evaluates a template with used-defined arguments.
+	 * 
+	 * @param key identifier of template 
+	 * @param args arguments to be given to the template (optional)
+	 * @return html string of evaluated template
+	 */
 	evaluateTemplate: function (key, args) {
+		args = args || {}
 		return this.__templates[key].evaluate(BetaJS.Objs.extend(args, this.templateArguments()));
 	},
 	
+	/** Evaluates a dynamic and binds it to a given element with used-defined arguments and options.
+	 * 
+	 * @param key identifier of dynamic
+	 * @param element jquery element to which the dynamic should be bound to 
+	 * @param args arguments to be given to the dynamic (optional)
+	 * @param options options to be passed to the dynamic (name is the most important one, see documentation)
+	 * @return dynamic instance
+	 */
 	evaluateDynamics: function (key, element, args, options) {
-		this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, {args: args || {}}));
+		return this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, {args: args || {}}));
 	},
 
-	dynamics: function (key) {
-		return key in this.__dynamics ? this.__dynamics[key] : null;
-	},
-
+	/** Sets private variable from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 * @param prefix (optional) per default is "__"
+	 */
 	_setOption: function (options, key, value, prefix) {
 		var prefix = prefix ? prefix : "__";
 		this[prefix + key] = key in options ? options[key] : value;
 	},
 	
+	/** Sets property variable (that will be passed to templates and dynamics by default) from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 */
 	_setOptionProperty: function (options, key, value) {
 		this.set(key, key in options ? options[key] : value);
 	},
 	
+	/** Creates a new view with options
+	 * <ul>
+	 *  <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li> 
+	 *  <li>visible: (default true) should the view be visible initially</li>
+	 *  <li>render_string: (default null) string that should be used as default rendering</li>
+	 *  <li>events: (default []) events that should be used additionally</li>
+	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
+	 *  <li>css_classes: (default {}) css classes that should be attached to container</li>
+	 *  <li>css_styles: (default {}) styles that should be attached to container</li>
+	 *  <li>css: (default {}) css classes that should be overwritten</li>
+	 *  <li>templates: (default {}) templates that should be overwritten</li>
+	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
+	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
+	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
+	 * </ul>
+	 * @param options options
+	 */
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.View, "constructor");
 		this._setOption(options, "el", null);
@@ -1670,6 +1785,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._setOption(options, "css_classes", []);
 		this.__added_css_classes = [];
 		this._setOption(options, "css_styles", {});
+		this._setOption(options, "invalidate_on_change", false);
 		this.__old_css_styles = {};
 		this._setOption(options, "css", {});
 		this.__parent = null;
@@ -1693,12 +1809,22 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html())
 
 		this.setAll(options["properties"] || {});
+		if (this.__invalidate_on_change)
+			this.on("change", function () {
+				this.invalidate();
+			}, this);
 	},
 	
+	/** Returns whether this view is active (i.e. bound and rendered) 
+	 * @return active  
+	 */
 	isActive: function () {
 		return this.__active;
 	},
 	
+	/** Activates view and all added sub views
+	 *  
+	 */
 	activate: function () {
 		if (this.isActive())
 			return true;
@@ -1748,6 +1874,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return true;
 	},
 	
+	/** Deactivates view and all added sub views
+	 * 
+	 */
 	deactivate: function () {
 		if (!this.isActive())
 			return false;
@@ -1770,21 +1899,32 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return true;
 	},
 	
+	/** Finds an element within the container of the view
+	 * @param selector a jquery selector
+	 * @return the jquery element(s) it matched 
+	 */
 	$: function(selector) {
 		return this.$el.find(selector);
 	},
 	
-	$data: function(key, value) {
-		return this.$("[data-" + key + "='" + value + "']");
-	},
-	
-	$subdata: function (elem, selectors) {
+	/** Finds an element within a subelement that matches a set of data attributes
+	 * 
+	 * @param selectors associative array, e.g. {"selector": "container", "view-id": this.cid()}
+	 * @param elem (optional, default is $el) the element we search in
+	 * @return the jquery element(s) it matched
+	 */
+	$data: function(selectors, elem) {
+		if (!elem)
+			elem = this.$el
 		var s = "";
 		for (var key in selectors)
 			s += "[data-" + key + "='" + selectors[key] + "']";
 		return elem.find(s);
 	},
 	
+	/** Destroys the view
+	 * 
+	 */
 	destroy: function () {
 		this.deactivate();
 		BetaJS.Objs.iter(this.__children, function (child) {
@@ -1799,14 +1939,23 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._inherited(BetaJS.Views.View, "destroy");
 	},
 	
+	/** Makes the view visible
+	 * 
+	 */
 	show: function () {
 		this.setVisibility(true);
 	},
 	
+	/** Makes the view invisible
+	 * 
+	 */
 	hide: function () {
 		this.setVisibility(false);
 	},
 	
+	/** Sets the visibility of the view
+	 * @param visible visibility
+	 */
 	setVisibility: function (visible) {
 		if (visible == this.__visible)
 			return;
@@ -1844,6 +1993,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._render();
 	},
 	
+	/** Manually triggers rerendering of the view
+	 * 
+	 */
 	invalidate: function () {
 		if (!this.isActive())
 			return;
@@ -1859,6 +2011,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		});
 	},
 	
+	/** Sets the container element of the view
+	 * @param el new container element
+ 	 */
 	setEl: function (el) {
 		if (this.isActive()) {
 			this.deactivate();
@@ -1869,14 +2024,25 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.__el = el;
 	},
 	
+	/** Returns the parent view
+	 * @return parent view
+	 */
 	getParent: function () {
 		return this.__parent;
 	},
 	
+	/** Checks whether a view has been added as a child
+	 * 
+ 	 * @param child view in question
+ 	 * @return true if view has been added
+	 */
 	hasChild: function (child) {
 		return child && child.cid() in this.__children;
 	},
 	
+	/** Changes the parent view
+	 * @param parent the new parent
+	 */
 	setParent: function (parent) {
 		if (parent == this.__parent)
 			return;
@@ -1894,16 +2060,27 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		}
 	},
 	
+	/** Returns all child views
+	 * @return array of child views 
+	 */
 	children: function () {
 		return BetaJS.Objs.values(this.__children);
 	},
 	
+	/** Adds an array of child views
+	 * 
+ 	 * @param children array of views
+	 */
 	addChildren: function (children) {
 		BetaJS.Objs.iter(children, function (child) {
 			this.addChild(child);
 		}, this);
 	},
-	
+
+	/** Adds a child view
+	 * 
+ 	 * @param child view
+	 */	
 	addChild: function (child) {
 		if (!this.hasChild(child)) {
 			this.__children[child.cid()] = child;
@@ -1914,20 +2091,70 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		return null;
 	},
 	
+	/** Removes an array of child views
+	 * 
+ 	 * @param children array of views
+	 */
 	removeChildren: function (children) {
 		BetaJS.Objs.iter(children, function (child) {
 			this.removeChild(child);
 		}, this);
 	},
 	
+	/** Removes a child view
+	 * 
+ 	 * @param child view
+	 */	
 	removeChild: function (child) {
 		if (this.hasChild(child)) {
 			delete this.__children[child.cid()];
 			child.setParent(null);
 			this._notify("removeChild", child);
 		}
-	}
+	},
 	
+	/** Returns the width (excluding margin, border, and padding) of the view
+	 * @return width
+	 */
+	width: function () {
+		return this.$el.width();
+	},
+	
+	/** Returns the inner width (excluding margin, border, but including padding) of the view
+	 * @return inner width
+	 */
+	innerWidth: function () {
+		return this.$el.innerWidth();
+	},
+
+	/** Returns the outer width (including margin, border, and padding) of the view
+	 * @return outer width
+	 */
+	outerWidth: function () {
+		return this.$el.outerWidth();
+	},
+
+	/** Returns the height (excluding margin, border, and padding) of the view
+	 * @return height
+	 */
+	height: function () {
+		return this.$el.height();
+	},
+	
+	/** Returns the inner height (excluding margin, border, but including padding) of the view
+	 * @return inner height
+	 */
+	innerHeight: function () {
+		return this.$el.innerHeight();
+	},
+
+	/** Returns the outer height (including margin, border, and padding) of the view
+	 * @return outer height
+	 */
+	outerHeight: function () {
+		return this.$el.outerHeight();
+	}
+
 }]);
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
@@ -2128,6 +2355,8 @@ BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view
 
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    class="button-view" {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
+BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" class="check-box-view" {%= checked ? "checked" : "" %} />  {%= label %} ';
+
 BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <label class="label-view" {%= bind.inner("label") %}></label> ';
@@ -2199,7 +2428,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		child.setEl("[data-view-id='" + child.cid() + "']");
 	},
 	__removeChildContainer: function (child) {
-		this.$data("view-id", child.cid()).remove();
+		this.$data({"view-id": child.cid()}).remove();
 	}
 });
 BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
@@ -2224,10 +2453,41 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
 	},
+	_events: function () {
+		return [{
+			"keyup input": "__keyupEvent"		
+		}];
+	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");
+	},
+	__keyupEvent: function (e) {
+		 var key = e.keyCode || e.which;
+         if (key == 13)
+         	this.trigger("enter_key");
+	}
+});
+BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
+	_templates: {
+		"default": BetaJS.Templates.Cached["check-box-view-template"]
+	},
+	_events: function () {
+		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
+			"click input": "__click"
+		}]);
+	},
+	constructor: function(options) {
+		options = options || {};
+		options["invalidate_on_change"] = true;
+		this._inherited(BetaJS.Views.CheckBoxView, "constructor", options);
+		this._setOptionProperty(options, "checked", false);
+		this._setOptionProperty(options, "label", "");
+	},
+	__click: function () {
+		this.set("checked", this.$("input").is(":checked"));
+		this.trigger("check", this.get("checked"));
 	}
 });
 BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
@@ -2344,21 +2604,21 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			list_container_element: this.__list_container_element,
 			list_container_attrs: this.__list_container_attrs
 		}));
-		return this.$data("selector", "list");
+		return this.$data({"selector": "list"});
 	},
 
 	_findItemElement: function (item) {
-		return this.$subdata(this.$selector_list, {
+		return this.$data({
 			"view-id": this.cid(),
 			"cid": BetaJS.Ids.objectId(item)
-		});
+		}, this.$selector_list);
 	},
 	
 	_findIndexElement: function (index) {
-		return this.$subdata(this.$selector_list, {
+		return this.$data({
 			"view-id": this.cid(),
 			"index": index
-		});
+		}, this.$selector_list);
 	},
 
 	__changeItem: function (item) {

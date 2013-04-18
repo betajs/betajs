@@ -93,21 +93,21 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			list_container_element: this.__list_container_element,
 			list_container_attrs: this.__list_container_attrs
 		}));
-		return this.$data("selector", "list");
+		return this.$data({"selector": "list"});
 	},
 
 	_findItemElement: function (item) {
-		return this.$subdata(this.$selector_list, {
+		return this.$data({
 			"view-id": this.cid(),
 			"cid": BetaJS.Ids.objectId(item)
-		});
+		}, this.$selector_list);
 	},
 	
 	_findIndexElement: function (index) {
-		return this.$subdata(this.$selector_list, {
+		return this.$data({
 			"view-id": this.cid(),
 			"index": index
-		});
+		}, this.$selector_list);
 	},
 
 	__changeItem: function (item) {
