@@ -24,7 +24,14 @@
 					label: "Reload"
 				});
 				var list = new BetaJS.Views.SubViewListView({
-					sub_view: BetaJS.Views.LabelView,
+					sub_view: BetaJS.Views.ButtonView,
+					sub_view_options: function (item) { 
+						return { 
+							label: item.binding("text"),
+							button_container_element: "div",
+							css_styles: {"font-size": (10+list.getCollection().getIndex(item) * 5) + "px"} 
+						}; 
+					},
 					item_label: "text",
 					compare: function (x, y) {
 						return x.get("text").localeCompare(y.get("text"));

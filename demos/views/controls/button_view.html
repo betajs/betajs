@@ -1,8 +1,8 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>BetaJS Holygrail View</title>
+		<title>BetaJS Button View</title>
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../../../dist/beta.js"></script>
 		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
@@ -11,15 +11,11 @@
 				var main = new BetaJS.Views.HolygrailView({
 					el: "#main",
 				});
-
 				var button = new BetaJS.Views.ButtonView({
 					css_styles: {"background-color": "red"},
 					label: "Click Me",
 				});
-
-				main.setLeft(input);
 				main.setCenter(button);
-				main.setRight(list);
 				button.on("clicked", function () {
 					alert("This is an alert");
 				});
@@ -30,4 +26,4 @@
 	<body>
 		<div id="main"></div>
 	</body>
-</html> -->
+</html>
