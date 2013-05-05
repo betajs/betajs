@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-04-25
+  betajs - v0.0.1 - 2013-05-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-04-25
+  betajs - v0.0.1 - 2013-05-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1121,7 +1121,7 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 });
 
 /*!
-  betajs - v0.0.1 - 2013-04-25
+  betajs - v0.0.1 - 2013-05-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1436,7 +1436,7 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 });
 
 /*!
-  betajs - v0.0.1 - 2013-04-25
+  betajs - v0.0.1 - 2013-05-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1679,10 +1679,11 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * <ul>
 	 *  <li>supp.css(key): Returns css class associated with key</li>
 	 *  <li>supp.attrs(obj): Returns html code for all html attributes specified by obj</li>
+	 *  <li>supp.styles(obj): Returns html code for all styles specified by obj</li>
 	 *  <li>supp.selector(name): Returns html code for data-selector='name'</li>
 	 * </ul>
 	 * @example
-	 * < label {%= supp.css("main-class") %} {%= supp.attrs({id: "test", title: "foo"}) %} {%= supp.selector("bar") %} > < /label >
+	 * < label class="{%= supp.css("main-class") %}" {%= supp.attrs({id: "test", title: "foo"}) %} {%= supp.selector("bar") %} > < /label >
 	 * results in
 	 * < label class="default-main-class" id="test" title="foo" data-selector="bar" > < /label >
 	 */
@@ -1696,6 +1697,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 				var s = "";
 				for (var key in obj)
 					s += (obj[key] == null ? key : (key + "='" + obj[key] + "'")) + " ";
+				return s;
+			},
+			styles: function (obj) {
+				var s = "";
+				for (var key in obj)
+					s += (key + ":" + obj[key] + "") + ";";
 				return s;
 			},
 			selector: function (name) {
@@ -1764,8 +1771,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>render_string: (default null) string that should be used as default rendering</li>
 	 *  <li>events: (default []) events that should be used additionally</li>
 	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
-	 *  <li>css_classes: (default {}) css classes that should be attached to container</li>
-	 *  <li>css_styles: (default {}) styles that should be attached to container</li>
+	 *  <li>el_classes: (default {}) css classes that should be attached to container</li>
+	 *  <li>el_styles: (default {}) styles that should be attached to container</li>
+	 *  <li>children_styles: (default {}) styles that should be attached to all direct children</li>
 	 *  <li>css: (default {}) css classes that should be overwritten</li>
 	 *  <li>templates: (default {}) templates that should be overwritten</li>
 	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
@@ -1782,11 +1790,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
 		this.__old_attributes = {};
-		this._setOption(options, "css_classes", []);
-		this.__added_css_classes = [];
-		this._setOption(options, "css_styles", {});
+		this._setOption(options, "el_classes", []);
+		this.__added_el_classes = [];
+		this._setOption(options, "el_styles", {});
+		this._setOption(options, "children_styles", {});
 		this._setOption(options, "invalidate_on_change", false);
-		this.__old_css_styles = {};
+		this.__old_el_styles = {};
 		this._setOption(options, "css", {});
 		this.__parent = null;
 		this.__children = {};
@@ -1849,20 +1858,20 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 				this.__old_attributes[key] = null;
 			this.$el.attr(key, this.__attributes[key]);
 		}
-		this.__added_css_classes = [];
-		for (var i; i < this.__css_classes; ++i)
-			if (!this.$el.hasClass(this.__css_classes[i])) {
-				this.$el.addClass(this.__css_classes[i]);
-				this.__added_css_classes.push(this.__css_classes[i]);
+		this.__added_el_classes = [];
+		for (var i; i < this.__el_classes; ++i)
+			if (!this.$el.hasClass(this.__el_classes[i])) {
+				this.$el.addClass(this.__el_classes[i]);
+				this.__added_el_classes.push(this.__el_classes[i]);
 			}
-		this.__old_css_styles = {};
-		for (var key in this.__css_styles)  {
+		this.__old_el_styles = {};
+		for (var key in this.__el_styles)  {
 			var old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
-				this.__old_css_styles[key] = old_value
+				this.__old_el_styles[key] = old_value
 			else
-				this.__old_css_styles[key] = null;
-			this.$el.css(key, this.__css_styles[key]);
+				this.__old_el_styles[key] = null;
+			this.$el.css(key, this.__el_styles[key]);
 		}
 		this.__bind();
 		this.$el.css("display", this.__visible ? "" : "none");
@@ -1891,10 +1900,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.$el.html("");
 		for (var key in this.__old_attributes) 
 			this.$el.attr(key, this.__old_attributes[key]);
-		for (var i; i < this.__added_css_classes; ++i)
-			this.$el.removeClass(this.__added_css_classes[i]);
-		for (var key in this.__old_css_styles) 
-			this.$el.css(key, this.__old_css_styles[key]);
+		for (var i; i < this.__added_el_classes; ++i)
+			this.$el.removeClass(this.__added_el_classes[i]);
+		for (var key in this.__old_el_styles) 
+			this.$el.css(key, this.__old_el_styles[key]);
 		this.$el = null;
 		return true;
 	},
@@ -1991,6 +2000,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (!this.isActive())
 			return;
 		this._render();
+		if (!BetaJS.Types.is_empty(this.__children_styles))
+			for (var key in this.__children_styles)
+				this.$el.children().css(key, this.__children_styles[key]);
 	},
 	
 	/** Manually triggers rerendering of the view
@@ -2697,7 +2709,7 @@ BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_elem
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" class="check-box-view" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
-BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
+BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view"         {%= bind.value("value") %}         {%= bind.attr("placeholder", "placeholder") %}  /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <label class="label-view" {%= bind.inner("label") %}></label> ';
 

@@ -38,13 +38,13 @@
 				});
 				var label = new BetaJS.Views.LabelView({
 					label: input.binding("value"),
-					css_styles: {color: "red", "font-weight": "bold"}
+					el_styles: {color: "red", "font-weight": "bold"}
 				});
 				var button = new BetaJS.Views.ButtonView({
 					label: "Click Me"
 				});
 				var list = new ListView({
-					css_styles: {color: "blue"},
+					el_styles: {color: "blue"},
 					items: ["Example 1", "Example 2"]
 				});
 				main.addChildren([input, button, list, label]);
