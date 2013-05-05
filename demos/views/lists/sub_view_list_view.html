@@ -25,19 +25,10 @@
 				});
 				var list = new BetaJS.Views.SubViewListView({
 					sub_view: BetaJS.Views.ButtonView,
-<<<<<<< HEAD
-					sub_view_options: function (item) { 
-						return { 
-							label: item.binding("text"),
-							button_container_element: "div",
-							css_styles: {"font-size": (10+list.getCollection().getIndex(item) * 5) + "px"} 
-						}; 
-=======
-					sub_view_options: function (item) {
+		sub_view_options: function (item) {
 						return {
 							label: item.binding("text")
 						};
->>>>>>> 518a5eee6ade8a75befd05960360c9b7e0d0c09a
 					},
 					item_label: "text",
 					compare: function (x, y) {

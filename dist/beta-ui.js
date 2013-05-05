@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-04-16
+  betajs - v0.0.1 - 2013-05-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -916,6 +916,8 @@ BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="righ
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="list-container-item"></div> ';
 
+BetaJS.Templates.Cached['icon-button-view-template'] = '  <div class="icon-button-view" {%= supp.selector("button") %}>   <div class="icon ui-icon-{%= icon %}"></div>  </div> ';
+
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    class="button-view" {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" class="check-box-view" {%= checked ? "checked" : "" %} />  {%= label %} ';
@@ -1006,6 +1008,25 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
 			"click button": "__clickButton"
+		}]);
+	},
+	__clickButton: function () {
+		this.trigger("clicked");
+	},
+});
+BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["icon-button-view-template"]
+	},
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
+		this._setOptionProperty(options, "label", "");
+		this._setOptionProperty(options, "icon", "question");
+		this._setOptionProperty(options, "button_container_element", "div");
+	},
+	_events: function () {
+		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
+			"click [data-selector='button']": "__clickButton"
 		}]);
 	},
 	__clickButton: function () {
@@ -1314,7 +1335,6 @@ BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
 	},
 	
 });
-
 
 
 BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListView", {

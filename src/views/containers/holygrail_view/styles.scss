@@ -1,11 +1,24 @@
+$widthleft: 50px;
+$widthright: 100px;
+
 .holygrail-view-left-container {
   float: left;
+  // position: absolute;
+  // left: 0px;
+  // width: $widthleft;
 }
 
 .holygrail-view-right-container {
   float: right;
+  // position: absolute;
+  // right: 0px;
+  // width: $widthright;
 }
 
 .holygrail-view-center-container {
+  //position: absolute;
   overflow: hidden;
+  text-align: center;
+  // left: $widthleft;
+  // right: $widthright;
 }

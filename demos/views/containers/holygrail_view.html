@@ -10,6 +10,7 @@
 			$(document).ready(function () {
 				var main = new BetaJS.Views.HolygrailView({
 					el: "#main",
+					css_styles: {"height": "50px", "position": "relative", "overflow": "hidden"},
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
@@ -37,14 +38,25 @@
 					css_styles: {"background-color": "red"},
 					label: "Click Me",
 				});
+				var iconbutton = new BetaJS.Views.IconButtonView({
+					icon: "check",
+				});
+				button.on("clicked", function () {
+					alert("This is an alert");
+				});
+				button.activate();
 				var list = new ListView({
 					css_styles: {"background-color": "yellow"},
 					items: ["Example 1", "Example 2"]
 				});
-				main.setLeft(input);
-				main.setCenter(button);
+				main.setLeft(iconbutton);
+				main.setCenter(input);
 				main.setRight(list);
 				button.on("clicked", function () {
+					list.add(input.get("value"));
+					input.set("value", "");
+				});
+				iconbutton.on("clicked", function () {
 					list.add(input.get("value"));
 					input.set("value", "");
 				});
@@ -53,6 +65,8 @@
 		</script>
 	</head>
 	<body>
-		<div id="main"></div>
+		<div style="">
+			<div id="main"></div>
+		</div>
 	</body>
 </html>

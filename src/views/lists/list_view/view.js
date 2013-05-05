@@ -242,7 +242,6 @@ BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
 });
 
 
-
 BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListView", {
 	
 	constructor: function(options) {

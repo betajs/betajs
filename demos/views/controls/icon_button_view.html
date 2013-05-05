@@ -2,16 +2,16 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>BetaJS Button View</title>
+		<title>BetaJS Icon Button View</title>
 		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="../../../dist/beta.js"></script>
 		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
 		<script>
 			$(document).ready(function () {
-				var button = new BetaJS.Views.ButtonView({
+				var button = new BetaJS.Views.IconButtonView({
 					el: "body",
-					css_styles: {"color": "red"},
-					label: "Click Me",
+					icon: "check",
+					css_styles: {"background-color": "red"},
 				});
 				button.on("clicked", function () {
 					alert("This is an alert");
