@@ -117,7 +117,9 @@ module.exports = function(grunt) {
 				src : [
 					'src/views/templates.js', 
 					'src/views/template.js', 
-					'src/views/views.js', 
+					'src/views/views.js',
+					'src/views/router.js',
+					 
 					'dist/beta-ui-templates.js',
 					
 					'src/views/containers/holygrail_view/view.js',

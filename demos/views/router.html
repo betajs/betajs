@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Router Demo</title>
+		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="https://raw.github.com/cowboy/jquery-hashchange/v1.3/jquery.ba-hashchange.js"></script>
+		<script src="../../dist/beta.js"></script>
+		<script>
+			$(document).ready(function () {
+				router = new BetaJS.Routers.Router({
+					routes: {
+						"main": "main",
+						"about": "about",
+						"pages": "pages",
+						"pages/([0-9]+)": "pages"
+					},
+				});
+				router.main = function () {
+					$("[data-selector='page']").css("display", "none");
+					$("#main").css("display", "");
+				};
+				router.about = function () {
+					$("[data-selector='page']").css("display", "none");
+					$("#about").css("display", "");
+				};
+				router.pages = function (index) {
+					index = parseInt(index || 1);
+					$("#pages #index").html(index);
+					$("#pages #next").attr("href", "javascript:router.navigate('pages/" + (index+1) + "')");
+					$("[data-selector='page']").css("display", "none");
+					$("#pages").css("display", "");
+				}
+				history = new BetaJS.Routers.RouterHistory(router);
+				history.on("change", function () {
+					$("#history").html("");
+					for (var i = 0; i < history.count(); ++i) 
+						$("#history").append("<li>" + history.getRoute(i) + "</li>");
+				});
+				hash_binder = new BetaJS.Routers.HashRouteBinder(router);
+			});
+		</script>		
+	</head>
+	<body>
+		<div>
+			<a href="javascript:router.navigate('main')">Main</a>
+			|
+			<a href="javascript:router.navigate('pages')">Pages</a>
+			|
+			<a href="javascript:router.navigate('about')">About</a>
+			|
+			<a href="javascript:history.back()">Back</a>
+		</div>
+		<hr />
+		<div>
+			<div id="main" data-selector="page">
+				<h1>
+					Main
+				</h1>
+				Main Content...
+			</div>
+			<div id="pages" data-selector="page" style="display:none">
+				<h1>
+					Page <span id="index"></span>
+				</h1>
+				Page <span id="index"></span> Content
+				<p>
+					<a id="next">Next Page</a>
+				</p>
+			</div>
+			<div id="about" data-selector="page" style="display:none">
+				<h1>
+					About
+				</h1>
+				About Content...
+			</div>
+		</div>
+		<hr />
+		<p>
+			History
+			<ul id="history"></ul>
+		</p>
+	</body>
+</html>
