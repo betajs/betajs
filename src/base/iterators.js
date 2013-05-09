@@ -37,3 +37,42 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	}
 	
 });
+
+BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIterator", {
+	
+	constructor: function (iterator, filter, context) {
+		this._inherited(BetaJS.Iterators.FilteredIterator, "constructor");
+		this.__iterator = iterator;
+		this.__filter = filter;
+		this.__context = context || this;
+		this.__next = null;
+		this.__has_next = true;
+	},
+	
+	hasNext: function () {
+		this.__crawl();
+		return this.__next != null;
+	},
+	
+	next: function () {
+		this.__crawl();
+		var item = this.__next;
+		this.__next = null;
+		return item;
+	},
+	
+	__crawl: function () {
+		while (this.__next == null && this.__iterator.hasNext()) {
+			this.__next = this.__iterator.next();
+			if (this.__filter_func(this.__next))
+				return;
+		}
+		this.__has_next = false;
+		this.__next = false;
+	},
+	
+	__filter_func: function (item) {
+		return filter.apply(this.__context, item);
+	}
+
+});

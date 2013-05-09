@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-05-05
+  betajs - v0.0.1 - 2013-05-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-05-05
+  betajs - v0.0.1 - 2013-05-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -693,6 +693,46 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	}
 	
 });
+
+BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIterator", {
+	
+	constructor: function (iterator, filter, context) {
+		this._inherited(BetaJS.Iterators.FilteredIterator, "constructor");
+		this.__iterator = iterator;
+		this.__filter = filter;
+		this.__context = context || this;
+		this.__next = null;
+		this.__has_next = true;
+	},
+	
+	hasNext: function () {
+		this.__crawl();
+		return this.__next != null;
+	},
+	
+	next: function () {
+		this.__crawl();
+		var item = this.__next;
+		this.__next = null;
+		return item;
+	},
+	
+	__crawl: function () {
+		while (this.__next == null && this.__iterator.hasNext()) {
+			this.__next = this.__iterator.next();
+			if (this.__filter_func(this.__next))
+				return;
+		}
+		this.__has_next = false;
+		this.__next = false;
+	},
+	
+	__filter_func: function (item) {
+		return filter.apply(this.__context, item);
+	}
+
+});
+
 BetaJS.Events = {};
 
 BetaJS.Events.EVENT_SPLITTER = /\s+/;
@@ -1121,7 +1161,7 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-05
+  betajs - v0.0.1 - 2013-05-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1435,8 +1475,156 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 	
 });
 
+BetaJS.Stores.CachedStore = BetaJS.Stores.BaseStore.extend("CachedStore", {
+	
+	constructor: function (parent) {
+		this._inherited(BetaJS.Stores.CachedStore, "constructor");
+		this.__parent = parent;
+		this.__cache = [];
+	},
+
+	_insert: function (data) {
+		var row = this.__parent._insert(data);
+		if (row)
+			this.__cache[row.id] = {
+				data: row,
+				exists: true
+			}
+		return row;
+	},
+	
+	_remove: function (id) {
+		if (!(id in this._cache))
+			this.__cache[id] = {};		
+		this.__cache[id].exists = false;
+		return this.__parent._remove(id);
+	},
+	
+	_get: function (id) {
+		if (id in this.__cache)
+			return this.__cache[id].exists;
+		var data = this.__parent.get(id);
+		if (data)
+			this.__cache[id] = {
+				exists: true,
+				data: data
+			}
+		else
+			this.__cache[id] = {
+				exists: false
+			};
+		return data; 
+	},
+	
+	_update: function (id, data) {
+		var row = this.__parent.update(id, data);
+		if (row)
+			this.__cache[id] = {
+				exists: true,
+				data: data
+			};
+		return row;
+	},
+	
+	invalidate: function (id) {
+		delete this.__cache[id];
+	},
+	
+	_query: function (query, options) {
+		return this.__parent.query(query, options);
+	}
+	
+});
+
+BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
+	
+	constructor: function (uri) {
+		this._inherited(BetaJS.Stores.RemoteStore, "constructor");
+		this.__uri = uri;
+	},
+
+	_insert: function (data) {
+		var row = null;
+		$.ajax({
+			type: "POST",
+			async: false,
+			url: this.__uri,
+			data: JSON.stringify(data),
+			success: function (response) {
+				row = response;
+			}
+		});
+		return row;
+	},
+	
+	_remove: function (id) {
+		var row = null;
+		$.ajax({
+			type: "DELETE",
+			async: false,
+			url: this.__uri + "/" + id,
+			success: function (response) {
+				if (response)
+					row = response
+				else
+					row = {id: id};
+			}
+		});
+		return row;
+	},
+	
+	_get: function (id) {
+		var row = null;
+		$.ajax({
+			type: "GET",
+			async: false,
+			url: this.__uri + "/" + id,
+			data: JSON.stringify(data),
+			success: function (response) {
+				row = response;
+			}
+		});
+		return row;
+	},
+	
+	_update: function (id, data) {
+		var row = null;
+		$.ajax({
+			type: "PUT",
+			async: false,
+			url: this.__uri + "/" + id,
+			data: JSON.stringify(data),
+			success: function (response) {
+				row = response;
+			}
+		});
+		return row;
+	},
+	
+	_query: function (query, options) {
+		var data = null;
+		$.ajax({
+			type: "GET",
+			async: false,
+			url: this.__uri,
+			success: function (response) {
+				data = response;
+			}
+		});
+		if (data == null)
+			return BetaJS.Iterators.ArrayIterator([]);			
+		return new BetaJS.Iterators.FilteredIterator(
+			new BetaJS.Iterators.ArrayIterator(data),
+			function (row) {
+				return BetaJS.Queries.evaluate(query, row);
+			}
+		);
+	}
+	
+});
+
 /*!
-  betajs - v0.0.1 - 2013-05-05
+  betajs - v0.0.1 - 2013-05-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1865,13 +2053,14 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 				this.__added_el_classes.push(this.__el_classes[i]);
 			}
 		this.__old_el_styles = {};
-		for (var key in this.__el_styles)  {
+		var new_el_styles = BetaJS.Objs.extend(this._el_styles(), this.__el_styles);
+		for (var key in new_el_styles)  {
 			var old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_el_styles[key] = old_value
 			else
 				this.__old_el_styles[key] = null;
-			this.$el.css(key, this.__el_styles[key]);
+			this.$el.css(key, new_el_styles[key]);
 		}
 		this.__bind();
 		this.$el.css("display", this.__visible ? "" : "none");
@@ -1906,6 +2095,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css(key, this.__old_el_styles[key]);
 		this.$el = null;
 		return true;
+	},
+	
+	/** Returns an associate array of styles that should be attached to the element
+	 * @return styles 
+	 */
+	_el_styles: function () {
+		return {};
 	},
 	
 	/** Finds an element within the container of the view
@@ -2812,6 +3008,10 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this._setOptionProperty(options, "label", "");
 		this._setOptionProperty(options, "icon", "question");
 		this._setOptionProperty(options, "button_container_element", "div");
+		this._setOptionProperty(options, "button_container_element", "div");
+		this._setOption(options, "size", null);
+		this._setOption(options, "width", this.__size);
+		this._setOption(options, "heigth", this.__size);
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{

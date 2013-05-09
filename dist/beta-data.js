@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-05-05
+  betajs - v0.0.1 - 2013-05-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -309,6 +309,154 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 	
 	_remove_key: function (key) {
 		delete this[key];
+	}
+	
+});
+
+BetaJS.Stores.CachedStore = BetaJS.Stores.BaseStore.extend("CachedStore", {
+	
+	constructor: function (parent) {
+		this._inherited(BetaJS.Stores.CachedStore, "constructor");
+		this.__parent = parent;
+		this.__cache = [];
+	},
+
+	_insert: function (data) {
+		var row = this.__parent._insert(data);
+		if (row)
+			this.__cache[row.id] = {
+				data: row,
+				exists: true
+			}
+		return row;
+	},
+	
+	_remove: function (id) {
+		if (!(id in this._cache))
+			this.__cache[id] = {};		
+		this.__cache[id].exists = false;
+		return this.__parent._remove(id);
+	},
+	
+	_get: function (id) {
+		if (id in this.__cache)
+			return this.__cache[id].exists;
+		var data = this.__parent.get(id);
+		if (data)
+			this.__cache[id] = {
+				exists: true,
+				data: data
+			}
+		else
+			this.__cache[id] = {
+				exists: false
+			};
+		return data; 
+	},
+	
+	_update: function (id, data) {
+		var row = this.__parent.update(id, data);
+		if (row)
+			this.__cache[id] = {
+				exists: true,
+				data: data
+			};
+		return row;
+	},
+	
+	invalidate: function (id) {
+		delete this.__cache[id];
+	},
+	
+	_query: function (query, options) {
+		return this.__parent.query(query, options);
+	}
+	
+});
+
+BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
+	
+	constructor: function (uri) {
+		this._inherited(BetaJS.Stores.RemoteStore, "constructor");
+		this.__uri = uri;
+	},
+
+	_insert: function (data) {
+		var row = null;
+		$.ajax({
+			type: "POST",
+			async: false,
+			url: this.__uri,
+			data: JSON.stringify(data),
+			success: function (response) {
+				row = response;
+			}
+		});
+		return row;
+	},
+	
+	_remove: function (id) {
+		var row = null;
+		$.ajax({
+			type: "DELETE",
+			async: false,
+			url: this.__uri + "/" + id,
+			success: function (response) {
+				if (response)
+					row = response
+				else
+					row = {id: id};
+			}
+		});
+		return row;
+	},
+	
+	_get: function (id) {
+		var row = null;
+		$.ajax({
+			type: "GET",
+			async: false,
+			url: this.__uri + "/" + id,
+			data: JSON.stringify(data),
+			success: function (response) {
+				row = response;
+			}
+		});
+		return row;
+	},
+	
+	_update: function (id, data) {
+		var row = null;
+		$.ajax({
+			type: "PUT",
+			async: false,
+			url: this.__uri + "/" + id,
+			data: JSON.stringify(data),
+			success: function (response) {
+				row = response;
+			}
+		});
+		return row;
+	},
+	
+	_query: function (query, options) {
+		var data = null;
+		$.ajax({
+			type: "GET",
+			async: false,
+			url: this.__uri,
+			success: function (response) {
+				data = response;
+			}
+		});
+		if (data == null)
+			return BetaJS.Iterators.ArrayIterator([]);			
+		return new BetaJS.Iterators.FilteredIterator(
+			new BetaJS.Iterators.ArrayIterator(data),
+			function (row) {
+				return BetaJS.Queries.evaluate(query, row);
+			}
+		);
 	}
 	
 });
