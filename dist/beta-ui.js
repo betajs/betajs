@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-05-05
+  betajs - v0.0.1 - 2013-05-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -428,13 +428,14 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 				this.__added_el_classes.push(this.__el_classes[i]);
 			}
 		this.__old_el_styles = {};
-		for (var key in this.__el_styles)  {
+		var new_el_styles = BetaJS.Objs.extend(this._el_styles(), this.__el_styles);
+		for (var key in new_el_styles)  {
 			var old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_el_styles[key] = old_value
 			else
 				this.__old_el_styles[key] = null;
-			this.$el.css(key, this.__el_styles[key]);
+			this.$el.css(key, new_el_styles[key]);
 		}
 		this.__bind();
 		this.$el.css("display", this.__visible ? "" : "none");
@@ -469,6 +470,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css(key, this.__old_el_styles[key]);
 		this.$el = null;
 		return true;
+	},
+	
+	/** Returns an associate array of styles that should be attached to the element
+	 * @return styles 
+	 */
+	_el_styles: function () {
+		return {};
 	},
 	
 	/** Finds an element within the container of the view

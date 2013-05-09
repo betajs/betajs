@@ -15,7 +15,7 @@
 						"pages": "pages",
 						"pages/([0-9]+)": "pages"
 					},
-				});
+				})
 				router.main = function () {
 					$("[data-selector='page']").css("display", "none");
 					$("#main").css("display", "");
@@ -30,12 +30,12 @@
 					$("#pages #next").attr("href", "javascript:router.navigate('pages/" + (index+1) + "')");
 					$("[data-selector='page']").css("display", "none");
 					$("#pages").css("display", "");
-				}
-				history = new BetaJS.Routers.RouterHistory(router);
-				history.on("change", function () {
+				};
+				router_history = new BetaJS.Routers.RouterHistory(router);
+				router_history.on("change", function () {
 					$("#history").html("");
-					for (var i = 0; i < history.count(); ++i) 
-						$("#history").append("<li>" + history.getRoute(i) + "</li>");
+					for (var i = 0; i < router_history.count(); ++i) 
+						$("#history").append("<li>" + router_history.getRoute(i) + "</li>");
 				});
 				hash_binder = new BetaJS.Routers.HashRouteBinder(router);
 			});
@@ -49,7 +49,7 @@
 			|
 			<a href="javascript:router.navigate('about')">About</a>
 			|
-			<a href="javascript:history.back()">Back</a>
+			<a href="javascript:router_history.back()">Back</a>
 		</div>
 		<hr />
 		<div>

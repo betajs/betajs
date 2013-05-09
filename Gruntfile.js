@@ -108,7 +108,9 @@ module.exports = function(grunt) {
 					'src/data/stores/dumb_store.js',
 					'src/data/stores/assoc_store.js',
 					'src/data/stores/local_store.js',
-					'src/data/stores/memory_store.js'
+					'src/data/stores/memory_store.js',
+					'src/data/stores/cached_store.js',
+					'src/data/stores/remote_store.js'
 				]
 			},
 			dist_beta_ui : {
