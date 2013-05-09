@@ -347,7 +347,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	},
 	
 	/** Returns an associate array of styles that should be attached to the element
-	 * @return styles 
+	 * @return styles
+	 * @example
+	 * return {"color": "red"};
+	 * or
+	 * var styles = {};
+	 * styles.color = "red";
+	 * return styles; 
 	 */
 	_el_styles: function () {
 		return {};
