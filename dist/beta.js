@@ -1959,7 +1959,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>render_string: (default null) string that should be used as default rendering</li>
 	 *  <li>events: (default []) events that should be used additionally</li>
 	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
-	 *  <li>el_classes: (default {}) css classes that should be attached to container</li>
+	 *  <li>el_classes: (default []) css classes that should be attached to container</li>
 	 *  <li>el_styles: (default {}) styles that should be attached to container</li>
 	 *  <li>children_styles: (default {}) styles that should be attached to all direct children</li>
 	 *  <li>css: (default {}) css classes that should be overwritten</li>
@@ -2047,7 +2047,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.attr(key, this.__attributes[key]);
 		}
 		this.__added_el_classes = [];
-		for (var i; i < this.__el_classes; ++i)
+		for (var i = 0; i < this.__el_classes.length; ++i)
 			if (!this.$el.hasClass(this.__el_classes[i])) {
 				this.$el.addClass(this.__el_classes[i]);
 				this.__added_el_classes.push(this.__el_classes[i]);
@@ -2089,7 +2089,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.$el.html("");
 		for (var key in this.__old_attributes) 
 			this.$el.attr(key, this.__old_attributes[key]);
-		for (var i; i < this.__added_el_classes; ++i)
+		for (var i = 0; i < this.__added_el_classes.length; ++i)
 			this.$el.removeClass(this.__added_el_classes[i]);
 		for (var key in this.__old_el_styles) 
 			this.$el.css(key, this.__old_el_styles[key]);
@@ -2098,7 +2098,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	},
 	
 	/** Returns an associate array of styles that should be attached to the element
-	 * @return styles 
+	 * @return styles
+	 * @example
+	 * return {"color": "red"};
+	 * or
+	 * var styles = {};
+	 * styles.color = "red";
+	 * return styles; 
 	 */
 	_el_styles: function () {
 		return {};
