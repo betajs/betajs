@@ -20,4 +20,10 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 	__clickButton: function () {
 		this.trigger("clicked");
 	},
+	_el_styles: function() {
+		var styles = {};
+		if (this.__width)
+			styles.width = this.__width + "px";
+		return styles;
+	},
 });

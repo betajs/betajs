@@ -9,9 +9,11 @@
 		<script>
 			$(document).ready(function () {
 				var button = new BetaJS.Views.IconButtonView({
-					el: "body",
+					el: "div",
 					icon: "check",
-					css_styles: {"background-color": "red"},
+					size: "500",
+					el_classes: "icon-button-view",
+					el_styles: {"color": "red"},
 				});
 				button.on("clicked", function () {
 					alert("This is an alert");
@@ -21,5 +23,6 @@
 		</script>
 	</head>
 	<body>
+		<div></div>
 	</body>
 </html>

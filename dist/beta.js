@@ -2098,7 +2098,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	},
 	
 	/** Returns an associate array of styles that should be attached to the element
-	 * @return styles 
+	 * @return styles
+	 * @example
+	 * return {"color": "red"};
+	 * or
+	 * var styles = {};
+	 * styles.color = "red";
+	 * return styles; 
 	 */
 	_el_styles: function () {
 		return {};
@@ -3020,6 +3026,12 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 	},
 	__clickButton: function () {
 		this.trigger("clicked");
+	},
+	_el_styles: function() {
+		var styles = {};
+		if (this.__width)
+			styles.width = this.__width + "px";
+		return styles;
 	},
 });
 BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
