@@ -11,7 +11,7 @@
 				var main = new BetaJS.Views.HolygrailView({
 					el: "#main",
 					el_classes: ["container"],
-					el_styles: {"height": "50px", "width": "600px"},
+					el_styles: {"height": "100px", "width": "600px"},
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
@@ -40,6 +40,7 @@
 					label: "Click Me",
 				});
 				var iconbutton = new BetaJS.Views.IconButtonView({
+					size: "100",
 					icon: "check",
 				});
 				button.on("clicked", function () {

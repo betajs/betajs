@@ -188,11 +188,11 @@
   background-color: orange; }
 
 .icon-position {
-  position: relative;
+  position: absolute;
   top: 50%;
+  left: 50%;
   margin-top: -9px;
-  margin-left: auto;
-  margin-right: auto; }
+  margin-left: -9px; }
 
 .input-button-outer {
   position: relative; }
