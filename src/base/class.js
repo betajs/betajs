@@ -113,6 +113,14 @@ BetaJS.Class._inherited = function (cls, func) {
 	return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 }
 
+BetaJS.Class.prototype.instance_of = function (cls) {
+	return this.cls.ancestor_of(cls);
+}
+
+BetaJS.Class.ancestor_of = function (cls) {
+	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
+}
+
 
 
 BetaJS.Class.prototype.cls = BetaJS.Class;

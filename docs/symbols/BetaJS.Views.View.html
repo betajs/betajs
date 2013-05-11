@@ -299,6 +299,24 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;private&gt; &nbsp;</td>
 							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_el_classes">_el_classes</a></b>()
+								</div>
+								<div class="description">Returns an array of classes that should be attached to the element</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_el_styles">_el_styles</a></b>()
+								</div>
+								<div class="description">Returns an associate array of styles that should be attached to the element</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_events">_events</a></b>()
 								</div>
 								<div class="description">Returns all events that the view is listening to.</div>
@@ -337,7 +355,7 @@ ul.inheritsList
 							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_supp">_supp</a></b>()
 								</div>
-								<div class="description">Support Routines for Templates and Dynamics<ul> <li>supp.css(key): Returns css class associated with key</li> <li>supp.attrs(obj): Returns html code for all html attributes specified by obj</li> <li>supp.selector(name): Returns html code for data-selector='name'</li></ul></div>
+								<div class="description">Support Routines for Templates and Dynamics<ul> <li>supp.css(key): Returns css class associated with key</li> <li>supp.attrs(obj): Returns html code for all html attributes specified by obj</li> <li>supp.styles(obj): Returns html code for all styles specified by obj</li> <li>supp.selector(name): Returns html code for data-selector='name'</li></ul></div>
 							</td>
 						</tr>
 					
@@ -391,7 +409,7 @@ ul.inheritsList
 							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#constructor">constructor</a></b>(options)
 								</div>
-								<div class="description">Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>render_string: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>css_classes: (default {}) css classes that should be attached to container</li> <li>css_styles: (default {}) styles that should be attached to container</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li></ul></div>
+								<div class="description">Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>render_string: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>el_classes: (default []) css classes that should be attached to container</li> <li>el_styles: (default {}) styles that should be attached to container</li> <li>children_styles: (default {}) styles that should be attached to all direct children</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li></ul></div>
 							</td>
 						</tr>
 					
@@ -828,6 +846,78 @@ ul.inheritsList
 
 					<hr />
 				
+					<a name="_el_classes"> </a>
+					<div class="fixedFont">&lt;private&gt; 
+					
+					
+					<b>_el_classes</b>()
+					
+					</div>
+					<div class="description">
+						Returns an array of classes that should be attached to the element
+						
+						
+					</div>
+					
+					
+					
+					<pre class="code">return ["test-css-class"]</pre>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>classes</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name="_el_styles"> </a>
+					<div class="fixedFont">&lt;private&gt; 
+					
+					
+					<b>_el_styles</b>()
+					
+					</div>
+					<div class="description">
+						Returns an associate array of styles that should be attached to the element
+						
+						
+					</div>
+					
+					
+					
+					<pre class="code">return {"color": "red"};orvar styles = {};styles.color = "red";return styles;</pre>
+					
+					
+					
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>styles</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
 					<a name="_events"> </a>
 					<div class="fixedFont">&lt;private&gt; 
 					
@@ -843,7 +933,7 @@ ul.inheritsList
 					
 					
 					
-					<pre class="code">return {	"click #button": "_clickButton", "change #input": "_inputChanged"}</pre>
+					<pre class="code">return {	"click #button": "_clickButton", "change #input": "_inputChanged", "blur": "_containerElementBlur"}</pre>
 					
 					
 					
@@ -999,14 +1089,14 @@ ul.inheritsList
 					
 					</div>
 					<div class="description">
-						Support Routines for Templates and Dynamics<ul> <li>supp.css(key): Returns css class associated with key</li> <li>supp.attrs(obj): Returns html code for all html attributes specified by obj</li> <li>supp.selector(name): Returns html code for data-selector='name'</li></ul>
+						Support Routines for Templates and Dynamics<ul> <li>supp.css(key): Returns css class associated with key</li> <li>supp.attrs(obj): Returns html code for all html attributes specified by obj</li> <li>supp.styles(obj): Returns html code for all styles specified by obj</li> <li>supp.selector(name): Returns html code for data-selector='name'</li></ul>
 						
 						
 					</div>
 					
 					
 					
-					<pre class="code">< label {%= supp.css("main-class") %} {%= supp.attrs({id: "test", title: "foo"}) %} {%= supp.selector("bar") %} > < /label >results in< label class="default-main-class" id="test" title="foo" data-selector="bar" > < /label ></pre>
+					<pre class="code">< label class="{%= supp.css("main-class") %}" {%= supp.attrs({id: "test", title: "foo"}) %} {%= supp.selector("bar") %} > < /label >results in< label class="default-main-class" id="test" title="foo" data-selector="bar" > < /label ></pre>
 					
 					
 					
@@ -1193,7 +1283,7 @@ ul.inheritsList
 					
 					</div>
 					<div class="description">
-						Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>render_string: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>css_classes: (default {}) css classes that should be attached to container</li> <li>css_styles: (default {}) styles that should be attached to container</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li></ul>
+						Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>render_string: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>el_classes: (default []) css classes that should be attached to container</li> <li>el_styles: (default {}) styles that should be attached to container</li> <li>children_styles: (default {}) styles that should be attached to all direct children</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li></ul>
 						
 						
 					</div>
@@ -2105,7 +2195,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Apr 25 2013 22:27:30 GMT-0400 (EDT)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Fri May 10 2013 22:52:11 GMT-0400 (EDT)
 		</div>
 	</body>
 </html>
