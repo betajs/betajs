@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-05-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-05-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1161,7 +1161,7 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-05-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1624,7 +1624,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-05-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
