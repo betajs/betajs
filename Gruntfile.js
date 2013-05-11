@@ -65,6 +65,7 @@ module.exports = function(grunt) {
 				      "dist/beta-ui-templates.js": [ 
 							'src/views/containers/holygrail_view/template.html',
 							'src/views/containers/list_container_view/template.html', 
+							'src/views/controls/button_view/icon_button_view/template.html',
 							'src/views/controls/button_view/template.html',
 							'src/views/controls/check_box_view/template.html',
 							'src/views/controls/input_view/template.html',
@@ -97,7 +98,7 @@ module.exports = function(grunt) {
 					'src/base/iterators.js', 
 					'src/base/events.js',
 					'src/base/properties.js',
-					'src/base/collections.js'
+					'src/base/collections.js',
 				]
 			},
 			dist_beta_data : {
@@ -126,6 +127,7 @@ module.exports = function(grunt) {
 					'src/views/containers/holygrail_view/view.js',
 					'src/views/containers/list_container_view/view.js', 
 					'src/views/controls/button_view/view.js',
+					'src/views/controls/button_view/icon_button_view/view.js',
 					'src/views/controls/input_view/view.js',
 					'src/views/controls/check_box_view/view.js',
 					'src/views/controls/label_view/view.js',
@@ -144,7 +146,7 @@ module.exports = function(grunt) {
 			dist_profiler: {
 				dest : 'dist/beta-profiler.js',
 				src : [
-				    'src/tools/profiling/profiler.js'
+				    'src/tools/profiling/profiler.js',
 				]
 			}
 		},
@@ -159,7 +161,7 @@ module.exports = function(grunt) {
 					'dist/beta-base.min.js' : [ 'dist/beta-base.js' ],
 					'dist/beta-data.min.js' : [ 'dist/beta-data.js' ],
 					'dist/beta-ui.min.js' : [ 'dist/beta-ui.js' ],
-					'dist/beta.min.js' : [ 'dist/beta.js' ]					
+					'dist/beta.min.js' : [ 'dist/beta.js' ],					
 				}
 			}
 		},
@@ -167,8 +169,13 @@ module.exports = function(grunt) {
 		    dist: {
 		    	files: {
 			        'dist/beta-ui.css': [
-			            'src/views/containers/holygrail_view/styles.scss',
-			            'src/views/containers/list_container_view/styles.scss',
+			        	'src/views/styles.scss',
+			        
+			            'src/views/containers/holygrail_view/styles.scss', 
+						'src/views/containers/list_container_view/styles.scss',
+						
+						'src/views/controls/button_view/icon_button_view/styles.scss',
+						'src/views/controls/input_view/styles.scss',
 			        ]
 		    	}
 		    }
