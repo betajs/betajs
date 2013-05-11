@@ -8,9 +8,9 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this._setOptionProperty(options, "icon", "question");
 		this._setOptionProperty(options, "button_container_element", "div");
 		this._setOptionProperty(options, "button_container_element", "div");
-		this._setOption(options, "size", null);
+		this._setOption(options, "size", 50);
 		this._setOption(options, "width", this.__size);
-		this._setOption(options, "heigth", this.__size);
+		this._setOption(options, "height", this.__size);
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
@@ -24,6 +24,8 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 		var styles = {};
 		if (this.__width)
 			styles.width = this.__width + "px";
+		if (this.__height)
+			styles.height = this.__height + "px";
 		return styles;
 	},
 });

@@ -7,9 +7,14 @@
 /*
  *  SCSS Code
  */
-.icon {
+.container {
   position: absolute;
-  margin: 16px;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px; }
+
+.icon {
   height: 18px;
   width: 18px;
   border-radius: 3px;
@@ -163,17 +168,40 @@
   background-position: -396px -36px !important; }
 
 .holygrail-view-left-container {
+  position: relative;
   float: left; }
 
 .holygrail-view-right-container {
+  position: relative;
   float: right; }
 
 .holygrail-view-center-container {
+  position: relative;
+  height: 100%;
   overflow: hidden;
   text-align: center; }
 
-.icon-button-view {
-  position: relative;
-  width: 50px;
-  height: 50px;
+.icon-button-outer {
+  position: relative; }
+
+.icon-button-inner {
   background-color: orange; }
+
+.icon-position {
+  position: relative;
+  top: 50%;
+  margin-top: -9px;
+  margin-left: auto;
+  margin-right: auto; }
+
+.input-button-outer {
+  position: relative; }
+
+.input-button-inner {
+  background-color: blue; }
+
+.input-position {
+  position: relative;
+  width: 95%;
+  height: 63%;
+  font-size: 100%; }

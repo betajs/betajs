@@ -10,7 +10,8 @@
 			$(document).ready(function () {
 				var main = new BetaJS.Views.HolygrailView({
 					el: "#main",
-					css_styles: {"height": "50px", "position": "relative", "overflow": "hidden"},
+					el_classes: "container",
+					el_styles: {"height": "50px", "width": "600px"},
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
@@ -32,8 +33,7 @@
 				});
 				var input = new BetaJS.Views.InputView({
 					el_styles: {"background-color": "purple", "height": "50px"},
-					children_styles: {"width": "95%"},
-					placeholder: "Please put something in here",
+					//placeholder: "Please put something in here",
 				});
 				var button = new BetaJS.Views.ButtonView({
 					el_styles: {"background-color": "red"},

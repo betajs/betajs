@@ -2,7 +2,6 @@
  *  SCSS Layout Variables 
  */
 
-$containerHeight: 50px;
 $iconSize: 18px;
 
 /**
@@ -11,15 +10,22 @@ $iconSize: 18px;
 
 $iconBackground: #4596CE;
 $buttonBackground: orange;
+$inputBackground: blue;
 
 /*
  *  SCSS Code
  */
 
-.icon {
+.container{
   position: absolute;
-  margin: ($containerHeight - $iconSize)/2 ;
   
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+}
+
+.icon {
   height: $iconSize;
   width: $iconSize;
   

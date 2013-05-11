@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-05-09
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-05-09
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1161,7 +1161,7 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-09
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1624,7 +1624,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-09
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1959,7 +1959,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>render_string: (default null) string that should be used as default rendering</li>
 	 *  <li>events: (default []) events that should be used additionally</li>
 	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
-	 *  <li>el_classes: (default {}) css classes that should be attached to container</li>
+	 *  <li>el_classes: (default []) css classes that should be attached to container</li>
 	 *  <li>el_styles: (default {}) styles that should be attached to container</li>
 	 *  <li>children_styles: (default {}) styles that should be attached to all direct children</li>
 	 *  <li>css: (default {}) css classes that should be overwritten</li>
@@ -2047,7 +2047,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.attr(key, this.__attributes[key]);
 		}
 		this.__added_el_classes = [];
-		for (var i; i < this.__el_classes; ++i)
+		for (var i = 0; i < this.__el_classes.length; ++i)
 			if (!this.$el.hasClass(this.__el_classes[i])) {
 				this.$el.addClass(this.__el_classes[i]);
 				this.__added_el_classes.push(this.__el_classes[i]);
@@ -2089,7 +2089,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.$el.html("");
 		for (var key in this.__old_attributes) 
 			this.$el.attr(key, this.__old_attributes[key]);
-		for (var i; i < this.__added_el_classes; ++i)
+		for (var i = 0; i < this.__added_el_classes.length; ++i)
 			this.$el.removeClass(this.__added_el_classes[i]);
 		for (var key in this.__old_el_styles) 
 			this.$el.css(key, this.__old_el_styles[key]);
@@ -2903,17 +2903,17 @@ BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBin
 }]);
 
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
-BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="right" class=\'holygrail-view-right-container\'></div>  <div data-selector="left" class=\'holygrail-view-left-container\'></div>  <div data-selector="center" class=\'holygrail-view-center-container\'></div> ';
+BetaJS.Templates.Cached['holygrail-view-template'] = '  <div class="container">   <div data-selector="right" class=\'holygrail-view-right-container\'></div>   <div data-selector="left" class=\'holygrail-view-left-container\'></div>   <div data-selector="center" class=\'holygrail-view-center-container\'></div>  </div> ';
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="list-container-item"></div> ';
 
-BetaJS.Templates.Cached['icon-button-view-template'] = '  <div class="icon-button-view" {%= supp.selector("button") %}>   <div class="icon ui-icon-{%= icon %}"></div>  </div> ';
+BetaJS.Templates.Cached['icon-button-view-template'] = '  <div class="container icon-button-inner" {%= supp.selector("button") %}>   <div class="icon icon-position ui-icon-{%= icon %}"></div>  </div> ';
 
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    class="button-view" {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" class="check-box-view" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
-BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view"         {%= bind.value("value") %}         {%= bind.attr("placeholder", "placeholder") %}  /> ';
+BetaJS.Templates.Cached['input-view-template'] = '  <div class="container input-button-inner">   <input class="input-position"    style="top: {%= top %}px"       {%= bind.value("value") %}         {%= bind.attr("placeholder", "placeholder") %}   />  </div> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <label class="label-view" {%= bind.inner("label") %}></label> ';
 
@@ -3015,9 +3015,9 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this._setOptionProperty(options, "icon", "question");
 		this._setOptionProperty(options, "button_container_element", "div");
 		this._setOptionProperty(options, "button_container_element", "div");
-		this._setOption(options, "size", null);
+		this._setOption(options, "size", 50);
 		this._setOption(options, "width", this.__size);
-		this._setOption(options, "heigth", this.__size);
+		this._setOption(options, "height", this.__size);
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
@@ -3031,6 +3031,8 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 		var styles = {};
 		if (this.__width)
 			styles.width = this.__width + "px";
+		if (this.__height)
+			styles.height = this.__height + "px";
 		return styles;
 	},
 });
@@ -3046,7 +3048,9 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
-		this._setOptionProperty(options, "placeholder", "");
+		this._setOptionProperty(options, "placeholder", "Input");
+		this._setOptionProperty(options, "top", "4");
+		
 	},
 	__keyupEvent: function (e) {
 		 var key = e.keyCode || e.which;

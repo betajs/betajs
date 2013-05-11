@@ -175,6 +175,7 @@ module.exports = function(grunt) {
 						'src/views/containers/list_container_view/styles.scss',
 						
 						'src/views/controls/button_view/icon_button_view/styles.scss',
+						'src/views/controls/input_view/styles.scss',
 			        ]
 		    	}
 		    }
