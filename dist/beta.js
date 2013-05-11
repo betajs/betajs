@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-05-11
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-05-11
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -349,6 +349,14 @@ BetaJS.Class.prototype._inherited = function (cls, func) {
 
 BetaJS.Class._inherited = function (cls, func) {
 	return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
+}
+
+BetaJS.Class.prototype.instance_of = function (cls) {
+	return this.cls.ancestor_of(cls);
+}
+
+BetaJS.Class.ancestor_of = function (cls) {
+	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
 }
 
 
@@ -1161,7 +1169,7 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-11
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1624,7 +1632,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-11
+  betajs - v0.0.1 - 2013-05-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1790,7 +1798,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @example
 	 * return {
 	 * 	"click #button": "_clickButton",
-	 *  "change #input": "_inputChanged"
+	 *  "change #input": "_inputChanged",
+	 *  "blur": "_containerElementBlur"
 	 * }  
 	 */
 	_events: function () {
@@ -2047,10 +2056,11 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.attr(key, this.__attributes[key]);
 		}
 		this.__added_el_classes = [];
-		for (var i = 0; i < this.__el_classes.length; ++i)
-			if (!this.$el.hasClass(this.__el_classes[i])) {
-				this.$el.addClass(this.__el_classes[i]);
-				this.__added_el_classes.push(this.__el_classes[i]);
+		var new_el_classes = BetaJS.Objs.extend(this._el_classes(), this.__el_classes);
+		for (var i = 0; i < new_el_classes.length; ++i)
+			if (!this.$el.hasClass(new_el_classes[i])) {
+				this.$el.addClass(new_el_classes[i]);
+				this.__added_el_classes.push(new_el_classes[i]);
 			}
 		this.__old_el_styles = {};
 		var new_el_styles = BetaJS.Objs.extend(this._el_styles(), this.__el_styles);
@@ -2108,6 +2118,15 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 */
 	_el_styles: function () {
 		return {};
+	},
+	
+	/** Returns an array of classes that should be attached to the element
+	 * @return classes
+	 * @example
+	 * return ["test-css-class"]
+	 */
+	_el_classes: function () {
+		return [];
 	},
 	
 	/** Finds an element within the container of the view
