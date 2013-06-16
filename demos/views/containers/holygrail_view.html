@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>BetaJS Holygrail View</title>
-		<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+		<script src="../../jquery-1.9.1.min.js"></script>
 		<script src="../../../dist/beta.js"></script>
 		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
 		<script>
@@ -32,7 +32,7 @@
 					}
 				});
 				var input = new BetaJS.Views.InputView({
-					el_styles: {"background-color": "purple", "height": "50px"},
+					el_styles: {"background-color": "purple"},
 					//placeholder: "Please put something in here",
 				});
 				var button = new BetaJS.Views.ButtonView({
@@ -40,20 +40,27 @@
 					label: "Click Me",
 				});
 				var iconbutton = new BetaJS.Views.IconButtonView({
-					size: "100",
+					//size: "100",
 					icon: "check",
 				});
 				button.on("clicked", function () {
 					alert("This is an alert");
 				});
+				
+				var text = new BetaJS.Views.TextViewView({
+					text: "Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum ",
+				});
+				
 				button.activate();
 				var list = new ListView({
 					el_styles: {"background-color": "yellow"},
 					items: ["Example 1", "Example 2"]
 				});
+				
 				main.setLeft(iconbutton);
-				main.setCenter(input);
-				main.setRight(list);
+				main.setCenter(text);
+				main.setRight(input);
+				
 				button.on("clicked", function () {
 					list.add(input.get("value"));
 					input.set("value", "");

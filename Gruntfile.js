@@ -64,13 +64,16 @@ module.exports = function(grunt) {
 			    files: {
 				      "dist/beta-ui-templates.js": [ 
 							'src/views/containers/holygrail_view/template.html',
-							'src/views/containers/list_container_view/template.html', 
+							'src/views/containers/list_container_view/template.html',
+							 
 							'src/views/controls/button_view/icon_button_view/template.html',
 							'src/views/controls/button_view/template.html',
 							'src/views/controls/check_box_view/template.html',
 							'src/views/controls/input_view/template.html',
 							'src/views/controls/label_view/template.html',
 							'src/views/controls/textarea_view/template.html',
+							'src/views/controls/textview_view/template.html',
+							
 							'src/views/lists/list_view/template.html',
 						]
 				}
@@ -140,12 +143,15 @@ module.exports = function(grunt) {
 					
 					'src/views/containers/holygrail_view/view.js',
 					'src/views/containers/list_container_view/view.js', 
+					
 					'src/views/controls/button_view/view.js',
 					'src/views/controls/button_view/icon_button_view/view.js',
 					'src/views/controls/input_view/view.js',
 					'src/views/controls/check_box_view/view.js',
 					'src/views/controls/label_view/view.js',
 					'src/views/controls/textarea_view/view.js',
+					'src/views/controls/textview_view/view.js',
+					
 					'src/views/lists/list_view/view.js',
 				]
 			},

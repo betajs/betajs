@@ -169,11 +169,15 @@
 
 .holygrail-view-left-container {
   position: relative;
-  float: left; }
+  float: left;
+  width: 20%;
+  height: 100%; }
 
 .holygrail-view-right-container {
   position: relative;
-  float: right; }
+  float: right;
+  width: 20%;
+  height: 100%; }
 
 .holygrail-view-center-container {
   position: relative;
