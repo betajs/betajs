@@ -10,8 +10,6 @@
 			$(document).ready(function () {
 				var main = new BetaJS.Views.HolygrailView({
 					el: "#main",
-					el_classes: ["container"],
-					el_styles: {"height": "100px", "width": "600px"},
 				});
 				var ListView = BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
@@ -32,40 +30,21 @@
 					}
 				});
 				var input = new BetaJS.Views.InputView({
-					el_styles: {"background-color": "purple"},
-					//placeholder: "Please put something in here",
+					css_styles: {"background-color": "purple"},
+					placeholder: "Please put something in here",
 				});
 				var button = new BetaJS.Views.ButtonView({
-					el_styles: {"background-color": "red"},
+					css_styles: {"background-color": "red"},
 					label: "Click Me",
 				});
-				var iconbutton = new BetaJS.Views.IconButtonView({
-					//size: "100",
-					icon: "check",
-				});
-				button.on("clicked", function () {
-					alert("This is an alert");
-				});
-				
-				var text = new BetaJS.Views.TextViewView({
-					text: "Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum ",
-				});
-				
-				button.activate();
 				var list = new ListView({
-					el_styles: {"background-color": "yellow"},
+					css_styles: {"background-color": "yellow"},
 					items: ["Example 1", "Example 2"]
 				});
-				
-				main.setLeft(iconbutton);
-				main.setCenter(text);
-				main.setRight(input);
-				
+				main.setLeft(input);
+				main.setCenter(button);
+				main.setRight(list);
 				button.on("clicked", function () {
-					list.add(input.get("value"));
-					input.set("value", "");
-				});
-				iconbutton.on("clicked", function () {
 					list.add(input.get("value"));
 					input.set("value", "");
 				});

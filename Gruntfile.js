@@ -145,12 +145,10 @@ module.exports = function(grunt) {
 					'src/views/containers/list_container_view/view.js', 
 					
 					'src/views/controls/button_view/view.js',
-					'src/views/controls/button_view/icon_button_view/view.js',
 					'src/views/controls/input_view/view.js',
 					'src/views/controls/check_box_view/view.js',
 					'src/views/controls/label_view/view.js',
 					'src/views/controls/textarea_view/view.js',
-					'src/views/controls/textview_view/view.js',
 					
 					'src/views/lists/list_view/view.js',
 				]
@@ -191,13 +189,7 @@ module.exports = function(grunt) {
 		    dist: {
 		    	files: {
 			        'dist/beta-ui.css': [
-			        	'src/views/styles.scss',
-			        
 			            'src/views/containers/holygrail_view/styles.scss', 
-						'src/views/containers/list_container_view/styles.scss',
-						
-						'src/views/controls/button_view/icon_button_view/styles.scss',
-						'src/views/controls/input_view/styles.scss',
 			        ]
 		    	}
 		    }

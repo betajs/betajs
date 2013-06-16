@@ -972,6 +972,7 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	_canSet: function (key, value) {
+		return true;
 	},
 	
 	_afterSet: function (key, value) {
@@ -3700,19 +3701,15 @@ BetaJS.Templates.Cached['holygrail-view-template'] = '  <div class="container"> 
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="list-container-item"></div> ';
 
-BetaJS.Templates.Cached['icon-button-view-template'] = '  <div class="container icon-button-inner" {%= supp.selector("button") %}>   <div class="icon icon-position ui-icon-{%= icon %}"></div>  </div> ';
+BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
-BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    class="button-view" {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
+BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
-BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" class="check-box-view" {%= checked ? "checked" : "" %} />  {%= label %} ';
+BetaJS.Templates.Cached['input-view-template'] = '  <input {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
-BetaJS.Templates.Cached['input-view-template'] = '  <div class="container input-button-inner">   <input class="input-position"    style="top: {%= top %}px"       {%= bind.value("value") %}         {%= bind.attr("placeholder", "placeholder") %}   />  </div> ';
+BetaJS.Templates.Cached['label-view-template'] = '  <label {%= bind.inner("label") %}></label> ';
 
-BetaJS.Templates.Cached['label-view-template'] = '  <label class="label-view" {%= bind.inner("label") %}></label> ';
-
-BetaJS.Templates.Cached['text-area-template'] = '   <textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>  ';
-
-BetaJS.Templates.Cached['text-view-template'] = '   <div class="text-view-view" {%= bind.inner("text") %}></div>  ';
+BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>  ';
 
 BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    {%= supp.css("list-view-function")%}    {%= supp.css("list-view-layout")%}    {%= supp.css("list-view-styling")%}    data-selector="list">   </{%= list_container_element %}>  ';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
@@ -3800,42 +3797,6 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this.trigger("clicked");
 	},
 });
-/** @class */
-BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", 
-/** @lends BetaJS.Views.IconButtonView.prototype */
-{
-	/** This is a test.
-	 */	
-	_dynamics: {
-		"default": BetaJS.Templates.Cached["icon-button-view-template"]
-	},
-	constructor: function(options) {
-		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
-		this._setOptionProperty(options, "label", "");
-		this._setOptionProperty(options, "icon", "question");
-		this._setOptionProperty(options, "button_container_element", "div");
-		this._setOptionProperty(options, "button_container_element", "div");
-		this._setOption(options, "size", 50);
-		this._setOption(options, "width", this.__size);
-		this._setOption(options, "height", this.__size);
-	},
-	_events: function () {
-		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
-			"click [data-selector='button']": "__clickButton"
-		}]);
-	},
-	__clickButton: function () {
-		this.trigger("clicked");
-	},
-	_el_styles: function() {
-		var styles = {"position": "relative"};
-		if (this.__width)
-			styles.width = this.__width + "px";
-		if (this.__height)
-			styles.height = this.__height + "px";
-		return styles;
-	},
-});
 BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
@@ -3897,22 +3858,6 @@ BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");
 	}
-});
-BetaJS.Views.TextViewView = BetaJS.Views.View.extend("TextViewView", {
-	_dynamics: {
-		"default": BetaJS.Templates.Cached["text-view-template"]
-	},
-	constructor: function(options) {
-		this._inherited(BetaJS.Views.TextViewView, "constructor", options);
-		this._setOptionProperty(options, "text", "This is a Text");
-		this._setOption(options, "width", 150);
-	},
-	_el_styles: function() {
-		var styles = {"position": "relative"};
-		if (this.__width)
-			styles.width = this.__width + "px";
-		return styles;
-	},
 });
 BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 	

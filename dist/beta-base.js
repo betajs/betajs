@@ -967,6 +967,7 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	_canSet: function (key, value) {
+		return true;
 	},
 	
 	_afterSet: function (key, value) {

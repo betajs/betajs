@@ -1,9 +1,3 @@
 <script type="text/template" id="input-view-template">
-	<div class="container input-button-inner">
-		<input class="input-position"
-			style="top: {%= top %}px"
-	    	{%= bind.value("value") %}
-	      	{%= bind.attr("placeholder", "placeholder") %}
-		/>
-	</div>
+	<input {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} />
 </script>
