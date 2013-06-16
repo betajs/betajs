@@ -5,7 +5,7 @@ BetaJS.Types = {
 	},
 	
 	is_array: function (x) {
-		return toString.call(x) == '[object Array]';
+		return Object.prototype.toString.call(x) === '[object Array]';
 	},
 	
 	is_undefined: function (x) {

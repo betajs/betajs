@@ -126,3 +126,8 @@ BetaJS.Class.ancestor_of = function (cls) {
 BetaJS.Class.prototype.cls = BetaJS.Class;
 
 BetaJS.Class.__notifications = {};
+
+BetaJS.Class.is_class_instance = function (object) {
+	return object != null && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
+};
+

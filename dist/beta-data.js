@@ -1,9 +1,332 @@
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-05-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
+BetaJS.Net = {};
+
+
+/*
+ * <ul>
+ *  <li>uri: target uri</li>
+ *  <li>method: get, post, ...</li>
+ *  <li>data: data as JSON to be passed with the request</li>
+ *  <li>success_callback(data): will be called when request was successful</li>
+ *  <li>failure_callback(status_code, status_text, data): will be called when request was not successful</li>
+ *  <li>complete_callback(): will be called when the request has been made</li>
+ * </ul>
+ * 
+ */
+BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
+	
+	constructor: function (options) {
+		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
+		this.__options = BetaJS.Objs.extend({
+			"method": "GET",
+			"data": {}
+		}, options);
+	},
+	
+	syncCall: function (options) {
+		var opts = BetaJS.Objs.clone(this.__options, 1);
+		opts = BetaJS.extend(opts, options);
+		var success_callback = opts.success_callback;
+		delete opts["success_callback"];
+		var failure_callback = opts.failure_callback;
+		delete opts["failure_callback"];
+		var complete_callback = opts.complete_callback;
+		delete opts["complete_callback"];
+		try {
+			var result = this._syncCall(opts);
+			if (success_callback)
+				success_callback(result);
+			if (complete_callback)
+				complete_callback();
+			return result;
+		} catch (e) {
+			e = BetaJS.Exceptions.ensure(e);
+			e.assert(BetaJS.Net.AjaxException);
+			if (failure_callback)
+				failure_callback(e.status_code(), e.status_text(), e.data())
+			else
+				throw e;
+		}
+	},
+	
+	asyncCall: function (options) {
+		var opts = BetaJS.Objs.clone(this.__options, 1);
+		opts = BetaJS.extend(opts, options);
+		var success_callback = opts.success_callback;
+		delete opts["success_callback"];
+		var failure_callback = opts.failure_callback;
+		delete opts["failure_callback"];
+		var complete_callback = opts.complete_callback;
+		delete opts["complete_callback"];
+		try {
+			var result = this._asyncCall(BetaJS.Objs.extend({
+				"success": function (data) {
+					if (success_callback)
+						success_callback(data);
+					if (complete_callback)
+						complete_callback();
+				},
+				"failure": function (status_code, status_text, data) {
+					if (failure_callback)
+						failure_callback(status_code, status_text, data)
+					else
+						throw new BetaJS.Net.AjaxException(status_code, status_text, data);
+					if (complete_callback)
+						complete_callback();
+				}
+			}, opts));
+			return result;
+		} catch (e) {
+			e = BetaJS.Exceptions.ensure(e);
+			e.assert(BetaJS.Net.AjaxException);
+			if (failure_callback)
+				failure_callback(e.status_code(), e.status_text(), e.data())
+			else
+				throw e;
+		}
+	},
+	
+	call: function (options) {
+		if (!("async" in options))
+			return false;
+		var async = options["async"];
+		delete options["async"];
+		return async ? this.asyncCall(options) : this.syncCall(options);
+	},
+	
+	_syncCall: function (options) {},
+	
+	_asyncCall: function (options) {},
+	
+});
+
+
+BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
+	
+	constructor: function (status_code, status_text, data) {
+		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
+		this.__status_code = status_code;
+		this.__status_text = status_text;
+		this.__data = data;
+	},
+	
+	status_code: function () {
+		return this.__status_code;
+	},
+	
+	status_text: function () {
+		return this.__status_text;
+	},
+	
+	data: function () {
+		return this.__data;
+	}
+	
+});
+
+
+BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
+	
+	_syncCall: function (options) {
+		var result;
+		BetaJS.$.ajax({
+			type: options.method,
+			async: false,
+			url: options.uri,
+			data: JSON.stringify(options.data),
+			success: function (response) {
+				result = response;
+			},
+			error: function (jqXHR, textStatus, errorThrown) {
+				throw new BetaJS.Net.AjaxException(errorThrown, textStatus, jqXHR);
+			}
+		});
+		return result;
+	},
+	
+	_asyncCall: function (options) {
+		BetaJS.$.ajax({
+			type: options.method,
+			async: true,
+			url: options.uri,
+			data: JSON.stringify(options.data),
+			success: function (response) {
+				options.success(response);
+			},
+			error: function (jqXHR, textStatus, errorThrown) {
+				options.failure(errorThrown, textStatus, jqXHR);
+			}
+		});
+	},
+
+});
+
+BetaJS.Queries = {
+
+	/*
+	 * Syntax:
+	 *
+	 * query :== Object | ["Or", query, query, ...] | ["And", query, query, ...] |
+	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value]
+	 *
+	 */
+
+	__dependencies : function(query, dep) {
+		if (BetaJS.Types.is_array(query)) {
+			if (query.length == 0)
+				throw "Malformed Query";
+			var op = query[0];
+			if (op == "Or" || op == "And") {
+				for (var i = 1; i < query.length; ++i)
+					dep = this.__dependencies(query[i], dep);
+				return dep;
+			} else {
+				if (query.length != 3)
+					throw "Malformed Query";
+				var key = query[1];
+				if ( key in dep)
+					dep[key]++
+				else
+					dep[key] = 1;
+				return dep;
+			}
+		} else if (BetaJS.Types.is_object(query)) {
+			for (key in query)
+			if ( key in dep)
+				dep[key]++
+			else
+				dep[key] = 1;
+			return dep;
+		} else
+			throw "Malformed Query";
+	},
+
+	dependencies : function(query) {
+		return this.__dependencies(query, {});
+	},
+
+	evaluate : function(query, object) {
+		if (BetaJS.Types.is_array(query)) {
+			if (query.length == 0)
+				throw "Malformed Query";
+			var op = query[0];
+			if (op == "Or") {
+				for (var i = 1; i < query.length; ++i)
+					if (this.evaluate(query[i], object))
+						return true;
+				return false;
+			} else if (op == "And") {
+				for (var i = 1; i < query.length; ++i)
+					if (!this.evaluate(query[i], object))
+						return false;
+				return true;
+			} else {
+				if (query.length != 3)
+					throw "Malformed Query";
+				var key = query[1];
+				var obj_value = object[key];
+				var value = query[2];
+				if (op == "==")
+					return obj_value == value
+				else if (op == "!=")
+					return obj_value != value
+				else if (op == ">")
+					return obj_value > value
+				else if (op == ">=")
+					return obj_value >= value
+				else if (op == "<")
+					return obj_value < value
+				else if (op == "<=")
+					return obj_value <= value
+				else
+					throw "Malformed Query";
+			}
+		} else if (BetaJS.Types.is_object(query)) {
+			for (key in query)
+			if (query[key] != object[key])
+				return false;
+			return true;
+		} else
+			throw "Malformed Query";
+	},
+
+	__compile : function(query) {
+		if (BetaJS.Types.is_array(query)) {
+			if (query.length == 0)
+				throw "Malformed Query";
+			var op = query[0];
+			if (op == "Or") {
+				var s = "false";
+				for (var i = 1; i < query.length; ++i)
+					s += " || (" + this.__compile(query[i]) + ")";
+				return s;
+			} else if (op == "And") {
+				var s = "true";
+				for (var i = 1; i < query.length; ++i)
+					s += " && (" + this.__compile(query[i]) + ")";
+				return s;
+			} else {
+				if (query.length != 3)
+					throw "Malformed Query";
+				var key = query[1];
+				var value = query[2];
+				var left = "object['" + key + "']";
+				var right = BetaJS.Types.is_string(value) ? "'" + value + "'" : value;
+				return left + " " + op + " " + right;
+			}
+		} else if (BetaJS.Types.is_object(query)) {
+			var s = "true";
+			for (key in query)
+				s += " && (object['" + key + "'] == " + (BetaJS.Types.is_string(query[key]) ? "'" + query[key] + "'" : query[key]) + ")";
+			return s;
+		} else
+			throw "Malformed Query";
+	},
+
+	compile : function(query) {
+		var func = new Function('object', result);
+		var func_call = function(data) {
+			return func.call(this, data);
+		};
+		func_call.source = 'function(object){\n' + result + '}';
+		return func_call;		
+	}
+	
+}; 
+BetaJS.Queries.CompiledQuery = BetaJS.Class.extend("CompiledQuery", {
+	
+	constructor: function (query) {
+		this.__query = query;
+		this.__dependencies = BetaJS.Query.dependencies(query);
+		this.__compiled = BetaJS.Query.compile(query);
+	},
+	
+	query: function () {
+		return this.__query;
+	},
+	
+	dependencies: function () {
+		return this.__dependencies;
+	},
+	
+	compiled: function () {
+		return this.__compiled;
+	},
+	
+	evaluate: function (object) {
+		return this.__compiled(object);
+	}
+	
+});
+
 BetaJS.Stores = BetaJS.Stores || {};
+
+
+BetaJS.Stores.StoreException = BetaJS.Exceptions.Exception.extend("StoreException");
 
 
 BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [BetaJS.Events.EventsMixin, {
@@ -375,88 +698,56 @@ BetaJS.Stores.CachedStore = BetaJS.Stores.BaseStore.extend("CachedStore", {
 });
 
 BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
-	
-	constructor: function (uri) {
+
+	constructor : function(uri, ajax) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor");
 		this.__uri = uri;
+		this.__ajax = ajax;
 	},
 
-	_insert: function (data) {
-		var row = null;
-		$.ajax({
-			type: "POST",
-			async: false,
-			url: this.__uri,
-			data: JSON.stringify(data),
-			success: function (response) {
-				row = response;
-			}
-		});
-		return row;
+	_insert : function(data) {
+		try {
+			return this.__ajax.syncCall({method: "POST", uri: this.__uri, data: data});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_remove: function (id) {
-		var row = null;
-		$.ajax({
-			type: "DELETE",
-			async: false,
-			url: this.__uri + "/" + id,
-			success: function (response) {
-				if (response)
-					row = response
-				else
-					row = {id: id};
-			}
-		});
-		return row;
+
+	_remove : function(id) {
+		try {
+			var response = this.__ajax.syncCall({method: "DELETE", uri: this.__uri + "/" + id});
+			return response ? response : {id:id};
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_get: function (id) {
-		var row = null;
-		$.ajax({
-			type: "GET",
-			async: false,
-			url: this.__uri + "/" + id,
-			data: JSON.stringify(data),
-			success: function (response) {
-				row = response;
-			}
-		});
-		return row;
+
+	_get : function(id) {
+		try {
+			return this.__ajax.syncCall({uri: this.__uri + "/" + id});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_update: function (id, data) {
-		var row = null;
-		$.ajax({
-			type: "PUT",
-			async: false,
-			url: this.__uri + "/" + id,
-			data: JSON.stringify(data),
-			success: function (response) {
-				row = response;
-			}
-		});
-		return row;
+
+	_update : function(id, data) {
+		try {
+			return this.__ajax.syncCall({method: "PUT", uri: this.__uri + "/" + id, data: data});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_query: function (query, options) {
-		var data = null;
-		$.ajax({
-			type: "GET",
-			async: false,
-			url: this.__uri,
-			success: function (response) {
-				data = response;
-			}
-		});
-		if (data == null)
-			return BetaJS.Iterators.ArrayIterator([]);			
-		return new BetaJS.Iterators.FilteredIterator(
-			new BetaJS.Iterators.ArrayIterator(data),
-			function (row) {
+
+	_query : function(query, options) {
+		try {
+			var data = this.__ajax.syncCall({uri: this.__uri});
+			if (data == null)
+				return BetaJS.Iterators.ArrayIterator([]);
+			return new BetaJS.Iterators.FilteredIterator(new BetaJS.Iterators.ArrayIterator(data), function(row) {
 				return BetaJS.Queries.evaluate(query, row);
-			}
-		);
+			});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	}
-	
 });

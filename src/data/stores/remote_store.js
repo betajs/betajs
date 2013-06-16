@@ -1,86 +1,54 @@
 BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
-	
-	constructor: function (uri) {
+
+	constructor : function(uri, ajax) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor");
 		this.__uri = uri;
+		this.__ajax = ajax;
 	},
 
-	_insert: function (data) {
-		var row = null;
-		$.ajax({
-			type: "POST",
-			async: false,
-			url: this.__uri,
-			data: JSON.stringify(data),
-			success: function (response) {
-				row = response;
-			}
-		});
-		return row;
+	_insert : function(data) {
+		try {
+			return this.__ajax.syncCall({method: "POST", uri: this.__uri, data: data});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_remove: function (id) {
-		var row = null;
-		$.ajax({
-			type: "DELETE",
-			async: false,
-			url: this.__uri + "/" + id,
-			success: function (response) {
-				if (response)
-					row = response
-				else
-					row = {id: id};
-			}
-		});
-		return row;
+
+	_remove : function(id) {
+		try {
+			var response = this.__ajax.syncCall({method: "DELETE", uri: this.__uri + "/" + id});
+			return response ? response : {id:id};
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_get: function (id) {
-		var row = null;
-		$.ajax({
-			type: "GET",
-			async: false,
-			url: this.__uri + "/" + id,
-			data: JSON.stringify(data),
-			success: function (response) {
-				row = response;
-			}
-		});
-		return row;
+
+	_get : function(id) {
+		try {
+			return this.__ajax.syncCall({uri: this.__uri + "/" + id});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_update: function (id, data) {
-		var row = null;
-		$.ajax({
-			type: "PUT",
-			async: false,
-			url: this.__uri + "/" + id,
-			data: JSON.stringify(data),
-			success: function (response) {
-				row = response;
-			}
-		});
-		return row;
+
+	_update : function(id, data) {
+		try {
+			return this.__ajax.syncCall({method: "PUT", uri: this.__uri + "/" + id, data: data});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	},
-	
-	_query: function (query, options) {
-		var data = null;
-		$.ajax({
-			type: "GET",
-			async: false,
-			url: this.__uri,
-			success: function (response) {
-				data = response;
-			}
-		});
-		if (data == null)
-			return BetaJS.Iterators.ArrayIterator([]);			
-		return new BetaJS.Iterators.FilteredIterator(
-			new BetaJS.Iterators.ArrayIterator(data),
-			function (row) {
+
+	_query : function(query, options) {
+		try {
+			var data = this.__ajax.syncCall({uri: this.__uri});
+			if (data == null)
+				return BetaJS.Iterators.ArrayIterator([]);
+			return new BetaJS.Iterators.FilteredIterator(new BetaJS.Iterators.ArrayIterator(data), function(row) {
 				return BetaJS.Queries.evaluate(query, row);
-			}
-		);
+			});
+		} catch (e) {
+			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
+		}
 	}
-	
 });

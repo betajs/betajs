@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-06-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -120,11 +120,13 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 }, {
 	
 	bySelector: function (selector) {
-		return new this($(selector).html());
+		return new this(BetaJS.$(selector).html());
 	}
 	
 });
 BetaJS.Views = BetaJS.Views || {};
+
+BetaJS.$ = jQuery || null;
 
 /** @class */
 BetaJS.Views.View = BetaJS.Class.extend("View", [
@@ -408,7 +410,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (this.__parent)
 			this.$el  = this.__parent.$(this.__el)
 		else
-			this.$el = $(this.__el);
+			this.$el = BetaJS.$(this.__el);
 		if (this.$el.size() == 0)
 			this.$el = null;
 		if (!this.$el)
@@ -1267,13 +1269,13 @@ BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBin
 	constructor: function (router) {
 		this._inherited(BetaJS.Routers.HashRouteBinder, "constructor", router);
 		var self = this;
-		$(window).on("hashchange.events" + this.cid(), function () {
+		BetaJS.$(window).on("hashchange.events" + this.cid(), function () {
 			self._setRoute(self._getExternalRoute());
 		});
 	},
 	
 	destroy: function () {
-		$(window).off("hashchange.events" + this.cid());
+		BetaJS.$(window).off("hashchange.events" + this.cid());
 		this._inherited(BetaJS.Routers.HashRouteBinder, "destroy");
 	},
 	

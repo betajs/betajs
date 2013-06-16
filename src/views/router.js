@@ -317,13 +317,13 @@ BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBin
 	constructor: function (router) {
 		this._inherited(BetaJS.Routers.HashRouteBinder, "constructor", router);
 		var self = this;
-		$(window).on("hashchange.events" + this.cid(), function () {
+		BetaJS.$(window).on("hashchange.events" + this.cid(), function () {
 			self._setRoute(self._getExternalRoute());
 		});
 	},
 	
 	destroy: function () {
-		$(window).off("hashchange.events" + this.cid());
+		BetaJS.$(window).off("hashchange.events" + this.cid());
 		this._inherited(BetaJS.Routers.HashRouteBinder, "destroy");
 	},
 	

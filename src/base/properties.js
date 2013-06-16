@@ -7,14 +7,33 @@ BetaJS.Properties.PropertiesMixin = {
 		return this.__properties[key];
 	},
 	
+	_canSet: function (key, value) {
+	},
+	
+	_afterSet: function (key, value) {
+		
+	},
+	
+	has: function (key) {
+		return key in this.__properties;
+	},
+	
 	set: function (key, value) {
 		if (!this.__properties) 
 			this.__properties = {};
-		if ((! key in this.__properties) || (this.__properties[key] != value)) {
+		if (((! key in this.__properties) || (this.__properties[key] != value)) && (this._canSet(key, value))) {
 			this.__properties[key] = value;
+			this._afterSet(key, value);
 			this.trigger("change", key, value);
 			this.trigger("change:" + key, value);
 		}
+	},
+	
+	binding: function (key) {
+		return {
+			bindee: this,
+			property: key
+		};
 	},
 	
 	getAll: function () {
@@ -24,7 +43,11 @@ BetaJS.Properties.PropertiesMixin = {
 	setAll: function (obj) {
 		for (var key in obj)
 			this.set(key, obj[key]);
-	}
+	},
+	
+	keys: function (mapped) {
+		return BetaJS.Objs.keys(this.__properties, mapped);
+	}	
 	
 };
 
@@ -73,6 +96,10 @@ BetaJS.Properties.BindablePropertiesMixin = {
 		return entry.value;
 	},
 	
+	has: function (key) {
+		return key in this.__properties;
+	},
+	
 	set: function (key, value) {
 		if (this.get(key) != value) {
 			var entry = this.__properties[key];
@@ -110,7 +137,11 @@ BetaJS.Properties.BindablePropertiesMixin = {
 	setAll: function (obj) {
 		for (var key in obj)
 			this.set(key, obj[key]);
-	}
+	},
+	
+	keys: function (mapped) {
+		return BetaJS.Objs.keys(this.__properties, mapped);
+	}	
 	
 };
 

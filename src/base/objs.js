@@ -38,6 +38,24 @@ BetaJS.Objs = {
 		return result;
 	},
 	
+	filter: function (obj, f, context) {
+		if (BetaJS.Types.is_array(obj)) {
+			var ret = [];
+			for (var i = 0; i < obj.length; ++i) {
+				if (context ? f.apply(context, [obj[i], i]) : f(obj[i], i))
+					ret.push(obj[i]);
+			}
+			return ret;
+		} else {
+			var ret = {};
+			for (var key in obj) {
+				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
+					ret[key] = obj[key];
+			}
+			return ret;
+		}
+	},
+	
 	equals: function (obj1, obj2, depth) {
 		if (depth && depth > 0) {
 			for (var key in obj1)

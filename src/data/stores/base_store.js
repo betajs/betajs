@@ -1,17 +1,45 @@
 BetaJS.Stores = BetaJS.Stores || {};
 
 
-BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [BetaJS.Events.EventsMixin, {
+BetaJS.Stores.StoreException = BetaJS.Exceptions.Exception.extend("StoreException");
+
+
+/** @class */
+BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
+	BetaJS.Events.EventsMixin,
+	/** @lends BetaJS.Stores.BaseStore.prototype */
+	{
 	
+	/** Insert data to store. Return inserted data with id.
+	 * 
+ 	 * @param data data to be inserted
+ 	 * @return data that has been inserted with id.
+	 */
 	_insert: function (data) {
 	},
 	
+	/** Remove data from store. Return removed data.
+	 * 
+ 	 * @param id data id
+ 	 * @return data
+	 */
 	_remove: function (id) {
 	},
 	
+	/** Get data from store by id.
+	 * 
+	 * @param id data id
+	 * @return data
+	 */
 	_get: function (id) {
 	},
 	
+	/** Update data by id.
+	 * 
+	 * @param id data id
+	 * @param data updated data
+	 * @return data from store
+	 */
 	_update: function (id, data) {
 	},
 	
@@ -64,7 +92,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [BetaJS.Events.Events
 	
 	_query_applies_to_id: function (query, id) {
 		var row = this.get(id);
-		return row && BetaJS.Queries.evaluate(query, row);
+		return row && BetaJS.Queries.overloaded_evaluate(query, row);
 	},
 	
 	clear: function () {

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-06-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -11,7 +11,7 @@ BetaJS.Types = {
 	},
 	
 	is_array: function (x) {
-		return toString.call(x) == '[object Array]';
+		return Object.prototype.toString.call(x) === '[object Array]';
 	},
 	
 	is_undefined: function (x) {
@@ -176,6 +176,24 @@ BetaJS.Objs = {
 		for (var key in obj)
 			result.push(obj[key]);
 		return result;
+	},
+	
+	filter: function (obj, f, context) {
+		if (BetaJS.Types.is_array(obj)) {
+			var ret = [];
+			for (var i = 0; i < obj.length; ++i) {
+				if (context ? f.apply(context, [obj[i], i]) : f(obj[i], i))
+					ret.push(obj[i]);
+			}
+			return ret;
+		} else {
+			var ret = {};
+			for (var key in obj) {
+				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
+					ret[key] = obj[key];
+			}
+			return ret;
+		}
 	},
 	
 	equals: function (obj1, obj2, depth) {
@@ -360,6 +378,11 @@ BetaJS.Class.prototype.cls = BetaJS.Class;
 
 BetaJS.Class.__notifications = {};
 
+BetaJS.Class.is_class_instance = function (object) {
+	return object != null && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
+};
+
+
 BetaJS.Classes = {};
 
 BetaJS.Classes.AutoDestroyMixin = {
@@ -379,6 +402,80 @@ BetaJS.Classes.AutoDestroyMixin = {
 	}
 		
 };
+
+BetaJS.Exceptions = {
+	
+	ensure: function (e) {
+		if (e != null && BetaJS.Types.is_object(e) && ("instance_of" in e) && (e.instance_of(BetaJS.Exceptions.Exception)))
+			return e;
+		return new BetaJS.Exceptions.NativeException(e);
+	}
+	
+};
+
+
+BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
+	
+	constructor: function (message) {
+		this._inherited(BetaJS.Exceptions.Exception, "constructor");
+		this.__message = message;
+	},
+	
+	assert: function (exception_class) {
+		if (!this.instance_of(exception_class))
+			throw this;
+		return this;
+	},
+	
+	callstack: function () {
+		var callstack = [];
+		var current = arguments.callee.caller;
+		while (current) {
+			callstack.push(current.toString());
+			current = current.caller;
+		}
+		return callstack;
+	},
+	
+	callstack_to_string: function () {
+		return this.callstack().join("\n");
+	},
+	
+	message: function () {
+		return this.__message;
+	},
+	
+	toString: function () {
+		return this.message();
+	},
+	
+	format: function () {
+		return this.cls.classname + ": " + this.toString() + "\n\nCall Stack:\n" + this.callstack_to_string();
+	}
+	
+}, {
+	
+	ensure: function (e) {
+		var e = BetaJS.Exceptions.ensure(e);
+		e.assert(this);
+		return e;
+	}
+	
+});
+
+
+BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeException", {
+	
+	constructor: function (object) {
+		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object.toString());
+		this.__object = object;
+	},
+	
+	object: function () {
+		return this.__object;
+	}
+	
+});
 
 BetaJS.Lists = {};
 
@@ -545,7 +642,8 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 	},
 	
 	get_ident: function (object) {
-		return BetaJS.Ids.objectId(object);
+		var ident = BetaJS.Ids.objectId(object);
+		return this.__map[ident] ? ident : null;
 	}
 	
 });
@@ -868,14 +966,33 @@ BetaJS.Properties.PropertiesMixin = {
 		return this.__properties[key];
 	},
 	
+	_canSet: function (key, value) {
+	},
+	
+	_afterSet: function (key, value) {
+		
+	},
+	
+	has: function (key) {
+		return key in this.__properties;
+	},
+	
 	set: function (key, value) {
 		if (!this.__properties) 
 			this.__properties = {};
-		if ((! key in this.__properties) || (this.__properties[key] != value)) {
+		if (((! key in this.__properties) || (this.__properties[key] != value)) && (this._canSet(key, value))) {
 			this.__properties[key] = value;
+			this._afterSet(key, value);
 			this.trigger("change", key, value);
 			this.trigger("change:" + key, value);
 		}
+	},
+	
+	binding: function (key) {
+		return {
+			bindee: this,
+			property: key
+		};
 	},
 	
 	getAll: function () {
@@ -885,7 +1002,11 @@ BetaJS.Properties.PropertiesMixin = {
 	setAll: function (obj) {
 		for (var key in obj)
 			this.set(key, obj[key]);
-	}
+	},
+	
+	keys: function (mapped) {
+		return BetaJS.Objs.keys(this.__properties, mapped);
+	}	
 	
 };
 
@@ -934,6 +1055,10 @@ BetaJS.Properties.BindablePropertiesMixin = {
 		return entry.value;
 	},
 	
+	has: function (key) {
+		return key in this.__properties;
+	},
+	
 	set: function (key, value) {
 		if (this.get(key) != value) {
 			var entry = this.__properties[key];
@@ -971,7 +1096,11 @@ BetaJS.Properties.BindablePropertiesMixin = {
 	setAll: function (obj) {
 		for (var key in obj)
 			this.set(key, obj[key]);
-	}
+	},
+	
+	keys: function (mapped) {
+		return BetaJS.Objs.keys(this.__properties, mapped);
+	}	
 	
 };
 

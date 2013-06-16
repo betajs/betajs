@@ -21,6 +21,7 @@ test("test object inheritance", function() {
 	});
 	var e = new E();
 	ok(e.test("g") == "geecca" && e.test2() == "z");
+	ok(e.instance_of(B) && !B.ancestor_of(C));
 });
 
 

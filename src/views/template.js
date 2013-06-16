@@ -16,7 +16,7 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 }, {
 	
 	bySelector: function (selector) {
-		return new this($(selector).html());
+		return new this(BetaJS.$(selector).html());
 	}
 	
 });

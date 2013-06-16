@@ -1,5 +1,7 @@
 BetaJS.Views = BetaJS.Views || {};
 
+BetaJS.$ = jQuery || null;
+
 /** @class */
 BetaJS.Views.View = BetaJS.Class.extend("View", [
     BetaJS.Events.EventsMixin,                                            
@@ -282,7 +284,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (this.__parent)
 			this.$el  = this.__parent.$(this.__el)
 		else
-			this.$el = $(this.__el);
+			this.$el = BetaJS.$(this.__el);
 		if (this.$el.size() == 0)
 			this.$el = null;
 		if (!this.$el)

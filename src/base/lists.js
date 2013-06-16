@@ -163,7 +163,8 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 	},
 	
 	get_ident: function (object) {
-		return BetaJS.Ids.objectId(object);
+		var ident = BetaJS.Ids.objectId(object);
+		return this.__map[ident] ? ident : null;
 	}
 	
 });
