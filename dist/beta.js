@@ -991,11 +991,9 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	set: function (key, value) {
-		alert("set: " + key);
 		if (!this.__properties) 
 			this.__properties = {};
 		if (((! key in this.__properties) || (this.__properties[key] != value)) && (this._canSet(key, value))) {
-			alert("aight");
 			this.__properties[key] = value;
 			this._afterSet(key, value);
 			this.trigger("change", key, value);
@@ -2385,7 +2383,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		});
 		return result;
 	},
-	
+/*	
 	findById: function (id) {
 		if (this.__models_by_id[id])
 			return this.__models_by_id[id]
@@ -2421,7 +2419,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		this.__enterModel(model);
 		return model;
 	},
-	
+*/	
 }]);
 BetaJS.Modelling.Associations = {};
 

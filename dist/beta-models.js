@@ -280,7 +280,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		});
 		return result;
 	},
-	
+/*	
 	findById: function (id) {
 		if (this.__models_by_id[id])
 			return this.__models_by_id[id]
@@ -316,7 +316,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		this.__enterModel(model);
 		return model;
 	},
-	
+*/	
 }]);
 BetaJS.Modelling.Associations = {};
 

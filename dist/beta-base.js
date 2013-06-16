@@ -986,11 +986,9 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	set: function (key, value) {
-		alert("set: " + key);
 		if (!this.__properties) 
 			this.__properties = {};
 		if (((! key in this.__properties) || (this.__properties[key] != value)) && (this._canSet(key, value))) {
-			alert("aight");
 			this.__properties[key] = value;
 			this._afterSet(key, value);
 			this.trigger("change", key, value);
