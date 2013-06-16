@@ -120,7 +120,7 @@ module.exports = function(grunt) {
 					'src/data/stores/remote_store.js'
 				]
 			},
-			dist_beta_data : {
+			dist_beta_models : {
 				dest : 'dist/beta-models.js',
 				src : [
 					'src/modelling/models.js',

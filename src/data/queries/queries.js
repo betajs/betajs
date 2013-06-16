@@ -4,7 +4,7 @@ BetaJS.Queries = {
 	 * Syntax:
 	 *
 	 * query :== Object | ["Or", query, query, ...] | ["And", query, query, ...] |
-	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value]
+	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value] || true || false
 	 *
 	 */
 
@@ -34,7 +34,9 @@ BetaJS.Queries = {
 			else
 				dep[key] = 1;
 			return dep;
-		} else
+		} else if (BetaJS.Types.is_boolean(query))
+			return dep
+		else
 			throw "Malformed Query";
 	},
 
@@ -51,6 +53,8 @@ BetaJS.Queries = {
 	},
 	
 	evaluate : function(query, object) {
+		if (object == null)
+			return false;
 		if (BetaJS.Types.is_array(query)) {
 			if (query.length == 0)
 				throw "Malformed Query";
@@ -88,10 +92,12 @@ BetaJS.Queries = {
 			}
 		} else if (BetaJS.Types.is_object(query)) {
 			for (key in query)
-			if (query[key] != object[key])
-				return false;
+				if (query[key] != object[key])
+					return false;
 			return true;
-		} else
+		} else if (BetaJS.Types.is_boolean(query))
+			return query
+		else
 			throw "Malformed Query";
 	},
 
@@ -124,7 +130,9 @@ BetaJS.Queries = {
 			for (key in query)
 				s += " && (object['" + key + "'] == " + (BetaJS.Types.is_string(query[key]) ? "'" + query[key] + "'" : query[key]) + ")";
 			return s;
-		} else
+		} else if (BetaJS.Types.is_boolean(query))
+			return query ? "true" : "false"
+		else
 			throw "Malformed Query";
 	},
 
@@ -134,7 +142,7 @@ BetaJS.Queries = {
 		var func_call = function(data) {
 			return func.call(this, data);
 		};
-		func_call.source = 'function(object){\n' + result + '}';
+		func_call.source = 'function(object){\n return ' + result + '; }';
 		return func_call;		
 	}
 	

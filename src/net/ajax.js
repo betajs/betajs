@@ -24,7 +24,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 	
 	syncCall: function (options) {
 		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.extend(opts, options);
+		opts = BetaJS.Objs.extend(opts, options);
 		var success_callback = opts.success_callback;
 		delete opts["success_callback"];
 		var failure_callback = opts.failure_callback;
@@ -50,7 +50,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 	
 	asyncCall: function (options) {
 		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.extend(opts, options);
+		opts = BetaJS.Objs.extend(opts, options);
 		var success_callback = opts.success_callback;
 		delete opts["success_callback"];
 		var failure_callback = opts.failure_callback;

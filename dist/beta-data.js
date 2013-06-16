@@ -1,9 +1,5 @@
 /*!
-<<<<<<< HEAD
-  betajs - v0.0.1 - 2013-05-13
-=======
-  betajs - v0.0.1 - 2013-06-09
->>>>>>> 0416302ab011fed04cdd490c13b07dbb8bcb07ad
+  betajs - v0.0.1 - 2013-06-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -33,7 +29,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 	
 	syncCall: function (options) {
 		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.extend(opts, options);
+		opts = BetaJS.Objs.extend(opts, options);
 		var success_callback = opts.success_callback;
 		delete opts["success_callback"];
 		var failure_callback = opts.failure_callback;
@@ -59,7 +55,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 	
 	asyncCall: function (options) {
 		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.extend(opts, options);
+		opts = BetaJS.Objs.extend(opts, options);
 		var success_callback = opts.success_callback;
 		delete opts["success_callback"];
 		var failure_callback = opts.failure_callback;
@@ -175,7 +171,7 @@ BetaJS.Queries = {
 	 * Syntax:
 	 *
 	 * query :== Object | ["Or", query, query, ...] | ["And", query, query, ...] |
-	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value]
+	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value] || true || false
 	 *
 	 */
 
@@ -205,15 +201,27 @@ BetaJS.Queries = {
 			else
 				dep[key] = 1;
 			return dep;
-		} else
+		} else if (BetaJS.Types.is_boolean(query))
+			return dep
+		else
 			throw "Malformed Query";
 	},
 
 	dependencies : function(query) {
 		return this.__dependencies(query, {});
 	},
-
+	
+	overloaded_evaluate: function (query, object) {
+		if (BetaJS.Class.is_class_instance(query))
+			return query.evaluate(object);
+		if (BetaJS.Types.is_function(query))
+			return query(object);
+		return this.evaluate(query, object);
+	},
+	
 	evaluate : function(query, object) {
+		if (object == null)
+			return false;
 		if (BetaJS.Types.is_array(query)) {
 			if (query.length == 0)
 				throw "Malformed Query";
@@ -251,10 +259,12 @@ BetaJS.Queries = {
 			}
 		} else if (BetaJS.Types.is_object(query)) {
 			for (key in query)
-			if (query[key] != object[key])
-				return false;
+				if (query[key] != object[key])
+					return false;
 			return true;
-		} else
+		} else if (BetaJS.Types.is_boolean(query))
+			return query
+		else
 			throw "Malformed Query";
 	},
 
@@ -287,16 +297,19 @@ BetaJS.Queries = {
 			for (key in query)
 				s += " && (object['" + key + "'] == " + (BetaJS.Types.is_string(query[key]) ? "'" + query[key] + "'" : query[key]) + ")";
 			return s;
-		} else
+		} else if (BetaJS.Types.is_boolean(query))
+			return query ? "true" : "false"
+		else
 			throw "Malformed Query";
 	},
 
 	compile : function(query) {
+		var result = this.__compile(query);
 		var func = new Function('object', result);
 		var func_call = function(data) {
 			return func.call(this, data);
 		};
-		func_call.source = 'function(object){\n' + result + '}';
+		func_call.source = 'function(object){\n return ' + result + '; }';
 		return func_call;		
 	}
 	
@@ -333,17 +346,42 @@ BetaJS.Stores = BetaJS.Stores || {};
 BetaJS.Stores.StoreException = BetaJS.Exceptions.Exception.extend("StoreException");
 
 
-BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [BetaJS.Events.EventsMixin, {
+/** @class */
+BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
+	BetaJS.Events.EventsMixin,
+	/** @lends BetaJS.Stores.BaseStore.prototype */
+	{
 	
+	/** Insert data to store. Return inserted data with id.
+	 * 
+ 	 * @param data data to be inserted
+ 	 * @return data that has been inserted with id.
+	 */
 	_insert: function (data) {
 	},
 	
+	/** Remove data from store. Return removed data.
+	 * 
+ 	 * @param id data id
+ 	 * @return data
+	 */
 	_remove: function (id) {
 	},
 	
+	/** Get data from store by id.
+	 * 
+	 * @param id data id
+	 * @return data
+	 */
 	_get: function (id) {
 	},
 	
+	/** Update data by id.
+	 * 
+	 * @param id data id
+	 * @param data updated data
+	 * @return data from store
+	 */
 	_update: function (id, data) {
 	},
 	
@@ -396,7 +434,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [BetaJS.Events.Events
 	
 	_query_applies_to_id: function (query, id) {
 		var row = this.get(id);
-		return row && BetaJS.Queries.evaluate(query, row);
+		return row && BetaJS.Queries.overloaded_evaluate(query, row);
 	},
 	
 	clear: function () {

@@ -3,7 +3,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	{
 	
 	constructor: function (store, model_type, options) {
-		this._inherited(BetaJS.Modelling.Collection, "constructor");
+		this._inherited(BetaJS.Modelling.Table, "constructor");
 		this.__store = store;
 		this.__model_type = model_type;
 		this.__models_by_id = {};
@@ -16,7 +16,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			"auto_create": false,
 			"save_invalid": false,
 			"greedy_save": true
-		}, options);
+		}, options || {});
 	},
 	
 	__enterModel: function (model) {
@@ -118,18 +118,22 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			result = obj.save() && result;
 		});
 		return result;
-	}
-	
-	/*
-	all: function (options) {
-		return this.allBy({}, options);
+	},
+/*	
+	findById: function (id) {
+		if (this.__models_by_id[id])
+			return this.__models_by_id[id]
+		else
+			return this.findBy({"id": id});
 	},
 	
-	findById: function (id) {
-		if (this.__cache[id])
-			return this.__cache[id]
-		else
-			return this.findBy({id: id});
+	findBy: function (query) {
+		var obj = this.allBy(query, {limit: 1}).next();
+		return obj ? this.__materialize(obj) : null;
+	},
+	
+	all: function (options) {
+		return this.allBy({}, options);
 	},
 	
 	allBy: function (query, options) {
@@ -141,21 +145,15 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		return mapped_iterator; 
 	},
 	
-	findBy: function (query) {
-		var obj = this.__store.query(query).next();
-		return obj ? this.__materialize(obj) : null;
-	},
-	
 	__materialize: function (obj) {
-		if (this.__cache[obj.id])
-			return this.__cache[obj.id];
+		if (this.__models_by_id[obj.id])
+			return this.__models_by_id[obj.id];
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
 		var model = new window[type](obj);
-		this.__enter_cache(model);
+		this.__enterModel(model);
 		return model;
 	},
-	*/
-	
+*/	
 }]);

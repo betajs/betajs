@@ -1,6 +1,15 @@
 BetaJS.Iterators = {};
 
-BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator");
+BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
+	
+	asArray: function () {
+		var arr = [];
+		while (this.hasNext())
+			arr.push(this.next());
+		return arr;
+	}
+	
+});
 
 BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator", {
 	
@@ -46,7 +55,6 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 		this.__filter = filter;
 		this.__context = context || this;
 		this.__next = null;
-		this.__has_next = true;
 	},
 	
 	hasNext: function () {
@@ -66,13 +74,12 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 			this.__next = this.__iterator.next();
 			if (this.__filter_func(this.__next))
 				return;
+			this.__next == null;
 		}
-		this.__has_next = false;
-		this.__next = false;
 	},
 	
 	__filter_func: function (item) {
-		return filter.apply(this.__context, item);
+		return this.__filter.apply(this.__context, item);
 	}
 
 });

@@ -7,6 +7,7 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor");
+		options = options || {};
 		this.__properties_changed = {};
 		this.__errors = {};
 		this.__unvalidated = {};
