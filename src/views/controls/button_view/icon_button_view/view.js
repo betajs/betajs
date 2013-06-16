@@ -1,4 +1,9 @@
-BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
+/** @class */
+BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", 
+/** @lends BetaJS.Views.IconButtonView.prototype */
+{
+	/** This is a test.
+	 */	
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["icon-button-view-template"]
 	},
@@ -21,7 +26,7 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this.trigger("clicked");
 	},
 	_el_styles: function() {
-		var styles = {};
+		var styles = {"position": "relative"};
 		if (this.__width)
 			styles.width = this.__width + "px";
 		if (this.__height)

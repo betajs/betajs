@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1169,7 +1169,7 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1632,7 +1632,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 /*!
-  betajs - v0.0.1 - 2013-05-10
+  betajs - v0.0.1 - 2013-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2938,6 +2938,8 @@ BetaJS.Templates.Cached['label-view-template'] = '  <label class="label-view" {%
 
 BetaJS.Templates.Cached['text-area-template'] = '   <textarea class="text-area-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>  ';
 
+BetaJS.Templates.Cached['text-view-template'] = '   <div class="text-view-view" {%= bind.inner("text") %}></div>  ';
+
 BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    {%= supp.css("list-view-function")%}    {%= supp.css("list-view-layout")%}    {%= supp.css("list-view-styling")%}    data-selector="list">   </{%= list_container_element %}>  ';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
 
@@ -3024,7 +3026,12 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this.trigger("clicked");
 	},
 });
-BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
+/** @class */
+BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", 
+/** @lends BetaJS.Views.IconButtonView.prototype */
+{
+	/** This is a test.
+	 */	
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["icon-button-view-template"]
 	},
@@ -3047,7 +3054,7 @@ BetaJS.Views.IconButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this.trigger("clicked");
 	},
 	_el_styles: function() {
-		var styles = {};
+		var styles = {"position": "relative"};
 		if (this.__width)
 			styles.width = this.__width + "px";
 		if (this.__height)
@@ -3116,6 +3123,22 @@ BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");
 	}
+});
+BetaJS.Views.TextViewView = BetaJS.Views.View.extend("TextViewView", {
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["text-view-template"]
+	},
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.TextViewView, "constructor", options);
+		this._setOptionProperty(options, "text", "This is a Text");
+		this._setOption(options, "width", 150);
+	},
+	_el_styles: function() {
+		var styles = {"position": "relative"};
+		if (this.__width)
+			styles.width = this.__width + "px";
+		return styles;
+	},
 });
 BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 	

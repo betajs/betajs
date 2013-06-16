@@ -46,14 +46,21 @@
 				button.on("clicked", function () {
 					alert("This is an alert");
 				});
+				
+				var text = new BetaJS.Views.TextViewView({
+					text: "Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum ",
+				});
+				
 				button.activate();
 				var list = new ListView({
 					el_styles: {"background-color": "yellow"},
 					items: ["Example 1", "Example 2"]
 				});
+				
 				main.setLeft(iconbutton);
-				main.setCenter(input);
-				main.setRight(list);
+				main.setCenter(text);
+				main.setRight(input);
+				
 				button.on("clicked", function () {
 					list.add(input.get("value"));
 					input.set("value", "");
