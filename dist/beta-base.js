@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-16
+  betajs - v0.0.1 - 2013-06-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -841,6 +841,70 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 
 });
 
+
+BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator", {
+	
+	constructor: function (iterator, skip) {
+		this._inherited(BetaJS.Iterators.SkipIterator, "constructor");
+		this.__iterator = iterator;
+		while (skip > 0) {
+			iterator.next();
+			skip--;
+		}
+	},
+	
+	hasNext: function () {
+		return this.__iterator.hasNext();
+	},
+	
+	next: function () {
+		return this.__iterator.next();
+	},
+
+});
+
+
+BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator", {
+	
+	constructor: function (iterator, limit) {
+		this._inherited(BetaJS.Iterators.LimitIterator, "constructor");
+		this.__iterator = iterator;
+		this.__limit = limit;
+	},
+	
+	hasNext: function () {
+		return this.__limit > 0 && this.__iterator.hasNext();
+	},
+	
+	next: function () {
+		if (this.__limit <= 0)
+			return null;
+		this.__limit--;
+		return this.__iterator.next();
+	},
+
+});
+
+
+BetaJS.Iterators.SortedIterator = BetaJS.Iterators.Iterator.extend("SortedIterator", {
+	
+	constructor: function (iterator, compare) {
+		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");
+		this.__arr = iterator.asArray();
+		this.__arr.sort(compare);
+		this.__i = 0;
+	},
+	
+	hasNext: function () {
+		return this.__i < this.__arr.length;
+	},
+	
+	next: function () {
+		return this.__arr[this.__i++];
+	}
+	
+});
+
 BetaJS.Events = {};
 
 BetaJS.Events.EVENT_SPLITTER = /\s+/;
@@ -1299,3 +1363,21 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 	}
 	
 });
+
+BetaJS.Comparators = {
+	
+	byObject: function (object) {
+		return function (left, right) {
+			for (key in object) {
+				var l = left.key || null;
+				var r = right.key || null;
+				if (l < r)
+					return object[key]
+				else if (l > r)
+					return -object[key];
+			}
+			return 0;
+		};
+	}
+	
+};

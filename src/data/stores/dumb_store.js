@@ -72,6 +72,12 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 		return row;
 	},
 	
+	_query_capabilities: function () {
+		return {
+			query: true
+		};
+	},
+	
 	_query: function (query, options) {
 		var iter = new BetaJS.Iterators.Iterator();
 		var store = this;

@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-06-16
+  betajs - v0.0.1 - 2013-06-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-06-16
+  betajs - v0.0.1 - 2013-06-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -846,6 +846,70 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 
 });
 
+
+BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator", {
+	
+	constructor: function (iterator, skip) {
+		this._inherited(BetaJS.Iterators.SkipIterator, "constructor");
+		this.__iterator = iterator;
+		while (skip > 0) {
+			iterator.next();
+			skip--;
+		}
+	},
+	
+	hasNext: function () {
+		return this.__iterator.hasNext();
+	},
+	
+	next: function () {
+		return this.__iterator.next();
+	},
+
+});
+
+
+BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator", {
+	
+	constructor: function (iterator, limit) {
+		this._inherited(BetaJS.Iterators.LimitIterator, "constructor");
+		this.__iterator = iterator;
+		this.__limit = limit;
+	},
+	
+	hasNext: function () {
+		return this.__limit > 0 && this.__iterator.hasNext();
+	},
+	
+	next: function () {
+		if (this.__limit <= 0)
+			return null;
+		this.__limit--;
+		return this.__iterator.next();
+	},
+
+});
+
+
+BetaJS.Iterators.SortedIterator = BetaJS.Iterators.Iterator.extend("SortedIterator", {
+	
+	constructor: function (iterator, compare) {
+		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");
+		this.__arr = iterator.asArray();
+		this.__arr.sort(compare);
+		this.__i = 0;
+	},
+	
+	hasNext: function () {
+		return this.__i < this.__arr.length;
+	},
+	
+	next: function () {
+		return this.__arr[this.__i++];
+	}
+	
+});
+
 BetaJS.Events = {};
 
 BetaJS.Events.EVENT_SPLITTER = /\s+/;
@@ -1305,8 +1369,26 @@ BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("Fi
 	
 });
 
+BetaJS.Comparators = {
+	
+	byObject: function (object) {
+		return function (left, right) {
+			for (key in object) {
+				var l = left.key || null;
+				var r = right.key || null;
+				if (l < r)
+					return object[key]
+				else if (l > r)
+					return -object[key];
+			}
+			return 0;
+		};
+	}
+	
+};
+
 /*!
-  betajs - v0.0.1 - 2013-06-16
+  betajs - v0.0.1 - 2013-06-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1478,7 +1560,7 @@ BetaJS.Queries = {
 	 * Syntax:
 	 *
 	 * query :== Object | ["Or", query, query, ...] | ["And", query, query, ...] |
-	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value] || true || false
+	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value]
 	 *
 	 */
 
@@ -1508,14 +1590,18 @@ BetaJS.Queries = {
 			else
 				dep[key] = 1;
 			return dep;
-		} else if (BetaJS.Types.is_boolean(query))
-			return dep
-		else
+		} else
 			throw "Malformed Query";
 	},
 
 	dependencies : function(query) {
 		return this.__dependencies(query, {});
+	},
+	
+	format: function (query) {
+		if (BetaJS.Class.is_class_instance(query))
+			return query.format();
+		return JSON.stringify(query);
 	},
 	
 	overloaded_evaluate: function (query, object) {
@@ -1569,9 +1655,7 @@ BetaJS.Queries = {
 				if (query[key] != object[key])
 					return false;
 			return true;
-		} else if (BetaJS.Types.is_boolean(query))
-			return query
-		else
+		} else
 			throw "Malformed Query";
 	},
 
@@ -1604,9 +1688,7 @@ BetaJS.Queries = {
 			for (key in query)
 				s += " && (object['" + key + "'] == " + (BetaJS.Types.is_string(query[key]) ? "'" + query[key] + "'" : query[key]) + ")";
 			return s;
-		} else if (BetaJS.Types.is_boolean(query))
-			return query ? "true" : "false"
-		else
+		} else
 			throw "Malformed Query";
 	},
 
@@ -1618,7 +1700,19 @@ BetaJS.Queries = {
 		};
 		func_call.source = 'function(object){\n return ' + result + '; }';
 		return func_call;		
-	}
+	},
+	
+	emulate: function (query, query_function, query_context) {
+		var raw = query_function.apply(query_context || this, {});
+		var iter = raw;
+		if (raw == null)
+			iter = BetaJS.Iterators.ArrayIterator([])
+		else if (BetaJS.Types.is_array(raw))
+			iter = BetaJS.Iterators.ArrayIterator(raw);		
+		return new BetaJS.Iterators.FilteredIterator(iter, function(row) {
+			return BetaJS.Queries.evaluate(query, row);
+		});
+	}	
 	
 }; 
 BetaJS.Queries.CompiledQuery = BetaJS.Class.extend("CompiledQuery", {
@@ -1643,9 +1737,69 @@ BetaJS.Queries.CompiledQuery = BetaJS.Class.extend("CompiledQuery", {
 	
 	evaluate: function (object) {
 		return this.__compiled(object);
+	},
+	
+	format: function () {
+		return BetaJS.Query.format(this.__query);
 	}
 	
 });
+
+BetaJS.Queries.Constrained = {
+	
+	make: function (query, options) {
+		return {
+			query: query,
+			options: options || {}
+		};
+	},
+	
+	format: function (instance) {
+		var query = instance.query;
+		instance.query = BetaJS.Queries.format(query);
+		var result = JSON.stringify(instance);
+		instance.query = query;
+		return result;
+	},
+	
+	emulate: function (constrained_query, query_capabilities, query_function, query_context) {
+		var query = constrained_query.query;
+		var options = constrained_query.options;
+		var execute_query = {};
+		var execute_options = {};
+		if ("sort" in options && "sort" in query_capabilities)
+			execute_options.sort = options.sort;
+		if ("query" in query_capabilities || BetaJS.Types.is_empty(query)) {
+			execute_query = query;
+			if (!"sort" in options || "sort" in query_capabilities) {
+				if ("skip" in options && "skip" in query_capabilities)
+					execute_options.skip = options.skip;
+				if ("limit" in options && "limit" in query_capabilities)
+					execute_options.limit = options.limit;
+			}
+		}
+		var raw = query_function.apply(query_context || this, execute_query, execute_options);
+		var iter = raw;
+		if (raw == null)
+			iter = BetaJS.Iterators.ArrayIterator([])
+		else if (BetaJS.Types.is_array(raw))
+			iter = BetaJS.Iterators.ArrayIterator(raw);		
+		if (!("query" in query_capabilities || BetaJS.Types.is_empty(query)))
+			iter = new BetaJS.Iterators.FilteredIterator(iter, function(row) {
+				return BetaJS.Queries.evaluate(query, row);
+			});
+		if ("sort" in options && ! "sort" in execute_options)
+			iter = BetaJS.Iterators.SortedIterator(iter, BetaJS.Comparators.byObject(options.sort));
+		if ("skip" in options && ! "skip" in execute_options)
+			iter = BetaJS.Iterators.SkipIterator(iter, options["skip"]);
+		if ("limit" in options && ! "limit" in execute_options)
+			iter = BetaJS.Iterators.LimitIterator(iter, options["limit"]);
+		return iter;
+	}
+	
+	
+
+}; 
 
 BetaJS.Stores = BetaJS.Stores || {};
 
@@ -1692,6 +1846,10 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	_update: function (id, data) {
 	},
 	
+	_query_capabilities: function () {
+		return {};
+	},
+	
 	_query: function (query, options) {
 	},	
 	
@@ -1736,7 +1894,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	},
 	
 	query: function (query, options) {
-		return this._query(query, options);
+		return BetaJS.Queries.Constrained.emulate(
+			BetaJS.Queries.Constrained.make(query, options),
+			this._query_capabilities(),
+			this._query,
+			this
+		); 
 	},
 	
 	_query_applies_to_id: function (query, id) {
@@ -1824,6 +1987,12 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 			this._write_item(id, row);
 		}
 		return row;
+	},
+	
+	_query_capabilities: function () {
+		return {
+			query: true
+		};
 	},
 	
 	_query: function (query, options) {
@@ -2089,12 +2258,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	_query : function(query, options) {
 		try {
-			var data = this.__ajax.syncCall({uri: this.__uri});
-			if (data == null)
-				return BetaJS.Iterators.ArrayIterator([]);
-			return new BetaJS.Iterators.FilteredIterator(new BetaJS.Iterators.ArrayIterator(data), function(row) {
-				return BetaJS.Queries.evaluate(query, row);
-			});
+			return this.__ajax.syncCall({uri: this.__uri});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
@@ -2102,7 +2266,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 /*!
-  betajs - v0.0.1 - 2013-06-16
+  betajs - v0.0.1 - 2013-06-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2449,7 +2613,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-06-16
+  betajs - v0.0.1 - 2013-06-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

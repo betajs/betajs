@@ -4,7 +4,7 @@ BetaJS.Queries = {
 	 * Syntax:
 	 *
 	 * query :== Object | ["Or", query, query, ...] | ["And", query, query, ...] |
-	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value] || true || false
+	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value]
 	 *
 	 */
 
@@ -34,14 +34,18 @@ BetaJS.Queries = {
 			else
 				dep[key] = 1;
 			return dep;
-		} else if (BetaJS.Types.is_boolean(query))
-			return dep
-		else
+		} else
 			throw "Malformed Query";
 	},
 
 	dependencies : function(query) {
 		return this.__dependencies(query, {});
+	},
+	
+	format: function (query) {
+		if (BetaJS.Class.is_class_instance(query))
+			return query.format();
+		return JSON.stringify(query);
 	},
 	
 	overloaded_evaluate: function (query, object) {
@@ -95,9 +99,7 @@ BetaJS.Queries = {
 				if (query[key] != object[key])
 					return false;
 			return true;
-		} else if (BetaJS.Types.is_boolean(query))
-			return query
-		else
+		} else
 			throw "Malformed Query";
 	},
 
@@ -130,9 +132,7 @@ BetaJS.Queries = {
 			for (key in query)
 				s += " && (object['" + key + "'] == " + (BetaJS.Types.is_string(query[key]) ? "'" + query[key] + "'" : query[key]) + ")";
 			return s;
-		} else if (BetaJS.Types.is_boolean(query))
-			return query ? "true" : "false"
-		else
+		} else
 			throw "Malformed Query";
 	},
 
@@ -144,6 +144,18 @@ BetaJS.Queries = {
 		};
 		func_call.source = 'function(object){\n return ' + result + '; }';
 		return func_call;		
-	}
+	},
+	
+	emulate: function (query, query_function, query_context) {
+		var raw = query_function.apply(query_context || this, {});
+		var iter = raw;
+		if (raw == null)
+			iter = BetaJS.Iterators.ArrayIterator([])
+		else if (BetaJS.Types.is_array(raw))
+			iter = BetaJS.Iterators.ArrayIterator(raw);		
+		return new BetaJS.Iterators.FilteredIterator(iter, function(row) {
+			return BetaJS.Queries.evaluate(query, row);
+		});
+	}	
 	
 }; 

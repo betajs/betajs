@@ -20,6 +20,10 @@ BetaJS.Queries.CompiledQuery = BetaJS.Class.extend("CompiledQuery", {
 	
 	evaluate: function (object) {
 		return this.__compiled(object);
+	},
+	
+	format: function () {
+		return BetaJS.Query.format(this.__query);
 	}
 	
 });

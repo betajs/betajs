@@ -43,6 +43,10 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	_update: function (id, data) {
 	},
 	
+	_query_capabilities: function () {
+		return {};
+	},
+	
 	_query: function (query, options) {
 	},	
 	
@@ -87,7 +91,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	},
 	
 	query: function (query, options) {
-		return this._query(query, options);
+		return BetaJS.Queries.Constrained.emulate(
+			BetaJS.Queries.Constrained.make(query, options),
+			this._query_capabilities(),
+			this._query,
+			this
+		); 
 	},
 	
 	_query_applies_to_id: function (query, id) {

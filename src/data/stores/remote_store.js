@@ -41,12 +41,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	_query : function(query, options) {
 		try {
-			var data = this.__ajax.syncCall({uri: this.__uri});
-			if (data == null)
-				return BetaJS.Iterators.ArrayIterator([]);
-			return new BetaJS.Iterators.FilteredIterator(new BetaJS.Iterators.ArrayIterator(data), function(row) {
-				return BetaJS.Queries.evaluate(query, row);
-			});
+			return this.__ajax.syncCall({uri: this.__uri});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
