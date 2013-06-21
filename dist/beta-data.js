@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-17
+  betajs - v0.0.1 - 2013-06-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -382,29 +382,29 @@ BetaJS.Queries.Constrained = {
 			execute_options.sort = options.sort;
 		if ("query" in query_capabilities || BetaJS.Types.is_empty(query)) {
 			execute_query = query;
-			if (!"sort" in options || "sort" in query_capabilities) {
+			if (!("sort" in options) || "sort" in query_capabilities) {
 				if ("skip" in options && "skip" in query_capabilities)
 					execute_options.skip = options.skip;
 				if ("limit" in options && "limit" in query_capabilities)
 					execute_options.limit = options.limit;
 			}
 		}
-		var raw = query_function.apply(query_context || this, execute_query, execute_options);
+		var raw = query_function.apply(query_context || this, [execute_query, execute_options]);
 		var iter = raw;
 		if (raw == null)
-			iter = BetaJS.Iterators.ArrayIterator([])
+			iter = new BetaJS.Iterators.ArrayIterator([])
 		else if (BetaJS.Types.is_array(raw))
-			iter = BetaJS.Iterators.ArrayIterator(raw);		
+			iter = new BetaJS.Iterators.ArrayIterator(raw);		
 		if (!("query" in query_capabilities || BetaJS.Types.is_empty(query)))
 			iter = new BetaJS.Iterators.FilteredIterator(iter, function(row) {
 				return BetaJS.Queries.evaluate(query, row);
 			});
-		if ("sort" in options && ! "sort" in execute_options)
-			iter = BetaJS.Iterators.SortedIterator(iter, BetaJS.Comparators.byObject(options.sort));
-		if ("skip" in options && ! "skip" in execute_options)
-			iter = BetaJS.Iterators.SkipIterator(iter, options["skip"]);
-		if ("limit" in options && ! "limit" in execute_options)
-			iter = BetaJS.Iterators.LimitIterator(iter, options["limit"]);
+		if ("sort" in options && !("sort" in execute_options))
+			iter = new BetaJS.Iterators.SortedIterator(iter, BetaJS.Comparators.byObject(options.sort));
+		if ("skip" in options && !("skip" in execute_options))
+			iter = new BetaJS.Iterators.SkipIterator(iter, options["skip"]);
+		if ("limit" in options && !("limit" in execute_options))
+			iter = new BetaJS.Iterators.LimitIterator(iter, options["limit"]);
 		return iter;
 	}
 	
@@ -506,7 +506,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	
 	query: function (query, options) {
 		return BetaJS.Queries.Constrained.emulate(
-			BetaJS.Queries.Constrained.make(query, options),
+			BetaJS.Queries.Constrained.make(query, options || {}),
 			this._query_capabilities(),
 			this._query,
 			this
@@ -765,73 +765,126 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 	
 });
 
-BetaJS.Stores.CachedStore = BetaJS.Stores.BaseStore.extend("CachedStore", {
-	
+BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStore", {
+
 	constructor: function (parent) {
-		this._inherited(BetaJS.Stores.CachedStore, "constructor");
+		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor");
 		this.__parent = parent;
-		this.__cache = [];
+		this.__cache = {};
+		this.__queries = {};
+	},
+	
+	invalidate: function () {
+		this.__cache = {};
+		this.__queries = {};
 	},
 
 	_insert: function (data) {
-		var row = this.__parent._insert(data);
-		if (row)
-			this.__cache[row.id] = {
-				data: row,
-				exists: true
-			}
-		return row;
+		var result = this.__parent.insert(data);
+		if (result)
+			this.__cache[data.id] = data;
+		return result;
 	},
 	
 	_remove: function (id) {
-		if (!(id in this._cache))
-			this.__cache[id] = {};		
-		this.__cache[id].exists = false;
-		return this.__parent._remove(id);
-	},
-	
-	_get: function (id) {
-		if (id in this.__cache)
-			return this.__cache[id].exists;
-		var data = this.__parent.get(id);
-		if (data)
-			this.__cache[id] = {
-				exists: true,
-				data: data
-			}
-		else
-			this.__cache[id] = {
-				exists: false
-			};
-		return data; 
+		var result = this.__parent.remove(id);
+		if (result)
+			delete this.__cache[id];
+		return result;
 	},
 	
 	_update: function (id, data) {
-		var row = this.__parent.update(id, data);
-		if (row)
-			this.__cache[id] = {
-				exists: true,
-				data: data
-			};
-		return row;
+		var result = this.__parent.update(id, data);
+		if (result)
+			this.__cache[id] = BetaJS.Objs.extend(this.__cache[id], data);
+		return result;
 	},
 	
-	invalidate: function (id) {
-		delete this.__cache[id];
+	_get: function (id) {
+		if (!(id in this.__cache))
+			this.__cache[id] = this.__parent.get(id);
+		return this.__cache[id];
 	},
 	
 	_query: function (query, options) {
-		return this.__parent.query(query, options);
-	}
+		var constrained = BetaJS.Queries.Constrained.make(query, options);
+		var encoded = BetaJS.Queries.Constrained.format(constrained);
+		if (encoded in this.__queries)
+			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
+		var result = this.__parent.query(query, options).asArray();
+		for (var i = 0; i < result.length; ++i)
+			this.__cache[result[i].id] = result[i];
+		this.__queries[encoded] = true;
+		return new BetaJS.Iterators.ArrayIterator(result);
+	},	
+	
+});
+
+BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStore", {
+
+	constructor: function (parent, full_data) {
+		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor");
+		this.__parent = parent;
+		this.__cache = {};
+		this.invalidate(full_data);
+	},
+	
+	invalidate: function (full_data) {
+		this.__cache = {};
+		if (!full_data)
+			full_data = this.__parent.query({});
+		if (BetaJS.Types.is_array(full_data))
+			full_data = new BetaJS.Iterators.ArrayIterator(full_data);
+		while (full_data.hasNext()) {
+			var row = full_data.next();
+			this.__cache[row.id] = row;
+		}
+	},
+
+	_insert: function (data) {
+		var result = this.__parent.insert(data);
+		if (result)
+			this.__cache[data.id] = data;
+		return result;
+	},
+	
+	_remove: function (id) {
+		var result = this.__parent.remove(id);
+		if (result)
+			delete this.__cache[id];
+		return result;
+	},
+	
+	_get: function (id) {
+		return this.__cache[id];
+	},
+	
+	_update: function (id, data) {
+		var result = this.__parent.update(id, data);
+		if (result)
+			this.__cache[id] = BetaJS.Objs.extend(this.__cache[id], data);
+		return result;
+	},
+	
+	_query: function (query, options) {
+		return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
+	},	
 	
 });
 
 BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
-	constructor : function(uri, ajax) {
+	constructor : function(uri, ajax, options) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor");
 		this.__uri = uri;
 		this.__ajax = ajax;
+		this.__options = BetaJS.Objs.extend({
+			"update_method": "PUT"
+		}, options || {});
+	},
+	
+	getUri: function () {
+		return this.__uri;
 	},
 
 	_insert : function(data) {
@@ -861,17 +914,57 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	_update : function(id, data) {
 		try {
-			return this.__ajax.syncCall({method: "PUT", uri: this.__uri + "/" + id, data: data});
+			return this.__ajax.syncCall({method: this.__options.update_method, uri: this.__uri + "/" + id, data: data});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
 	},
-
+	
 	_query : function(query, options) {
-		try {
-			return this.__ajax.syncCall({uri: this.__uri});
+		try {			
+			return this.__ajax.syncCall(this._encode_query(query, options));
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
+	},
+	
+	_encode_query: function (query, options) {
+		return {
+			uri: this.getUri()
+		};		
 	}
+	
+});
+
+
+BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
+
+	constructor : function(uri, ajax, capability_params, options) {
+		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
+		this.__uri = uri;
+		this.__ajax = ajax;
+		this.__capability_params = capability_params;
+	},
+	
+	_query_capabilities: function () {
+		var caps = {};
+		if ("skip" in this.__capability_params)
+			caps.skip = true;
+		if ("limit" in this.__capability_params)
+			caps.limit = true;
+		return caps;
+	},
+
+	_encode_query: function (query, options) {
+		options = options || {};
+		var uri = this.getUri() + "?"; 
+		if (options["skip"] && "skip" in this.__capability_params)
+			uri += this.__capability_params["skip"] + "=" + options["skip"] + "&";
+		if (options["limit"] && "limit" in this.__capability_params)
+			uri += this.__capability_params["limit"] + "=" + options["limit"] + "&";
+		return {
+			uri: uri
+		};		
+	}
+
 });

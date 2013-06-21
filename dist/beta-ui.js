@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-17
+  betajs - v0.0.1 - 2013-06-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1305,7 +1305,7 @@ BetaJS.Templates.Cached['label-view-template'] = '  <label {%= bind.inner("label
 
 BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>  ';
 
-BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    {%= supp.css("list-view-function")%}    {%= supp.css("list-view-layout")%}    {%= supp.css("list-view-styling")%}    data-selector="list">   </{%= list_container_element %}>  ';
+BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    data-selector="list">   </{%= list_container_element %}>  ';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {

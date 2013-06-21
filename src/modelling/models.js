@@ -12,12 +12,14 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__errors = {};
 		this.__unvalidated = {};
 		this.__enter_table_count = 0;
-		if ("table" in options)
-			this.__table = options["table"];
-		this.__saved = "saved" in options ? options["saved"] : false;
-		this.__new = "new" in options ? options["new"] : true;
 		for (key in attributes)
 			this.set(key, attributes[key]);
+		this.__saved = "saved" in options ? options["saved"] : false;
+		this.__new = "new" in options ? options["new"] : true;
+		if (this.__saved)
+			this.__properties_changed = {};
+		if ("table" in options)
+			this.__table = options["table"];
 		if (this.__canCallTable())
 			this.__table.__modelCreate(this);
 	},

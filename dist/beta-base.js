@@ -1,9 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-06-17
+  betajs - v0.0.1 - 2013-06-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 var BetaJS = BetaJS || {};
+/*
+ * Export for NodeJS
+ */
+if (typeof module != "undefined" && "exports" in module)
+	module.exports = BetaJS;
+
 BetaJS.Types = {
 	
 	is_object: function (x) {
@@ -1369,8 +1375,8 @@ BetaJS.Comparators = {
 	byObject: function (object) {
 		return function (left, right) {
 			for (key in object) {
-				var l = left.key || null;
-				var r = right.key || null;
+				var l = left[key] || null;
+				var r = right[key] || null;
 				if (l < r)
 					return object[key]
 				else if (l > r)

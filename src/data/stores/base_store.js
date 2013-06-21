@@ -92,7 +92,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	
 	query: function (query, options) {
 		return BetaJS.Queries.Constrained.emulate(
-			BetaJS.Queries.Constrained.make(query, options),
+			BetaJS.Queries.Constrained.make(query, options || {}),
 			this._query_capabilities(),
 			this._query,
 			this

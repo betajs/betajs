@@ -34,7 +34,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	},
 	
 	__hasModel: function (model) {
-		return model.cid() in this.__model_by_cid;
+		return model.cid() in this.__models_by_cid;
 	},
 	
 	__modelCreate: function (model) {
@@ -119,19 +119,18 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		});
 		return result;
 	},
-/*	
+	
 	findById: function (id) {
 		if (this.__models_by_id[id])
 			return this.__models_by_id[id]
 		else
-			return this.findBy({"id": id});
+			return this.__materialize(this.__store.get(id));
 	},
-	
+
 	findBy: function (query) {
-		var obj = this.allBy(query, {limit: 1}).next();
-		return obj ? this.__materialize(obj) : null;
+		return this.allBy(query, {limit: 1}).next();
 	},
-	
+
 	all: function (options) {
 		return this.allBy({}, options);
 	},
@@ -146,14 +145,20 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	},
 	
 	__materialize: function (obj) {
+		if (!obj)
+			return null;
 		if (this.__models_by_id[obj.id])
 			return this.__models_by_id[obj.id];
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
-		var model = new window[type](obj);
+		var model = new window[type](obj, {
+			table: this,
+			saved: true,
+			"new": false
+		});
 		this.__enterModel(model);
 		return model;
 	},
-*/	
+	
 }]);

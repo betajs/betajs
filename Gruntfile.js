@@ -118,7 +118,8 @@ module.exports = function(grunt) {
 					'src/data/stores/assoc_store.js',
 					'src/data/stores/local_store.js',
 					'src/data/stores/memory_store.js',
-					'src/data/stores/cached_store.js',
+					'src/data/stores/query_cached_store.js',
+					'src/data/stores/fully_cached_store.js',
 					'src/data/stores/remote_store.js'
 				]
 			},
@@ -155,12 +156,18 @@ module.exports = function(grunt) {
 					'src/views/lists/list_view/view.js',
 				]
 			},
-			dist_beta : {
-				dest : 'dist/beta.js',
+			dist_beta_common : {
+				dest : 'dist/beta-common.js',
 				src : [
 					'dist/beta-base.js', 
 					'dist/beta-data.js',
 					'dist/beta-models.js',
+				]
+			},
+			dist_beta : {
+				dest : 'dist/beta.js',
+				src : [
+					'dist/beta-common.js', 
 					'dist/beta-ui.js'
 				]
 			},
@@ -182,6 +189,7 @@ module.exports = function(grunt) {
 					'dist/beta-base.min.js' : [ 'dist/beta-base.js' ],
 					'dist/beta-data.min.js' : [ 'dist/beta-data.js' ],
 					'dist/beta-models.min.js' : [ 'dist/beta-models.js' ],
+					'dist/beta-common.min.js' : [ 'dist/beta-common.js' ],					
 					'dist/beta-ui.min.js' : [ 'dist/beta-ui.js' ],
 					'dist/beta.min.js' : [ 'dist/beta.js' ],					
 				}

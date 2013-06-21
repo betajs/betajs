@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-17
+  betajs - v0.0.1 - 2013-06-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -17,12 +17,14 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__errors = {};
 		this.__unvalidated = {};
 		this.__enter_table_count = 0;
-		if ("table" in options)
-			this.__table = options["table"];
-		this.__saved = "saved" in options ? options["saved"] : false;
-		this.__new = "new" in options ? options["new"] : true;
 		for (key in attributes)
 			this.set(key, attributes[key]);
+		this.__saved = "saved" in options ? options["saved"] : false;
+		this.__new = "new" in options ? options["new"] : true;
+		if (this.__saved)
+			this.__properties_changed = {};
+		if ("table" in options)
+			this.__table = options["table"];
 		if (this.__canCallTable())
 			this.__table.__modelCreate(this);
 	},
@@ -195,7 +197,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	},
 	
 	__hasModel: function (model) {
-		return model.cid() in this.__model_by_cid;
+		return model.cid() in this.__models_by_cid;
 	},
 	
 	__modelCreate: function (model) {
@@ -280,19 +282,18 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		});
 		return result;
 	},
-/*	
+	
 	findById: function (id) {
 		if (this.__models_by_id[id])
 			return this.__models_by_id[id]
 		else
-			return this.findBy({"id": id});
+			return this.__materialize(this.__store.get(id));
 	},
-	
+
 	findBy: function (query) {
-		var obj = this.allBy(query, {limit: 1}).next();
-		return obj ? this.__materialize(obj) : null;
+		return this.allBy(query, {limit: 1}).next();
 	},
-	
+
 	all: function (options) {
 		return this.allBy({}, options);
 	},
@@ -307,16 +308,22 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	},
 	
 	__materialize: function (obj) {
+		if (!obj)
+			return null;
 		if (this.__models_by_id[obj.id])
 			return this.__models_by_id[obj.id];
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
-		var model = new window[type](obj);
+		var model = new window[type](obj, {
+			table: this,
+			saved: true,
+			"new": false
+		});
 		this.__enterModel(model);
 		return model;
 	},
-*/	
+	
 }]);
 BetaJS.Modelling.Associations = {};
 
