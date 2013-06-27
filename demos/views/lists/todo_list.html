@@ -29,11 +29,11 @@
 						);
 					},
 					objects: [
-						new BetaJS.Properties.BindableProperties({
+						new BetaJS.Properties.Properties({
 							"text": "Send your mother flowers",
 							"checked": false
 						}),
-					    new BetaJS.Properties.BindableProperties({
+					    new BetaJS.Properties.Properties({
 					    	"text": "Make some coffee",
 					    	"checked": true
 					    })]
@@ -53,7 +53,7 @@
 					el: "body"
 				});
 				input.on("enter_key", function () {
-					list.add(new BetaJS.Properties.BindableProperties({
+					list.add(new BetaJS.Properties.Properties({
 						"text": input.get("value"),
 						"checked": false
 					}));

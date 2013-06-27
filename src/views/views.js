@@ -7,7 +7,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
-	BetaJS.Properties.BindablePropertiesMixin,
+	BetaJS.Properties.PropertiesMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
     

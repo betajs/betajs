@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-19
+  betajs - v0.0.1 - 2013-06-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -133,7 +133,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
-	BetaJS.Properties.BindablePropertiesMixin,
+	BetaJS.Properties.PropertiesMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
     
@@ -1403,7 +1403,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
-		this._setOptionProperty(options, "placeholder", "Input");
+		this._setOptionProperty(options, "placeholder", "");
 		this._setOptionProperty(options, "top", "4");
 		
 	},
