@@ -49,10 +49,10 @@
 					input.set("value", "");
 				});
 				button_remove.on("clicked", function () {
-					list.getCollection().remove(list.getCollection().getByIndex(0));
+					list.collection().remove(list.collection().getByIndex(0));
 				});
 				button_reverse.on("clicked", function () {
-					list.getCollection().iterate(function (item) {
+					list.collection().iterate(function (item) {
 						item.set("text", item.get("text").split("").reverse().join(""));
 					});
 				});

@@ -113,6 +113,7 @@ module.exports = function(grunt) {
 					'src/data/queries/queries.js', 
 					'src/data/queries/compiled_query.js', 
 					'src/data/queries/constrained_queries.js', 
+					'src/data/queries/query_collection.js',
 					'src/data/stores/base_store.js',
 					'src/data/stores/dumb_store.js',
 					'src/data/stores/assoc_store.js',

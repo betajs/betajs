@@ -68,7 +68,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		this._inherited(BetaJS.Views.CustomListView, "destroy");
 	},
 	
-	getCollection: function () {
+	collection: function () {
 		return this.__collection;
 	},
 	
@@ -186,7 +186,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 
 	__reIndexItem: function (item) {
 		var element = this._findItemElement(item);
-		var index = this.getCollection().getIndex(item);
+		var index = this.collection().getIndex(item);
 		if (index == 0)
 			this.$selector_list.prepend(element)
 		else {
@@ -198,7 +198,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 	_updateItemIndex: function (item, index) {},
 	
 	__sort: function () {
-		for (var index = this.getCollection().count() - 1; index >= 0; index--)
+		for (var index = this.collection().count() - 1; index >= 0; index--)
 			this.$selector_list.prepend(this._findIndexElement(index));
 	},
 	

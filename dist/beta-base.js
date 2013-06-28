@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-27
+  betajs - v0.0.1 - 2013-06-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1232,9 +1232,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 			self._sorted();
 		};
 		if ("objects" in options)
-			BetaJS.Objs.iter(options["objects"], function (object) {
-				this.add(object);
-			}, this);
+			this.add_objects(options["objects"]);
 	},
 	
 	set_compare: function (compare) {
@@ -1290,6 +1288,12 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		return ident;
 	},
 	
+	add_objects: function (objects) {
+		BetaJS.Objs.iter(objects, function (object) {
+			this.add(object);
+		}, this);		
+	},
+	
 	exists: function (object) {
 		return this.__data.exists(object);
 	},
@@ -1317,6 +1321,13 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 	
 	iterate: function (cb) {
 		this.__data.iterate(cb);
+	},
+	
+	clear: function () {
+		var self = this;
+		this.iterate(function (obj) {
+			self.remove(obj);
+		});
 	}
 		
 }]);
