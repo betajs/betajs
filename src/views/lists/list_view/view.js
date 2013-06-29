@@ -23,8 +23,9 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		this._inherited(BetaJS.Views.CustomListView, "constructor", options);
 		this._setOption(options, "list_container_element", "ul");
 		this._setOption(options, "list_container_attrs", {});
+		this._setOption(options, "list_container_classes", "");
 		this._setOption(options, "item_container_element", "li");
-		this._setOption(options, "item_container_attrs", {});
+		this._setOption(options, "item_container_classes", "");
 		this.__itemData = {};
 		if ("collection" in options) {
 			this.__collection = options.collection;
@@ -91,7 +92,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 	_renderListContainer: function () {
 		this.$el.html(this.evaluateTemplate("default", {
 			list_container_element: this.__list_container_element,
-			list_container_attrs: this.__list_container_attrs
+			list_container_attrs: this.__list_container_attrs,
+			list_container_classes: this.__list_container_classes
 		}));
 		return this.$data({"selector": "list"});
 	},
@@ -135,7 +137,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		var container = this.evaluateTemplate("item-container", {
 			item: item,
 			item_container_element: this.__item_container_element, 
-			item_container_attrs: this.__item_container_attrs 
+			item_container_attrs: this.__item_container_attrs,
+			item_container_classes: this.__item_container_classes			
 		});
 		var index = this.__collection.getIndex(item);
 		if (index == 0)

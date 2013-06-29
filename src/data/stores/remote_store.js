@@ -66,9 +66,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
 
 	constructor : function(uri, ajax, capability_params, options) {
-		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
-		this.__uri = uri;
-		this.__ajax = ajax;
+		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
 		this.__capability_params = capability_params;
 	},
 	

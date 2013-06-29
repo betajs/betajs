@@ -114,11 +114,11 @@ BetaJS.Properties.PropertiesMixin = {
 					type: BetaJS.Properties.TYPE_COMPUTED,
 					func: value.func,
 					dependencies: value.dependencies,
-					value: value.func(this)
+					value: value.func.apply(self)
 				};
 				BetaJS.Objs.iter(value.dependencies, function (dep) {
 					self.on("change:" + dep, function () {
-						self.__properties[key].value = value.func(self);
+						self.__properties[key].value = value.func.apply(self);
 						self.trigger("change");
 						self.trigger("change:" + key);
 					}, this.__properties[key]);

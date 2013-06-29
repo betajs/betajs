@@ -39,16 +39,32 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		return this.__cache[id];
 	},
 	
+	_query_capabilities: function () {
+		return this.__parent._query_capabilities();
+	},
+
 	_query: function (query, options) {
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		if (encoded in this.__queries)
-			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
+			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__queries[encoded]));
 		var result = this.__parent.query(query, options).asArray();
-		for (var i = 0; i < result.length; ++i)
+		this.__queries[encoded] = {};
+		for (var i = 0; i < result.length; ++i) {
 			this.__cache[result[i].id] = result[i];
-		this.__queries[encoded] = true;
+			this.__queries[encoded][result[i].id] = result[i];
+		}
 		return new BetaJS.Iterators.ArrayIterator(result);
-	},	
+	},
+	
+	cache: function (query, options, result) {
+		var constrained = BetaJS.Queries.Constrained.make(query, options);
+		var encoded = BetaJS.Queries.Constrained.format(constrained);
+		this.__queries[encoded] = {};
+		for (var i = 0; i < result.length; ++i) {
+			this.__cache[result[i].id] = result[i];
+			this.__queries[encoded][result[i].id] = result[i];
+		}
+	}
 	
 });

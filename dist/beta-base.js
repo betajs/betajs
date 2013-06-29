@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -142,6 +142,18 @@ BetaJS.Functions = {
 		}
 	}
 
+};
+
+BetaJS.Scopes = {
+	
+	resolve: function (s, base) {
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length; ++i)
+			object = object[a[i]];
+		return object;
+	}
+	
 };
 
 BetaJS.Objs = {
@@ -344,6 +356,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 BetaJS.Class.prototype.constructor = function () {
 	this._notify("construct");
+}
+
+BetaJS.Class.prototype.as_method = function (s) {
+	return BetaJS.Functions.as_method(this[s], this);
 }
 
 BetaJS.Class.prototype._notify = function (name) {
@@ -1150,11 +1166,11 @@ BetaJS.Properties.PropertiesMixin = {
 					type: BetaJS.Properties.TYPE_COMPUTED,
 					func: value.func,
 					dependencies: value.dependencies,
-					value: value.func(this)
+					value: value.func.apply(self)
 				};
 				BetaJS.Objs.iter(value.dependencies, function (dep) {
 					self.on("change:" + dep, function () {
-						self.__properties[key].value = value.func(self);
+						self.__properties[key].value = value.func.apply(self);
 						self.trigger("change");
 						self.trigger("change:" + key);
 					}, this.__properties[key]);

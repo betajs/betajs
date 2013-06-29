@@ -77,13 +77,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			return this.__css[ident];
 		if (this.__parent) {
 			var css = this.__parent.css(ident);
-			if (css)
+			if (css && css != ident)
 				return css;
 		}
 		var css = this._css();
 		if (css[ident])
 			return css[ident];
-		return null;
+		return ident;
 	},
 	
 	/** Is called by the view when the view needs to be rendered.
@@ -277,12 +277,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	activate: function () {
 		if (this.isActive())
 			return true;
-		if (!this.__el)
+		if (this.__el == null) 
 			return false;
 		if (this.__parent && !this.__parent.isActive())
 			return false;
 		if (this.__parent)
-			this.$el  = this.__parent.$(this.__el)
+			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el)
 		else
 			this.$el = BetaJS.$(this.__el);
 		if (this.$el.size() == 0)
@@ -708,6 +708,12 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		},
 		inner: function (variable) {
 			return this.__context.__bind_inner(variable);
+		},
+		css_if: function (css, variable) {
+			return this.__context.__bind_css_if(css, variable, true);
+		},
+		css_if_not: function (css, variable) {
+			return this.__context.__bind_css_if(css, variable, false);
 		}
 	},
 	
@@ -745,13 +751,21 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		else if (element.type == "value")
 			element.$el.val(value)
 		else if (element.type == "attribute")
-			element.$el.attr(element.attribute, value);
+			element.$el.attr(element.attribute, value)
+		else if (element.type == "css") {
+			if (!element.positive)
+				value = !value;
+			if (value)
+				element.$el.addClass(this.__parent.view().css(element.css))
+			else
+				element.$el.removeClass(this.__parent.view().css(element.css));
+		};
 	},
 	
 	__prepare_element: function (element) {
 		var self = this;
 		element.$el = this.$el.find(element.selector);
-		if (element.type == "inner")
+		if (element.type == "inner" || element.type == "css")
 			this.__update_element(element);
 		else if (element.type == "value")
 			element.$el.on("change input keyup paste", function () {
@@ -770,6 +784,20 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		var dec = this.__decompose_variable(variable);
 		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
 		return selector + " " + attribute + "='" + dec.object.get(dec.key) + "'";
+	},
+	
+	__bind_css_if: function (css, variable, positive) {
+		var element = this.__new_element({
+			type: "css",
+			css: css,
+			variable: variable,
+			positive: positive
+		});
+		var selector = "data-bind-css-" + css + "='" + element.id + "'";
+		element.selector = "[" + selector + "]";
+		var dec = this.__decompose_variable(variable);
+		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
+		return selector;
 	},
 	
 	__bind_value: function (variable) {

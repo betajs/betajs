@@ -71,6 +71,7 @@ module.exports = function(grunt) {
 							'src/views/controls/check_box_view/template.html',
 							'src/views/controls/input_view/template.html',
 							'src/views/controls/label_view/template.html',
+							'src/views/controls/link_view/template.html',
 							'src/views/controls/textarea_view/template.html',
 							'src/views/controls/textview_view/template.html',
 							
@@ -92,7 +93,8 @@ module.exports = function(grunt) {
 					'src/base/base.js', 
 					'src/base/types.js',
 					'src/base/strings.js',
-					'src/base/functions.js', 
+					'src/base/functions.js',
+					'src/base/scopes.js', 
 					'src/base/objs.js',
 					'src/base/ids.js', 
 					'src/base/class.js',
@@ -147,14 +149,17 @@ module.exports = function(grunt) {
 					
 					'src/views/containers/holygrail_view/view.js',
 					'src/views/containers/list_container_view/view.js', 
+					'src/views/containers/single_container_view/view.js', 
 					
 					'src/views/controls/button_view/view.js',
 					'src/views/controls/input_view/view.js',
 					'src/views/controls/check_box_view/view.js',
 					'src/views/controls/label_view/view.js',
+					'src/views/controls/link_view/view.js',
 					'src/views/controls/textarea_view/view.js',
 					
 					'src/views/lists/list_view/view.js',
+					'src/views/lists/item_list_view/view.js'
 				]
 			},
 			dist_beta_common : {

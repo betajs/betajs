@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -12,6 +12,9 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor");
+		var scheme = this.cls.scheme();
+		for (var key in scheme)
+			this.set(key, scheme[key].def || null);
 		options = options || {};
 		this.__properties_changed = {};
 		this.__errors = {};
@@ -52,12 +55,10 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		delete this.__properties_changed[key];
 	},
 	
-	_canSet: function (key, value) {
-		var scheme = this.cls.scheme();
-		return key in scheme;
-	},
-	
 	_afterSet: function (key, value) {
+		var scheme = this.cls.scheme();
+		if (!(key in scheme))
+			return;
 		this.__properties_changed[key] = true;
 		this.__unvalidated[key] = true;
 		this.__saved = false;
@@ -315,7 +316,8 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
-		var model = new window[type](obj, {
+		var cls = BetaJS.Scopes.resolve(type);
+		var model = new cls(obj, {
 			table: this,
 			saved: true,
 			"new": false

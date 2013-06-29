@@ -32,8 +32,8 @@ test("test properties computed", function () {
 	var e = new BetaJS.Properties.Properties();
 	e.set("a", 1);
 	e.set("b", 2);
-	e.set("sum", e.computed(function (e) {
-		return e.get("a") + e.get("b");
+	e.set("sum", e.computed(function () {
+		return this.get("a") + this.get("b");
 	}, ["a", "b"]));
 	ok(e.get("sum"), 3);
 	var z = 0;

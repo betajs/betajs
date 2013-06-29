@@ -20,7 +20,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 	__execute_query: function (skip, limit, clear_before) {
 		skip = Math.max(skip, 0);
 		var q = {};
-		if (this.__query.sort != null)
+		if (this.__query.sort != null && !BetaJS.Types.is_empty(this.__query.sort))
 			q.sort = this.__query.sort;
 		if (clear_before) {
 			if (skip > 0)
@@ -33,7 +33,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 			this.__query.limit = limit;
 			this.__query.count = limit == null || objs.length < limit ? skip + objs.length : null;
 			this.clear();
-				this.add_objects(objs);
+			this.add_objects(objs);
 		} else if (skip < this.__query.skip) {
 			limit = this.__query.skip - skip;
 			if (skip > 0)
@@ -55,6 +55,8 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 				var iter = this.__query.func(this.__query.select, q);
 				var objs = iter.asArray();
 				this.__query.limit = this.__query.limit + objs.length;
+				if (limit > objs.length)
+					this.__query.count = skip + objs.length;
 				this.add_objects(objs);
 			}
 		}
@@ -102,6 +104,10 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 			return;
 		if (paginate_index > 0)
 			this.paginate(paginate_index - 1);
+	},
+	
+	isComplete: function () {
+		return this.__query.count != null;
 	}
 	
 });

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -152,6 +152,18 @@ BetaJS.Functions = {
 		}
 	}
 
+};
+
+BetaJS.Scopes = {
+	
+	resolve: function (s, base) {
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length; ++i)
+			object = object[a[i]];
+		return object;
+	}
+	
 };
 
 BetaJS.Objs = {
@@ -354,6 +366,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 BetaJS.Class.prototype.constructor = function () {
 	this._notify("construct");
+}
+
+BetaJS.Class.prototype.as_method = function (s) {
+	return BetaJS.Functions.as_method(this[s], this);
 }
 
 BetaJS.Class.prototype._notify = function (name) {
@@ -1160,11 +1176,11 @@ BetaJS.Properties.PropertiesMixin = {
 					type: BetaJS.Properties.TYPE_COMPUTED,
 					func: value.func,
 					dependencies: value.dependencies,
-					value: value.func(this)
+					value: value.func.apply(self)
 				};
 				BetaJS.Objs.iter(value.dependencies, function (dep) {
 					self.on("change:" + dep, function () {
-						self.__properties[key].value = value.func(self);
+						self.__properties[key].value = value.func.apply(self);
 						self.trigger("change");
 						self.trigger("change:" + key);
 					}, this.__properties[key]);
@@ -1424,7 +1440,7 @@ BetaJS.Comparators = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1859,7 +1875,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 	__execute_query: function (skip, limit, clear_before) {
 		skip = Math.max(skip, 0);
 		var q = {};
-		if (this.__query.sort != null)
+		if (this.__query.sort != null && !BetaJS.Types.is_empty(this.__query.sort))
 			q.sort = this.__query.sort;
 		if (clear_before) {
 			if (skip > 0)
@@ -1872,7 +1888,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 			this.__query.limit = limit;
 			this.__query.count = limit == null || objs.length < limit ? skip + objs.length : null;
 			this.clear();
-				this.add_objects(objs);
+			this.add_objects(objs);
 		} else if (skip < this.__query.skip) {
 			limit = this.__query.skip - skip;
 			if (skip > 0)
@@ -1894,6 +1910,8 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 				var iter = this.__query.func(this.__query.select, q);
 				var objs = iter.asArray();
 				this.__query.limit = this.__query.limit + objs.length;
+				if (limit > objs.length)
+					this.__query.count = skip + objs.length;
 				this.add_objects(objs);
 			}
 		}
@@ -1941,6 +1959,10 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 			return;
 		if (paginate_index > 0)
 			this.paginate(paginate_index - 1);
+	},
+	
+	isComplete: function () {
+		return this.__query.count != null;
 	}
 	
 });
@@ -2338,17 +2360,33 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		return this.__cache[id];
 	},
 	
+	_query_capabilities: function () {
+		return this.__parent._query_capabilities();
+	},
+
 	_query: function (query, options) {
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		if (encoded in this.__queries)
-			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
+			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__queries[encoded]));
 		var result = this.__parent.query(query, options).asArray();
-		for (var i = 0; i < result.length; ++i)
+		this.__queries[encoded] = {};
+		for (var i = 0; i < result.length; ++i) {
 			this.__cache[result[i].id] = result[i];
-		this.__queries[encoded] = true;
+			this.__queries[encoded][result[i].id] = result[i];
+		}
 		return new BetaJS.Iterators.ArrayIterator(result);
-	},	
+	},
+	
+	cache: function (query, options, result) {
+		var constrained = BetaJS.Queries.Constrained.make(query, options);
+		var encoded = BetaJS.Queries.Constrained.format(constrained);
+		this.__queries[encoded] = {};
+		for (var i = 0; i < result.length; ++i) {
+			this.__cache[result[i].id] = result[i];
+			this.__queries[encoded][result[i].id] = result[i];
+		}
+	}
 	
 });
 
@@ -2472,9 +2510,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
 
 	constructor : function(uri, ajax, capability_params, options) {
-		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
-		this.__uri = uri;
-		this.__ajax = ajax;
+		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
 		this.__capability_params = capability_params;
 	},
 	
@@ -2501,7 +2537,7 @@ BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("Quer
 
 });
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2514,6 +2550,9 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor");
+		var scheme = this.cls.scheme();
+		for (var key in scheme)
+			this.set(key, scheme[key].def || null);
 		options = options || {};
 		this.__properties_changed = {};
 		this.__errors = {};
@@ -2554,12 +2593,10 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		delete this.__properties_changed[key];
 	},
 	
-	_canSet: function (key, value) {
-		var scheme = this.cls.scheme();
-		return key in scheme;
-	},
-	
 	_afterSet: function (key, value) {
+		var scheme = this.cls.scheme();
+		if (!(key in scheme))
+			return;
 		this.__properties_changed[key] = true;
 		this.__unvalidated[key] = true;
 		this.__saved = false;
@@ -2817,7 +2854,8 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
-		var model = new window[type](obj, {
+		var cls = BetaJS.Scopes.resolve(type);
+		var model = new cls(obj, {
 			table: this,
 			saved: true,
 			"new": false
@@ -2855,7 +2893,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3059,13 +3097,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			return this.__css[ident];
 		if (this.__parent) {
 			var css = this.__parent.css(ident);
-			if (css)
+			if (css && css != ident)
 				return css;
 		}
 		var css = this._css();
 		if (css[ident])
 			return css[ident];
-		return null;
+		return ident;
 	},
 	
 	/** Is called by the view when the view needs to be rendered.
@@ -3259,12 +3297,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	activate: function () {
 		if (this.isActive())
 			return true;
-		if (!this.__el)
+		if (this.__el == null) 
 			return false;
 		if (this.__parent && !this.__parent.isActive())
 			return false;
 		if (this.__parent)
-			this.$el  = this.__parent.$(this.__el)
+			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el)
 		else
 			this.$el = BetaJS.$(this.__el);
 		if (this.$el.size() == 0)
@@ -3690,6 +3728,12 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		},
 		inner: function (variable) {
 			return this.__context.__bind_inner(variable);
+		},
+		css_if: function (css, variable) {
+			return this.__context.__bind_css_if(css, variable, true);
+		},
+		css_if_not: function (css, variable) {
+			return this.__context.__bind_css_if(css, variable, false);
 		}
 	},
 	
@@ -3727,13 +3771,21 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		else if (element.type == "value")
 			element.$el.val(value)
 		else if (element.type == "attribute")
-			element.$el.attr(element.attribute, value);
+			element.$el.attr(element.attribute, value)
+		else if (element.type == "css") {
+			if (!element.positive)
+				value = !value;
+			if (value)
+				element.$el.addClass(this.__parent.view().css(element.css))
+			else
+				element.$el.removeClass(this.__parent.view().css(element.css));
+		};
 	},
 	
 	__prepare_element: function (element) {
 		var self = this;
 		element.$el = this.$el.find(element.selector);
-		if (element.type == "inner")
+		if (element.type == "inner" || element.type == "css")
 			this.__update_element(element);
 		else if (element.type == "value")
 			element.$el.on("change input keyup paste", function () {
@@ -3752,6 +3804,20 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		var dec = this.__decompose_variable(variable);
 		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
 		return selector + " " + attribute + "='" + dec.object.get(dec.key) + "'";
+	},
+	
+	__bind_css_if: function (css, variable, positive) {
+		var element = this.__new_element({
+			type: "css",
+			css: css,
+			variable: variable,
+			positive: positive
+		});
+		var selector = "data-bind-css-" + css + "='" + element.id + "'";
+		element.selector = "[" + selector + "]";
+		var dec = this.__decompose_variable(variable);
+		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
+		return selector;
 	},
 	
 	__bind_value: function (variable) {
@@ -4159,10 +4225,12 @@ BetaJS.Templates.Cached['input-view-template'] = '  <input {%= bind.value("value
 
 BetaJS.Templates.Cached['label-view-template'] = '  <label {%= bind.inner("label") %}></label> ';
 
+BetaJS.Templates.Cached['link-view-template'] = '  <a href="javascript:{}" {%= bind.inner("label") %}></a> ';
+
 BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>  ';
 
-BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    data-selector="list">   </{%= list_container_element %}>  ';
-BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
+BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    class="{%= list_container_classes %}"    data-selector="list">   </{%= list_container_element %}>  ';
+BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    class="{%= item_container_classes %}"    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
@@ -4228,6 +4296,22 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	__removeChildContainer: function (child) {
 		this.$data({"view-id": child.cid()}).remove();
 	}
+});
+BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView", {
+	constructor: function (options) {
+		this._inherited(BetaJS.Views.SingleContainerView, "constructor", options);
+		this.__view = null;
+	},
+	getView: function () {
+		return this.__view;
+	},
+	setView: function(view) {
+		this.removeChild(this.__view);
+		if (view) {
+			view.setEl("");
+			this.__view = this.addChild(view);
+		}
+	},
 });
 BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	_dynamics: {
@@ -4299,6 +4383,23 @@ BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 		this._setOptionProperty(options, "label", "");
 	}
 });
+BetaJS.Views.LinkView = BetaJS.Views.View.extend("LinkView", {
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["link-view-template"]
+	},
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.LinkView, "constructor", options);
+		this._setOptionProperty(options, "label", "");
+	},
+	_events: function () {
+		return this._inherited(BetaJS.Views.LinkView, "_events").concat([{
+			"click a": "__click"
+		}]);
+	},
+	__click: function () {
+		this.trigger("click");
+	}
+});
 BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["text-area-template"]
@@ -4334,8 +4435,9 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		this._inherited(BetaJS.Views.CustomListView, "constructor", options);
 		this._setOption(options, "list_container_element", "ul");
 		this._setOption(options, "list_container_attrs", {});
+		this._setOption(options, "list_container_classes", "");
 		this._setOption(options, "item_container_element", "li");
-		this._setOption(options, "item_container_attrs", {});
+		this._setOption(options, "item_container_classes", "");
 		this.__itemData = {};
 		if ("collection" in options) {
 			this.__collection = options.collection;
@@ -4402,7 +4504,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 	_renderListContainer: function () {
 		this.$el.html(this.evaluateTemplate("default", {
 			list_container_element: this.__list_container_element,
-			list_container_attrs: this.__list_container_attrs
+			list_container_attrs: this.__list_container_attrs,
+			list_container_classes: this.__list_container_classes
 		}));
 		return this.$data({"selector": "list"});
 	},
@@ -4446,7 +4549,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		var container = this.evaluateTemplate("item-container", {
 			item: item,
 			item_container_element: this.__item_container_element, 
-			item_container_attrs: this.__item_container_attrs 
+			item_container_attrs: this.__item_container_attrs,
+			item_container_classes: this.__item_container_classes			
 		});
 		var index = this.__collection.getIndex(item);
 		if (index == 0)
@@ -4585,5 +4689,87 @@ BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListVi
 		this.removeChild(data.view);
 		data.view.destroy();
 	},
+	
+});
+BetaJS.Views.ItemListItemView = BetaJS.Views.View.extend("ItemListItemView", {
+	
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.ItemListItemView, "constructor", options);
+		this._setOptionProperty(options, "item", null);
+		this._setOptionProperty(options, "_selected");
+	},
+	
+	_events: function () {
+		return [{
+			"click": "__click"
+		}];
+	},
+	
+	isSelected: function () {
+		return this.get("_selected");
+	},
+	
+	__click: function () {
+		if (this.getParent().__click_select)
+			this.select();
+	},
+	
+	select: function () {
+		this.getParent().select(this.get("item"));
+	},
+	
+	unselect: function () {
+		this.getParent().unselect(this.get("item"));
+	}
+
+});
+
+BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
+	
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.ItemListView, "constructor", options);
+		this._setOption(options, "sub_view", BetaJS.Views.ItemListItemView);
+		this._setOption(options, "sub_view_options", this._sub_view_options || {});
+		this._setOption(options, "selectable", true);
+		this._setOption(options, "multi_select", false);
+		this._setOption(options, "click_select", true);
+	},
+	
+	_addItem: function (item, element, is_new_item) {
+		var view = new this.__sub_view(BetaJS.Objs.extend({
+			el: element,
+			item: item
+		}, this.__sub_view_options));
+		this.itemData(item).view = view;
+		this.addChild(view);
+	},
+	
+	_destroyItemData: function (data) {
+		this.removeChild(data.view);
+		data.view.destroy();
+	},
+	
+	isSelected: function (item) {
+		return this.itemData(item).view.get("_selected");
+	},
+	
+	select: function (item) {
+		var self = this;
+		if (this.__selectable && !this.isSelected(item)) {
+			if (!this.__multi_select)
+				this.collection().iterate(function (object) {
+					self.unselect(object);
+				});
+			this.itemData(item).view.set("_selected", true);
+			this.trigger("select", item);
+		}
+	},
+	
+	unselect: function (item) {
+		if (this.__selectable && this.isSelected(item)) {
+			this.itemData(item).view.set("_selected", false);
+			this.trigger("unselect", item);
+		}
+	}
 	
 });

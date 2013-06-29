@@ -89,6 +89,10 @@ BetaJS.Class.prototype.constructor = function () {
 	this._notify("construct");
 }
 
+BetaJS.Class.prototype.as_method = function (s) {
+	return BetaJS.Functions.as_method(this[s], this);
+}
+
 BetaJS.Class.prototype._notify = function (name) {
 	if (!this.cls.__notifications)
 		return;

@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -147,6 +147,18 @@ BetaJS.Functions = {
 		}
 	}
 
+};
+
+BetaJS.Scopes = {
+	
+	resolve: function (s, base) {
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length; ++i)
+			object = object[a[i]];
+		return object;
+	}
+	
 };
 
 BetaJS.Objs = {
@@ -349,6 +361,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 BetaJS.Class.prototype.constructor = function () {
 	this._notify("construct");
+}
+
+BetaJS.Class.prototype.as_method = function (s) {
+	return BetaJS.Functions.as_method(this[s], this);
 }
 
 BetaJS.Class.prototype._notify = function (name) {
@@ -1155,11 +1171,11 @@ BetaJS.Properties.PropertiesMixin = {
 					type: BetaJS.Properties.TYPE_COMPUTED,
 					func: value.func,
 					dependencies: value.dependencies,
-					value: value.func(this)
+					value: value.func.apply(self)
 				};
 				BetaJS.Objs.iter(value.dependencies, function (dep) {
 					self.on("change:" + dep, function () {
-						self.__properties[key].value = value.func(self);
+						self.__properties[key].value = value.func.apply(self);
 						self.trigger("change");
 						self.trigger("change:" + key);
 					}, this.__properties[key]);
@@ -1419,7 +1435,7 @@ BetaJS.Comparators = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1854,7 +1870,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 	__execute_query: function (skip, limit, clear_before) {
 		skip = Math.max(skip, 0);
 		var q = {};
-		if (this.__query.sort != null)
+		if (this.__query.sort != null && !BetaJS.Types.is_empty(this.__query.sort))
 			q.sort = this.__query.sort;
 		if (clear_before) {
 			if (skip > 0)
@@ -1867,7 +1883,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 			this.__query.limit = limit;
 			this.__query.count = limit == null || objs.length < limit ? skip + objs.length : null;
 			this.clear();
-				this.add_objects(objs);
+			this.add_objects(objs);
 		} else if (skip < this.__query.skip) {
 			limit = this.__query.skip - skip;
 			if (skip > 0)
@@ -1889,6 +1905,8 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 				var iter = this.__query.func(this.__query.select, q);
 				var objs = iter.asArray();
 				this.__query.limit = this.__query.limit + objs.length;
+				if (limit > objs.length)
+					this.__query.count = skip + objs.length;
 				this.add_objects(objs);
 			}
 		}
@@ -1936,6 +1954,10 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 			return;
 		if (paginate_index > 0)
 			this.paginate(paginate_index - 1);
+	},
+	
+	isComplete: function () {
+		return this.__query.count != null;
 	}
 	
 });
@@ -2333,17 +2355,33 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		return this.__cache[id];
 	},
 	
+	_query_capabilities: function () {
+		return this.__parent._query_capabilities();
+	},
+
 	_query: function (query, options) {
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		if (encoded in this.__queries)
-			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
+			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__queries[encoded]));
 		var result = this.__parent.query(query, options).asArray();
-		for (var i = 0; i < result.length; ++i)
+		this.__queries[encoded] = {};
+		for (var i = 0; i < result.length; ++i) {
 			this.__cache[result[i].id] = result[i];
-		this.__queries[encoded] = true;
+			this.__queries[encoded][result[i].id] = result[i];
+		}
 		return new BetaJS.Iterators.ArrayIterator(result);
-	},	
+	},
+	
+	cache: function (query, options, result) {
+		var constrained = BetaJS.Queries.Constrained.make(query, options);
+		var encoded = BetaJS.Queries.Constrained.format(constrained);
+		this.__queries[encoded] = {};
+		for (var i = 0; i < result.length; ++i) {
+			this.__cache[result[i].id] = result[i];
+			this.__queries[encoded][result[i].id] = result[i];
+		}
+	}
 	
 });
 
@@ -2467,9 +2505,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
 
 	constructor : function(uri, ajax, capability_params, options) {
-		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
-		this.__uri = uri;
-		this.__ajax = ajax;
+		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
 		this.__capability_params = capability_params;
 	},
 	
@@ -2496,7 +2532,7 @@ BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("Quer
 
 });
 /*!
-  betajs - v0.0.1 - 2013-06-28
+  betajs - v0.0.1 - 2013-06-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2509,6 +2545,9 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor");
+		var scheme = this.cls.scheme();
+		for (var key in scheme)
+			this.set(key, scheme[key].def || null);
 		options = options || {};
 		this.__properties_changed = {};
 		this.__errors = {};
@@ -2549,12 +2588,10 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		delete this.__properties_changed[key];
 	},
 	
-	_canSet: function (key, value) {
-		var scheme = this.cls.scheme();
-		return key in scheme;
-	},
-	
 	_afterSet: function (key, value) {
+		var scheme = this.cls.scheme();
+		if (!(key in scheme))
+			return;
 		this.__properties_changed[key] = true;
 		this.__unvalidated[key] = true;
 		this.__saved = false;
@@ -2812,7 +2849,8 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
-		var model = new window[type](obj, {
+		var cls = BetaJS.Scopes.resolve(type);
+		var model = new cls(obj, {
 			table: this,
 			saved: true,
 			"new": false

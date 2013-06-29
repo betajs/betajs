@@ -152,7 +152,8 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
-		var model = new window[type](obj, {
+		var cls = BetaJS.Scopes.resolve(type);
+		var model = new cls(obj, {
 			table: this,
 			saved: true,
 			"new": false
