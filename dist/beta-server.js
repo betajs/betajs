@@ -8,6 +8,11 @@
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
+/*!
+  betajs - v0.0.1 - 2013-06-29
+  Copyright (c) Oliver Friedmann & Victor Lingenthal
+  MIT Software License.
+*/
 var BetaJS = BetaJS || {};
 /*
  * Export for NodeJS
@@ -2956,6 +2961,261 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 	validate: function (value, context) {
 		return BetaJS.Types.is_null(value) ? this.__error_string : null;
+	}
+
+});
+BetaJS.Databases = {};
+
+BetaJS.Databases.Database = BetaJS.Class.extend("Database", {
+	
+	_tableClass: function () {
+		return null;
+	},
+	
+	getTable: function (table_name) {
+		var cls = this._tableClass();		
+		return new cls(this, table_name);
+	}
+	
+});
+
+BetaJS.Databases.DatabaseTable = BetaJS.Class.extend("DatabaseTable", {
+	
+	constructor: function (database, table_name) {
+		this._inherited(BetaJS.Databases.DatabaseTable, "constructor");
+		this._database = database;
+		this._table_name = table_name;
+	},
+	
+	_encode: function (data) {
+		return data;	
+	},
+	
+	_decode: function (data) {
+		return data;
+	},
+
+	_insertRow: function (row) {		
+	},
+	
+	_removeRow: function (query) {		
+	},
+	
+	_findOne: function (query, options) {
+	},
+	
+	_updateRow: function (query, row) {
+	},
+	
+	_find: function (query, options) {
+	},
+
+	insertRow: function (row) {
+		return this._decode(this._insertRow(this._encode(row)));
+	},
+	
+	removeRow: function (query) {
+		return this._removeRow(this._encode(query));
+	},
+	
+	findOne: function (query, options) {
+		var result = this._findOne(this._encode(query), options);
+		return result == null ? null : this._decode(result);
+	},
+	
+	updateRow: function (query, row) {
+		return this._decode(this._updateRow(this._encode(query), this._encode(row)));
+	},
+	
+	find: function (query, options) {
+		var self = this;
+		return new BetaJS.Iterators.MappedIterator(this._find(this._encode(query), options), function (row) {
+			return self._decode(row);
+		});
+	},
+	
+	removeById: function (id) {
+		return this.removeRow({id : id});
+	},
+	
+	findById: function (id) {
+		return this.findOne({id : id});
+	},
+	
+	updateById: function (id, data) {
+		return this.updateRow({id: id}, data);
+	}
+	
+});
+/* Needs to be executed within Fiber; requires Mongo-Sync. */
+
+BetaJS.Databases.MongoDatabase = BetaJS.Databases.Database.extend("MongoDatabase", {
+	
+	constructor: function (mongo_sync, database_name, server, port) {
+		this._inherited(BetaJS.Databases.MongoDatabase, "constructor");
+		this.__server = server || "localhost";
+		this.__port = port || 27017;
+		this.__database_name = database_name;
+		this.__mongodb = null;
+		this.__mongo_sync = mongo_sync;
+	},
+
+	_tableClass: function () {
+		return BetaJS.Databases.MongoDatabaseTable;
+	},
+	
+	mongo_sync: function () {
+		return this.__mongo_sync;
+	},
+	
+	mongodb: function () {
+		if (!this.__mongodb) {
+			this.__mongo_server = new this.__mongo_sync.Server(this.__server, this.__port);
+			this.__mongodb = this.__mongo_server.db(this.__database_name);
+		}
+		return this.__mongodb;
+	},
+	
+	destroy: function () {
+		if (this.__mongo_server)
+			this.__mongo_server.close();
+		this._inherited(BetaJS.Databases.MongoDatabase, "destroy");
+	}
+	
+});
+BetaJS.Databases.MongoDatabaseTable = BetaJS.Databases.DatabaseTable.extend("MongoDatabaseTable", {
+	
+	constructor: function (database, table_name) {
+		this._inherited(BetaJS.Databases.MongoDatabaseTable, "constructor", database, table_name);
+		this.__table = null;
+	},
+	
+	table: function () {
+		if (!this.__table)
+			this.__table = this._database.mongodb().getCollection(this._table_name);
+		return this.__table;
+	},
+	
+	_encode: function (data) {
+		var obj = BetaJS.Objs.clone(data, 1);
+		if ("id" in data) {
+			delete obj["id"];
+			obj._id = data.id;
+		}
+		return obj;
+	},
+	
+	_decode: function (data) {
+		var obj = BetaJS.Objs.clone(data, 1);
+		if ("_id" in data) {
+			delete obj["_id"];
+			obj.id = data._id;
+		}
+		return obj;
+	},
+
+	_insertRow: function (row) {
+		return this.table().insert(row);
+	},
+	
+	_removeRow: function (query) {
+		return this.table().remove(query);	
+	},
+	
+	_findOne: function (query, options) {
+		options = options || {};
+		options.limit = 1;
+		var result = this._find(query, options);
+		return result.next();
+	},
+	
+	_updateRow: function (query, row) {
+		return this.table().update(query, row, true, false);
+	},
+	
+	_find: function (query, options) {
+		options = options || {};
+		var result = this.table().find(query);
+		if ("sort" in options)
+			result = result.sort(options.sort);
+		if ("skip" in options)
+			result = result.skip(options.skip);
+		if ("limit" in options)
+			result = result.limit(options.limit);
+		return new BetaJS.Iterators.ArrayIterator(result.toArray());
+	},
+
+});
+
+BetaJS.Stores.DatabaseStore = BetaJS.Stores.BaseStore.extend("DatabaseStore", {
+	
+	constructor: function (database, table_name) {
+		this._inherited(BetaJS.Stores.DatabaseStore, "constructor");
+		this.__database = database;
+		this.__table_name = table_name;
+		this.__table = null;
+	},
+	
+	table: function () {
+		if (!this.__table)
+			this.__table = this.__database.getTable(this.__table_name);
+		return this.__table;
+	},
+	
+	_insert: function (data) {
+		return this.table().insertRow(data);
+	},
+	
+	_remove: function (id) {
+		return this.table().removeById(id);
+	},
+	
+	_get: function (id) {
+		return this.table().findById(id);
+	},
+	
+	_update: function (id, data) {
+		return this.table().updateById(id, data);
+	},
+	
+	_query_capabilities: function () {
+		return {
+			"query": true,
+			"sort": true,
+			"skip": true,
+			"limit": true
+		};
+	},
+	
+	_query: function (query, options) {
+		return this.table().find(query, options);
+	},	
+
+});
+
+BetaJS.Stores.MongoDatabaseStore = BetaJS.Stores.ConversionStore.extend("MongoDatabaseStore", {
+	
+	constructor: function (database, table_name, types) {
+		var store = new BetaJS.Stores.DatabaseStore(database, table_name);
+		var encoding = {};
+		var decoding = {};
+		types = types || {};
+		types.id = "id";
+		var ObjectId = database.mongo_sync().ObjectId;
+		for (var key in types) {
+			if (types[key] == "id") {
+				encoding[key] = function (value) {
+					return new ObjectId(value);
+				};
+				decoding[key] = function (value) {
+					return value + "";
+				};
+			}
+		}
+		this._inherited(BetaJS.Stores.MongoDatabaseStore, "constructor", store, {
+			value_encoding: encoding,
+			value_decoding: decoding
+		});
 	}
 
 });
