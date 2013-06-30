@@ -123,7 +123,8 @@ module.exports = function(grunt) {
 					'src/data/stores/memory_store.js',
 					'src/data/stores/query_cached_store.js',
 					'src/data/stores/fully_cached_store.js',
-					'src/data/stores/remote_store.js'
+					'src/data/stores/remote_store.js',
+					'src/data/stores/conversion_store.js'
 				]
 			},
 			dist_beta_models : {
@@ -182,6 +183,19 @@ module.exports = function(grunt) {
 				src : [
 				    'src/tools/profiling/profiler.js',
 				]
+			},
+			dist_server: {
+				dest: 'dist/beta-server.js',
+				src: [
+					'dist/beta-common.js',
+					
+					'src/server/databases/databases.js',
+					'src/server/databases/database_tables.js',
+					'src/server/databases/mongo_database.js',
+					'src/server/databases/mongo_database_table.js',
+					'src/server/stores/database_store.js',
+					'src/server/stores/mongo_database_store.js'
+				]
 			}
 		},
 		uglify : {
@@ -197,6 +211,7 @@ module.exports = function(grunt) {
 					'dist/beta-models.min.js' : [ 'dist/beta-models.js' ],
 					'dist/beta-common.min.js' : [ 'dist/beta-common.js' ],					
 					'dist/beta-ui.min.js' : [ 'dist/beta-ui.js' ],
+					'dist/beta-server.min.js' : [ 'dist/beta-server.js' ],					
 					'dist/beta.min.js' : [ 'dist/beta.js' ],					
 				}
 			}
