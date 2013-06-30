@@ -1058,15 +1058,6 @@ BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin);
 BetaJS.Properties = {};
 
 
-/*
- * value
- * bindee
- * readonly
- * computed
- * type: 0
- * 
- */
-
 BetaJS.Properties.TYPE_VALUE = 0;
 BetaJS.Properties.TYPE_BINDING = 1;
 BetaJS.Properties.TYPE_COMPUTED = 2;
