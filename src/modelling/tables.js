@@ -78,12 +78,14 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		if (!is_valid && !this.__options["save_invalid"] && !this.__options["greedy_save"])
 			return false;
 		var attrs = {};
-		if (this.__options["save_invalid"])
+		var new_model = model.isNew();
+		if (new_model)
+			attrs = model.getAll()
+		else if (this.__options["save_invalid"])
 			attrs = model.properties_changed()
 		else
 			attrs = model.properties_changed(true);
 		var confirmed = {};
-		var new_model = model.isNew();
 		if (new_model) {
 			if (this.__options["type_column"])
 				attrs[this.__options["type_column"]] = model.cls.classname;

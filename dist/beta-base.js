@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-06-29
+  betajs - v0.0.1 - 2013-07-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -821,7 +821,7 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	},
 	
 	next: function () {
-		return this.__map(this.__iterator.next());
+		return this.hasNext() ? this.__map(this.__iterator.next()) : null;
 	}
 	
 });
@@ -1419,3 +1419,11 @@ BetaJS.Comparators = {
 	}
 	
 };
+
+BetaJS.Tokens = {
+	
+	generate_token: function () {
+		return Math.random().toString(36).substr(2); 
+	}
+	
+}

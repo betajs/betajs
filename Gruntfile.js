@@ -105,7 +105,8 @@ module.exports = function(grunt) {
 					'src/base/events.js',
 					'src/base/properties.js',
 					'src/base/collections.js',
-					'src/base/comparators.js'
+					'src/base/comparators.js',
+					'src/base/tokens.js',
 				]
 			},
 			dist_beta_data : {

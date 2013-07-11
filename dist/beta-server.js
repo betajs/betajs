@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-06-29
+  betajs - v0.0.1 - 2013-07-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-06-29
+  betajs - v0.0.1 - 2013-07-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-06-29
+  betajs - v0.0.1 - 2013-07-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -831,7 +831,7 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	},
 	
 	next: function () {
-		return this.__map(this.__iterator.next());
+		return this.hasNext() ? this.__map(this.__iterator.next()) : null;
 	}
 	
 });
@@ -1430,8 +1430,15 @@ BetaJS.Comparators = {
 	
 };
 
+BetaJS.Tokens = {
+	
+	generate_token: function () {
+		return Math.random().toString(36).substr(2); 
+	}
+	
+}
 /*!
-  betajs - v0.0.1 - 2013-06-29
+  betajs - v0.0.1 - 2013-07-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2600,7 +2607,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-06-29
+  betajs - v0.0.1 - 2013-07-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2614,8 +2621,16 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor");
 		var scheme = this.cls.scheme();
+		this.__properties_changed = {};
+		this.__errors = {};
+		this.__unvalidated = {};
 		for (var key in scheme)
-			this.set(key, scheme[key].def || null);
+			if (scheme[key].def) 
+				this.set(key, scheme[key].def)
+			else if (scheme[key].auto_create)
+				this.set(key, scheme[key].auto_create(this))
+			else
+				this.set(key, null);
 		options = options || {};
 		this.__properties_changed = {};
 		this.__errors = {};
@@ -2843,12 +2858,14 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		if (!is_valid && !this.__options["save_invalid"] && !this.__options["greedy_save"])
 			return false;
 		var attrs = {};
-		if (this.__options["save_invalid"])
+		var new_model = model.isNew();
+		if (new_model)
+			attrs = model.getAll()
+		else if (this.__options["save_invalid"])
 			attrs = model.properties_changed()
 		else
 			attrs = model.properties_changed(true);
 		var confirmed = {};
-		var new_model = model.isNew();
 		if (new_model) {
 			if (this.__options["type_column"])
 				attrs[this.__options["type_column"]] = model.cls.classname;

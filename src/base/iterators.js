@@ -42,7 +42,7 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	},
 	
 	next: function () {
-		return this.__map(this.__iterator.next());
+		return this.hasNext() ? this.__map(this.__iterator.next()) : null;
 	}
 	
 });
