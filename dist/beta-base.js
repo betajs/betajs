@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-11
+  betajs - v0.0.1 - 2013-07-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -147,6 +147,8 @@ BetaJS.Functions = {
 BetaJS.Scopes = {
 	
 	resolve: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
 		var object = base || window || global;
 		var a = s.split(".");
 		for (var i = 0; i < a.length; ++i)
@@ -777,7 +779,19 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 	}
 
 });
-BetaJS.Iterators = {};
+BetaJS.Iterators = {
+	
+	ensure: function (mixed) {
+		if (mixed == null)
+			return new BetaJS.Iterators.ArrayIterator([]);
+		if (mixed.instance_of(BetaJS.Iterators.Iterator))
+			return mixed;
+		if (BetaJS.Types.is_array(mixed))
+			return new BetaJS.Iterators.ArrayIterator(mixed);
+		return new BetaJS.Iterators.ArrayIterator([mixed]);
+	},
+	
+};
 
 BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
 	

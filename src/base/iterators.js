@@ -1,4 +1,16 @@
-BetaJS.Iterators = {};
+BetaJS.Iterators = {
+	
+	ensure: function (mixed) {
+		if (mixed == null)
+			return new BetaJS.Iterators.ArrayIterator([]);
+		if (mixed.instance_of(BetaJS.Iterators.Iterator))
+			return mixed;
+		if (BetaJS.Types.is_array(mixed))
+			return new BetaJS.Iterators.ArrayIterator(mixed);
+		return new BetaJS.Iterators.ArrayIterator([mixed]);
+	},
+	
+};
 
 BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
 	

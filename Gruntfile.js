@@ -135,6 +135,8 @@ module.exports = function(grunt) {
 					'src/modelling/tables.js',
 					'src/modelling/associations/associations.js', 
 					'src/modelling/associations/has_many_associations.js', 
+					'src/modelling/associations/has_one_associations.js', 
+					'src/modelling/associations/belongs_to_associations.js', 
 					'src/modelling/validations/validators.js', 
 					'src/modelling/validations/present_validators.js', 
 				]

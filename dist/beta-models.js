@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-11
+  betajs - v0.0.1 - 2013-07-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -38,12 +38,27 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 			this.__table = options["table"];
 		if (this.__canCallTable())
 			this.__table.__modelCreate(this);
+		this.assocs = this._initializeAssociations();
+		for (var key in this.assocs)
+			this.__addAssoc(key, this.assocs[key]);
+	},
+	
+	__addAssoc: function (key, obj) {
+		this[key] = function () {
+			return obj.yield();
+		}
+	},
+	
+	_initializeAssociations: function () {
+		return {};
 	},
 	
 	destroy: function () {
 		if (this.__canCallTable() && !this.__table.__modelDestroy(this))
 			return false;
 		this.trigger("destroy");
+		for (var key in this.assocs)
+			this.assocs[key].destroy();
 		this._inherited(BetaJS.Modelling.Model, "destroy");
 	},
 	
@@ -134,8 +149,14 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 			return false;
 		this.trigger("save");
 		this.__saved = true;
+		var was_new = this.__new;
 		this.__new = false;
+		if (was_new)
+			this._after_create();
 		return true;
+	},
+	
+	_after_create: function () {
 	},
 	
 	isSaved: function () {
@@ -152,14 +173,44 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.trigger("remove");
 		this.destroy();
 		return true;
+	},
+	
+	asRecord: function (tags) {
+		var rec = {};
+		var scheme = this.cls.scheme();
+		var props = this.getAll();
+		tags = tags || {};
+		for (var key in props) 
+			if (key in scheme) {
+				var target = scheme[key]["tags"] || [];
+				var tarobj = {};
+				BetaJS.Objs.iter(target, function (value) {
+					tarobj[value] = true;
+				});
+				var success = true;
+				BetaJS.Objs.iter(tags, function (x) {
+					success = success && x in tarobj;
+				}, this);
+				if (success)
+					rec[key] = props[key];
+			}
+		return rec;		
 	}
 	
 }], {
 
 	_initializeScheme: function () {
 		return {
-			"id": {}
+			"id": {
+				type: "id"
+			}
 		};
+	},
+	
+	asRecords: function (arr, tags) {
+		return arr.map(function (item) {
+			return item.asRecord(tags);
+		});
 	}
 	
 }, {
@@ -340,8 +391,72 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 BetaJS.Modelling.Associations = {};
 
 BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
+
+	constructor: function (model, foreign_table, foreign_key, options) {
+		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");
+		this._model = model;
+		this._foreign_table = foreign_table;
+		this._foreign_key = foreign_key;
+		this._options = options || {};
+		this.__cache = null;
+		if (options["delete_cascade"])
+			model.on("remove", function () {
+				this.__delete_cascade();
+			}, this);
+	},
+	
+	__delete_cascade: function () {
+		var iter = BetaJS.Iterators.ensure(this.yield());
+		while (iter.hasNext())
+			iter.next().remove();
+	},
+	
+	yield: function () {
+		if (this.__cache)
+			return this.__cache;
+		var obj = this._yield();
+		if (this._options["cached"])
+			this.__cache = obj;
+		return obj;
+	},
+	
+	invalidate: function () {
+		delete this["__cache"];
+	}
+
 });
 BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations.Association.extend("HasManyAssocation", {
+
+	_yield: function () {
+		var query = {};
+		query[this._foreign_key] = this._model.get("id");
+		return this._foreign_table.allBy(query);
+	},
+
+	yield: function () {
+		if (!this._options["cached"])
+			return this._yield();
+		if (!this.__cache)
+			this.__cache = this._yield().asArray();
+		return new BetaJS.Iterators.ArrayIterator(this.__cache);
+	},
+
+});
+BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.Association.extend("HasOneAssocation", {
+
+	_yield: function () {
+		var query = {};
+		query[this._foreign_key] = this._model.get("id");
+		return this._foreign_table.findBy(query);
+	}
+
+});
+BetaJS.Modelling.Associations.BelongsToAssociation = BetaJS.Modelling.Associations.Association.extend("BelongsToAssocation", {
+	
+	_yield: function () {
+		return this._foreign_table.findById(this._model.get(this._foreign_key));
+	}
+	
 });
 BetaJS.Modelling.Validators = {};
 

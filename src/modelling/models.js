@@ -33,12 +33,27 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 			this.__table = options["table"];
 		if (this.__canCallTable())
 			this.__table.__modelCreate(this);
+		this.assocs = this._initializeAssociations();
+		for (var key in this.assocs)
+			this.__addAssoc(key, this.assocs[key]);
+	},
+	
+	__addAssoc: function (key, obj) {
+		this[key] = function () {
+			return obj.yield();
+		}
+	},
+	
+	_initializeAssociations: function () {
+		return {};
 	},
 	
 	destroy: function () {
 		if (this.__canCallTable() && !this.__table.__modelDestroy(this))
 			return false;
 		this.trigger("destroy");
+		for (var key in this.assocs)
+			this.assocs[key].destroy();
 		this._inherited(BetaJS.Modelling.Model, "destroy");
 	},
 	
@@ -129,8 +144,14 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 			return false;
 		this.trigger("save");
 		this.__saved = true;
+		var was_new = this.__new;
 		this.__new = false;
+		if (was_new)
+			this._after_create();
 		return true;
+	},
+	
+	_after_create: function () {
 	},
 	
 	isSaved: function () {
@@ -147,14 +168,44 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.trigger("remove");
 		this.destroy();
 		return true;
+	},
+	
+	asRecord: function (tags) {
+		var rec = {};
+		var scheme = this.cls.scheme();
+		var props = this.getAll();
+		tags = tags || {};
+		for (var key in props) 
+			if (key in scheme) {
+				var target = scheme[key]["tags"] || [];
+				var tarobj = {};
+				BetaJS.Objs.iter(target, function (value) {
+					tarobj[value] = true;
+				});
+				var success = true;
+				BetaJS.Objs.iter(tags, function (x) {
+					success = success && x in tarobj;
+				}, this);
+				if (success)
+					rec[key] = props[key];
+			}
+		return rec;		
 	}
 	
 }], {
 
 	_initializeScheme: function () {
 		return {
-			"id": {}
+			"id": {
+				type: "id"
+			}
 		};
+	},
+	
+	asRecords: function (arr, tags) {
+		return arr.map(function (item) {
+			return item.asRecord(tags);
+		});
 	}
 	
 }, {
