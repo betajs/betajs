@@ -197,7 +197,8 @@ module.exports = function(grunt) {
 					'src/server/databases/mongo_database.js',
 					'src/server/databases/mongo_database_table.js',
 					'src/server/stores/database_store.js',
-					'src/server/stores/mongo_database_store.js'
+					'src/server/stores/mongo_database_store.js',
+					'src/server/net/http_header.js'
 				]
 			}
 		},

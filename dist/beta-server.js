@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-07-12
+  betajs - v0.0.1 - 2013-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-12
+  betajs - v0.0.1 - 2013-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-12
+  betajs - v0.0.1 - 2013-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1452,7 +1452,7 @@ BetaJS.Tokens = {
 	
 }
 /*!
-  betajs - v0.0.1 - 2013-07-12
+  betajs - v0.0.1 - 2013-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2621,7 +2621,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-12
+  betajs - v0.0.1 - 2013-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2817,6 +2817,25 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 					rec[key] = props[key];
 			}
 		return rec;		
+	},
+	
+	setByTags: function (data, tags) {
+		var scheme = this.cls.scheme();
+		tags = tags || {};
+		for (var key in data) 
+			if (key in scheme) {
+				var target = scheme[key]["tags"] || [];
+				var tarobj = {};
+				BetaJS.Objs.iter(target, function (value) {
+					tarobj[value] = true;
+				});
+				var success = true;
+				BetaJS.Objs.iter(tags, function (x) {
+					success = success && x in tarobj;
+				}, this);
+				if (success)
+					this.set(key, data[key]);
+			}
 	}
 	
 }], {
@@ -3356,3 +3375,36 @@ BetaJS.Stores.MongoDatabaseStore = BetaJS.Stores.ConversionStore.extend("MongoDa
 	}
 
 });
+
+BetaJS.Net.HttpHeader = {
+	
+	HTTP_STATUS_OK : 200,
+	HTTP_STATUS_CREATED : 201,
+	HTTP_STATUS_PAYMENT_REQUIRED : 402,
+	HTTP_STATUS_FORBIDDEN : 403,
+	HTTP_STATUS_NOT_FOUND : 404,
+	HTTP_STATUS_PRECONDITION_FAILED : 412,
+	HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+	
+	format: function (code, prepend_code) {
+		var ret = "";
+		if (code == this.HTTP_STATUS_OK)
+			ret = "OK"
+		else if (code == this.HTTP.STATUS_CREATED)
+			ret = "Created"
+		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
+			ret = "Payment Required"
+		else if (code == this.HTTP_STATUS_FORBIDDEN)
+			ret = "Forbidden"
+		else if (code == this.HTTP_STATUS_NOT_FOUND)
+			ret = "Not found"
+		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
+			ret = "Precondition Failed"
+		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+			ret = "Internal Server Error"
+		else
+			ret = "Other Error";
+		return prepend_code ? code + " " + ret : ret;
+	}
+	
+}

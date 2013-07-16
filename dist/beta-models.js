@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-12
+  betajs - v0.0.1 - 2013-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -195,6 +195,25 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 					rec[key] = props[key];
 			}
 		return rec;		
+	},
+	
+	setByTags: function (data, tags) {
+		var scheme = this.cls.scheme();
+		tags = tags || {};
+		for (var key in data) 
+			if (key in scheme) {
+				var target = scheme[key]["tags"] || [];
+				var tarobj = {};
+				BetaJS.Objs.iter(target, function (value) {
+					tarobj[value] = true;
+				});
+				var success = true;
+				BetaJS.Objs.iter(tags, function (x) {
+					success = success && x in tarobj;
+				}, this);
+				if (success)
+					this.set(key, data[key]);
+			}
 	}
 	
 }], {
