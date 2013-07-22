@@ -9,7 +9,13 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
-	
+		
+	constructor: function (options) {
+		this._inherited(BetaJS.Stores.BaseStore, "constructor");
+		options = options || {};
+		this._id_key = options.id_key || "id";
+	},
+		
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -50,32 +56,17 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	_query: function (query, options) {
 	},	
 	
-	_insertEvent: function (row, external) {
-		this.trigger("insert", row, external);		
-		this.trigger("insert-" + external ? 'external' : 'internal', row);
-	},
-	
-	_updateEvent: function (row, row_changed, external) {
-		this.trigger("update", row, row_changed, external)
-		this.trigger("update-" + external ? 'external' : 'internal', row, row_changed);
-	},
-
-	_removeEvent: function (row, external) {
-		this.trigger("remove", row, external)
-		this.trigger("remove-" + external ? 'external' : 'internal', row);
-	},
-
 	insert: function (data) {
 		var row = this._insert(data);
 		if (row)
-			this._insertEvent(row, true);
+			this.trigger("insert", row)
 		return row;
 	},
 	
 	remove: function (id) {
 		var row = this._remove(id);
 		if (row)
-			this._removeEvent(row, true);
+			this.trigger("remove", row);
 		return row;
 	},
 	
@@ -86,7 +77,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	update: function (id, data) {
 		var row = this._update(id, data);
 		if (row)
-			this._updateEvent(row, data, true);
+			this.trigger("update", row, data);
 		return row;
 	},
 	

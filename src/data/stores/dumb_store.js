@@ -25,7 +25,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 			this._write_prev_id(id, last_id);
 		} else
 			this._write_first_id(id);
-		data.id = id;
+		data[this._id_key] = id;
 		this._write_last_id(id);
 		this._write_item(id, data);
 		return data;
@@ -65,7 +65,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	_update: function (id, data) {
 		var row = this._get(id);
 		if (row) {
-			delete data.id;
+			delete data[this._id_key];
 			BetaJS.Objs.extend(row, data);
 			this._write_item(id, row);
 		}

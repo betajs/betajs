@@ -1,7 +1,9 @@
 BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStore", {
 
-	constructor: function (parent) {
-		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor");
+	constructor: function (parent, options) {
+		options = options || {};
+		options.id_key = parent._id_key;
+		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor", options);
 		this.__parent = parent;
 		this.__cache = {};
 		this.__queries = {};
@@ -15,7 +17,7 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 	_insert: function (data) {
 		var result = this.__parent.insert(data);
 		if (result)
-			this.__cache[data.id] = data;
+			this.__cache[data[this._id_key]] = data;
 		return result;
 	},
 	
@@ -51,8 +53,8 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		var result = this.__parent.query(query, options).asArray();
 		this.__queries[encoded] = {};
 		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i].id] = result[i];
-			this.__queries[encoded][result[i].id] = result[i];
+			this.__cache[result[i][this._id_key]] = result[i];
+			this.__queries[encoded][result[i][this._id_key]] = result[i];
 		}
 		return new BetaJS.Iterators.ArrayIterator(result);
 	},
@@ -62,8 +64,8 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		this.__queries[encoded] = {};
 		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i].id] = result[i];
-			this.__queries[encoded][result[i].id] = result[i];
+			this.__cache[result[i][this._id_key]] = result[i];
+			this.__queries[encoded][result[i][this._id_key]] = result[i];
 		}
 	}
 	

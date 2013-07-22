@@ -1,9 +1,10 @@
 BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore", {
 	
 	constructor: function (store, options) {
-		this._inherited(BetaJS.Stores.ConversionStore, "constructor");
-		this.__store = store;
 		options = options || {};
+		options.id_key = store._id_key;
+		this._inherited(BetaJS.Stores.ConversionStore, "constructor", options);
+		this.__store = store;
 		this.__key_encoding = options["key_encoding"] || {};
 		this.__key_decoding = options["key_decoding"] || {};
 		this.__value_encoding = options["value_encoding"] || {};
@@ -45,15 +46,15 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 	},
 	
 	_remove: function (id) {
-		return this.__store.remove(this.encode_value("id", id));
+		return this.__store.remove(this.encode_value(this._id_key, id));
 	},
 
 	_get: function (id) {
-		return this.decode_object(this.__store.get(this.encode_value("id", id)));
+		return this.decode_object(this.__store.get(this.encode_value(this._id_key, id)));
 	},
 	
 	_update: function (id, data) {
-		return this.decode_object(this.__store.update(this.encode_value("id", id), this.encode_object(data)));
+		return this.decode_object(this.__store.update(this.encode_value(this._id_key, id), this.encode_object(data)));
 	},
 	
 	_query_capabilities: function () {

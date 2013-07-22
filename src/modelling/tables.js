@@ -22,15 +22,15 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__enterModel: function (model) {
 		this.trigger("enter", model);
 		this.__models_by_cid[model.cid()] = model;
-		if (model.has("id"))
-			this.__models_by_id[model.get("id")] = model;
+		if (model.hasId())
+			this.__models_by_id[model.id()] = model;
 	},
 	
 	__leaveModel: function (model) {
 		this.trigger("leave", model);
 		delete this.__models_by_cid[model.cid()];
-		if (model.has("id"))
-			delete this.__models_by_id[model.get("id")];
+		if (model.hasId())
+			delete this.__models_by_id[model.id()];
 	},
 	
 	__hasModel: function (model) {
@@ -53,7 +53,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__modelRemove: function (model) {
 		if (!this.__hasModel(model))
 			return false;
-		var result = this.__store.remove(model.get("id"));
+		var result = this.__store.remove(model.id());
 		if (result)
 			this.trigger("remove", model);
 		return this.__leaveModel(model) && result;
@@ -90,11 +90,11 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			if (this.__options["type_column"])
 				attrs[this.__options["type_column"]] = model.cls.classname;
 			confirmed = this.__store.insert(attrs);
-			if (!("id" in confirmed))
+			if (!(model.cls.primary_key() in confirmed))
 				return false;
-			this.__models_by_id[confirmed["id"]] = model;
+			this.__models_by_id[confirmed[model.cls.primary_key()]] = model;
 		} else if (!BetaJS.Types.is_empty(attrs)){
-			confirmed = this.__store.update(model.get("id"), attrs);
+			confirmed = this.__store.update(model.id(), attrs);
 			if (BetaJS.Types.is_empty(confirmed))
 				return false;			
 		}
@@ -149,12 +149,12 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__materialize: function (obj) {
 		if (!obj)
 			return null;
-		if (this.__models_by_id[obj.id])
-			return this.__models_by_id[obj.id];
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
 		var cls = BetaJS.Scopes.resolve(type);
+		if (this.__models_by_id[obj[cls.primary_key()]])
+			return this.__models_by_id[obj[cls.primary_key()]];
 		var model = new cls(obj, {
 			table: this,
 			saved: true,

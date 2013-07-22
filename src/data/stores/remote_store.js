@@ -1,7 +1,7 @@
 BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
-		this._inherited(BetaJS.Stores.RemoteStore, "constructor");
+		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
 		this.__uri = uri;
 		this.__ajax = ajax;
 		this.__options = BetaJS.Objs.extend({
@@ -24,7 +24,11 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 	_remove : function(id) {
 		try {
 			var response = this.__ajax.syncCall({method: "DELETE", uri: this.__uri + "/" + id});
-			return response ? response : {id:id};
+			if (response)
+				return response;
+			response = {};
+			response[this._id_key] = id;
+			return response;
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}

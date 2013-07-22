@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-16
+  betajs - v0.0.1 - 2013-07-22
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -214,16 +214,28 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 				if (success)
 					this.set(key, data[key]);
 			}
+	},
+	
+	id: function () {
+		return this.get(this.cls.primary_key());
+	},
+	
+	hasId: function () {
+		return this.has(this.cls.primary_key());
 	}
 	
 }], {
 
+	primary_key: function () {
+		return "id";
+	},
+
 	_initializeScheme: function () {
-		return {
-			"id": {
-				type: "id"
-			}
+		var s = {};
+		s[this.primary_key()] = {
+			type: "id"
 		};
+		return s;
 	},
 	
 	asRecords: function (arr, tags) {
@@ -238,7 +250,7 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__scheme = this.__scheme || this._initializeScheme();
 		return this.__scheme;
 	}
-
+	
 });
 BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	BetaJS.Events.EventsMixin,
@@ -264,15 +276,15 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__enterModel: function (model) {
 		this.trigger("enter", model);
 		this.__models_by_cid[model.cid()] = model;
-		if (model.has("id"))
-			this.__models_by_id[model.get("id")] = model;
+		if (model.hasId())
+			this.__models_by_id[model.id()] = model;
 	},
 	
 	__leaveModel: function (model) {
 		this.trigger("leave", model);
 		delete this.__models_by_cid[model.cid()];
-		if (model.has("id"))
-			delete this.__models_by_id[model.get("id")];
+		if (model.hasId())
+			delete this.__models_by_id[model.id()];
 	},
 	
 	__hasModel: function (model) {
@@ -295,7 +307,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__modelRemove: function (model) {
 		if (!this.__hasModel(model))
 			return false;
-		var result = this.__store.remove(model.get("id"));
+		var result = this.__store.remove(model.id());
 		if (result)
 			this.trigger("remove", model);
 		return this.__leaveModel(model) && result;
@@ -332,11 +344,11 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			if (this.__options["type_column"])
 				attrs[this.__options["type_column"]] = model.cls.classname;
 			confirmed = this.__store.insert(attrs);
-			if (!("id" in confirmed))
+			if (!(model.cls.primary_key() in confirmed))
 				return false;
-			this.__models_by_id[confirmed["id"]] = model;
+			this.__models_by_id[confirmed[model.cls.primary_key()]] = model;
 		} else if (!BetaJS.Types.is_empty(attrs)){
-			confirmed = this.__store.update(model.get("id"), attrs);
+			confirmed = this.__store.update(model.id(), attrs);
 			if (BetaJS.Types.is_empty(confirmed))
 				return false;			
 		}
@@ -391,12 +403,12 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__materialize: function (obj) {
 		if (!obj)
 			return null;
-		if (this.__models_by_id[obj.id])
-			return this.__models_by_id[obj.id];
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
 		var cls = BetaJS.Scopes.resolve(type);
+		if (this.__models_by_id[obj[cls.primary_key()]])
+			return this.__models_by_id[obj[cls.primary_key()]];
 		var model = new cls(obj, {
 			table: this,
 			saved: true,

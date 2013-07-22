@@ -209,16 +209,28 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 				if (success)
 					this.set(key, data[key]);
 			}
+	},
+	
+	id: function () {
+		return this.get(this.cls.primary_key());
+	},
+	
+	hasId: function () {
+		return this.has(this.cls.primary_key());
 	}
 	
 }], {
 
+	primary_key: function () {
+		return "id";
+	},
+
 	_initializeScheme: function () {
-		return {
-			"id": {
-				type: "id"
-			}
+		var s = {};
+		s[this.primary_key()] = {
+			type: "id"
 		};
+		return s;
 	},
 	
 	asRecords: function (arr, tags) {
@@ -233,5 +245,5 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__scheme = this.__scheme || this._initializeScheme();
 		return this.__scheme;
 	}
-
+	
 });

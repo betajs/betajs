@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-07-16
+  betajs - v0.0.1 - 2013-07-22
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-16
+  betajs - v0.0.1 - 2013-07-22
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1447,7 +1447,7 @@ BetaJS.Tokens = {
 	
 }
 /*!
-  betajs - v0.0.1 - 2013-07-16
+  betajs - v0.0.1 - 2013-07-22
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1984,7 +1984,13 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
-	
+		
+	constructor: function (options) {
+		this._inherited(BetaJS.Stores.BaseStore, "constructor");
+		options = options || {};
+		this._id_key = options.id_key || "id";
+	},
+		
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -2025,32 +2031,17 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	_query: function (query, options) {
 	},	
 	
-	_insertEvent: function (row, external) {
-		this.trigger("insert", row, external);		
-		this.trigger("insert-" + external ? 'external' : 'internal', row);
-	},
-	
-	_updateEvent: function (row, row_changed, external) {
-		this.trigger("update", row, row_changed, external)
-		this.trigger("update-" + external ? 'external' : 'internal', row, row_changed);
-	},
-
-	_removeEvent: function (row, external) {
-		this.trigger("remove", row, external)
-		this.trigger("remove-" + external ? 'external' : 'internal', row);
-	},
-
 	insert: function (data) {
 		var row = this._insert(data);
 		if (row)
-			this._insertEvent(row, true);
+			this.trigger("insert", row)
 		return row;
 	},
 	
 	remove: function (id) {
 		var row = this._remove(id);
 		if (row)
-			this._removeEvent(row, true);
+			this.trigger("remove", row);
 		return row;
 	},
 	
@@ -2061,7 +2052,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	update: function (id, data) {
 		var row = this._update(id, data);
 		if (row)
-			this._updateEvent(row, data, true);
+			this.trigger("update", row, data);
 		return row;
 	},
 	
@@ -2114,7 +2105,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 			this._write_prev_id(id, last_id);
 		} else
 			this._write_first_id(id);
-		data.id = id;
+		data[this._id_key] = id;
 		this._write_last_id(id);
 		this._write_item(id, data);
 		return data;
@@ -2154,7 +2145,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	_update: function (id, data) {
 		var row = this._get(id);
 		if (row) {
-			delete data.id;
+			delete data[this._id_key];
 			BetaJS.Objs.extend(row, data);
 			this._write_item(id, row);
 		}
@@ -2328,8 +2319,10 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 
 BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStore", {
 
-	constructor: function (parent) {
-		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor");
+	constructor: function (parent, options) {
+		options = options || {};
+		options.id_key = parent._id_key;
+		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor", options);
 		this.__parent = parent;
 		this.__cache = {};
 		this.__queries = {};
@@ -2343,7 +2336,7 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 	_insert: function (data) {
 		var result = this.__parent.insert(data);
 		if (result)
-			this.__cache[data.id] = data;
+			this.__cache[data[this._id_key]] = data;
 		return result;
 	},
 	
@@ -2379,8 +2372,8 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		var result = this.__parent.query(query, options).asArray();
 		this.__queries[encoded] = {};
 		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i].id] = result[i];
-			this.__queries[encoded][result[i].id] = result[i];
+			this.__cache[result[i][this._id_key]] = result[i];
+			this.__queries[encoded][result[i][this._id_key]] = result[i];
 		}
 		return new BetaJS.Iterators.ArrayIterator(result);
 	},
@@ -2390,8 +2383,8 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		this.__queries[encoded] = {};
 		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i].id] = result[i];
-			this.__queries[encoded][result[i].id] = result[i];
+			this.__cache[result[i][this._id_key]] = result[i];
+			this.__queries[encoded][result[i][this._id_key]] = result[i];
 		}
 	}
 	
@@ -2399,11 +2392,15 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 
 BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStore", {
 
-	constructor: function (parent, full_data) {
-		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor");
+	constructor: function (parent, full_data, options) {
+		options = options || {};
+		options.id_key = parent._id_key;
+		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor", options);
 		this.__parent = parent;
 		this.__cache = {};
-		this.invalidate(full_data);
+		this.__cached = false;
+		if (full_data)
+			this.invalidate(full_data);
 	},
 	
 	invalidate: function (full_data) {
@@ -2414,18 +2411,23 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 			full_data = new BetaJS.Iterators.ArrayIterator(full_data);
 		while (full_data.hasNext()) {
 			var row = full_data.next();
-			this.__cache[row.id] = row;
+			this.__cache[row[this._id_key]] = row;
 		}
+		this.__cached = true;
 	},
 
 	_insert: function (data) {
+		if (!this.__cached)
+			this.invalidate({});
 		var result = this.__parent.insert(data);
 		if (result)
-			this.__cache[data.id] = data;
+			this.__cache[data[this._id_key]] = data;
 		return result;
 	},
 	
 	_remove: function (id) {
+		if (!this.__cached)
+			this.invalidate({});
 		var result = this.__parent.remove(id);
 		if (result)
 			delete this.__cache[id];
@@ -2433,10 +2435,14 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 	},
 	
 	_get: function (id) {
+		if (!this.__cached)
+			this.invalidate({});
 		return this.__cache[id];
 	},
 	
 	_update: function (id, data) {
+		if (!this.__cached)
+			this.invalidate({});
 		var result = this.__parent.update(id, data);
 		if (result)
 			this.__cache[id] = BetaJS.Objs.extend(this.__cache[id], data);
@@ -2444,6 +2450,8 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 	},
 	
 	_query: function (query, options) {
+		if (!this.__cached)
+			this.invalidate({});
 		return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
 	},	
 	
@@ -2452,7 +2460,7 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
-		this._inherited(BetaJS.Stores.RemoteStore, "constructor");
+		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
 		this.__uri = uri;
 		this.__ajax = ajax;
 		this.__options = BetaJS.Objs.extend({
@@ -2475,7 +2483,11 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 	_remove : function(id) {
 		try {
 			var response = this.__ajax.syncCall({method: "DELETE", uri: this.__uri + "/" + id});
-			return response ? response : {id:id};
+			if (response)
+				return response;
+			response = {};
+			response[this._id_key] = id;
+			return response;
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
@@ -2546,9 +2558,10 @@ BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("Quer
 BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore", {
 	
 	constructor: function (store, options) {
-		this._inherited(BetaJS.Stores.ConversionStore, "constructor");
-		this.__store = store;
 		options = options || {};
+		options.id_key = store._id_key;
+		this._inherited(BetaJS.Stores.ConversionStore, "constructor", options);
+		this.__store = store;
 		this.__key_encoding = options["key_encoding"] || {};
 		this.__key_decoding = options["key_decoding"] || {};
 		this.__value_encoding = options["value_encoding"] || {};
@@ -2590,15 +2603,15 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 	},
 	
 	_remove: function (id) {
-		return this.__store.remove(this.encode_value("id", id));
+		return this.__store.remove(this.encode_value(this._id_key, id));
 	},
 
 	_get: function (id) {
-		return this.decode_object(this.__store.get(this.encode_value("id", id)));
+		return this.decode_object(this.__store.get(this.encode_value(this._id_key, id)));
 	},
 	
 	_update: function (id, data) {
-		return this.decode_object(this.__store.update(this.encode_value("id", id), this.encode_object(data)));
+		return this.decode_object(this.__store.update(this.encode_value(this._id_key, id), this.encode_object(data)));
 	},
 	
 	_query_capabilities: function () {
@@ -2616,7 +2629,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-16
+  betajs - v0.0.1 - 2013-07-22
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2831,16 +2844,28 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 				if (success)
 					this.set(key, data[key]);
 			}
+	},
+	
+	id: function () {
+		return this.get(this.cls.primary_key());
+	},
+	
+	hasId: function () {
+		return this.has(this.cls.primary_key());
 	}
 	
 }], {
 
+	primary_key: function () {
+		return "id";
+	},
+
 	_initializeScheme: function () {
-		return {
-			"id": {
-				type: "id"
-			}
+		var s = {};
+		s[this.primary_key()] = {
+			type: "id"
 		};
+		return s;
 	},
 	
 	asRecords: function (arr, tags) {
@@ -2855,7 +2880,7 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__scheme = this.__scheme || this._initializeScheme();
 		return this.__scheme;
 	}
-
+	
 });
 BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	BetaJS.Events.EventsMixin,
@@ -2881,15 +2906,15 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__enterModel: function (model) {
 		this.trigger("enter", model);
 		this.__models_by_cid[model.cid()] = model;
-		if (model.has("id"))
-			this.__models_by_id[model.get("id")] = model;
+		if (model.hasId())
+			this.__models_by_id[model.id()] = model;
 	},
 	
 	__leaveModel: function (model) {
 		this.trigger("leave", model);
 		delete this.__models_by_cid[model.cid()];
-		if (model.has("id"))
-			delete this.__models_by_id[model.get("id")];
+		if (model.hasId())
+			delete this.__models_by_id[model.id()];
 	},
 	
 	__hasModel: function (model) {
@@ -2912,7 +2937,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__modelRemove: function (model) {
 		if (!this.__hasModel(model))
 			return false;
-		var result = this.__store.remove(model.get("id"));
+		var result = this.__store.remove(model.id());
 		if (result)
 			this.trigger("remove", model);
 		return this.__leaveModel(model) && result;
@@ -2949,11 +2974,11 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			if (this.__options["type_column"])
 				attrs[this.__options["type_column"]] = model.cls.classname;
 			confirmed = this.__store.insert(attrs);
-			if (!("id" in confirmed))
+			if (!(model.cls.primary_key() in confirmed))
 				return false;
-			this.__models_by_id[confirmed["id"]] = model;
+			this.__models_by_id[confirmed[model.cls.primary_key()]] = model;
 		} else if (!BetaJS.Types.is_empty(attrs)){
-			confirmed = this.__store.update(model.get("id"), attrs);
+			confirmed = this.__store.update(model.id(), attrs);
 			if (BetaJS.Types.is_empty(confirmed))
 				return false;			
 		}
@@ -3008,12 +3033,12 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	__materialize: function (obj) {
 		if (!obj)
 			return null;
-		if (this.__models_by_id[obj.id])
-			return this.__models_by_id[obj.id];
 		var type = this.__model_type;
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
 		var cls = BetaJS.Scopes.resolve(type);
+		if (this.__models_by_id[obj[cls.primary_key()]])
+			return this.__models_by_id[obj[cls.primary_key()]];
 		var model = new cls(obj, {
 			table: this,
 			saved: true,
