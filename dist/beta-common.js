@@ -3090,7 +3090,7 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 
 	_yield: function () {
 		var query = {};
-		query[this._foreign_key] = this._model.get("id");
+		query[this._foreign_key] = this._model.id();
 		return this._foreign_table.allBy(query);
 	},
 
@@ -3107,7 +3107,7 @@ BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.
 
 	_yield: function () {
 		var query = {};
-		query[this._foreign_key] = this._model.get("id");
+		query[this._foreign_key] = this._model.id();
 		return this._foreign_table.findBy(query);
 	}
 
