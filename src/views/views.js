@@ -223,6 +223,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @param options options
 	 */
 	constructor: function (options) {
+		options = options || {};
 		this._inherited(BetaJS.Views.View, "constructor");
 		this._setOption(options, "el", null);
 		this._setOption(options, "visible", true);

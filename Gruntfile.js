@@ -223,7 +223,7 @@ module.exports = function(grunt) {
 		sass: {
 		    dist: {
 		    	files: {
-			        'dist/beta-ui.css': [
+			        'dist/client.css': [
 			            'src/views/containers/holygrail_view/styles.scss', 
 			        ]
 		    	}

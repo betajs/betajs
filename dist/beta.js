@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-07-22
+  betajs - v0.0.1 - 2013-07-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-22
+  betajs - v0.0.1 - 2013-07-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-22
+  betajs - v0.0.1 - 2013-07-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1452,7 +1452,7 @@ BetaJS.Tokens = {
 	
 }
 /*!
-  betajs - v0.0.1 - 2013-07-22
+  betajs - v0.0.1 - 2013-07-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2634,7 +2634,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-22
+  betajs - v0.0.1 - 2013-07-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3146,7 +3146,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-07-22
+  betajs - v0.0.1 - 2013-07-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3496,6 +3496,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @param options options
 	 */
 	constructor: function (options) {
+		options = options || {};
 		this._inherited(BetaJS.Views.View, "constructor");
 		this._setOption(options, "el", null);
 		this._setOption(options, "visible", true);
