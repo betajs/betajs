@@ -12,19 +12,19 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 		return this.__left;
 	},
 	setLeft: function (view) {
-		this.__setView("left", view);
+		return this.__setView("left", view);
 	},
 	getCenter: function () {
 		return this.__center;
 	},
 	setCenter: function (view) {
-		this.__setView("center", view);
+		return this.__setView("center", view);
 	},
 	getRight: function () {
 		return this.__right;
 	},
 	setRight: function (view) {
-		this.__setView("right", view);
+		return this.__setView("right", view);
 	},
 	__setView: function(key, view) {
 		// Remove old child in case we had one
@@ -38,5 +38,6 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 			// store new view as child attribute and add the view
 			this["__" + key] = this.addChild(view);
 		}
+		return view;
 	},
 });

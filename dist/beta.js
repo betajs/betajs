@@ -2282,8 +2282,8 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.DumbStore.extend("AssocStore", {
 
 BetaJS.Stores.LocalStore = BetaJS.Stores.AssocStore.extend("LocalStore", {
 	
-	constructor: function (prefix) {
-		this._inherited(BetaJS.Stores.LocalStore, "constructor");
+	constructor: function (prefix, options) {
+		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
 		this.__prefix = prefix;
 	},
 	
@@ -2717,7 +2717,7 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		var scheme = this.cls.scheme();
 		if (!(key in scheme))
 			return;
-		this.__properties_changed[key] = true;
+		this.__properties_changed[key] = value;
 		this.__unvalidated[key] = true;
 		this.__saved = false;
 		delete this.__errors[key];
@@ -3590,7 +3590,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css(key, new_el_styles[key]);
 		}
 		this.__bind();
-		this.$el.css("display", this.__visible ? "" : "none");
+		if (!this.__visible)
+			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
 		BetaJS.Objs.iter(this.__children, function (child) {
@@ -4034,9 +4035,10 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		var value = this.__get_variable(element.variable);
 		if (element.type == "inner")
 			element.$el.html(value)
-		else if (element.type == "value")
-			element.$el.val(value)
-		else if (element.type == "attribute")
+		else if (element.type == "value") {
+			if (element.$el.val() != value)
+				element.$el.val(value);
+		} else if (element.type == "attribute")
 			element.$el.attr(element.attribute, value)
 		else if (element.type == "css") {
 			if (!element.positive)
@@ -4483,13 +4485,15 @@ BetaJS.Templates.Cached['holygrail-view-template'] = '  <div>   <div data-select
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}"></div> ';
 
+BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" data-selector="switch-container-item"></div> ';
+
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
 BetaJS.Templates.Cached['input-view-template'] = '  <input {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
-BetaJS.Templates.Cached['label-view-template'] = '  <label {%= bind.inner("label") %}></label> ';
+BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} {%= bind.inner("label") %}></{%= element %}> ';
 
 BetaJS.Templates.Cached['link-view-template'] = '  <a href="javascript:{}" {%= bind.inner("label") %}></a> ';
 
@@ -4512,19 +4516,19 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 		return this.__left;
 	},
 	setLeft: function (view) {
-		this.__setView("left", view);
+		return this.__setView("left", view);
 	},
 	getCenter: function () {
 		return this.__center;
 	},
 	setCenter: function (view) {
-		this.__setView("center", view);
+		return this.__setView("center", view);
 	},
 	getRight: function () {
 		return this.__right;
 	},
 	setRight: function (view) {
-		this.__setView("right", view);
+		return this.__setView("right", view);
 	},
 	__setView: function(key, view) {
 		// Remove old child in case we had one
@@ -4538,6 +4542,7 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 			// store new view as child attribute and add the view
 			this["__" + key] = this.addChild(view);
 		}
+		return view;
 	},
 });
 BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
@@ -4602,6 +4607,52 @@ BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView
 		}
 	},
 });
+BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView", {
+	
+	_templates: {
+		"item": BetaJS.Templates.Cached["switch-container-view-item-template"]
+	},
+	
+	_notifications: {
+		"addChild": "__addChildContainer",
+		"removeChild": "__removeChildContainer"
+	},
+	
+	constructor: function (options) {
+		this._inherited(BetaJS.Views.SwitchContainerView, "constructor", options);
+		this.__selected = null;
+	},
+
+	_render: function () {
+		this.$el.html("");
+		BetaJS.Objs.iter(this.children(), function (child) {
+			this.__addChildContainer(child);
+		}, this);
+	
+	},
+	
+	__addChildContainer: function (child) {
+		if (this.isActive())
+			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
+		child.setEl("[data-view-id='" + child.cid() + "']");
+		this.__selected = this.__selected || child;
+		child.setVisibility(this.__selected == child);
+	},
+	
+	__removeChildContainer: function (child) {
+		this.$data({"view-id": child.cid()}).remove();
+		if (this.__selected == child)
+			this.__selected = null;
+	},
+	
+	select: function (child) {
+		this.__selected = child;
+		BetaJS.Objs.iter(this.children(), function (child) {
+			child.setVisibility(this.__selected == child);
+		}, this);
+	}
+	
+});
 BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["button-view-template"]
@@ -4626,20 +4677,26 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	},
 	_events: function () {
 		return [{
-			"keyup input": "__keyupEvent"		
+			"keyup input": "__keyupEvent",
+			"blur input": "__leaveEvent"	
 		}];
 	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
-		this._setOptionProperty(options, "placeholder", "");
-		this._setOptionProperty(options, "top", "4");
-		
+		this._setOptionProperty(options, "placeholder", "");	
 	},
 	__keyupEvent: function (e) {
 		 var key = e.keyCode || e.which;
          if (key == 13)
          	this.trigger("enter_key");
+	},
+	__leaveEvent: function () {
+		this.trigger("leave");
+	},
+	focus: function () {
+		this.$("input").focus();
+		this.$("input").focus();
 	}
 });
 BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
@@ -4667,10 +4724,55 @@ BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["label-view-template"]
 	},
+	_events: function () {
+		return [{
+			"click": "__clickEvent"	
+		}];
+	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.LabelView, "constructor", options);
 		this._setOptionProperty(options, "label", "");
+		this._setOptionProperty(options, "element", "label");
+	},
+	__clickEvent: function () {
+		this.trigger("click");
 	}
+});
+BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInputView", {
+
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.InputLabelView, "constructor", options);
+		this._setOptionProperty(options, "value", "");
+		this._setOptionProperty(options, "placeholder", "");
+		this._setOption(options, "edit_on_click", true);
+		this._setOption(options, "label_mode", true);
+		this.label = this.addChild(new BetaJS.Views.LabelView({
+			label: this.binding("value")
+		}));
+		this.input = this.addChild(new BetaJS.Views.InputView({
+			value: this.binding("value"),
+			placeholder: this.binding("placeholder")
+		}));
+		if (!this.__label_mode)
+			this.select(this.input);
+		this.input.on("leave enter_key", function () {
+			this.label_mode();
+		}, this);
+		if (this.__edit_on_click)
+			this.label.on("click", function () {
+				this.edit_mode();
+			}, this);
+	},
+	
+	label_mode: function () {
+		this.select(this.label);		
+	},
+	
+	edit_mode: function () {
+		this.select(this.input);
+		this.input.focus();
+	}
+
 });
 BetaJS.Views.LinkView = BetaJS.Views.View.extend("LinkView", {
 	_dynamics: {
@@ -5052,6 +5154,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 			this.itemData(item).view.set("_selected", true);
 			this.trigger("select", item);
 		}
+		return this.itemData(item).view;
 	},
 	
 	unselect: function (item) {
@@ -5059,6 +5162,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 			this.itemData(item).view.set("_selected", false);
 			this.trigger("unselect", item);
 		}
+		return this.itemData(item).view;
 	}
 	
 });

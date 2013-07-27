@@ -70,6 +70,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 			this.itemData(item).view.set("_selected", true);
 			this.trigger("select", item);
 		}
+		return this.itemData(item).view;
 	},
 	
 	unselect: function (item) {
@@ -77,6 +78,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 			this.itemData(item).view.set("_selected", false);
 			this.trigger("unselect", item);
 		}
+		return this.itemData(item).view;
 	}
 	
 });

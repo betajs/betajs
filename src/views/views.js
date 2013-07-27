@@ -317,7 +317,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css(key, new_el_styles[key]);
 		}
 		this.__bind();
-		this.$el.css("display", this.__visible ? "" : "none");
+		if (!this.__visible)
+			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
 		BetaJS.Objs.iter(this.__children, function (child) {
@@ -761,9 +762,10 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 		var value = this.__get_variable(element.variable);
 		if (element.type == "inner")
 			element.$el.html(value)
-		else if (element.type == "value")
-			element.$el.val(value)
-		else if (element.type == "attribute")
+		else if (element.type == "value") {
+			if (element.$el.val() != value)
+				element.$el.val(value);
+		} else if (element.type == "attribute")
 			element.$el.attr(element.attribute, value)
 		else if (element.type == "css") {
 			if (!element.positive)

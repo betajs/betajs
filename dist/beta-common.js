@@ -2277,8 +2277,8 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.DumbStore.extend("AssocStore", {
 
 BetaJS.Stores.LocalStore = BetaJS.Stores.AssocStore.extend("LocalStore", {
 	
-	constructor: function (prefix) {
-		this._inherited(BetaJS.Stores.LocalStore, "constructor");
+	constructor: function (prefix, options) {
+		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
 		this.__prefix = prefix;
 	},
 	
@@ -2712,7 +2712,7 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		var scheme = this.cls.scheme();
 		if (!(key in scheme))
 			return;
-		this.__properties_changed[key] = true;
+		this.__properties_changed[key] = value;
 		this.__unvalidated[key] = true;
 		this.__saved = false;
 		delete this.__errors[key];

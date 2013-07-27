@@ -77,7 +77,7 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		var scheme = this.cls.scheme();
 		if (!(key in scheme))
 			return;
-		this.__properties_changed[key] = true;
+		this.__properties_changed[key] = value;
 		this.__unvalidated[key] = true;
 		this.__saved = false;
 		delete this.__errors[key];
