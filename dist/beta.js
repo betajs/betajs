@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-07-25
+  betajs - v0.0.1 - 2013-07-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-25
+  betajs - v0.0.1 - 2013-07-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-25
+  betajs - v0.0.1 - 2013-07-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1452,7 +1452,7 @@ BetaJS.Tokens = {
 	
 }
 /*!
-  betajs - v0.0.1 - 2013-07-25
+  betajs - v0.0.1 - 2013-07-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2634,7 +2634,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-25
+  betajs - v0.0.1 - 2013-07-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3146,7 +3146,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-07-25
+  betajs - v0.0.1 - 2013-07-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3594,7 +3594,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__active = true;
 		this.__render();
 		BetaJS.Objs.iter(this.__children, function (child) {
-			child.activate();
+			child.view.activate();
 		});
 		return true;
 	},
@@ -3675,7 +3675,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	destroy: function () {
 		this.deactivate();
 		BetaJS.Objs.iter(this.__children, function (child) {
-			child.destroy();
+			child.view.destroy();
 		});
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.destroy();
@@ -3750,14 +3750,14 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (!this.isActive())
 			return;
 		BetaJS.Objs.iter(this.__children, function (child) {
-			child.deactivate();
+			child.view.deactivate();
 		});
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.reset();
 		}, this);
 		this.__render();
 		BetaJS.Objs.iter(this.__children, function (child) {
-			child.activate();
+			child.view.activate();
 		});
 	},
 	
@@ -3814,7 +3814,15 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @return array of child views 
 	 */
 	children: function () {
-		return BetaJS.Objs.values(this.__children);
+		var children = {};
+		BetaJS.Objs.iter(this.__children, function (child, key) {
+			children[key] = child.view;
+		}, this);
+		return children;
+	},
+	
+	childOptions: function (child) {
+		return this.__children[child.cid()].options;
 	},
 	
 	/** Adds an array of child views
@@ -3831,10 +3839,14 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * 
  	 * @param child view
 	 */	
-	addChild: function (child) {
+	addChild: function (child, options) {
 		if (!this.hasChild(child)) {
-			this.__children[child.cid()] = child;
-			this._notify("addChild", child);
+			options = options || {};
+			this.__children[child.cid()] = {
+				view: child,
+				options: options
+			};
+			this._notify("addChild", child, options);
 			child.setParent(this);
 			return child;
 		}
@@ -4543,9 +4555,14 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		}, this);
 	},
 	__addChildContainer: function (child) {
+		var options = this.childOptions(child);
 		if (this.isActive())
 			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
+		if (this.isActive() && "float" in options) {
+			var container = this.$("[data-view-id='" + child.cid() + "']");
+			container.css("float", options["float"]);
+		}			
 	},
 	__removeChildContainer: function (child) {
 		this.$data({"view-id": child.cid()}).remove();

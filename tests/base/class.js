@@ -64,8 +64,8 @@ test("test notifications", function() {
 		_notifications: {
 			"test": "test_a"
 		},
-		test_a: function() {
-			this.x = 1;
+		test_a: function(a, b) {
+			this.x = b-a;
 		}
 	});
 	var B = A.extend("B", {
@@ -76,7 +76,7 @@ test("test notifications", function() {
 			this.y = 2;
 		},
 		test: function () {
-			this._notify("test");
+			this._notify("test", 8, 9);
 		}
 	});
 	var b = new B();
