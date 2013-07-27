@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-07-26
+  betajs - v0.0.1 - 2013-07-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-26
+  betajs - v0.0.1 - 2013-07-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-26
+  betajs - v0.0.1 - 2013-07-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1452,7 +1452,7 @@ BetaJS.Tokens = {
 	
 }
 /*!
-  betajs - v0.0.1 - 2013-07-26
+  betajs - v0.0.1 - 2013-07-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2634,7 +2634,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-26
+  betajs - v0.0.1 - 2013-07-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3146,7 +3146,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-07-26
+  betajs - v0.0.1 - 2013-07-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4479,9 +4479,9 @@ BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBin
 }]);
 
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
-BetaJS.Templates.Cached['holygrail-view-template'] = '  <div class="container">   <div data-selector="right" class=\'holygrail-view-right-container\'></div>   <div data-selector="left" class=\'holygrail-view-left-container\'></div>   <div data-selector="center" class=\'holygrail-view-center-container\'></div>  </div> ';
+BetaJS.Templates.Cached['holygrail-view-template'] = '  <div>   <div data-selector="right" class=\'holygrail-view-right-container\'></div>   <div data-selector="left" class=\'holygrail-view-left-container\'></div>   <div data-selector="center" class=\'holygrail-view-center-container\'></div>  </div> ';
 
-BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="list-container-item"></div> ';
+BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}"></div> ';
 
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
@@ -4541,32 +4541,50 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	},
 });
 BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
+	
 	_templates: {
 		"item": BetaJS.Templates.Cached["list-container-view-item-template"]
 	},
+	
 	_notifications: {
 		"addChild": "__addChildContainer",
 		"removeChild": "__removeChildContainer"
 	},
+	
+	constructor: function (options) {
+		options = options || {};
+		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
+		this._setOption(options, "alignment", "horizontal");		
+	},
+	
+	isHorizontal: function () {
+		return this.__alignment == "horizontal";
+	},
+	
 	_render: function () {
 		this.$el.html("");
 		BetaJS.Objs.iter(this.children(), function (child) {
 			this.__addChildContainer(child);
 		}, this);
 	},
+	
 	__addChildContainer: function (child) {
 		var options = this.childOptions(child);
 		if (this.isActive())
 			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
+		if (this.isHorizontal() && !("float" in options))
+			options["float"] = "left";
 		if (this.isActive() && "float" in options) {
 			var container = this.$("[data-view-id='" + child.cid() + "']");
 			container.css("float", options["float"]);
 		}			
 	},
+	
 	__removeChildContainer: function (child) {
 		this.$data({"view-id": child.cid()}).remove();
 	}
+	
 });
 BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView", {
 	constructor: function (options) {
