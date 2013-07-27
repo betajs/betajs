@@ -1334,7 +1334,7 @@ BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBin
 }]);
 
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
-BetaJS.Templates.Cached['holygrail-view-template'] = '  <div>   <div data-selector="right" class=\'holygrail-view-right-container\'></div>   <div data-selector="left" class=\'holygrail-view-left-container\'></div>   <div data-selector="center" class=\'holygrail-view-center-container\'></div>  </div> ';
+BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="right" class=\'holygrail-view-right-container\'></div>  <div data-selector="left" class=\'holygrail-view-left-container\'></div>  <div data-selector="center" class=\'holygrail-view-center-container\'></div> ';
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}"></div> ';
 

@@ -829,9 +829,9 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.DumbStore.extend("AssocStore", {
 
 BetaJS.Stores.LocalStore = BetaJS.Stores.AssocStore.extend("LocalStore", {
 	
-	constructor: function (prefix, options) {
+	constructor: function (options) {
 		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
-		this.__prefix = prefix;
+		this.__prefix = options.prefix;
 	},
 	
 	__key: function (key) {

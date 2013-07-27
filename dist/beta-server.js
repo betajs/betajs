@@ -1433,13 +1433,22 @@ BetaJS.Comparators = {
 			for (key in object) {
 				var l = left[key] || null;
 				var r = right[key] || null;
-				if (l < r)
-					return object[key]
-				else if (l > r)
-					return -object[key];
+				var c = BetaJS.Comparators.byValue(l, r);
+				if (c != 0)
+				return c * object[key];
 			}
 			return 0;
 		};
+	},
+	
+	byValue: function (a, b) {
+		if (BetaJS.Types.is_string(a))
+			return a.localCompare(b);
+		if (a < b)
+			return -1;
+		if (a > b)
+			return 1;
+		return 0;
 	}
 	
 };
@@ -2282,9 +2291,9 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.DumbStore.extend("AssocStore", {
 
 BetaJS.Stores.LocalStore = BetaJS.Stores.AssocStore.extend("LocalStore", {
 	
-	constructor: function (prefix, options) {
+	constructor: function (options) {
 		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
-		this.__prefix = prefix;
+		this.__prefix = options.prefix;
 	},
 	
 	__key: function (key) {
