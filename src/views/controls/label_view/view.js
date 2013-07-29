@@ -10,7 +10,7 @@ BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.LabelView, "constructor", options);
 		this._setOptionProperty(options, "label", "");
-		this._setOptionProperty(options, "element", "label");
+		this._setOptionProperty(options, "element", "span");
 	},
 	__clickEvent: function () {
 		this.trigger("click");

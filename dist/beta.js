@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-07-27
+  betajs - v0.0.1 - 2013-07-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-27
+  betajs - v0.0.1 - 2013-07-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-27
+  betajs - v0.0.1 - 2013-07-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1461,7 +1461,7 @@ BetaJS.Tokens = {
 	
 }
 /*!
-  betajs - v0.0.1 - 2013-07-27
+  betajs - v0.0.1 - 2013-07-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2643,7 +2643,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-27
+  betajs - v0.0.1 - 2013-07-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3155,7 +3155,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-07-27
+  betajs - v0.0.1 - 2013-07-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4494,7 +4494,7 @@ BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="righ
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}"></div> ';
 
-BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" data-selector="switch-container-item"></div> ';
+BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="switch-container" data-selector="switch-container-item"></div> ';
 
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
@@ -4502,7 +4502,7 @@ BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {
 
 BetaJS.Templates.Cached['input-view-template'] = '  <input {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
-BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} {%= bind.inner("label") %}></{%= element %}> ';
+BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="label" {%= bind.inner("label") %}></{%= element %}> ';
 
 BetaJS.Templates.Cached['link-view-template'] = '  <a href="javascript:{}" {%= bind.inner("label") %}></a> ';
 

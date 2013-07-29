@@ -203,7 +203,15 @@ module.exports = function(grunt) {
 					'src/server/stores/mongo_database_store.js',
 					'src/server/net/http_header.js'
 				]
-			}
+			},
+		    dist_ui_scss: {
+		    	files: {
+			        'dist/beta-ui.scss': [
+			            'src/views/containers/holygrail_view/styles.scss',
+						'src/views/containers/switch_container_view/styles.scss',
+			        ]
+		    	}
+		    }
 		},
 		uglify : {
 			options : {
@@ -226,9 +234,7 @@ module.exports = function(grunt) {
 		sass: {
 		    dist: {
 		    	files: {
-			        'dist/beta-ui.css': [
-			            'src/views/containers/holygrail_view/styles.scss', 
-			        ]
+			        'dist/beta-ui.css': 'dist/beta-ui.scss'
 		    	}
 		    }
 		},
@@ -245,7 +251,7 @@ module.exports = function(grunt) {
 				}
 			}
 		},
-		clean: ["dist/beta-ui-templates.js"]
+		clean: ["dist/beta-ui-templates.js", "dist/beta-ui.scss"]
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-concat');
