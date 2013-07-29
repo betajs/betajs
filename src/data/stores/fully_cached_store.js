@@ -19,11 +19,16 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 			full_data = new BetaJS.Iterators.ArrayIterator(full_data);
 		while (full_data.hasNext()) {
 			var row = full_data.next();
-			this.__cache[row[this._id_key]] = row;
+			this.cache(row);
 		}
 		this.__cached = true;
 	},
-
+	
+	cache: function (row) {
+		this.__cache[row[this._id_key]] = row;
+		this.trigger("cache", row);		
+	},
+	
 	_insert: function (data) {
 		if (!this.__cached)
 			this.invalidate({});
@@ -59,7 +64,7 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 	
 	_query: function (query, options) {
 		if (!this.__cached)
-			this.invalidate({});
+			this.invalidate();
 		return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
 	},	
 	
