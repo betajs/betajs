@@ -208,7 +208,6 @@ module.exports = function(grunt) {
 		    	files: {
 			        'dist/beta-ui.scss': [
 			            'src/views/containers/holygrail_view/styles.scss',
-						'src/views/containers/switch_container_view/styles.scss',
 			        ]
 		    	}
 		    }

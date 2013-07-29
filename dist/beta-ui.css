@@ -1,5 +1,5 @@
 /*
-  betajs - v0.0.1 - 2013-07-28
+  betajs - v0.0.1 - 2013-07-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -11,10 +11,3 @@
 
 .holygrail-view-center-container {
   overflow: hidden; }
-
-.switch-container {
-  height: 100%;
-  background: red; }
-
-.label {
-  background: lime; }

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-28
+  betajs - v0.0.1 - 2013-07-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1344,7 +1344,7 @@ BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_elem
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
-BetaJS.Templates.Cached['input-view-template'] = '  <input {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
+BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="label" {%= bind.inner("label") %}></{%= element %}> ';
 
@@ -1585,7 +1585,7 @@ BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.LabelView, "constructor", options);
 		this._setOptionProperty(options, "label", "");
-		this._setOptionProperty(options, "element", "label");
+		this._setOptionProperty(options, "element", "span");
 	},
 	__clickEvent: function () {
 		this.trigger("click");

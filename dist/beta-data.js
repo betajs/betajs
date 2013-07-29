@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-28
+  betajs - v0.0.1 - 2013-07-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -137,7 +137,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-			data: JSON.stringify(options.data),
+			dataType: "json",
+			data: options.data,// JSON.stringify(options.data),
 			success: function (response) {
 				result = response;
 			},
@@ -153,7 +154,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-			data: JSON.stringify(options.data),
+			dataType: "json",
+			data: options.data, //JSON.stringify(options.data),
 			success: function (response) {
 				options.success(response);
 			},
@@ -963,11 +965,16 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 			full_data = new BetaJS.Iterators.ArrayIterator(full_data);
 		while (full_data.hasNext()) {
 			var row = full_data.next();
-			this.__cache[row[this._id_key]] = row;
+			this.cache(row);
 		}
 		this.__cached = true;
 	},
-
+	
+	cache: function (row) {
+		this.__cache[row[this._id_key]] = row;
+		this.trigger("cache", row);		
+	},
+	
 	_insert: function (data) {
 		if (!this.__cached)
 			this.invalidate({});
@@ -1003,7 +1010,7 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 	
 	_query: function (query, options) {
 		if (!this.__cached)
-			this.invalidate({});
+			this.invalidate();
 		return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__cache));
 	},	
 	
@@ -1062,8 +1069,12 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 	},
 	
 	_query : function(query, options) {
-		try {			
-			return this.__ajax.syncCall(this._encode_query(query, options));
+		try {		
+			var raw = this.__ajax.syncCall(this._encode_query(query, options));
+			if (BetaJS.Types.is_string(raw))	
+				return JSON.parse(raw)
+			else
+				return raw;
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
