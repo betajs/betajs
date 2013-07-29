@@ -137,8 +137,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-			dataType: "json",
-			data: options.data,// JSON.stringify(options.data),
+//			dataType: "json", 
+			data: JSON.stringify(options.data), //options.data
 			success: function (response) {
 				result = response;
 			},
@@ -154,8 +154,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-			dataType: "json",
-			data: options.data, //JSON.stringify(options.data),
+//			dataType: "json", 
+			data: JSON.stringify(options.data), //options.data
 			success: function (response) {
 				options.success(response);
 			},
