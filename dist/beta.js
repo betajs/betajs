@@ -3721,6 +3721,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.setVisibility(false);
 	},
 	
+	isVisible: function () {
+		return this.__visible;
+	},
+	
 	/** Sets the visibility of the view
 	 * @param visible visibility
 	 */
