@@ -14,3 +14,13 @@ test("test mapped iterator", function() {
 		s += iter.next();
 	ok(s == 27);
 });
+
+
+test("test filtered iterator", function() {
+	var base = new BetaJS.Iterators.ArrayIterator([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+	var iter = new BetaJS.Iterators.FilteredIterator(base, function (x) { return x % 2 == 0; });
+	var s = "";
+	while (iter.hasNext())
+		s += iter.next();
+	ok(s == "2468");
+});

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -339,6 +339,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
 	 *  <li>el_classes: (default []) css classes that should be attached to container</li>
 	 *  <li>el_styles: (default {}) styles that should be attached to container</li>
+	 *  <li>children_classes: (default []) css classes that should be attached to all direct children</li>
 	 *  <li>children_styles: (default {}) styles that should be attached to all direct children</li>
 	 *  <li>css: (default {}) css classes that should be overwritten</li>
 	 *  <li>templates: (default {}) templates that should be overwritten</li>
@@ -361,6 +362,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__added_el_classes = [];
 		this._setOption(options, "el_styles", {});
 		this._setOption(options, "children_styles", {});
+		this._setOption(options, "children_classes", []);
 		this._setOption(options, "invalidate_on_change", false);
 		this.__old_el_styles = {};
 		this._setOption(options, "css", {});
@@ -460,7 +462,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (!this.isActive())
 			return false;
 		BetaJS.Objs.iter(this.__children, function (child) {
-			child.deactivate();
+			child.view.deactivate();
 		});
 		this.__active = false;
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
@@ -600,9 +602,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (!this.isActive())
 			return;
 		this._render();
+		var q = this.$el.children();
 		if (!BetaJS.Types.is_empty(this.__children_styles))
 			for (var key in this.__children_styles)
-				this.$el.children().css(key, this.__children_styles[key]);
+				q.css(key, this.__children_styles[key]);
+		BetaJS.Objs.iter(this.__children_classes, function (cls) {
+			q.addClass(cls);	
+		});
 	},
 	
 	/** Manually triggers rerendering of the view
@@ -1358,7 +1364,7 @@ BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="label
 
 BetaJS.Templates.Cached['link-view-template'] = '  <a href="javascript:{}" {%= bind.inner("label") %}></a> ';
 
-BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>  ';
+BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}             {%= bind.css_if_not("text-area-no-resize", "resizable") %}             {%= readonly ? \'readonly\' : \'\' %}             {%= bind.css_if("text-area-horizontal-fill", "horizontal_fill") %}></textarea>  ';
 
 BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    class="{%= list_container_classes %}"    data-selector="list">   </{%= list_container_element %}>  ';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    class="{%= item_container_classes %}"    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
@@ -1529,7 +1535,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 		}]);
 	},
 	__clickButton: function () {
-		this.trigger("clicked");
+		this.trigger("click");
 	},
 });
 BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
@@ -1660,6 +1666,15 @@ BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 		this._inherited(BetaJS.Views.TextAreaView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");
+		this._setOptionProperty(options, "resizable", true);
+		this._setOptionProperty(options, "horizontal_fill", false);
+		this._setOptionProperty(options, "readonly", false);
+		this.on("change:readonly", function () {
+			if (this.get("readonly"))
+				this.$("textarea").attr("readonly", "readonly");
+			else
+				this.$("textarea").removeAttr("readonly");
+		}, this);
 	}
 });
 BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {

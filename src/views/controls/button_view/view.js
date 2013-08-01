@@ -13,6 +13,6 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 		}]);
 	},
 	__clickButton: function () {
-		this.trigger("clicked");
+		this.trigger("click");
 	},
 });

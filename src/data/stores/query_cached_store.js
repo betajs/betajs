@@ -52,10 +52,8 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__queries[encoded]));
 		var result = this.__parent.query(query, options).asArray();
 		this.__queries[encoded] = {};
-		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i][this._id_key]] = result[i];
-			this.__queries[encoded][result[i][this._id_key]] = result[i];
-		}
+		for (var i = 0; i < result.length; ++i)
+			this.__cache_row(result[i], encoded);
 		return new BetaJS.Iterators.ArrayIterator(result);
 	},
 	
@@ -63,10 +61,14 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		this.__queries[encoded] = {};
-		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i][this._id_key]] = result[i];
-			this.__queries[encoded][result[i][this._id_key]] = result[i];
-		}
+		for (var i = 0; i < result.length; ++i)
+			this.__cache_row(result[i], encoded);
+	},
+	
+	__cache_row: function (row, encoded) {
+		this.trigger("cache", row);
+		this.__cache[row[this._id_key]] = row;
+		this.__queries[encoded][row[this._id_key]] = row;
 	}
 	
 });

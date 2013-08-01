@@ -83,15 +83,14 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 	
 	__crawl: function () {
 		while (this.__next == null && this.__iterator.hasNext()) {
-			this.__next = this.__iterator.next();
-			if (this.__filter_func(this.__next))
-				return;
-			this.__next == null;
+			var item = this.__iterator.next();;
+			if (this.__filter_func(item))
+				this.__next = item;
 		}
 	},
 	
 	__filter_func: function (item) {
-		return this.__filter.apply(this.__context, item);
+		return this.__filter.apply(this.__context, [item]);
 	}
 
 });

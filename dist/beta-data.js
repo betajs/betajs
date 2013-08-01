@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -925,10 +925,8 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__queries[encoded]));
 		var result = this.__parent.query(query, options).asArray();
 		this.__queries[encoded] = {};
-		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i][this._id_key]] = result[i];
-			this.__queries[encoded][result[i][this._id_key]] = result[i];
-		}
+		for (var i = 0; i < result.length; ++i)
+			this.__cache_row(result[i], encoded);
 		return new BetaJS.Iterators.ArrayIterator(result);
 	},
 	
@@ -936,10 +934,14 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		this.__queries[encoded] = {};
-		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i][this._id_key]] = result[i];
-			this.__queries[encoded][result[i][this._id_key]] = result[i];
-		}
+		for (var i = 0; i < result.length; ++i)
+			this.__cache_row(result[i], encoded);
+	},
+	
+	__cache_row: function (row, encoded) {
+		this.trigger("cache", row);
+		this.__cache[row[this._id_key]] = row;
+		this.__queries[encoded][row[this._id_key]] = row;
 	}
 	
 });
@@ -971,8 +973,8 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 	},
 	
 	cache: function (row) {
-		this.__cache[row[this._id_key]] = row;
 		this.trigger("cache", row);		
+		this.__cache[row[this._id_key]] = row;
 	},
 	
 	_insert: function (data) {
@@ -1020,20 +1022,29 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
-		this.__uri = uri;
+		this._uri = uri;
 		this.__ajax = ajax;
 		this.__options = BetaJS.Objs.extend({
-			"update_method": "PUT"
+			"update_method": "PUT",
+			"uri_mappings": {}
 		}, options || {});
 	},
 	
 	getUri: function () {
-		return this.__uri;
+		return this._uri;
+	},
+	
+	prepare_uri: function (action, data) {
+		if (this.__options["uri_mappings"][action])
+			return this.__options["uri_mappings"][action](data);
+		if (action == "remove" || action == "get" || action == "update")
+			return this.getUri() + "/" + data[this._id_key];
+		return this.getUri();
 	},
 
 	_insert : function(data) {
 		try {
-			return this.__ajax.syncCall({method: "POST", uri: this.__uri, data: data});
+			return this.__ajax.syncCall({method: "POST", uri: this.prepare_uri("insert", data), data: data});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
@@ -1041,7 +1052,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	_remove : function(id) {
 		try {
-			var response = this.__ajax.syncCall({method: "DELETE", uri: this.__uri + "/" + id});
+			var response = this.__ajax.syncCall({method: "DELETE", uri: this.prepare_uri("remove", data)});
 			if (response)
 				return response;
 			response = {};
@@ -1053,16 +1064,20 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 	},
 
 	_get : function(id) {
+		var data = {};
+		data[this._id_key] = id;
 		try {
-			return this.__ajax.syncCall({uri: this.__uri + "/" + id});
+			return this.__ajax.syncCall({uri: this.prepare_uri("get", data)});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
 	},
 
 	_update : function(id, data) {
+		var copy = BetaJS.Objs.clone(data, 1);
+		copy[this._id_key] = id;
 		try {
-			return this.__ajax.syncCall({method: this.__options.update_method, uri: this.__uri + "/" + id, data: data});
+			return this.__ajax.syncCall({method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
@@ -1082,7 +1097,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 	
 	_encode_query: function (query, options) {
 		return {
-			uri: this.getUri()
+			uri: this.prepare_uri("query")
 		};		
 	}
 	

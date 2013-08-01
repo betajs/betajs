@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -864,15 +864,14 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 	
 	__crawl: function () {
 		while (this.__next == null && this.__iterator.hasNext()) {
-			this.__next = this.__iterator.next();
-			if (this.__filter_func(this.__next))
-				return;
-			this.__next == null;
+			var item = this.__iterator.next();;
+			if (this.__filter_func(item))
+				this.__next = item;
 		}
 	},
 	
 	__filter_func: function (item) {
-		return this.__filter.apply(this.__context, item);
+		return this.__filter.apply(this.__context, [item]);
 	}
 
 });
@@ -1450,3 +1449,73 @@ BetaJS.Tokens = {
 	}
 	
 }
+BetaJS.Locales = {
+	
+	get: function (s) {
+		return s;
+	}
+	
+};
+BetaJS.Time = {
+	
+	now: function () {
+		var d = new Date();
+		return d.getTime();
+	},
+	
+	ago: function (t) {
+		return this.now() - t;
+	},
+	
+	days_ago: function (t) {
+		return Math.round(this.ago(t) / 1000 / 60 / 60 / 24);
+	},
+	
+	format_ago: function (t) {
+		if (this.days_ago(t) > 1)
+			return this.format(t, {time: false})
+		else
+			return this.format_period(this.ago(t)) + " ago";
+	},
+	
+	format_period: function (t) {
+		t = Math.round(t / 1000);
+		if (t < 60)
+			return t + " " + BetaJS.Locales.get(t == 1 ? "second" : "seconds");
+		t = Math.round(t / 60);
+		if (t < 60)
+			return t + " " + BetaJS.Locales.get(t == 1 ? "minute" : "minutes");
+		t = Math.round(t / 60);
+		if (t < 24)
+			return t + " " + BetaJS.Locales.get(t == 1 ? "hour" : "hours");
+		t = Math.round(t / 24);
+		return t + " " + BetaJS.Locales.get(t == 1 ? "day" : "days");
+	},
+	
+	format: function (t, options) {
+		options = BetaJS.Objs.extend({
+			time: true,
+			date: true,
+			locale: true
+		}, options || {});
+		var d = new Date(t);
+		if (options.locale) {
+			if (options.date)
+				if (options.time)
+					return d.toLocaleString()
+				else
+					return d.toLocaleDateString()
+			else
+				return d.toLocaleTimeString();
+		} else {
+			if (options.date)
+				if (options.time)
+					return d.toString()
+				else
+					return d.toDateString()
+			else
+				return d.toTimeString();
+		}
+	}
+	
+};

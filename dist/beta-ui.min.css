@@ -1,7 +1,7 @@
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 
-.holygrail-view-left-container{float:left}.holygrail-view-right-container{float:right}.holygrail-view-center-container{overflow:hidden}
+.holygrail-view-left-container{float:left}.holygrail-view-right-container{float:right}.holygrail-view-center-container{overflow:hidden}.text-area-no-resize{resize:none}.text-area-horizontal-fill{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;width:100%}

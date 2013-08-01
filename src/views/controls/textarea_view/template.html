@@ -1,3 +1,6 @@
 <script type="text/template" id="text-area-template">
-	<textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}></textarea>
+	<textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}
+	          {%= bind.css_if_not("text-area-no-resize", "resizable") %}
+	          {%= readonly ? 'readonly' : '' %}
+	          {%= bind.css_if("text-area-horizontal-fill", "horizontal_fill") %}></textarea>
 </script>

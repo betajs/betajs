@@ -108,6 +108,8 @@ module.exports = function(grunt) {
 					'src/base/collections.js',
 					'src/base/comparators.js',
 					'src/base/tokens.js',
+					'src/base/locales.js',
+					'src/base/time.js'
 				]
 			},
 			dist_beta_data : {
@@ -136,6 +138,7 @@ module.exports = function(grunt) {
 					'src/modelling/tables.js',
 					'src/modelling/associations/associations.js', 
 					'src/modelling/associations/has_many_associations.js', 
+					'src/modelling/associations/has_many_through_array_associations.js', 
 					'src/modelling/associations/has_one_associations.js', 
 					'src/modelling/associations/belongs_to_associations.js', 
 					'src/modelling/validations/validators.js', 
@@ -208,6 +211,7 @@ module.exports = function(grunt) {
 		    	files: {
 			        'dist/beta-ui.scss': [
 			            'src/views/containers/holygrail_view/styles.scss',
+			            'src/views/controls/textarea_view/styles.css',
 			        ]
 		    	}
 		    }

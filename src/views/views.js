@@ -213,6 +213,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
 	 *  <li>el_classes: (default []) css classes that should be attached to container</li>
 	 *  <li>el_styles: (default {}) styles that should be attached to container</li>
+	 *  <li>children_classes: (default []) css classes that should be attached to all direct children</li>
 	 *  <li>children_styles: (default {}) styles that should be attached to all direct children</li>
 	 *  <li>css: (default {}) css classes that should be overwritten</li>
 	 *  <li>templates: (default {}) templates that should be overwritten</li>
@@ -235,6 +236,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__added_el_classes = [];
 		this._setOption(options, "el_styles", {});
 		this._setOption(options, "children_styles", {});
+		this._setOption(options, "children_classes", []);
 		this._setOption(options, "invalidate_on_change", false);
 		this.__old_el_styles = {};
 		this._setOption(options, "css", {});
@@ -334,7 +336,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (!this.isActive())
 			return false;
 		BetaJS.Objs.iter(this.__children, function (child) {
-			child.deactivate();
+			child.view.deactivate();
 		});
 		this.__active = false;
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
@@ -474,9 +476,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (!this.isActive())
 			return;
 		this._render();
+		var q = this.$el.children();
 		if (!BetaJS.Types.is_empty(this.__children_styles))
 			for (var key in this.__children_styles)
-				this.$el.children().css(key, this.__children_styles[key]);
+				q.css(key, this.__children_styles[key]);
+		BetaJS.Objs.iter(this.__children_classes, function (cls) {
+			q.addClass(cls);	
+		});
 	},
 	
 	/** Manually triggers rerendering of the view

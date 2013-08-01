@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -874,15 +874,14 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 	
 	__crawl: function () {
 		while (this.__next == null && this.__iterator.hasNext()) {
-			this.__next = this.__iterator.next();
-			if (this.__filter_func(this.__next))
-				return;
-			this.__next == null;
+			var item = this.__iterator.next();;
+			if (this.__filter_func(item))
+				this.__next = item;
 		}
 	},
 	
 	__filter_func: function (item) {
-		return this.__filter.apply(this.__context, item);
+		return this.__filter.apply(this.__context, [item]);
 	}
 
 });
@@ -1460,8 +1459,79 @@ BetaJS.Tokens = {
 	}
 	
 }
+BetaJS.Locales = {
+	
+	get: function (s) {
+		return s;
+	}
+	
+};
+BetaJS.Time = {
+	
+	now: function () {
+		var d = new Date();
+		return d.getTime();
+	},
+	
+	ago: function (t) {
+		return this.now() - t;
+	},
+	
+	days_ago: function (t) {
+		return Math.round(this.ago(t) / 1000 / 60 / 60 / 24);
+	},
+	
+	format_ago: function (t) {
+		if (this.days_ago(t) > 1)
+			return this.format(t, {time: false})
+		else
+			return this.format_period(this.ago(t)) + " ago";
+	},
+	
+	format_period: function (t) {
+		t = Math.round(t / 1000);
+		if (t < 60)
+			return t + " " + BetaJS.Locales.get(t == 1 ? "second" : "seconds");
+		t = Math.round(t / 60);
+		if (t < 60)
+			return t + " " + BetaJS.Locales.get(t == 1 ? "minute" : "minutes");
+		t = Math.round(t / 60);
+		if (t < 24)
+			return t + " " + BetaJS.Locales.get(t == 1 ? "hour" : "hours");
+		t = Math.round(t / 24);
+		return t + " " + BetaJS.Locales.get(t == 1 ? "day" : "days");
+	},
+	
+	format: function (t, options) {
+		options = BetaJS.Objs.extend({
+			time: true,
+			date: true,
+			locale: true
+		}, options || {});
+		var d = new Date(t);
+		if (options.locale) {
+			if (options.date)
+				if (options.time)
+					return d.toLocaleString()
+				else
+					return d.toLocaleDateString()
+			else
+				return d.toLocaleTimeString();
+		} else {
+			if (options.date)
+				if (options.time)
+					return d.toString()
+				else
+					return d.toDateString()
+			else
+				return d.toTimeString();
+		}
+	}
+	
+};
+
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2387,10 +2457,8 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__queries[encoded]));
 		var result = this.__parent.query(query, options).asArray();
 		this.__queries[encoded] = {};
-		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i][this._id_key]] = result[i];
-			this.__queries[encoded][result[i][this._id_key]] = result[i];
-		}
+		for (var i = 0; i < result.length; ++i)
+			this.__cache_row(result[i], encoded);
 		return new BetaJS.Iterators.ArrayIterator(result);
 	},
 	
@@ -2398,10 +2466,14 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.BaseStore.extend("QueryCachedStor
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		this.__queries[encoded] = {};
-		for (var i = 0; i < result.length; ++i) {
-			this.__cache[result[i][this._id_key]] = result[i];
-			this.__queries[encoded][result[i][this._id_key]] = result[i];
-		}
+		for (var i = 0; i < result.length; ++i)
+			this.__cache_row(result[i], encoded);
+	},
+	
+	__cache_row: function (row, encoded) {
+		this.trigger("cache", row);
+		this.__cache[row[this._id_key]] = row;
+		this.__queries[encoded][row[this._id_key]] = row;
 	}
 	
 });
@@ -2433,8 +2505,8 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 	},
 	
 	cache: function (row) {
-		this.__cache[row[this._id_key]] = row;
 		this.trigger("cache", row);		
+		this.__cache[row[this._id_key]] = row;
 	},
 	
 	_insert: function (data) {
@@ -2482,20 +2554,29 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
-		this.__uri = uri;
+		this._uri = uri;
 		this.__ajax = ajax;
 		this.__options = BetaJS.Objs.extend({
-			"update_method": "PUT"
+			"update_method": "PUT",
+			"uri_mappings": {}
 		}, options || {});
 	},
 	
 	getUri: function () {
-		return this.__uri;
+		return this._uri;
+	},
+	
+	prepare_uri: function (action, data) {
+		if (this.__options["uri_mappings"][action])
+			return this.__options["uri_mappings"][action](data);
+		if (action == "remove" || action == "get" || action == "update")
+			return this.getUri() + "/" + data[this._id_key];
+		return this.getUri();
 	},
 
 	_insert : function(data) {
 		try {
-			return this.__ajax.syncCall({method: "POST", uri: this.__uri, data: data});
+			return this.__ajax.syncCall({method: "POST", uri: this.prepare_uri("insert", data), data: data});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
@@ -2503,7 +2584,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 
 	_remove : function(id) {
 		try {
-			var response = this.__ajax.syncCall({method: "DELETE", uri: this.__uri + "/" + id});
+			var response = this.__ajax.syncCall({method: "DELETE", uri: this.prepare_uri("remove", data)});
 			if (response)
 				return response;
 			response = {};
@@ -2515,16 +2596,20 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 	},
 
 	_get : function(id) {
+		var data = {};
+		data[this._id_key] = id;
 		try {
-			return this.__ajax.syncCall({uri: this.__uri + "/" + id});
+			return this.__ajax.syncCall({uri: this.prepare_uri("get", data)});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
 	},
 
 	_update : function(id, data) {
+		var copy = BetaJS.Objs.clone(data, 1);
+		copy[this._id_key] = id;
 		try {
-			return this.__ajax.syncCall({method: this.__options.update_method, uri: this.__uri + "/" + id, data: data});
+			return this.__ajax.syncCall({method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data});
 		} catch (e) {
 			throw new BetaJS.Stores.StoreException(BetaJS.Net.AjaxException.ensure(e).toString()); 			
 		}
@@ -2544,7 +2629,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 	
 	_encode_query: function (query, options) {
 		return {
-			uri: this.getUri()
+			uri: this.prepare_uri("query")
 		};		
 	}
 	
@@ -2654,7 +2739,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-31
+  betajs - v0.0.1 - 2013-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3124,6 +3209,27 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 			return this._yield();
 		if (!this.__cache)
 			this.__cache = this._yield().asArray();
+		return new BetaJS.Iterators.ArrayIterator(this.__cache);
+	},
+
+});
+BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.Associations.HasManyAssociation.extend("HasManyThroughArrayAssociation", {
+
+	_yield: function () {
+		var result = [];
+		BetaJS.Objs.iter(this._model.get(this._foreign_key), function ($id) {
+			var item = this._foreign_table.findById($id);
+			if (item)
+				result.push(item);
+		}, this);
+		return result;
+	},
+
+	yield: function () {
+		if (!this._options["cached"])
+			return new BetaJS.Iterators.ArrayIterator(this._yield());
+		if (!this.__cache)
+			this.__cache = this._yield();
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
 	},
 

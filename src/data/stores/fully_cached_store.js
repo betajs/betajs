@@ -25,8 +25,8 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.BaseStore.extend("FullyCachedStor
 	},
 	
 	cache: function (row) {
-		this.__cache[row[this._id_key]] = row;
 		this.trigger("cache", row);		
+		this.__cache[row[this._id_key]] = row;
 	},
 	
 	_insert: function (data) {

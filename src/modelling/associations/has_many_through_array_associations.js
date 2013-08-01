@@ -1,0 +1,21 @@
+BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.Associations.HasManyAssociation.extend("HasManyThroughArrayAssociation", {
+
+	_yield: function () {
+		var result = [];
+		BetaJS.Objs.iter(this._model.get(this._foreign_key), function ($id) {
+			var item = this._foreign_table.findById($id);
+			if (item)
+				result.push(item);
+		}, this);
+		return result;
+	},
+
+	yield: function () {
+		if (!this._options["cached"])
+			return new BetaJS.Iterators.ArrayIterator(this._yield());
+		if (!this.__cache)
+			this.__cache = this._yield();
+		return new BetaJS.Iterators.ArrayIterator(this.__cache);
+	},
+
+});
