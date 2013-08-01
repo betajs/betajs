@@ -443,6 +443,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css("display", this.__visible ? "" : "none");		
 	},
 	
+	toggle: function () {
+		this.setVisibility(!this.isVisible());
+	},
+	
 	__bind: function () {
 		var self = this;
 		this.__unbind();

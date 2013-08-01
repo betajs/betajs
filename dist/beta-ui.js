@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -567,6 +567,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__visible = visible;
 		if (this.isActive())
 			this.$el.css("display", this.__visible ? "" : "none");		
+	},
+	
+	toggle: function () {
+		this.setVisibility(!this.isVisible());
 	},
 	
 	__bind: function () {

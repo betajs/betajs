@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1461,7 +1461,7 @@ BetaJS.Tokens = {
 	
 }
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1599,8 +1599,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-			dataType: "json",
-			data: options.data,// JSON.stringify(options.data),
+//			dataType: "json", 
+			data: JSON.stringify(options.data), //options.data
 			success: function (response) {
 				result = response;
 			},
@@ -1616,8 +1616,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-			dataType: "json",
-			data: options.data, //JSON.stringify(options.data),
+//			dataType: "json", 
+			data: JSON.stringify(options.data), //options.data
 			success: function (response) {
 				options.success(response);
 			},
@@ -2654,7 +2654,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3166,7 +3166,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3734,6 +3734,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this.__visible = visible;
 		if (this.isActive())
 			this.$el.css("display", this.__visible ? "" : "none");		
+	},
+	
+	toggle: function () {
+		this.setVisibility(!this.isVisible());
 	},
 	
 	__bind: function () {

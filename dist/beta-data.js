@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-07-29
+  betajs - v0.0.1 - 2013-07-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -137,8 +137,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-			dataType: "json",
-			data: options.data,// JSON.stringify(options.data),
+//			dataType: "json", 
+			data: JSON.stringify(options.data), //options.data
 			success: function (response) {
 				result = response;
 			},
@@ -154,8 +154,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-			dataType: "json",
-			data: options.data, //JSON.stringify(options.data),
+//			dataType: "json", 
+			data: JSON.stringify(options.data), //options.data
 			success: function (response) {
 				options.success(response);
 			},
