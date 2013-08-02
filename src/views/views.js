@@ -220,6 +220,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
 	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
 	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
+	 *  <li>hide_on_leave: (default: false) hide view if focus leaves</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -231,12 +232,17 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._setOption(options, "render_string", null);
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
+		this._setOption(options, "hide_on_leave", false);
 		this.__old_attributes = {};
 		this._setOption(options, "el_classes", []);
+		if (BetaJS.Types.is_string(this.__el_classes))
+			this.__el_classes = this.__el_classes.split(" ");
 		this.__added_el_classes = [];
 		this._setOption(options, "el_styles", {});
 		this._setOption(options, "children_styles", {});
 		this._setOption(options, "children_classes", []);
+		if (BetaJS.Types.is_string(this.__children_classes))
+			this.__children_classes = this.__children_classes.split(" ");
 		this._setOption(options, "invalidate_on_change", false);
 		this.__old_el_styles = {};
 		this._setOption(options, "css", {});
@@ -323,6 +329,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
+		if (this.__visible) {
+			this.__bind_hide_on_leave();
+			this._after_show();
+		}
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});
@@ -339,6 +349,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			child.view.deactivate();
 		});
 		this.__active = false;
+		if (this.__visible)
+			this.__unbind_hide_on_leave();
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.reset();
 		}, this);
@@ -441,8 +453,18 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (visible == this.__visible)
 			return;
 		this.__visible = visible;
-		if (this.isActive())
-			this.$el.css("display", this.__visible ? "" : "none");		
+		if (this.isActive()) {
+			this.$el.css("display", this.__visible ? "" : "none");
+			if (this.__visible) {
+				this.__bind_hide_on_leave();
+				this._after_show();
+			}
+			else
+				this.__unbind_hide_on_leave()
+		}		
+	},
+	
+	_after_show: function () {		
 	},
 	
 	toggle: function () {
@@ -657,6 +679,30 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 */
 	outerHeight: function () {
 		return this.$el.outerHeight();
+	},
+	
+	__bind_hide_on_leave: function () {
+		if (!this.__hide_on_leave || this.__hide_on_leave_func)
+			return;
+		var el = this.$el.get(0);
+		var self = this;
+		this.__hide_on_leave_func = function (e) {
+			if (self.__hide_on_leave_skip) {
+				self.__hide_on_leave_skip = false;
+				return;
+			}
+			if (e.target !== el && !$.contains(el, e.target))
+				self.hide();
+		};
+		this.__hide_on_leave_skip = true;
+		BetaJS.$(document.body).on("click", this.__hide_on_leave_func);
+	},
+	
+	__unbind_hide_on_leave: function () {
+		if (!this.__hide_on_leave || !this.__hide_on_leave_func)
+			return;
+		$(document.body).unbind("click", this.__hide_on_leave_func);
+		delete this.__hide_on_leave_func;
 	}
 
 }]);

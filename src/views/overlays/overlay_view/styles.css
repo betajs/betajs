@@ -1,0 +1,4 @@
+.overlay-container-class {
+	position: absolute;
+	z-index: 20000;
+}

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-01
+  betajs - v0.0.1 - 2013-08-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-01
+  betajs - v0.0.1 - 2013-08-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-01
+  betajs - v0.0.1 - 2013-08-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1147,8 +1147,11 @@ BetaJS.Properties.PropertiesMixin = {
 			} else if (entry.type == BetaJS.Properties.TYPE_COMPUTED) {
 				var self = this;
 				BetaJS.Objs.iter(entry.dependencies, function (dep) {
-					self.off("change:" + dep, null, this.__properties[key]);
-				});
+					if (this._isBinding(dep))
+						dep.bindee.off("change:" + dep.property, null, this.__properties[key])
+					else
+						self.off("change:" + dep, null, this.__properties[key]);
+				}, this);
 			}
 			delete this.__properties[key];
 		};
@@ -1183,11 +1186,18 @@ BetaJS.Properties.PropertiesMixin = {
 					value: value.func.apply(self)
 				};
 				BetaJS.Objs.iter(value.dependencies, function (dep) {
-					self.on("change:" + dep, function () {
-						self.__properties[key].value = value.func.apply(self);
-						self.trigger("change");
-						self.trigger("change:" + key);
-					}, this.__properties[key]);
+					if (this._isBinding(dep))
+						dep.bindee.on("change:" + dep.property, function () {
+							self.__properties[key].value = value.func.apply(self);
+							self.trigger("change");
+							self.trigger("change:" + key);
+						}, this.__properties[key]);
+					else
+						self.on("change:" + dep, function () {
+							self.__properties[key].value = value.func.apply(self);
+							self.trigger("change");
+							self.trigger("change:" + key);
+						}, this.__properties[key]);
 				}, this);
 				this._afterSet(key, this.__properties[key].value);
 				this.trigger("change");
@@ -1531,7 +1541,7 @@ BetaJS.Time = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-01
+  betajs - v0.0.1 - 2013-08-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2739,7 +2749,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-08-01
+  betajs - v0.0.1 - 2013-08-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3211,6 +3221,16 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 			this.__cache = this._yield().asArray();
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
 	},
+	
+	findBy: function (query) {
+		query[this._foreign_key] = this._model.id();
+		return this._foreign_table.findBy(query);
+	},
+
+	allBy: function (query) {
+		query[this._foreign_key] = this._model.id();
+		return this._foreign_table.allBy(query);
+	},
 
 });
 BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.Associations.HasManyAssociation.extend("HasManyThroughArrayAssociation", {
@@ -3272,7 +3292,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-08-01
+  betajs - v0.0.1 - 2013-08-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3619,6 +3639,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
 	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
 	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
+	 *  <li>hide_on_leave: (default: false) hide view if focus leaves</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -3630,12 +3651,17 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._setOption(options, "render_string", null);
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
+		this._setOption(options, "hide_on_leave", false);
 		this.__old_attributes = {};
 		this._setOption(options, "el_classes", []);
+		if (BetaJS.Types.is_string(this.__el_classes))
+			this.__el_classes = this.__el_classes.split(" ");
 		this.__added_el_classes = [];
 		this._setOption(options, "el_styles", {});
 		this._setOption(options, "children_styles", {});
 		this._setOption(options, "children_classes", []);
+		if (BetaJS.Types.is_string(this.__children_classes))
+			this.__children_classes = this.__children_classes.split(" ");
 		this._setOption(options, "invalidate_on_change", false);
 		this.__old_el_styles = {};
 		this._setOption(options, "css", {});
@@ -3722,6 +3748,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
+		if (this.__visible) {
+			this.__bind_hide_on_leave();
+			this._after_show();
+		}
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});
@@ -3738,6 +3768,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			child.view.deactivate();
 		});
 		this.__active = false;
+		if (this.__visible)
+			this.__unbind_hide_on_leave();
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.reset();
 		}, this);
@@ -3840,8 +3872,18 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (visible == this.__visible)
 			return;
 		this.__visible = visible;
-		if (this.isActive())
-			this.$el.css("display", this.__visible ? "" : "none");		
+		if (this.isActive()) {
+			this.$el.css("display", this.__visible ? "" : "none");
+			if (this.__visible) {
+				this.__bind_hide_on_leave();
+				this._after_show();
+			}
+			else
+				this.__unbind_hide_on_leave()
+		}		
+	},
+	
+	_after_show: function () {		
 	},
 	
 	toggle: function () {
@@ -4056,6 +4098,30 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 */
 	outerHeight: function () {
 		return this.$el.outerHeight();
+	},
+	
+	__bind_hide_on_leave: function () {
+		if (!this.__hide_on_leave || this.__hide_on_leave_func)
+			return;
+		var el = this.$el.get(0);
+		var self = this;
+		this.__hide_on_leave_func = function (e) {
+			if (self.__hide_on_leave_skip) {
+				self.__hide_on_leave_skip = false;
+				return;
+			}
+			if (e.target !== el && !$.contains(el, e.target))
+				self.hide();
+		};
+		this.__hide_on_leave_skip = true;
+		BetaJS.$(document.body).on("click", this.__hide_on_leave_func);
+	},
+	
+	__unbind_hide_on_leave: function () {
+		if (!this.__hide_on_leave || !this.__hide_on_leave_func)
+			return;
+		$(document.body).unbind("click", this.__hide_on_leave_func);
+		delete this.__hide_on_leave_func;
 	}
 
 }]);
@@ -4633,7 +4699,7 @@ BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {
 
 BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
-BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="label" {%= bind.inner("label") %}></{%= element %}> ';
+BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="{%= supp.css(\'label\') %}" {%= bind.inner("label") %}></{%= element %}> ';
 
 BetaJS.Templates.Cached['link-view-template'] = '  <a href="javascript:{}" {%= bind.inner("label") %}></a> ';
 
@@ -4641,6 +4707,8 @@ BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("va
 
 BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    class="{%= list_container_classes %}"    data-selector="list">   </{%= list_container_element %}>  ';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    class="{%= item_container_classes %}"    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
+
+BetaJS.Templates.Cached['overlay-view-template'] = '  <div></div> ';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
@@ -4790,6 +4858,10 @@ BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView
 		BetaJS.Objs.iter(this.children(), function (child) {
 			child.setVisibility(this.__selected == child);
 		}, this);
+	},
+	
+	selected: function () {
+		return this.__selected;
 	}
 	
 });
@@ -4822,6 +4894,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 		}];
 	},
 	constructor: function(options) {
+		options = options || {};
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
@@ -4834,9 +4907,11 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	__leaveEvent: function () {
 		this.trigger("leave");
 	},
-	focus: function () {
+	focus: function (select_all) {
 		this.$("input").focus();
 		this.$("input").focus();
+		if (select_all)
+			this.$("input").select();
 	}
 });
 BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
@@ -4863,6 +4938,9 @@ BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
 BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["label-view-template"]
+	},
+	_css: function () {
+		return {"label": "label"};
 	},
 	_events: function () {
 		return [{
@@ -4904,13 +4982,27 @@ BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInpu
 			}, this);
 	},
 	
+	is_label_mode: function () {
+		return this.__label_mode;
+	},
+	
+	is_edit_mode: function () {
+		return !this.__label_mode;
+	},
+
 	label_mode: function () {
+		if (this.is_label_mode())
+			return;
+		this.__label_mode = true;
 		this.select(this.label);		
 	},
 	
 	edit_mode: function () {
+		if (this.is_edit_mode())
+			return;
+		this.__label_mode = false;
 		this.select(this.input);
-		this.input.focus();
+		this.input.focus(true);
 	}
 
 });
@@ -5314,4 +5406,91 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 		return this.itemData(item).view;
 	}
 	
+});
+BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
+	
+	_templates: {
+		"default": BetaJS.Templates.Cached["overlay-view-template"]
+	},
+
+	/*
+	 * anchor: "element" | "absolute" | "relative"
+     *
+	 * overlay_left
+	 * overlay_right
+     *
+	 * overlay_align_vertical: "auto" | "top" | "center" | "bottom"
+	 * overlay_align_horizontal: "auto" | "left" | "center" | "right"
+	 *
+	 * element-align-vertical: "auto" | "top" | "center" | "bottom"
+	 * element-align-horizontal: "auto" | "left" | "center" | "right"
+     *
+	 * element
+	 */
+	constructor: function (options) {
+		options = options || {};
+		options.anchor = options.anchor || "absolute";
+		options.hide_on_leave = "hide_on_leave" in options ? options.hide_on_leave : true;
+		options.visible = "visible" in options ? options.visible : false;
+		options.children_classes = options.children_classes || [];
+		if (BetaJS.Types.is_string(options.children_classes))
+			options.children_classes = options.children_classes.split(" ");
+		options.children_classes.push("overlay-container-class");
+		this._inherited(BetaJS.Views.OverlayView, "constructor", options);
+		this._setOption(options, "anchor", "none");
+		this._setOption(options, "element", "");
+		this._setOption(options, "overlay_left", 0);
+		this._setOption(options, "overlay_top", 0);
+		this._setOption(options, "overlay_align_vertical", "top");
+		this._setOption(options, "overlay_align_horizontal", "left");
+		this._setOption(options, "element_align_vertical", "bottom");
+		this._setOption(options, "element_align_horizontal", "left");
+	},
+	
+	_after_show: function () {	
+		if (this.__anchor == "none")
+			return;
+		var overlay = this.$(".overlay-container-class");
+		var width = overlay.outerWidth();
+		var height = overlay.outerHeight();
+
+		var left = this.__overlay_left;
+		var top = this.__overlay_top;
+		
+		if (this.__overlay_align_vertical == "bottom")
+			top -= height
+		else if (this.__overlay_align_vertical == "center")
+			top -= Math.round(height/2);
+
+		if (this.__overlay_align_horizontal == "right")
+			left -= width
+		else if (this.__overlay_align_horizontal == "center")
+			left -= Math.round(width/2);
+			
+		var element = this.$el;
+		if (this.__anchor == "element" && this.__element) {
+			element = this.__element;
+			if (BetaJS.Types.is_string(element))
+				element = BetaJS.$(element)
+			else if (BetaJS.Class.is_class_instance(element))
+				element = element.$el;
+		}
+		if (this.__anchor == "relative" || this.__anchor == "element") {
+			element_width = element.outerWidth();
+			element_height = element.outerHeight();
+			left += element.offset().left - $(window).scrollLeft();
+			top += element.offset().top - $(window).scrollTop();
+			if (this.__element_align_vertical == "bottom")
+				top += element_height
+			else if (this.__element_align_vertical == "center")
+				top += Math.round(element_height/2);
+			if (this.__element_align_horizontal == "right")
+				left += element_width
+			else if (this.__element_align_horizontal == "center")
+				left += Math.round(element_width/2);
+		}
+		overlay.css("left", left + "px");
+		overlay.css("top", top + "px");
+	},
+
 });

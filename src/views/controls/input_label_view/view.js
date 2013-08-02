@@ -24,13 +24,27 @@ BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInpu
 			}, this);
 	},
 	
+	is_label_mode: function () {
+		return this.__label_mode;
+	},
+	
+	is_edit_mode: function () {
+		return !this.__label_mode;
+	},
+
 	label_mode: function () {
+		if (this.is_label_mode())
+			return;
+		this.__label_mode = true;
 		this.select(this.label);		
 	},
 	
 	edit_mode: function () {
+		if (this.is_edit_mode())
+			return;
+		this.__label_mode = false;
 		this.select(this.input);
-		this.input.focus();
+		this.input.focus(true);
 	}
 
 });

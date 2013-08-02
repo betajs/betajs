@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-01
+  betajs - v0.0.1 - 2013-08-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -470,6 +470,16 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 		if (!this.__cache)
 			this.__cache = this._yield().asArray();
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
+	},
+	
+	findBy: function (query) {
+		query[this._foreign_key] = this._model.id();
+		return this._foreign_table.findBy(query);
+	},
+
+	allBy: function (query) {
+		query[this._foreign_key] = this._model.id();
+		return this._foreign_table.allBy(query);
 	},
 
 });

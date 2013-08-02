@@ -72,8 +72,11 @@ BetaJS.Properties.PropertiesMixin = {
 			} else if (entry.type == BetaJS.Properties.TYPE_COMPUTED) {
 				var self = this;
 				BetaJS.Objs.iter(entry.dependencies, function (dep) {
-					self.off("change:" + dep, null, this.__properties[key]);
-				});
+					if (this._isBinding(dep))
+						dep.bindee.off("change:" + dep.property, null, this.__properties[key])
+					else
+						self.off("change:" + dep, null, this.__properties[key]);
+				}, this);
 			}
 			delete this.__properties[key];
 		};
@@ -108,11 +111,18 @@ BetaJS.Properties.PropertiesMixin = {
 					value: value.func.apply(self)
 				};
 				BetaJS.Objs.iter(value.dependencies, function (dep) {
-					self.on("change:" + dep, function () {
-						self.__properties[key].value = value.func.apply(self);
-						self.trigger("change");
-						self.trigger("change:" + key);
-					}, this.__properties[key]);
+					if (this._isBinding(dep))
+						dep.bindee.on("change:" + dep.property, function () {
+							self.__properties[key].value = value.func.apply(self);
+							self.trigger("change");
+							self.trigger("change:" + key);
+						}, this.__properties[key]);
+					else
+						self.on("change:" + dep, function () {
+							self.__properties[key].value = value.func.apply(self);
+							self.trigger("change");
+							self.trigger("change:" + key);
+						}, this.__properties[key]);
 				}, this);
 				this._afterSet(key, this.__properties[key].value);
 				this.trigger("change");

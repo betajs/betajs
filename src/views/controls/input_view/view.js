@@ -9,6 +9,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 		}];
 	},
 	constructor: function(options) {
+		options = options || {};
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
@@ -21,8 +22,10 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	__leaveEvent: function () {
 		this.trigger("leave");
 	},
-	focus: function () {
+	focus: function (select_all) {
 		this.$("input").focus();
 		this.$("input").focus();
+		if (select_all)
+			this.$("input").select();
 	}
 });

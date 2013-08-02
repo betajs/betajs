@@ -41,6 +41,10 @@ BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView
 		BetaJS.Objs.iter(this.children(), function (child) {
 			child.setVisibility(this.__selected == child);
 		}, this);
+	},
+	
+	selected: function () {
+		return this.__selected;
 	}
 	
 });

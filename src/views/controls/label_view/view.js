@@ -2,6 +2,9 @@ BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["label-view-template"]
 	},
+	_css: function () {
+		return {"label": "label"};
+	},
 	_events: function () {
 		return [{
 			"click": "__clickEvent"	
