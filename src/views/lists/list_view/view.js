@@ -30,6 +30,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = false;
+			if ("compare" in options)
+				this.__collection.set_compare(options["compare"]);
 		} else {
 			var col_options = {};
 			if ("objects" in options) 

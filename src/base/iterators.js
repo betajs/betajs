@@ -41,6 +41,22 @@ BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator
 	
 });
 
+BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectKeysIterator", {
+	
+	constructor: function (obj) {
+		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
+	}
+	
+});
+
+BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectValuesIterator", {
+	
+	constructor: function (obj) {
+		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
+	}
+	
+});
+
 BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterator", {
 	
 	constructor: function (iterator, map) {

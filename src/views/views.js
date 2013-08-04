@@ -425,6 +425,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		BetaJS.Objs.iter(this.__templates, function (template) {
 			template.destroy();
 		}, this);
+		this.trigger("destroy");
 		this._inherited(BetaJS.Views.View, "destroy");
 	},
 	
@@ -562,16 +563,25 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			return;
 		this.deactivate();
 		if (this.__parent) {
+			this._unbindParent(this.__parent);
 			var old_parent = this.__parent;
+			this.__parent.off(null, null, this);
 			this.__parent = null;
 			old_parent.removeChild(this);
 		}
 		if (parent) {
 			this.__parent = parent;
 			parent.addChild(this);
+			this._bindParent(parent);
 			if (parent.isActive())
 				this.activate();
 		}
+	},
+	
+	_bindParent: function () {		
+	},
+
+	_unbindParent: function () {		
 	},
 	
 	/** Returns all child views
@@ -635,6 +645,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (this.hasChild(child)) {
 			delete this.__children[child.cid()];
 			child.setParent(null);
+			child.off(null, null, this);
 			this._notify("removeChild", child);
 		}
 	},

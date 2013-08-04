@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-02
+  betajs - v0.0.1 - 2013-08-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -242,6 +242,14 @@ BetaJS.Objs = {
 				if (BetaJS.Types.is_defined(result) && !result)
 					return;
 			}
+	},
+	
+	intersect: function (a, b) {
+		var c = {};
+		for (var key in a)
+			if (key in b)
+				c[key] = a[key];
+		return c;
 	}
 	
 };
@@ -685,7 +693,7 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 		this._inherited(BetaJS.Lists.ArrayList, "constructor", objects);
 	},
 	
-	set_sompare: function (compare) {
+	set_compare: function (compare) {
 		this._compare = compare;
 		if (compare)
 			this.sort();
@@ -818,6 +826,22 @@ BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator
 	
 	next: function () {
 		return this.__arr[this.__i++];
+	}
+	
+});
+
+BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectKeysIterator", {
+	
+	constructor: function (obj) {
+		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
+	}
+	
+});
+
+BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectValuesIterator", {
+	
+	constructor: function (obj) {
+		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
 	}
 	
 });

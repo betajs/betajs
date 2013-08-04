@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-02
+  betajs - v0.0.1 - 2013-08-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -551,6 +551,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		BetaJS.Objs.iter(this.__templates, function (template) {
 			template.destroy();
 		}, this);
+		this.trigger("destroy");
 		this._inherited(BetaJS.Views.View, "destroy");
 	},
 	
@@ -688,16 +689,25 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			return;
 		this.deactivate();
 		if (this.__parent) {
+			this._unbindParent(this.__parent);
 			var old_parent = this.__parent;
+			this.__parent.off(null, null, this);
 			this.__parent = null;
 			old_parent.removeChild(this);
 		}
 		if (parent) {
 			this.__parent = parent;
 			parent.addChild(this);
+			this._bindParent(parent);
 			if (parent.isActive())
 				this.activate();
 		}
+	},
+	
+	_bindParent: function () {		
+	},
+
+	_unbindParent: function () {		
 	},
 	
 	/** Returns all child views
@@ -761,6 +771,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		if (this.hasChild(child)) {
 			delete this.__children[child.cid()];
 			child.setParent(null);
+			child.off(null, null, this);
 			this._notify("removeChild", child);
 		}
 	},
@@ -1781,6 +1792,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = false;
+			if ("compare" in options)
+				this.__collection.set_compare(options["compare"]);
 		} else {
 			var col_options = {};
 			if ("objects" in options) 
@@ -2093,6 +2106,8 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 	},
 	
 	select: function (item) {
+		if (!this.itemData(item))
+			return;
 		var self = this;
 		if (this.__selectable && !this.isSelected(item)) {
 			if (!this.__multi_select)
@@ -2121,16 +2136,16 @@ BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
 	},
 
 	/*
-	 * anchor: "element" | "absolute" | "relative"
+	 * anchor: "absolute" | "element" | "relative"
      *
 	 * overlay_left
 	 * overlay_right
      *
-	 * overlay_align_vertical: "auto" | "top" | "center" | "bottom"
-	 * overlay_align_horizontal: "auto" | "left" | "center" | "right"
+	 * overlay_align_vertical: "top" | "center" | "bottom"
+	 * overlay_align_horizontal: "left" | "center" | "right"
 	 *
-	 * element-align-vertical: "auto" | "top" | "center" | "bottom"
-	 * element-align-horizontal: "auto" | "left" | "center" | "right"
+	 * element-align-vertical: "top" | "center" | "bottom"
+	 * element-align-horizontal: "left" | "center" | "right"
      *
 	 * element
 	 */

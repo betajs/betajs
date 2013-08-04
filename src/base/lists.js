@@ -182,7 +182,7 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 		this._inherited(BetaJS.Lists.ArrayList, "constructor", objects);
 	},
 	
-	set_sompare: function (compare) {
+	set_compare: function (compare) {
 		this._compare = compare;
 		if (compare)
 			this.sort();

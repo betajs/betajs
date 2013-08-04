@@ -164,4 +164,24 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		return model;
 	},
 	
+	active_query_engine: function () {
+		if (!this.__active_query_engine) {
+			var self = this;
+			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
+			this._active_query_engine._query = function (query) {
+				return self.allBy(query);
+			};
+			this.on("create", function (object) {
+				this._active_query_engine.insert(object);
+			});
+			this.on("remove", function (object) {
+				this._active_query_engine.insert(remove);
+			});
+			this.on("change", function (object) {
+				this._active_query_engine.update(object);
+			});
+		}
+		return this._active_query_engine;
+	}
+	
 }]);

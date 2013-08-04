@@ -61,6 +61,8 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 	},
 	
 	select: function (item) {
+		if (!this.itemData(item))
+			return;
 		var self = this;
 		if (this.__selectable && !this.isSelected(item)) {
 			if (!this.__multi_select)

@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-08-02
+  betajs - v0.0.1 - 2013-08-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-02
+  betajs - v0.0.1 - 2013-08-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -247,6 +247,14 @@ BetaJS.Objs = {
 				if (BetaJS.Types.is_defined(result) && !result)
 					return;
 			}
+	},
+	
+	intersect: function (a, b) {
+		var c = {};
+		for (var key in a)
+			if (key in b)
+				c[key] = a[key];
+		return c;
 	}
 	
 };
@@ -690,7 +698,7 @@ BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
 		this._inherited(BetaJS.Lists.ArrayList, "constructor", objects);
 	},
 	
-	set_sompare: function (compare) {
+	set_compare: function (compare) {
 		this._compare = compare;
 		if (compare)
 			this.sort();
@@ -823,6 +831,22 @@ BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator
 	
 	next: function () {
 		return this.__arr[this.__i++];
+	}
+	
+});
+
+BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectKeysIterator", {
+	
+	constructor: function (obj) {
+		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
+	}
+	
+});
+
+BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectValuesIterator", {
+	
+	constructor: function (obj) {
+		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
 	}
 	
 });
@@ -1536,7 +1560,7 @@ BetaJS.Time = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-02
+  betajs - v0.0.1 - 2013-08-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1919,6 +1943,8 @@ BetaJS.Queries.Constrained = {
 		var execute_options = {};
 		if ("sort" in options && "sort" in query_capabilities)
 			execute_options.sort = options.sort;
+		// Test
+		execute_query = query;
 		if ("query" in query_capabilities || BetaJS.Types.is_empty(query)) {
 			execute_query = query;
 			if (!("sort" in options) || "sort" in query_capabilities) {
@@ -2064,6 +2090,167 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 	}
 	
 });
+BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
+	
+	constructor: function () {
+		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
+		this.__aqs = {};
+		this.__object_to_aqs = {};
+		this.__match_to_aqs = {};
+		this.__uniform_aqs = {};
+	},
+	
+	__valid_for_aq: function (raw, aq) {
+		return BetaJS.Queries.evaluate(aq.query(), raw);
+	},
+	
+	insert: function (object) {
+		if (this.__object_to_aqs[BetaJS.Ids.objectId(object)])
+			return;
+		var raw = object.getAll();
+		var aqs = {};
+		this.__object_to_aqs[BetaJS.Ids.objectId(object)] = aqs;
+		BetaJS.Objs.iter(this.__uniform_aqs, function (aq) {
+			aq._add(object);
+			aqs[BetaJS.Ids.objectId(aq)] = aq;
+		}, this);
+		for (var key in raw) {
+			var normalized = key + ":" + JSON.stringify(raw[key]);
+			if (this.__match_to_aqs[normalized])
+				BetaJS.Objs.iter(this.__match_to_aqs[normalized], function (aq) {
+					if (this.__valid_for_aq(raw, aq)) {
+						aq._add(object);
+						aqs[BetaJS.Ids.objectId(aq)] = aq;
+					}
+				}, this);
+		}
+		object.on("change", function () {
+			this.update(object);
+		}, this);
+	},
+	
+	remove: function (object) {
+		BetaJS.Objs.iter(this.__object_to_aqs[BetaJS.Ids.objectId(object)], function (aq) {
+			aq._remove(object);
+		}, this);
+		delete this.__object_to_aqs[BetaJS.Ids.objectId(object)];
+		object.off(null, this, null);
+	},
+	
+	update: function (object) {
+		var raw = object.getAll();
+		var aqs = this.__object_to_aqs[BetaJS.Ids.objectId(object)];
+		BetaJS.Objs.iter(this.__object_to_aqs[BetaJS.Ids.objectId(object)], function (aq) {
+			if (!this.__valid_for_aq(raw, aq)) {
+				aq._remove(object);
+				delete aqs[BetaJS.Ids.objectId(aq)];
+			}
+		}, this);
+		for (var key in raw) {
+			var normalized = key + ":" + JSON.stringify(raw[key]);
+			if (this.__match_to_aqs[normalized])
+				BetaJS.Objs.iter(this.__match_to_aqs[normalized], function (aq) {
+					if (!(BetaJS.Ids.objectId(aq) in aqs) && this.__valid_for_aq(raw, aq)) {
+						aq._add(object);
+						aqs[BetaJS.Ids.objectId(aq)] = aq;
+					}
+				}, this);
+		}
+	},
+	
+	register: function (aq) {
+		if (aq.isUniform())
+			this.__uniform_aqs[BetaJS.Ids.objectId(aq)] = aq
+		else
+			this.__aqs[BetaJS.Ids.objectId(aq)] = aq;
+		var query = aq.query();
+		for (var key in query) {
+			var normalized = key + ":" + JSON.stringify(query[key]);
+			this.__match_to_aqs[normalized] = this.__match_to_aqs[normalized] || {};
+			this.__match_to_aqs[normalized][BetaJS.Ids.objectId(aq)] = aq;
+		}
+		var result = this._query(query);
+		while (result.hasNext()) {
+			var object = result.next();
+			if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
+				this.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)] = aq;
+				aq._add(object);
+			} else
+				this.insert(object);
+		}
+	},
+	
+	unregister: function (aq) {
+		if (aq.isUniform())
+			delete this.__uniform_aqs[BetaJS.Ids.objectId(aq)]
+		else
+			delete this.__aqs[BetaJS.Ids.objectId(aq)];
+		var self = this;
+		aq.collection().iterate(function (object) {
+			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)];
+		});
+		var query = aq.query();
+		for (var key in query) {
+			var normalized = key + ":" + JSON.stringify(query[key]);
+			delete this.__match_to_aqs[normalized][BetaJS.Ids.objectId(aq)];
+			if (BetaJS.Types.is_empty(this.__match_to_aqs[normalized]))
+				delete this.__match_to_aqs[normalized];
+		}		
+	},
+	
+	_query: function (query) {
+	},	
+	
+});
+
+BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", {
+	
+	constructor: function (engine, query) {
+		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
+		this.__engine = engine;
+		this.__query = query;
+		this.__collection = new BetaJS.Collections.Collection();
+		engine.register(this);
+	},
+	
+	destroy: function () {
+		this.__engine.unregister(this);
+		this._inherited(BetaJS.Queries.ActiveQuery, "destroy");
+	},
+	
+	isUniform: function () {
+		return BetaJS.Types.is_empty(this.query());
+	},
+	
+	engine: function () {
+		return this.__engine;
+	},
+	
+	query: function () {
+		return this.__query;
+	},
+	
+	collection: function () {
+		return this.__collection;
+	},
+	
+	_add: function (object) {
+		this.__collection.add(object);		
+	},
+	
+	_remove: function (object) {
+		this.__collection.remove(object);
+	},
+	
+	change_query: function (query) {
+		this.__engine.unregister(this);
+		this.__query = query;
+		this.__collection.clear();
+		this.__engine.register(this);
+	}
+	
+});
+
 BetaJS.Stores = BetaJS.Stores || {};
 
 
@@ -2080,8 +2267,10 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 		this._inherited(BetaJS.Stores.BaseStore, "constructor");
 		options = options || {};
 		this._id_key = options.id_key || "id";
+		this._create_ids = options.create_ids || false;
+		this._last_id = 1;
 	},
-		
+			
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -2123,6 +2312,16 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	},	
 	
 	insert: function (data) {
+		if (this._create_ids) {
+			if (this._id_key in data) {
+				if (this.get(data[this._id_key]))
+					return null;
+			} else {
+				while (this.get(this._last_id))
+					this._last_id++;
+				data[this._id_key] = this._last_id;
+			}
+		}
 		var row = this._insert(data);
 		if (row)
 			this.trigger("insert", row)
@@ -2132,7 +2331,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	remove: function (id) {
 		var row = this._remove(id);
 		if (row)
-			this.trigger("remove", row);
+			this.trigger("remove", id);
 		return row;
 	},
 	
@@ -2149,7 +2348,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	
 	query: function (query, options) {
 		return BetaJS.Queries.Constrained.emulate(
-			BetaJS.Queries.Constrained.make(query, options || {}),
+			BetaJS.Queries.Constrained.make(query || {}, options || {}),
 			this._query_capabilities(),
 			this._query,
 			this
@@ -2169,6 +2368,76 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 
 }]);
 
+BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
+	
+	_read_key: function (key) {},
+	_write_key: function (key, value) {},
+	_remove_key: function (key) {},
+	_iterate: function () {},
+	
+	constructor: function (options) {
+		options = options || {};
+		options.create_ids = true;
+		this._inherited(BetaJS.Stores.AssocStore, "constructor", options);
+	},
+	
+	_insert: function (data) {
+		this._write_key(data[this._id_key], data);
+		return data;
+	},
+	
+	_remove: function (id) {
+		var row = this._read_key(id);
+		if (row && !this._remove_key(id))
+			return null;
+		return row;
+	},
+	
+	_get: function (id) {
+		return this._read_key(id);
+	},
+	
+	_update: function (id, data) {
+		var row = this._get(id);
+		if (row) {
+			delete data[this._id_key];
+			BetaJS.Objs.extend(row, data);
+			this._write_key(id, row);
+		}
+		return row;
+	},
+	
+	_query: function (query, options) {
+		return this._iterate();
+	},	
+
+});
+
+BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
+	
+	constructor: function (options) {
+		this._inherited(BetaJS.Stores.MemoryStore, "constructor", options);
+		this.__data = {};
+	},
+
+	_read_key: function (key) {
+		return this.__data[key];
+	},
+	
+	_write_key: function (key, value) {
+		this.__data[key] = value;
+	},
+	
+	_remove_key: function (key) {
+		delete this.__data[key];
+	},
+	
+	_iterate: function () {
+		return new BetaJS.Iterators.ObjectValuesIterator(this.__data);
+	}
+	
+});
+
 BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	
 	_read_last_id: function () {},
@@ -2187,16 +2456,20 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	_write_prev_id: function (id, prev_id) {},
 	_remove_prev_id: function (id) {},
 	
+	constructor: function (options) {
+		options = options || {};
+		options.create_ids = true;
+		this._inherited(BetaJS.Stores.DumbStore, "constructor", options);
+	},
+
 	_insert: function (data) {
 		var last_id = this._read_last_id();
-		var id = 1;
+		var id = data[this._id_key];
 		if (last_id != null) {
-			id = last_id + 1;
 			this._write_next_id(last_id, id);
 			this._write_prev_id(id, last_id);
 		} else
 			this._write_first_id(id);
-		data[this._id_key] = id;
 		this._write_last_id(id);
 		this._write_item(id, data);
 		return data;
@@ -2248,7 +2521,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 			query: true
 		};
 	},
-	
+
 	_query: function (query, options) {
 		var iter = new BetaJS.Iterators.Iterator();
 		var store = this;
@@ -2293,7 +2566,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	
 });
 
-BetaJS.Stores.AssocStore = BetaJS.Stores.DumbStore.extend("AssocStore", {
+BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
@@ -2366,7 +2639,7 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.DumbStore.extend("AssocStore", {
 	
 });
 
-BetaJS.Stores.LocalStore = BetaJS.Stores.AssocStore.extend("LocalStore", {
+BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
@@ -2389,22 +2662,6 @@ BetaJS.Stores.LocalStore = BetaJS.Stores.AssocStore.extend("LocalStore", {
 	_remove_key: function (key) {
 		delete localStorage[this.__key(key)];
 	},
-	
-});
-
-BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
-	
-	_read_key: function (key) {
-		return this[key];
-	},
-	
-	_write_key: function (key, value) {
-		this[key] = value;
-	},
-	
-	_remove_key: function (key) {
-		delete this[key];
-	}
 	
 });
 
@@ -2743,8 +3000,209 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 
 });
 
+BetaJS.Stores.IndexedStore = BetaJS.Stores.BaseStore.extend("IndexedStore", {
+	
+	constructor: function (store, indices, options) {
+		options = options || {};
+		options.rebuild = "rebuild" in options ? options.rebuild : true;
+		options.id_key = store._id_key;
+		this._inherited(BetaJS.Stores.IndexedStore, "constructor", options);
+		this._store = store;
+		this._indices = {};
+		BetaJS.Objs.iter(indices || {}, function (value, key) {
+			value.type = value.type || "StoreIndex";
+			this._indices[key] = new BetaJS.Stores[value.type](store, key);
+			if (options.rebuild)
+				this._indices[key].rebuild();
+		}, this);
+	},
+	
+	rebuild: function () {
+		BetaJS.Objs.iter(this._indices, function (index) {
+			index.rebuild();
+		}, this);
+	},
+	
+	_query: function (query, options) {
+		var initialized = false;
+		var ids = {};
+		for (var key in query) 
+			if (key in this._indices) {
+				if (initialized) {
+					var new_ids = this._indices[key].get(query[key]);
+					ids = BetaJS.Objs.intersect(ids, new_ids);
+				} else {
+					initialized = true;
+					ids = this._indices[key].get(query[key]);
+				}
+				if (BetaJS.Types.is_empty(ids))
+					return {};
+			}
+		if (!initialized)
+			return this._store.query(query, options);
+		var self = this;
+		return new BetaJS.Iterators.MappedIterator(
+			       new BetaJS.Iterators.FilteredIterator(
+			           new BetaJS.Iterators.ObjectKeysIterator(ids),
+			           function (id) {
+			           	   return self._query_applies_to_id(query, id);
+			           }
+			       ),
+			       function (id) {
+                       return self.get(id);
+			       }
+			 );
+	},
+	
+	_insert: function (data) {
+		return this._store.insert(data);
+	},
+
+	_remove: function (id) {
+		return this._store.remove(id);
+	},
+	
+	_get: function (id) {
+		return this._store.get(id);
+	},
+	
+	_update: function (id, data) {
+		return this._store.update(id, data);
+	},
+		
+});
+
+BetaJS.Stores.StoreIndex = BetaJS.Class.extend("StoreIndex", {
+	
+	constructor: function (base_store, index_key) {
+		this._inherited(BetaJS.Stores.StoreIndex, "constructor");
+		this._base_store = base_store;
+		this._index_key = index_key;
+		this._id_to_key = {};
+		this._key_to_ids = {};
+		this._base_store.on("insert", function (row) {
+			this._insert(row);
+		}, this);
+		this._base_store.on("remove", function (id) {
+			this._remove(id);
+		}, this);
+		this._base_store.on("update", function (row) {
+			if (!this._exists(row)) {
+				this._remove(this._id(row));
+				this._insert(row);
+			}
+		}, this);
+	},
+	
+	destroy: function () {
+		this._base_store.off(null, null, this);
+		this._inherited(BetaJS.Stores.StoreIndex, "destroy");
+	},
+	
+	rebuild: function () {
+		var iter = this._base_store.query();
+		while (iter.hasNext())
+			this.insert(iter.next());
+	},
+	
+	_id: function (row) {
+		return row[this._base_store._id_key];
+	},
+	
+	_key: function (row) {
+		return row[this._index_key];
+	},
+
+	_insert: function (row) {
+		var id = this._id(row);
+		var key = this._key(row);
+		this._id_to_key[id] = key;
+		if (!(key in this._key_to_ids))
+			this._key_to_ids[key] = {};
+		this._key_to_ids[key][id] = true;
+	},
+	
+	_remove: function (id) {
+		var key = this._id_to_key[id];
+		delete this._id_to_key[id];
+		delete this._key_to_ids[id];
+	},
+	
+	_exists: function (row) {
+		return this._id(row) in this._id_to_key;
+	},
+	
+	get: function (key) {
+		return key in this._key_to_ids ? this._key_to_ids[key] : [];
+	}
+	
+});
+
+/*
+BetaJS.Stores.SubStringStoreIndex = BetaJS.Stores.StoreIndex.extend("SubStringStoreIndex", {
+
+	constructor: function (base_store, index_key) {
+		this._inherited(BetaJS.Stores.SubStringStoreIndex, "constructor", base_store, index_key);
+		this._substrings = {};
+	},
+
+	_insert: function (row) {
+		this._inherited(BetaJS.Stores.SubStringStoreIndex, "_insert", row);
+		var id = this._id(row);
+		var key = this._key(row) + "";
+		var current = this._substrings;
+		while (key != "") {
+			var c = key.charAt(0);
+			key = key.substr(1);
+			if (!(c in current))
+				current[c] = {
+					sub: {},
+					ids: {}
+				};
+			current[c].ids[id] = true;
+			current = current[c].sub;
+		}
+	},
+	
+	__remove_helper: function (current, key, id) {
+		if (key == "")
+			return;
+		var c = key.charAt(0);
+		key = key.substr(1);
+		this.__remove_helper(current[c].sub, key, id);
+		delete current[c].ids[id];
+		if (BetaJS.Types.is_empty(current[c].ids))
+			delete current[c];
+	},
+
+	_remove: function (id) {
+		this.__remove_helper(this._substrings, this._id_to_key[id], id);
+		this._inherited(BetaJS.Stores.SubStringStoreIndex, "_remove", id);		
+	},
+
+	get: function (key) {
+		if (!BetaJS.Types.is_object(key)) 
+			return this._inherited(BetaJS.Stores.SubStringStoreIndex, "get", key);
+		key = key.value;
+		if (key == "")
+			return {};
+		var current = this._substrings; 
+		while (key != "") {
+			var c = key.charAt(0);
+			key = key.substr(1);
+			if (!(c in current))
+				return {};
+			if (key == "")
+				return current[c].ids;
+			current = current[c].sub;
+		}
+		return {};
+	}
+	
+});
+*/
 /*!
-  betajs - v0.0.1 - 2013-08-02
+  betajs - v0.0.1 - 2013-08-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2762,8 +3220,8 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__errors = {};
 		this.__unvalidated = {};
 		for (var key in scheme)
-			if (scheme[key].def) 
-				this.set(key, scheme[key].def)
+			if ("def" in scheme[key]) 
+				this.set(key, scheme[key].def);
 			else if (scheme[key].auto_create)
 				this.set(key, scheme[key].auto_create(this))
 			else
@@ -3162,6 +3620,26 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		this.__enterModel(model);
 		return model;
 	},
+	
+	active_query_engine: function () {
+		if (!this.__active_query_engine) {
+			var self = this;
+			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
+			this._active_query_engine._query = function (query) {
+				return self.allBy(query);
+			};
+			this.on("create", function (object) {
+				this._active_query_engine.insert(object);
+			});
+			this.on("remove", function (object) {
+				this._active_query_engine.insert(remove);
+			});
+			this.on("change", function (object) {
+				this._active_query_engine.update(object);
+			});
+		}
+		return this._active_query_engine;
+	}
 	
 }]);
 BetaJS.Modelling.Associations = {};

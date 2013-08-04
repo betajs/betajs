@@ -12,8 +12,8 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__errors = {};
 		this.__unvalidated = {};
 		for (var key in scheme)
-			if (scheme[key].def) 
-				this.set(key, scheme[key].def)
+			if ("def" in scheme[key]) 
+				this.set(key, scheme[key].def);
 			else if (scheme[key].auto_create)
 				this.set(key, scheme[key].auto_create(this))
 			else

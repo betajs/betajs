@@ -122,15 +122,18 @@ module.exports = function(grunt) {
 					'src/data/queries/compiled_query.js', 
 					'src/data/queries/constrained_queries.js', 
 					'src/data/queries/query_collection.js',
+					'src/data/queries/active_queries.js',
 					'src/data/stores/base_store.js',
-					'src/data/stores/dumb_store.js',
 					'src/data/stores/assoc_store.js',
-					'src/data/stores/local_store.js',
 					'src/data/stores/memory_store.js',
+					'src/data/stores/dumb_store.js',
+					'src/data/stores/assoc_dumb_store.js',
+					'src/data/stores/local_store.js',
 					'src/data/stores/query_cached_store.js',
 					'src/data/stores/fully_cached_store.js',
 					'src/data/stores/remote_store.js',
-					'src/data/stores/conversion_store.js'
+					'src/data/stores/conversion_store.js',
+					'src/data/stores/indexed_store.js',
 				]
 			},
 			dist_beta_models : {

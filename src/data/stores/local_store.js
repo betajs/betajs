@@ -1,4 +1,4 @@
-BetaJS.Stores.LocalStore = BetaJS.Stores.AssocStore.extend("LocalStore", {
+BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);

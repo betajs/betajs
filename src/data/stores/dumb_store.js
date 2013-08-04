@@ -16,16 +16,20 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	_write_prev_id: function (id, prev_id) {},
 	_remove_prev_id: function (id) {},
 	
+	constructor: function (options) {
+		options = options || {};
+		options.create_ids = true;
+		this._inherited(BetaJS.Stores.DumbStore, "constructor", options);
+	},
+
 	_insert: function (data) {
 		var last_id = this._read_last_id();
-		var id = 1;
+		var id = data[this._id_key];
 		if (last_id != null) {
-			id = last_id + 1;
 			this._write_next_id(last_id, id);
 			this._write_prev_id(id, last_id);
 		} else
 			this._write_first_id(id);
-		data[this._id_key] = id;
 		this._write_last_id(id);
 		this._write_item(id, data);
 		return data;
@@ -77,7 +81,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 			query: true
 		};
 	},
-	
+
 	_query: function (query, options) {
 		var iter = new BetaJS.Iterators.Iterator();
 		var store = this;

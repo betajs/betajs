@@ -14,8 +14,10 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 		this._inherited(BetaJS.Stores.BaseStore, "constructor");
 		options = options || {};
 		this._id_key = options.id_key || "id";
+		this._create_ids = options.create_ids || false;
+		this._last_id = 1;
 	},
-		
+			
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -57,6 +59,16 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	},	
 	
 	insert: function (data) {
+		if (this._create_ids) {
+			if (this._id_key in data) {
+				if (this.get(data[this._id_key]))
+					return null;
+			} else {
+				while (this.get(this._last_id))
+					this._last_id++;
+				data[this._id_key] = this._last_id;
+			}
+		}
 		var row = this._insert(data);
 		if (row)
 			this.trigger("insert", row)
@@ -66,7 +78,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	remove: function (id) {
 		var row = this._remove(id);
 		if (row)
-			this.trigger("remove", row);
+			this.trigger("remove", id);
 		return row;
 	},
 	
@@ -83,7 +95,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	
 	query: function (query, options) {
 		return BetaJS.Queries.Constrained.emulate(
-			BetaJS.Queries.Constrained.make(query, options || {}),
+			BetaJS.Queries.Constrained.make(query || {}, options || {}),
 			this._query_capabilities(),
 			this._query,
 			this

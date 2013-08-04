@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-02
+  betajs - v0.0.1 - 2013-08-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -17,8 +17,8 @@ BetaJS.Modelling.Model = BetaJS.Properties.Properties.extend("Model", [
 		this.__errors = {};
 		this.__unvalidated = {};
 		for (var key in scheme)
-			if (scheme[key].def) 
-				this.set(key, scheme[key].def)
+			if ("def" in scheme[key]) 
+				this.set(key, scheme[key].def);
 			else if (scheme[key].auto_create)
 				this.set(key, scheme[key].auto_create(this))
 			else
@@ -417,6 +417,26 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		this.__enterModel(model);
 		return model;
 	},
+	
+	active_query_engine: function () {
+		if (!this.__active_query_engine) {
+			var self = this;
+			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
+			this._active_query_engine._query = function (query) {
+				return self.allBy(query);
+			};
+			this.on("create", function (object) {
+				this._active_query_engine.insert(object);
+			});
+			this.on("remove", function (object) {
+				this._active_query_engine.insert(remove);
+			});
+			this.on("change", function (object) {
+				this._active_query_engine.update(object);
+			});
+		}
+		return this._active_query_engine;
+	}
 	
 }]);
 BetaJS.Modelling.Associations = {};

@@ -1,72 +1,44 @@
-BetaJS.Stores.AssocStore = BetaJS.Stores.DumbStore.extend("AssocStore", {
+BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
 	_remove_key: function (key) {},
+	_iterate: function () {},
 	
-	__read_id: function (key) {
-		var raw = this._read_key(key);
-		return raw ? parseInt(raw) : null;
+	constructor: function (options) {
+		options = options || {};
+		options.create_ids = true;
+		this._inherited(BetaJS.Stores.AssocStore, "constructor", options);
 	},
 	
-	_read_last_id: function () {
-		return this.__read_id("last_id");
+	_insert: function (data) {
+		this._write_key(data[this._id_key], data);
+		return data;
 	},
 	
-	_write_last_id: function (id) {
-		this._write_key("last_id", id);
+	_remove: function (id) {
+		var row = this._read_key(id);
+		if (row && !this._remove_key(id))
+			return null;
+		return row;
 	},
+	
+	_get: function (id) {
+		return this._read_key(id);
+	},
+	
+	_update: function (id, data) {
+		var row = this._get(id);
+		if (row) {
+			delete data[this._id_key];
+			BetaJS.Objs.extend(row, data);
+			this._write_key(id, row);
+		}
+		return row;
+	},
+	
+	_query: function (query, options) {
+		return this._iterate();
+	},	
 
-	_remove_last_id: function () {
-		this._remove_key("last_id");
-	},
-
-	_read_first_id: function () {
-		return this.__read_id("first_id");
-	},
-	
-	_write_first_id: function (id) {
-		this._write_key("first_id", id);
-	},
-	
-	_remove_first_id: function () {
-		this._remove_key("first_id");
-	},
-
-	_read_item: function (id) {
-		return this._read_key("item_" + id);
-	},
-
-	_write_item: function (id, data) {
-		this._write_key("item_" + id, data);
-	},
-	
-	_remove_item: function (id) {
-		this._remove_key("item_" + id);
-	},
-	
-	_read_next_id: function (id) {
-		return this.__read_id("next_" + id);
-	},
-
-	_write_next_id: function (id, next_id) {
-		this._write_key("next_" + id, next_id);
-	},
-	
-	_remove_next_id: function (id) {
-		this._remove_key("next_" + id);
-	},
-	
-	_read_prev_id: function (id) {
-		return this.__read_id("prev_" + id);
-	},
-
-	_write_prev_id: function (id, prev_id) {
-		this._write_key("prev_" + id, prev_id);
-	},
-
-	_remove_prev_id: function (id) {
-		this._remove_key("prev_" + id);
-	}
-	
 });

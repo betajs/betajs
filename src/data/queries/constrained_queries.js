@@ -22,6 +22,8 @@ BetaJS.Queries.Constrained = {
 		var execute_options = {};
 		if ("sort" in options && "sort" in query_capabilities)
 			execute_options.sort = options.sort;
+		// Test
+		execute_query = query;
 		if ("query" in query_capabilities || BetaJS.Types.is_empty(query)) {
 			execute_query = query;
 			if (!("sort" in options) || "sort" in query_capabilities) {

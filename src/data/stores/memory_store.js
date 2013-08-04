@@ -1,15 +1,24 @@
 BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 	
+	constructor: function (options) {
+		this._inherited(BetaJS.Stores.MemoryStore, "constructor", options);
+		this.__data = {};
+	},
+
 	_read_key: function (key) {
-		return this[key];
+		return this.__data[key];
 	},
 	
 	_write_key: function (key, value) {
-		this[key] = value;
+		this.__data[key] = value;
 	},
 	
 	_remove_key: function (key) {
-		delete this[key];
+		delete this.__data[key];
+	},
+	
+	_iterate: function () {
+		return new BetaJS.Iterators.ObjectValuesIterator(this.__data);
 	}
 	
 });

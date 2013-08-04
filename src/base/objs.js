@@ -82,6 +82,14 @@ BetaJS.Objs = {
 				if (BetaJS.Types.is_defined(result) && !result)
 					return;
 			}
+	},
+	
+	intersect: function (a, b) {
+		var c = {};
+		for (var key in a)
+			if (key in b)
+				c[key] = a[key];
+		return c;
 	}
 	
 };
