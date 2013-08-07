@@ -9,7 +9,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
-			"click button": "__clickButton"
+			"click [data-selector='button-inner']": "__clickButton"
 		}]);
 	},
 	__clickButton: function () {

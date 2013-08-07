@@ -329,13 +329,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
-		if (this.__visible) {
+		if (this.__visible)
 			this.__bind_hide_on_leave();
-			this._after_show();
-		}
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});
+		if (this.__visible)
+			this._after_show();
 		return true;
 	},
 	
@@ -462,7 +462,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			}
 			else
 				this.__unbind_hide_on_leave()
-		}		
+		}
+		if (this.__parent)
+			this.__parent.updateChildVisibility(this);	
+	},
+	
+	updateChildVisibility: function (child) {		
 	},
 	
 	_after_show: function () {		

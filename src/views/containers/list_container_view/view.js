@@ -12,7 +12,8 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	constructor: function (options) {
 		options = options || {};
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
-		this._setOption(options, "alignment", "horizontal");		
+		this._setOption(options, "alignment", "horizontal");
+		this._setOption(options, "float", true);	
 	},
 	
 	isHorizontal: function () {
@@ -31,9 +32,9 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		if (this.isActive())
 			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
-		if (this.isHorizontal() && !("float" in options))
+		if (this.isHorizontal() && !("float" in options) && this.__float)
 			options["float"] = "left";
-		if (this.isActive() && "float" in options) {
+		if (this.isActive() && "float" in options && this.__float) {
 			var container = this.$("[data-view-id='" + child.cid() + "']");
 			container.css("float", options["float"]);
 		}			

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1565,7 +1565,7 @@ BetaJS.Time = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3207,7 +3207,7 @@ BetaJS.Stores.SubStringStoreIndex = BetaJS.Stores.StoreIndex.extend("SubStringSt
 });
 */
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3770,7 +3770,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4226,13 +4226,13 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
-		if (this.__visible) {
+		if (this.__visible)
 			this.__bind_hide_on_leave();
-			this._after_show();
-		}
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});
+		if (this.__visible)
+			this._after_show();
 		return true;
 	},
 	
@@ -4359,7 +4359,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			}
 			else
 				this.__unbind_hide_on_leave()
-		}		
+		}
+		if (this.__parent)
+			this.__parent.updateChildVisibility(this);	
+	},
+	
+	updateChildVisibility: function (child) {		
 	},
 	
 	_after_show: function () {		
@@ -5182,7 +5187,7 @@ BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view
 
 BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="switch-container" data-selector="switch-container-item"></div> ';
 
-BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
+BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner"    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
@@ -5256,7 +5261,8 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	constructor: function (options) {
 		options = options || {};
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
-		this._setOption(options, "alignment", "horizontal");		
+		this._setOption(options, "alignment", "horizontal");
+		this._setOption(options, "float", true);	
 	},
 	
 	isHorizontal: function () {
@@ -5275,9 +5281,9 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		if (this.isActive())
 			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
-		if (this.isHorizontal() && !("float" in options))
+		if (this.isHorizontal() && !("float" in options) && this.__float)
 			options["float"] = "left";
-		if (this.isActive() && "float" in options) {
+		if (this.isActive() && "float" in options && this.__float) {
 			var container = this.$("[data-view-id='" + child.cid() + "']");
 			container.css("float", options["float"]);
 		}			
@@ -5365,7 +5371,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
-			"click button": "__clickButton"
+			"click [data-selector='button-inner']": "__clickButton"
 		}]);
 	},
 	__clickButton: function () {

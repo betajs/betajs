@@ -4,4 +4,14 @@
 	<comment></comment>
 	<projects>
 	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>com.aptana.ide.core.unifiedBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.aptana.ruby.core.rubynature</nature>
+	</natures>
 </projectDescription>

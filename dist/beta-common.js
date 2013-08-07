@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1560,7 +1560,7 @@ BetaJS.Time = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3202,7 +3202,7 @@ BetaJS.Stores.SubStringStoreIndex = BetaJS.Stores.StoreIndex.extend("SubStringSt
 });
 */
 /*!
-  betajs - v0.0.1 - 2013-08-03
+  betajs - v0.0.1 - 2013-08-07
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
