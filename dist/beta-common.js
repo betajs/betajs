@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-08-07
+  betajs - v0.0.1 - 2013-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-07
+  betajs - v0.0.1 - 2013-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -255,6 +255,26 @@ BetaJS.Objs = {
 			if (key in b)
 				c[key] = a[key];
 		return c;
+	},
+	
+	contains_key: function (obj, key) {
+		if (BetaJS.Types.is_array(obj))
+			return BetaJS.Types.is_defined(obj[key])
+		else
+			return key in obj;
+	},
+	
+	contains_value: function (obj, value) {
+		if (BetaJS.Types.is_array(obj)) {
+			for (var i = 0; i < obj.length; ++i)
+				if (obj[i] === value)
+					return true
+		} else {
+			for (var key in obj)
+				if (obj[key] === value)
+					return true;
+		}
+		return false;
 	}
 	
 };
@@ -1560,7 +1580,7 @@ BetaJS.Time = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-07
+  betajs - v0.0.1 - 2013-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1733,43 +1753,94 @@ BetaJS.Queries = {
 	/*
 	 * Syntax:
 	 *
-	 * query :== Object | ["Or", query, query, ...] | ["And", query, query, ...] |
-	 *           [("=="|"!="|>"|">="|"<"|"<="), key, value]
+	 * queries :== [query, ...]
+	 * simples :== [simple, ...]
+	 * query :== {pair, ...}
+	 * pair :== string: value | $or : queries | $and: queries
+	 * value :== simple | {condition, ...}  
+	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple
 	 *
 	 */
-
-	__dependencies : function(query, dep) {
-		if (BetaJS.Types.is_array(query)) {
-			if (query.length == 0)
-				throw "Malformed Query";
-			var op = query[0];
-			if (op == "Or" || op == "And") {
-				for (var i = 1; i < query.length; ++i)
-					dep = this.__dependencies(query[i], dep);
-				return dep;
-			} else {
-				if (query.length != 3)
-					throw "Malformed Query";
-				var key = query[1];
-				if ( key in dep)
-					dep[key]++
-				else
-					dep[key] = 1;
-				return dep;
-			}
-		} else if (BetaJS.Types.is_object(query)) {
-			for (key in query)
-			if ( key in dep)
-				dep[key]++
-			else
-				dep[key] = 1;
-			return dep;
-		} else
-			throw "Malformed Query";
+	
+	__increase_dependency: function (key, dep) {
+		if (key in dep)
+			dep[key]++
+		else
+			dep[key] = 1;
+		return dep;		
+	},
+	
+	__dependencies_queries: function (queries, dep) {
+		BetaJS.Objs.iter(queries, function (query) {
+			dep = this.__dependencies_query(query, dep);
+		}, this);
+		return dep;
+	},
+	
+	__dependencies_query: function (query, dep) {
+		for (key in query)
+			dep = this.__dependencies_pair(key, query[key], dep);
+		return dep;
+	},
+	
+	__dependencies_pair: function (key, value, dep) {
+		if (key == "$or" || key == "$and")
+			return this.__dependencies_queries(value, dep)
+		else
+			return this.__increase_dependency(key, dep);
 	},
 
 	dependencies : function(query) {
-		return this.__dependencies(query, {});
+		return this.__dependencies_query(query, {});
+	},
+	
+	
+	__evaluate_query: function (query, object) {
+		for (key in query)
+			if (!this.__evaluate_pair(key, query[key], object))
+				return false;
+		return true;
+	},
+	
+	__evaluate_pair: function (key, value, object) {
+		if (key == "$or")
+			return this.__evaluate_or(value, object);
+		if (key == "$and")
+			return this.__evaluate_and(value, object);
+		return this.__evaluate_value(value, object[key]);
+	},
+	
+	__evaluate_value: function (value, object_value) {
+		if (BetaJS.Types.is_object(value)) {
+			BetaJS.Objs.iter(value, function (tar, op) {
+				if (op == "$in")
+					return BetaJS.Objs.contains_value(tar, object_value);
+				if (op == "$gt")
+					return object_value >= tar;
+				if (op == "$lt")
+					return object_value <= tar;
+				if (op == "$sw")
+					return object_value.indexOf(tar) == 0;
+			}, this);
+			return true;
+		}
+		return value == object_value;
+	},
+	
+	__evaluate_or: function (arr, object) {
+		BetaJS.Objs.iter(arr, function (query) {
+			if (this.__evaluate_query(query, object))
+				return true;
+		}, this);
+		return false;
+	},
+	
+	__evaluate_and: function (arr, object) {
+		BetaJS.Objs.iter(arr, function (query) {
+			if (!this.__evaluate_query(query, object))
+				return false;
+		}, this);
+		return true;
 	},
 	
 	format: function (query) {
@@ -1787,52 +1858,9 @@ BetaJS.Queries = {
 	},
 	
 	evaluate : function(query, object) {
-		if (object == null)
-			return false;
-		if (BetaJS.Types.is_array(query)) {
-			if (query.length == 0)
-				throw "Malformed Query";
-			var op = query[0];
-			if (op == "Or") {
-				for (var i = 1; i < query.length; ++i)
-					if (this.evaluate(query[i], object))
-						return true;
-				return false;
-			} else if (op == "And") {
-				for (var i = 1; i < query.length; ++i)
-					if (!this.evaluate(query[i], object))
-						return false;
-				return true;
-			} else {
-				if (query.length != 3)
-					throw "Malformed Query";
-				var key = query[1];
-				var obj_value = object[key];
-				var value = query[2];
-				if (op == "==")
-					return obj_value == value
-				else if (op == "!=")
-					return obj_value != value
-				else if (op == ">")
-					return obj_value > value
-				else if (op == ">=")
-					return obj_value >= value
-				else if (op == "<")
-					return obj_value < value
-				else if (op == "<=")
-					return obj_value <= value
-				else
-					throw "Malformed Query";
-			}
-		} else if (BetaJS.Types.is_object(query)) {
-			for (key in query)
-				if (query[key] != object[key])
-					return false;
-			return true;
-		} else
-			throw "Malformed Query";
+		return this.__evaluate_query(query, object);
 	},
-
+/*
 	__compile : function(query) {
 		if (BetaJS.Types.is_array(query)) {
 			if (query.length == 0)
@@ -1875,7 +1903,7 @@ BetaJS.Queries = {
 		func_call.source = 'function(object){\n return ' + result + '; }';
 		return func_call;		
 	},
-	
+*/	
 	emulate: function (query, query_function, query_context) {
 		var raw = query_function.apply(query_context || this, {});
 		var iter = raw;
@@ -1889,36 +1917,6 @@ BetaJS.Queries = {
 	}	
 	
 }; 
-BetaJS.Queries.CompiledQuery = BetaJS.Class.extend("CompiledQuery", {
-	
-	constructor: function (query) {
-		this.__query = query;
-		this.__dependencies = BetaJS.Query.dependencies(query);
-		this.__compiled = BetaJS.Query.compile(query);
-	},
-	
-	query: function () {
-		return this.__query;
-	},
-	
-	dependencies: function () {
-		return this.__dependencies;
-	},
-	
-	compiled: function () {
-		return this.__compiled;
-	},
-	
-	evaluate: function (object) {
-		return this.__compiled(object);
-	},
-	
-	format: function () {
-		return BetaJS.Query.format(this.__query);
-	}
-	
-});
-
 BetaJS.Queries.Constrained = {
 	
 	make: function (query, options) {
@@ -1936,7 +1934,7 @@ BetaJS.Queries.Constrained = {
 		return result;
 	},
 	
-	emulate: function (constrained_query, query_capabilities, query_function, query_context) {
+	emulate: function (constrained_query, query_capabilities, query_function, query_context, callbacks) {
 		var query = constrained_query.query;
 		var options = constrained_query.options;
 		var execute_query = {};
@@ -1954,23 +1952,42 @@ BetaJS.Queries.Constrained = {
 					execute_options.limit = options.limit;
 			}
 		}
-		var raw = query_function.apply(query_context || this, [execute_query, execute_options]);
-		var iter = raw;
-		if (raw == null)
-			iter = new BetaJS.Iterators.ArrayIterator([])
-		else if (BetaJS.Types.is_array(raw))
-			iter = new BetaJS.Iterators.ArrayIterator(raw);		
-		if (!("query" in query_capabilities || BetaJS.Types.is_empty(query)))
-			iter = new BetaJS.Iterators.FilteredIterator(iter, function(row) {
-				return BetaJS.Queries.evaluate(query, row);
-			});
-		if ("sort" in options && !("sort" in execute_options))
-			iter = new BetaJS.Iterators.SortedIterator(iter, BetaJS.Comparators.byObject(options.sort));
-		if ("skip" in options && !("skip" in execute_options))
-			iter = new BetaJS.Iterators.SkipIterator(iter, options["skip"]);
-		if ("limit" in options && !("limit" in execute_options))
-			iter = new BetaJS.Iterators.LimitIterator(iter, options["limit"]);
-		return iter;
+		var params = [execute_query, execute_options];
+		if (callbacks)
+			params.push(callbacks);
+		var success_call = function (raw) {
+			var iter = raw;
+			if (raw == null)
+				iter = new BetaJS.Iterators.ArrayIterator([])
+			else if (BetaJS.Types.is_array(raw))
+				iter = new BetaJS.Iterators.ArrayIterator(raw);		
+			if (!("query" in query_capabilities || BetaJS.Types.is_empty(query)))
+				iter = new BetaJS.Iterators.FilteredIterator(iter, function(row) {
+					return BetaJS.Queries.evaluate(query, row);
+				});
+			if ("sort" in options && !("sort" in execute_options))
+				iter = new BetaJS.Iterators.SortedIterator(iter, BetaJS.Comparators.byObject(options.sort));
+			if ("skip" in options && !("skip" in execute_options))
+				iter = new BetaJS.Iterators.SkipIterator(iter, options["skip"]);
+			if ("limit" in options && !("limit" in execute_options))
+				iter = new BetaJS.Iterators.LimitIterator(iter, options["limit"]);
+			return iter;
+		};
+		var exception_call = function (e) {
+			if (callbacks && callbacks.exception)
+				callbacks.exception(e)
+			else
+				throw e;
+		};
+		if (callbacks)
+			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}])
+		else
+			try {
+				var raw = query_function.apply(query_context || this, [execute_query, execute_options]);
+				return success_call(raw);
+			} catch (e) {
+				exception_call(e);
+			}		
 	}
 	
 	
@@ -2096,8 +2113,6 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
 		this.__aqs = {};
 		this.__object_to_aqs = {};
-		this.__match_to_aqs = {};
-		this.__uniform_aqs = {};
 	},
 	
 	__valid_for_aq: function (raw, aq) {
@@ -2110,20 +2125,12 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		var raw = object.getAll();
 		var aqs = {};
 		this.__object_to_aqs[BetaJS.Ids.objectId(object)] = aqs;
-		BetaJS.Objs.iter(this.__uniform_aqs, function (aq) {
-			aq._add(object);
-			aqs[BetaJS.Ids.objectId(aq)] = aq;
+		BetaJS.Objs.iter(this.__aqs, function (aq) {
+			if (this.__valid_for_aq(raw, aq)) {
+				aq._add(object);
+				aqs[BetaJS.Ids.objectId(aq)] = aq;
+			}
 		}, this);
-		for (var key in raw) {
-			var normalized = key + ":" + JSON.stringify(raw[key]);
-			if (this.__match_to_aqs[normalized])
-				BetaJS.Objs.iter(this.__match_to_aqs[normalized], function (aq) {
-					if (this.__valid_for_aq(raw, aq)) {
-						aq._add(object);
-						aqs[BetaJS.Ids.objectId(aq)] = aq;
-					}
-				}, this);
-		}
 		object.on("change", function () {
 			this.update(object);
 		}, this);
@@ -2146,29 +2153,17 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 				delete aqs[BetaJS.Ids.objectId(aq)];
 			}
 		}, this);
-		for (var key in raw) {
-			var normalized = key + ":" + JSON.stringify(raw[key]);
-			if (this.__match_to_aqs[normalized])
-				BetaJS.Objs.iter(this.__match_to_aqs[normalized], function (aq) {
-					if (!(BetaJS.Ids.objectId(aq) in aqs) && this.__valid_for_aq(raw, aq)) {
-						aq._add(object);
-						aqs[BetaJS.Ids.objectId(aq)] = aq;
-					}
-				}, this);
-		}
+		BetaJS.Objs.iter(this.__aqs, function (aq) {
+			if (this.__valid_for_aq(raw, aq)) {
+				aq._add(object);
+				aqs[BetaJS.Ids.objectId(aq)] = aq;
+			}
+		}, this);
 	},
 	
 	register: function (aq) {
-		if (aq.isUniform())
-			this.__uniform_aqs[BetaJS.Ids.objectId(aq)] = aq
-		else
-			this.__aqs[BetaJS.Ids.objectId(aq)] = aq;
+		this.__aqs[BetaJS.Ids.objectId(aq)] = aq;
 		var query = aq.query();
-		for (var key in query) {
-			var normalized = key + ":" + JSON.stringify(query[key]);
-			this.__match_to_aqs[normalized] = this.__match_to_aqs[normalized] || {};
-			this.__match_to_aqs[normalized][BetaJS.Ids.objectId(aq)] = aq;
-		}
 		var result = this._query(query);
 		while (result.hasNext()) {
 			var object = result.next();
@@ -2181,21 +2176,11 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	},
 	
 	unregister: function (aq) {
-		if (aq.isUniform())
-			delete this.__uniform_aqs[BetaJS.Ids.objectId(aq)]
-		else
-			delete this.__aqs[BetaJS.Ids.objectId(aq)];
+		delete this.__aqs[BetaJS.Ids.objectId(aq)];
 		var self = this;
 		aq.collection().iterate(function (object) {
 			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)];
 		});
-		var query = aq.query();
-		for (var key in query) {
-			var normalized = key + ":" + JSON.stringify(query[key]);
-			delete this.__match_to_aqs[normalized][BetaJS.Ids.objectId(aq)];
-			if (BetaJS.Types.is_empty(this.__match_to_aqs[normalized]))
-				delete this.__match_to_aqs[normalized];
-		}		
 	},
 	
 	_query: function (query) {
@@ -2269,30 +2254,38 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 		this._id_key = options.id_key || "id";
 		this._create_ids = options.create_ids || false;
 		this._last_id = 1;
+		this._async = "async" in options ? options.async : false;
+		this._async = this._async && this._supports_async();
+	},
+	
+	_supports_async: function () {
+		return false;
 	},
 			
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
  	 * @return data that has been inserted with id.
+ 	 * @exception if it fails
 	 */
-	_insert: function (data) {
+	_insert: function (data, callbacks) {
 	},
 	
 	/** Remove data from store. Return removed data.
 	 * 
  	 * @param id data id
- 	 * @return data
+ 	 * @exception if it fails
 	 */
-	_remove: function (id) {
+	_remove: function (id, callbacks) {
 	},
 	
 	/** Get data from store by id.
 	 * 
 	 * @param id data id
 	 * @return data
+	 * @exception if it fails
 	 */
-	_get: function (id) {
+	_get: function (id, callbacks) {
 	},
 	
 	/** Update data by id.
@@ -2300,58 +2293,136 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 	 * @param id data id
 	 * @param data updated data
 	 * @return data from store
+	 * @exception if it fails
 	 */
-	_update: function (id, data) {
+	_update: function (id, data, callbacks) {
 	},
 	
 	_query_capabilities: function () {
 		return {};
 	},
 	
-	_query: function (query, options) {
-	},	
+	/*
+	 * @exception if it fails
+	 */
+	_query: function (query, options, callbacks) {
+	},
 	
-	insert: function (data) {
-		if (this._create_ids) {
-			if (this._id_key in data) {
-				if (this.get(data[this._id_key]))
-					return null;
-			} else {
-				while (this.get(this._last_id))
-					this._last_id++;
-				data[this._id_key] = this._last_id;
-			}
+	_new_id: function (callbacks) {
+	},
+
+	insert: function (data, callbacks) {
+		if (this._create_ids && !(this._id_key in data)) {
+			if (this._async)
+				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
+			while (this.get(this._last_id))
+				this._last_id++;
+			data[this._id_key] = this._last_id;
 		}
-		var row = this._insert(data);
-		if (row)
-			this.trigger("insert", row)
-		return row;
+		var self = this;
+		var success_call = function (row) {
+			self.trigger("insert", row);
+			if (callbacks && callbacks.success)
+				callbacks.success(row);
+		};
+		var exception_call = function (e) {
+			if (callbacks && callbacks.exception)
+				callbacks.exception(e)
+			else
+				throw e;
+		};
+		if (this._async)
+			this._insert(data, {success: success_call, exception: exception_call})
+		else
+			try {
+				var row = this._insert(data);
+				success_call(row);
+				return row;
+			} catch (e) {
+				exception_call(e);
+			}
+	},
+
+	remove: function (id, callbacks) {
+		var self = this;
+		var success_call = function () {
+			self.trigger("remove", id);
+			if (callbacks && callbacks.success)
+				callbacks.success(id);
+		};
+		var exception_call = function (e) {
+			if (callbacks && callbacks.exception)
+				callbacks.exception(e)
+			else
+				throw e;
+		};
+		if (this._async)
+			this._remove(id, {success: success_call, exception: exception_call})
+		else
+			try {
+				this._remove(id);
+				success_call();
+			} catch (e) {
+				exception_call(e);
+			}
 	},
 	
-	remove: function (id) {
-		var row = this._remove(id);
-		if (row)
-			this.trigger("remove", id);
-		return row;
+	get: function (id, callbacks) {
+		var self = this;
+		var success_call = function (row) {
+			if (callbacks && callbacks.success)
+				callbacks.success(row);
+		};
+		var exception_call = function (e) {
+			if (callbacks && callbacks.exception)
+				callbacks.exception(e)
+			else
+				throw e;
+		};
+		if (this._async)
+			this._get(id, {success: success_call, exception: exception_call})
+		else
+			try {
+				var row = this._get(id);
+				success_call(row);
+				return row;
+			} catch (e) {
+				exception_call(e);
+			}
 	},
 	
-	get: function (id) {
-		return this._get(id);
+	update: function (id, data, callbacks) {
+		var self = this;
+		var success_call = function (row) {
+			self.trigger("update", row, data);
+			if (callbacks && callbacks.success)
+				callbacks.success(row, data);
+		};
+		var exception_call = function (e) {
+			if (callbacks && callbacks.exception)
+				callbacks.exception(e)
+			else
+				throw e;
+		};
+		if (this._async)
+			this._update(id, data, {success: success_call, exception: exception_call})
+		else
+			try {
+				var row = this._update(id, data);
+				success_call(row);
+				return row;
+			} catch (e) {
+				exception_call(e);
+			}
 	},
 	
-	update: function (id, data) {
-		var row = this._update(id, data);
-		if (row)
-			this.trigger("update", row, data);
-		return row;
-	},
-	
-	query: function (query, options) {
+	query: function (query, options, callbacks) {
 		return BetaJS.Queries.Constrained.emulate(
-			BetaJS.Queries.Constrained.make(query || {}, options || {}),
+			BetaJS.Queries.Constrained.make(query, options || {}),
 			this._query_capabilities(),
 			this._query,
-			this
+			this,
+			callbacks
 		); 
 	},
 	
@@ -3000,209 +3071,8 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 
 });
 
-BetaJS.Stores.IndexedStore = BetaJS.Stores.BaseStore.extend("IndexedStore", {
-	
-	constructor: function (store, indices, options) {
-		options = options || {};
-		options.rebuild = "rebuild" in options ? options.rebuild : true;
-		options.id_key = store._id_key;
-		this._inherited(BetaJS.Stores.IndexedStore, "constructor", options);
-		this._store = store;
-		this._indices = {};
-		BetaJS.Objs.iter(indices || {}, function (value, key) {
-			value.type = value.type || "StoreIndex";
-			this._indices[key] = new BetaJS.Stores[value.type](store, key);
-			if (options.rebuild)
-				this._indices[key].rebuild();
-		}, this);
-	},
-	
-	rebuild: function () {
-		BetaJS.Objs.iter(this._indices, function (index) {
-			index.rebuild();
-		}, this);
-	},
-	
-	_query: function (query, options) {
-		var initialized = false;
-		var ids = {};
-		for (var key in query) 
-			if (key in this._indices) {
-				if (initialized) {
-					var new_ids = this._indices[key].get(query[key]);
-					ids = BetaJS.Objs.intersect(ids, new_ids);
-				} else {
-					initialized = true;
-					ids = this._indices[key].get(query[key]);
-				}
-				if (BetaJS.Types.is_empty(ids))
-					return {};
-			}
-		if (!initialized)
-			return this._store.query(query, options);
-		var self = this;
-		return new BetaJS.Iterators.MappedIterator(
-			       new BetaJS.Iterators.FilteredIterator(
-			           new BetaJS.Iterators.ObjectKeysIterator(ids),
-			           function (id) {
-			           	   return self._query_applies_to_id(query, id);
-			           }
-			       ),
-			       function (id) {
-                       return self.get(id);
-			       }
-			 );
-	},
-	
-	_insert: function (data) {
-		return this._store.insert(data);
-	},
-
-	_remove: function (id) {
-		return this._store.remove(id);
-	},
-	
-	_get: function (id) {
-		return this._store.get(id);
-	},
-	
-	_update: function (id, data) {
-		return this._store.update(id, data);
-	},
-		
-});
-
-BetaJS.Stores.StoreIndex = BetaJS.Class.extend("StoreIndex", {
-	
-	constructor: function (base_store, index_key) {
-		this._inherited(BetaJS.Stores.StoreIndex, "constructor");
-		this._base_store = base_store;
-		this._index_key = index_key;
-		this._id_to_key = {};
-		this._key_to_ids = {};
-		this._base_store.on("insert", function (row) {
-			this._insert(row);
-		}, this);
-		this._base_store.on("remove", function (id) {
-			this._remove(id);
-		}, this);
-		this._base_store.on("update", function (row) {
-			if (!this._exists(row)) {
-				this._remove(this._id(row));
-				this._insert(row);
-			}
-		}, this);
-	},
-	
-	destroy: function () {
-		this._base_store.off(null, null, this);
-		this._inherited(BetaJS.Stores.StoreIndex, "destroy");
-	},
-	
-	rebuild: function () {
-		var iter = this._base_store.query();
-		while (iter.hasNext())
-			this.insert(iter.next());
-	},
-	
-	_id: function (row) {
-		return row[this._base_store._id_key];
-	},
-	
-	_key: function (row) {
-		return row[this._index_key];
-	},
-
-	_insert: function (row) {
-		var id = this._id(row);
-		var key = this._key(row);
-		this._id_to_key[id] = key;
-		if (!(key in this._key_to_ids))
-			this._key_to_ids[key] = {};
-		this._key_to_ids[key][id] = true;
-	},
-	
-	_remove: function (id) {
-		var key = this._id_to_key[id];
-		delete this._id_to_key[id];
-		delete this._key_to_ids[id];
-	},
-	
-	_exists: function (row) {
-		return this._id(row) in this._id_to_key;
-	},
-	
-	get: function (key) {
-		return key in this._key_to_ids ? this._key_to_ids[key] : [];
-	}
-	
-});
-
-/*
-BetaJS.Stores.SubStringStoreIndex = BetaJS.Stores.StoreIndex.extend("SubStringStoreIndex", {
-
-	constructor: function (base_store, index_key) {
-		this._inherited(BetaJS.Stores.SubStringStoreIndex, "constructor", base_store, index_key);
-		this._substrings = {};
-	},
-
-	_insert: function (row) {
-		this._inherited(BetaJS.Stores.SubStringStoreIndex, "_insert", row);
-		var id = this._id(row);
-		var key = this._key(row) + "";
-		var current = this._substrings;
-		while (key != "") {
-			var c = key.charAt(0);
-			key = key.substr(1);
-			if (!(c in current))
-				current[c] = {
-					sub: {},
-					ids: {}
-				};
-			current[c].ids[id] = true;
-			current = current[c].sub;
-		}
-	},
-	
-	__remove_helper: function (current, key, id) {
-		if (key == "")
-			return;
-		var c = key.charAt(0);
-		key = key.substr(1);
-		this.__remove_helper(current[c].sub, key, id);
-		delete current[c].ids[id];
-		if (BetaJS.Types.is_empty(current[c].ids))
-			delete current[c];
-	},
-
-	_remove: function (id) {
-		this.__remove_helper(this._substrings, this._id_to_key[id], id);
-		this._inherited(BetaJS.Stores.SubStringStoreIndex, "_remove", id);		
-	},
-
-	get: function (key) {
-		if (!BetaJS.Types.is_object(key)) 
-			return this._inherited(BetaJS.Stores.SubStringStoreIndex, "get", key);
-		key = key.value;
-		if (key == "")
-			return {};
-		var current = this._substrings; 
-		while (key != "") {
-			var c = key.charAt(0);
-			key = key.substr(1);
-			if (!(c in current))
-				return {};
-			if (key == "")
-				return current[c].ids;
-			current = current[c].sub;
-		}
-		return {};
-	}
-	
-});
-*/
 /*!
-  betajs - v0.0.1 - 2013-08-07
+  betajs - v0.0.1 - 2013-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

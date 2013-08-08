@@ -4,8 +4,6 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
 		this.__aqs = {};
 		this.__object_to_aqs = {};
-		this.__match_to_aqs = {};
-		this.__uniform_aqs = {};
 	},
 	
 	__valid_for_aq: function (raw, aq) {
@@ -18,20 +16,12 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		var raw = object.getAll();
 		var aqs = {};
 		this.__object_to_aqs[BetaJS.Ids.objectId(object)] = aqs;
-		BetaJS.Objs.iter(this.__uniform_aqs, function (aq) {
-			aq._add(object);
-			aqs[BetaJS.Ids.objectId(aq)] = aq;
+		BetaJS.Objs.iter(this.__aqs, function (aq) {
+			if (this.__valid_for_aq(raw, aq)) {
+				aq._add(object);
+				aqs[BetaJS.Ids.objectId(aq)] = aq;
+			}
 		}, this);
-		for (var key in raw) {
-			var normalized = key + ":" + JSON.stringify(raw[key]);
-			if (this.__match_to_aqs[normalized])
-				BetaJS.Objs.iter(this.__match_to_aqs[normalized], function (aq) {
-					if (this.__valid_for_aq(raw, aq)) {
-						aq._add(object);
-						aqs[BetaJS.Ids.objectId(aq)] = aq;
-					}
-				}, this);
-		}
 		object.on("change", function () {
 			this.update(object);
 		}, this);
@@ -54,29 +44,17 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 				delete aqs[BetaJS.Ids.objectId(aq)];
 			}
 		}, this);
-		for (var key in raw) {
-			var normalized = key + ":" + JSON.stringify(raw[key]);
-			if (this.__match_to_aqs[normalized])
-				BetaJS.Objs.iter(this.__match_to_aqs[normalized], function (aq) {
-					if (!(BetaJS.Ids.objectId(aq) in aqs) && this.__valid_for_aq(raw, aq)) {
-						aq._add(object);
-						aqs[BetaJS.Ids.objectId(aq)] = aq;
-					}
-				}, this);
-		}
+		BetaJS.Objs.iter(this.__aqs, function (aq) {
+			if (this.__valid_for_aq(raw, aq)) {
+				aq._add(object);
+				aqs[BetaJS.Ids.objectId(aq)] = aq;
+			}
+		}, this);
 	},
 	
 	register: function (aq) {
-		if (aq.isUniform())
-			this.__uniform_aqs[BetaJS.Ids.objectId(aq)] = aq
-		else
-			this.__aqs[BetaJS.Ids.objectId(aq)] = aq;
+		this.__aqs[BetaJS.Ids.objectId(aq)] = aq;
 		var query = aq.query();
-		for (var key in query) {
-			var normalized = key + ":" + JSON.stringify(query[key]);
-			this.__match_to_aqs[normalized] = this.__match_to_aqs[normalized] || {};
-			this.__match_to_aqs[normalized][BetaJS.Ids.objectId(aq)] = aq;
-		}
 		var result = this._query(query);
 		while (result.hasNext()) {
 			var object = result.next();
@@ -89,21 +67,11 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	},
 	
 	unregister: function (aq) {
-		if (aq.isUniform())
-			delete this.__uniform_aqs[BetaJS.Ids.objectId(aq)]
-		else
-			delete this.__aqs[BetaJS.Ids.objectId(aq)];
+		delete this.__aqs[BetaJS.Ids.objectId(aq)];
 		var self = this;
 		aq.collection().iterate(function (object) {
 			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)];
 		});
-		var query = aq.query();
-		for (var key in query) {
-			var normalized = key + ":" + JSON.stringify(query[key]);
-			delete this.__match_to_aqs[normalized][BetaJS.Ids.objectId(aq)];
-			if (BetaJS.Types.is_empty(this.__match_to_aqs[normalized]))
-				delete this.__match_to_aqs[normalized];
-		}		
 	},
 	
 	_query: function (query) {

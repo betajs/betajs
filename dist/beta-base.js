@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-07
+  betajs - v0.0.1 - 2013-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -250,6 +250,26 @@ BetaJS.Objs = {
 			if (key in b)
 				c[key] = a[key];
 		return c;
+	},
+	
+	contains_key: function (obj, key) {
+		if (BetaJS.Types.is_array(obj))
+			return BetaJS.Types.is_defined(obj[key])
+		else
+			return key in obj;
+	},
+	
+	contains_value: function (obj, value) {
+		if (BetaJS.Types.is_array(obj)) {
+			for (var i = 0; i < obj.length; ++i)
+				if (obj[i] === value)
+					return true
+		} else {
+			for (var key in obj)
+				if (obj[key] === value)
+					return true;
+		}
+		return false;
 	}
 	
 };
