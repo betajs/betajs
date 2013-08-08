@@ -1040,16 +1040,15 @@ BetaJS.Events.EventsMixin = {
 		var event;
 		if (!this.__events_mixin_events)
 			return;
-    	while (event = events.shift()) {
-    		if (this.__events_mixin_events[event])
+    	while (event = events.shift())
+    		if (this.__events_mixin_events && this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				object.callback.apply(object.context || self, rest);
     			});
-    		if (this.__events_mixin_events["all"])
-    			this.__events_mixin_events["all"].iterate(function (object) {
-    				object.callback.apply(object.context || self, rest);
-    			});
-    	};
+		if (this.__events_mixin_events && "all" in this.__events_mixin_events)
+			this.__events_mixin_events["all"].iterate(function (object) {
+				object.callback.apply(object.context || self, rest);
+			});
     	return this;
     },
     

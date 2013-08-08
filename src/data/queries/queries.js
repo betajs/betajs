@@ -62,17 +62,18 @@ BetaJS.Queries = {
 	
 	__evaluate_value: function (value, object_value) {
 		if (BetaJS.Types.is_object(value)) {
+			var result = true;
 			BetaJS.Objs.iter(value, function (tar, op) {
 				if (op == "$in")
-					return BetaJS.Objs.contains_value(tar, object_value);
+					result = result && BetaJS.Objs.contains_value(tar, object_value);
 				if (op == "$gt")
-					return object_value >= tar;
+					result = result && object_value >= tar;
 				if (op == "$lt")
-					return object_value <= tar;
+					result = result && object_value <= tar;
 				if (op == "$sw")
-					return object_value.indexOf(tar) == 0;
+					result = result && object_value.indexOf(tar) == 0;
 			}, this);
-			return true;
+			return result;
 		}
 		return value == object_value;
 	},
