@@ -221,6 +221,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
 	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
 	 *  <li>hide_on_leave: (default: false) hide view if focus leaves</li>
+	 *  <li>invalidate_on_show: (default: false) invalidate view on show</li>
+	 *  <li>append_to_el: (default: false) append to el instead of replacing content</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -233,6 +235,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
 		this._setOption(options, "hide_on_leave", false);
+		this._setOption(options, "invalidate_on_show", false);
+		this._setOption(options, "append_to_el", false);
 		this.__old_attributes = {};
 		this._setOption(options, "el_classes", []);
 		if (BetaJS.Types.is_string(this.__el_classes))
@@ -298,6 +302,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el = null;
 		if (!this.$el)
 			return false;
+		if (this.__append_to_el) {
+			this.$el.append("<div data-view-id='" + this.cid() + "'></div>");
+			this.$el = this.$el.find("[data-view-id='" + this.cid() + "']");
+		}
 		this.__old_attributes = {};
 		for (var key in this.__attributes) {
 			var old_value = this.$el.attr(key);
@@ -362,6 +370,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 			this.$el.removeClass(this.__added_el_classes[i]);
 		for (var key in this.__old_el_styles) 
 			this.$el.css(key, this.__old_el_styles[key]);
+		if (this.__append_to_el)
+			this.$el.remove();
 		this.$el = null;
 		return true;
 	},
@@ -470,7 +480,9 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	updateChildVisibility: function (child) {		
 	},
 	
-	_after_show: function () {		
+	_after_show: function () {	
+		if (this.__invalidate_on_show)
+			this.invalidate();	
 	},
 	
 	toggle: function () {

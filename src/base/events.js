@@ -4,16 +4,64 @@ BetaJS.Events.EVENT_SPLITTER = /\s+/;
 
 BetaJS.Events.EventsMixin = {
 	
-	on: function(events, callback, context) {
+	__create_event_object: function (callback, context, options) {
+		options = options || {};
+		var obj = {
+			callback: callback,
+			context: context,
+		};
+		if (options.min_delay)
+			obj.min_delay = new BetaJS.Timers.Timer({
+				delay: options.min_delay,
+				once: true,
+				start: false,
+				context: this,
+				fire: function () {
+					if (obj.max_delay)
+						obj.max_delay.stop();
+					obj.callback.apply(obj.context || this, obj.params);
+				}
+			});
+		if (options.max_delay)
+			obj.max_delay = new BetaJS.Timers.Timer({
+				delay: options.max_delay,
+				once: true,
+				start: false,
+				context: this,
+				fire: function () {
+					if (obj.min_delay)
+						obj.min_delay.stop();
+					obj.callback.apply(obj.context || this, obj.params);
+				}
+			});
+		return obj;
+	},
+	
+	__destroy_event_object: function (object) {
+		if (object.min_delay)
+			object.min_delay.destroy();
+		if (object.max_delay)
+			object.max_delay.destroy();
+	},
+	
+	__call_event_object: function (object, params) {
+		if (object.min_delay)
+			object.min_delay.restart();
+		if (object.max_delay)
+			object.max_delay.start();
+		if (!object.min_delay && !object.max_delay)
+			object.callback.apply(object.context || this, params)
+		else
+			object.params = params;
+	},
+	
+	on: function(events, callback, context, options) {
 		this.__events_mixin_events = this.__events_mixin_events || {};
 		events = events.split(BetaJS.Events.EVENT_SPLITTER);
 		var event;
 		while (event = events.shift()) {
 			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
-			this.__events_mixin_events[event].add({
-				callback: callback,
-				context: context
-			});
+			this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
 		}
 		return this;
 	},
@@ -26,7 +74,10 @@ BetaJS.Events.EventsMixin = {
 			while (event = events.shift())
 				if (this.__events_mixin_events[event]) {
 					this.__events_mixin_events[event].remove_by_filter(function (object) {
-						return (!callback || object.callback == callback) && (!context || object.context == context);
+						var result = (!callback || object.callback == callback) && (!context || object.context == context);
+						if (result && this.__destroy_event_object)
+							this.__destroy_event_object(object);
+						return result;
 					});
 					if (this.__events_mixin_events[event].count() == 0) {
 						this.__events_mixin_events[event].destroy();
@@ -36,7 +87,10 @@ BetaJS.Events.EventsMixin = {
 		} else {
 			for (event in this.__events_mixin_events) {
 				this.__events_mixin_events[event].remove_by_filter(function (object) {
-					return (!callback || object.callback == callback) && (!context || object.context == context);
+					var result = (!callback || object.callback == callback) && (!context || object.context == context);
+					if (result && this.__destroy_event_object)
+						this.__destroy_event_object(object);
+					return result;
 				});
 				if (this.__events_mixin_events[event].count() == 0) {
 					this.__events_mixin_events[event].destroy();
@@ -57,24 +111,24 @@ BetaJS.Events.EventsMixin = {
     	while (event = events.shift())
     		if (this.__events_mixin_events && this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
-    				object.callback.apply(object.context || self, rest);
+    				self.__call_event_object(object, rest);
     			});
 		if (this.__events_mixin_events && "all" in this.__events_mixin_events)
 			this.__events_mixin_events["all"].iterate(function (object) {
-				object.callback.apply(object.context || self, rest);
+				self.__call_event_object(object, rest);
 			});
     	return this;
     },
     
-    once: function (events, callback, context) {
+    once: function (events, callback, context, options) {
         var self = this;
         var once = BetaJS.Functions.once(function() {
           self.off(events, once);
           callback.apply(this, arguments);
         });
         once._callback = callback;
-        return this.on(name, once, context);
-    }    
+        return this.on(name, once, context, options);
+    }
 	
 };
 
@@ -88,16 +142,16 @@ BetaJS.Events.ListenMixin = {
 		"destroy": "listenOff" 
 	},
 		
-	listenOn: function (target, events, callback) {
+	listenOn: function (target, events, callback, options) {
 		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
-		target.on(events, callback, this);
+		target.on(events, callback, this, options);
 	},
 	
-	listenOnce: function (target, events, callback) {
+	listenOnce: function (target, events, callback, options) {
 		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
-		target.once(events, callback, this);
+		target.once(events, callback, this, options);
 	},
 	
 	listenOff: function (target, events, callback) {

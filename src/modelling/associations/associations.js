@@ -2,18 +2,22 @@ BetaJS.Modelling.Associations = {};
 
 BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
 
-	constructor: function (model, foreign_table, foreign_key, options) {
+	constructor: function (model, options) {
 		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");
 		this._model = model;
-		this._foreign_table = foreign_table;
-		this._foreign_key = foreign_key;
 		this._options = options || {};
 		this.__cache = null;
 		if (options["delete_cascade"])
 			model.on("remove", function () {
 				this.__delete_cascade();
 			}, this);
+		if (!options["ignore_change_id"])
+			model.on("change_id", function (new_id, old_id) {
+				this._change_id(new_id, old_id);
+			}, this);
 	},
+	
+	_change_id: function () {},
 	
 	__delete_cascade: function () {
 		var iter = BetaJS.Iterators.ensure(this.yield());

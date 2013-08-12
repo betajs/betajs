@@ -138,7 +138,7 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 				result = response;
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				throw new BetaJS.Net.AjaxException(errorThrown, textStatus, jqXHR);
+				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
 			}
 		});
 		return result;
@@ -155,7 +155,7 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 				options.success(response);
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				options.failure(errorThrown, textStatus, jqXHR);
+				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
 			}
 		});
 	},

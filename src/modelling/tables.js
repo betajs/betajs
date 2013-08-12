@@ -1,7 +1,41 @@
+BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelException", {
+	
+	constructor: function (model, message) {
+		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
+		this.__model = model;
+	},
+	
+	model: function () {
+		return this.__model;
+	}
+	
+});
+
+
+BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend("ModelInvalidException", {
+	
+	constructor: function (model) {
+		var message = BetaJS.Objs.values(model.errors()).join("\n");
+		this._inherited(BetaJS.Modelling.ModelInvalidException, "constructor", model, message);
+	},
+
+});
+
+
+BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.extend("ModelMissingIdException", {
+	
+	constructor: function (model) {
+		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
+	},
+
+});
+
+
+
 BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	BetaJS.Events.EventsMixin,
 	{
-	
+
 	constructor: function (store, model_type, options) {
 		this._inherited(BetaJS.Modelling.Table, "constructor");
 		this.__store = store;
@@ -10,116 +44,259 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 		this.__models_by_cid = {};
 		this.__models_changed = {};
 		this.__options = BetaJS.Objs.extend({
-			"type_column": null,
-			"auto_update": true,
-			"auto_update_attr": false,
-			"auto_create": false,
-			"save_invalid": false,
-			"greedy_save": true
+			// Attribute that describes the type
+			type_column: null,
+			// Removing options
+			remove_exception: true,
+			// Creation options
+			auto_create: false,
+			create_exception: true,
+			invalid_create_exception: true,
+			invalid_create_save: false,
+			greedy_create: false,
+			// Validation options
+			store_validation_conversion: true,
+			// Update options
+			auto_update: false,
+//			auto_update_min_delay: null,
+//			auto_update_max_delay: null,
+			update_exception: true,
+			invalid_update_exception: true,
+			invalid_update_save: false,
+			greedy_update: false
 		}, options || {});
 	},
 	
-	__enterModel: function (model) {
-		this.trigger("enter", model);
+	async_read: function () {
+		return this.__store.async_read();
+	},
+	
+	async_write: function () {
+		return this.__store.async_write();
+	},
+
+	_model_register: function (model) {
+		if (this.hasModel(model))
+			return;
+		this.trigger("register", model);
 		this.__models_by_cid[model.cid()] = model;
 		if (model.hasId())
 			this.__models_by_id[model.id()] = model;
+		if (model.isNew() && this.__options.auto_create)
+			this._model_create(model);
 	},
 	
-	__leaveModel: function (model) {
-		this.trigger("leave", model);
+	_model_unregister: function (model) {
+		if (!this.hasModel(model))
+			return;
+		model.save();
 		delete this.__models_by_cid[model.cid()];
 		if (model.hasId())
 			delete this.__models_by_id[model.id()];
+		this.trigger("unregister", model);
 	},
 	
-	__hasModel: function (model) {
+	hasModel: function (model) {
 		return model.cid() in this.__models_by_cid;
 	},
-	
-	__modelCreate: function (model) {
-		if (this.__hasModel(model))
+
+	_model_remove: function (model, options) {
+		if (!this.hasModel(model))
 			return false;
-		return this.__enterModel(model) && (!this.__options["auto_create"] || model.save());
+		var self = this;
+		var callback = {
+			success : function () {
+				if (options && options.success)
+					options.success();
+				if (options && options.complete)
+					options.complete();
+				self.trigger("remove", model);
+				model.destroy();
+				return true;
+			},
+			exception : function (e) {
+				if (options && options.exception)
+					options.exception(e);
+				if (options && options.complete)
+					options.complete();
+				if ((!options || !options.exception) && self.__options.remove_exception)
+					throw e;
+				return false;
+			}
+		};
+		if (this.async_write())
+			this.__store.remove(model.id(), callback)
+		else try {
+			this.__store.remove(model.id());
+			return callback.success();
+		} catch (e) {
+			return callback.exception(e);
+		}
+	},
+
+	_model_save: function (model, options) {
+		return model.isNew() ? this._model_create(model, options) : this._model_update(model, options);
 	},
 	
-	__modelDestroy: function (model) {
-		if (!this.__hasModel(model))
-			return true;
-		var result = model.save();
-		return this.__leaveModel(model) && result;
+	__exception_conversion: function (model, e) {
+		if (this.__options.store_validation_conversion && e.instance_of(BetaJS.Stores.RemoteStoreException)) {
+			var source = e.source();
+			if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
+				BetaJS.Objs.iter(source.data(), function (value, key) {
+					model.setError(key, value);
+				}, this);
+				e = new BetaJS.Modelling.ModelInvalidException(model);
+			}
+		}
+		return e;
 	},
 	
-	__modelRemove: function (model) {
-		if (!this.__hasModel(model))
+	_model_create: function (model, options) {
+		if (!this.hasModel(model) || !model.isNew())
 			return false;
-		var result = this.__store.remove(model.id());
-		if (result)
-			this.trigger("remove", model);
-		return this.__leaveModel(model) && result;
+		var self = this;
+		var is_valid = model.validate();
+		if (!is_valid) {
+		 	var e = new BetaJS.Modelling.ModelInvalidException(model);
+			if (options && options.exception)
+				options.exception(e);
+			if (options && options.complete)
+				options.complete();
+			 if ((!options || !options.exception) && self.__options.invalid_create_exception)
+				throw e;
+			 if (!this.__options.invalid_create_save)
+			 	return false;
+		}
+		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.getAll();
+		if (this.__options.type_column)
+			attrs[this.__options.type_column] = model.cls.classname;
+		var callback = {
+			success : function (confirmed) {
+				if (!(model.cls.primary_key() in confirmed))
+					return callback.exception(new BetaJS.Modelling.ModelMissingIdException(model));
+				self.__models_by_id[confirmed[model.cls.primary_key()]] = model;
+				if (!self.__options.greedy_create)
+					for (var key in model.properties_by(false))
+						delete confirmed[key];
+				model.setAll(confirmed, {no_change: true, silent: true});
+				if (is_valid)
+					delete self.__models_changed[model.cid()];
+				self.trigger("create", model);
+				self.trigger("save", model);
+				if (options && options.success)
+					options.success(confirmed);
+				if (options && options.complete)
+					options.complete();
+				return true;		
+			},
+			exception : function (e) {
+				e = self.__exception_conversion(model, e);
+				if (options && options.exception)
+					options.exception(e);
+				if (options && options.complete)
+					options.complete();
+				if ((!options || !options.exception) && self.__options.create_exception)
+					throw e;
+				return false;
+			}
+		};
+		if (this.async_write())
+			this.__store.insert(attrs, callback)
+		else try {
+			var confirmed = this.__store.insert(attrs);
+			return callback.success(confirmed);		
+		} catch (e) {
+			e = self.__exception_conversion(model, e);
+			return callback.exception(e);
+		}
 	},
-	
-	__modelSetAttr: function (model, key, value) {
+
+
+
+	_model_update: function (model, options) {
+		if (!this.hasModel(model) || model.isNew())
+			return false;
+		var self = this;
+		var is_valid = model.validate();
+		if (!is_valid) {
+		 	var e = new BetaJS.Modelling.ModelInvalidException(model);
+			if (options && options.exception)
+				options.exception(e);
+			if (options && options.complete)
+				options.complete();
+			 if ((!options || !options.exception) && self.__options.invalid_update_exception)
+				throw e;
+			 if (!this.__options.invalid_update_save)
+			 	return false;
+		}
+		var attrs = this.__options.greedy_update ? model.properties_changed(true) : model.properties_changed();
+		var callback = {
+			success : function (confirmed) {
+				if (!self.__options.greedy_update)
+					for (var key in model.properties_changed(false))
+						delete confirmed[key];
+				model.setAll(confirmed, {no_change: true, silent: true});
+				if (is_valid)
+					delete self.__models_changed[model.cid()];
+				self.trigger("update", model);
+				self.trigger("save", model);
+				if (options && options.success)
+					options.success(confirmed);
+				if (options && options.complete)
+					options.complete();
+				return true;		
+			},
+			exception : function (e) {
+				if (options && options.exception)
+					options.exception(e);
+				if (options && options.complete)
+					options.complete();
+				if ((!options || !options.exception) && self.__options.update_exception)
+					throw e;
+				return false;
+			}
+		};
+		if (this.async_write() && !BetaJS.Types.is_empty(attrs))
+			this.__store.update(model.id(), attrs, callback)
+		else try {
+			var confirmed = BetaJS.Types.is_empty(attrs) ? {} : this.__store.update(model.id(), attrs);
+			return callback.success(confirmed);		
+		} catch (e) {
+			return callback.exception(e);
+		}
+	},
+
+	_model_set_value: function (model, key, value, options) {
 		this.__models_changed[model.cid()] = model;
 		this.trigger("change", model, key, value);
 		this.trigger("change:" + key, model, value);
-		return !this.__options["auto_update_attr"] || model.save();
+		if (this.__options.auto_update)
+			return model.save(options);
 	},
-	
-	__modelUpdate: function (model) {
-		this.trigger("update", model);
-		return !this.__options["auto_update"] || model.save();
-	},
-	
-	__modelSave: function (model) {
-		if (model.isSaved())
-			return true;
-		var is_valid = model.validate();
-		if (!is_valid && !this.__options["save_invalid"] && !this.__options["greedy_save"])
-			return false;
-		var attrs = {};
-		var new_model = model.isNew();
-		if (new_model)
-			attrs = model.getAll()
-		else if (this.__options["save_invalid"])
-			attrs = model.properties_changed()
-		else
-			attrs = model.properties_changed(true);
-		var confirmed = {};
-		if (new_model) {
-			if (this.__options["type_column"])
-				attrs[this.__options["type_column"]] = model.cls.classname;
-			confirmed = this.__store.insert(attrs);
-			if (!(model.cls.primary_key() in confirmed))
-				return false;
-			this.__models_by_id[confirmed[model.cls.primary_key()]] = model;
-		} else if (!BetaJS.Types.is_empty(attrs)){
-			confirmed = this.__store.update(model.id(), attrs);
-			if (BetaJS.Types.is_empty(confirmed))
-				return false;			
-		}
-		if (!this.__options["save_invalid"])
-			for (var key in model.properties_changed(false))
-				delete confirmed[key];
-		model.__leaveTable();
-		model.setAll(confirmed);
-		model.__enterTable();
-		for (var key in confirmed)
-			model.__unsetChanged(key);
-		if (is_valid)
-			delete this.__models_changed[model.cid()];
-		if (new_model)
-			this.trigger("create", model);
-		this.trigger("save", model);
-		return this.__options["save_invalid"] || is_valid;
-	},
-	
+		
 	save: function () {
 		var result = true;
 		BetaJS.Objs.iter(this.__models_changed, function (obj, id) {
 			result = obj.save() && result;
 		});
 		return result;
+	},
+	
+	__materialize: function (obj) {
+		if (!obj)
+			return null;
+		var type = this.__model_type;
+		if (this.__options.type_column && obj[this.__options.type_column])
+			type = obj[this.__options.type_column];
+		var cls = BetaJS.Scopes.resolve(type);
+		if (this.__models_by_id[obj[cls.primary_key()]])
+			return this.__models_by_id[obj[cls.primary_key()]];
+		var model = new cls(obj, {
+			table: this,
+			saved: true,
+			"new": false
+		});
+		return model;
 	},
 	
 	findById: function (id) {
@@ -144,24 +321,6 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			return self.__materialize(obj);
 		});
 		return mapped_iterator; 
-	},
-	
-	__materialize: function (obj) {
-		if (!obj)
-			return null;
-		var type = this.__model_type;
-		if (this.__options.type_column && obj[this.__options.type_column])
-			type = obj[this.__options.type_column];
-		var cls = BetaJS.Scopes.resolve(type);
-		if (this.__models_by_id[obj[cls.primary_key()]])
-			return this.__models_by_id[obj[cls.primary_key()]];
-		var model = new cls(obj, {
-			table: this,
-			saved: true,
-			"new": false
-		});
-		this.__enterModel(model);
-		return model;
 	},
 	
 	active_query_engine: function () {

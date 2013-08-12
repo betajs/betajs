@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Button View</title>
+		<script src="../../jquery-1.9.1.min.js"></script>
+		<script src="../../../dist/beta.js"></script>
+		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
+		<script>
+			$(document).ready(function () {
+				var input = new BetaJS.Views.InputView({
+					el: "#input",
+				});
+				var label = new BetaJS.Views.LabelView({
+					el: "#label",
+					value: "bla"
+				});
+				input.on("change", function (value) {
+					document.title = "abc:" + value;
+					label.set("label", value);
+				}, null, {
+					min_delay: 1000,
+					max_delay: 5000
+				});
+				input.activate();
+				label.activate();
+			});
+		</script>
+	</head>
+	<body>
+		<div id="input"></div>
+		<div id="label"></div>
+	</body>
+</html>

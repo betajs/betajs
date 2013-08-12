@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-08
+  betajs - v0.0.1 - 2013-08-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -990,16 +990,64 @@ BetaJS.Events.EVENT_SPLITTER = /\s+/;
 
 BetaJS.Events.EventsMixin = {
 	
-	on: function(events, callback, context) {
+	__create_event_object: function (callback, context, options) {
+		options = options || {};
+		var obj = {
+			callback: callback,
+			context: context,
+		};
+		if (options.min_delay)
+			obj.min_delay = new BetaJS.Timers.Timer({
+				delay: options.min_delay,
+				once: true,
+				start: false,
+				context: this,
+				fire: function () {
+					if (obj.max_delay)
+						obj.max_delay.stop();
+					obj.callback.apply(obj.context || this, obj.params);
+				}
+			});
+		if (options.max_delay)
+			obj.max_delay = new BetaJS.Timers.Timer({
+				delay: options.max_delay,
+				once: true,
+				start: false,
+				context: this,
+				fire: function () {
+					if (obj.min_delay)
+						obj.min_delay.stop();
+					obj.callback.apply(obj.context || this, obj.params);
+				}
+			});
+		return obj;
+	},
+	
+	__destroy_event_object: function (object) {
+		if (object.min_delay)
+			object.min_delay.destroy();
+		if (object.max_delay)
+			object.max_delay.destroy();
+	},
+	
+	__call_event_object: function (object, params) {
+		if (object.min_delay)
+			object.min_delay.restart();
+		if (object.max_delay)
+			object.max_delay.start();
+		if (!object.min_delay && !object.max_delay)
+			object.callback.apply(object.context || this, params)
+		else
+			object.params = params;
+	},
+	
+	on: function(events, callback, context, options) {
 		this.__events_mixin_events = this.__events_mixin_events || {};
 		events = events.split(BetaJS.Events.EVENT_SPLITTER);
 		var event;
 		while (event = events.shift()) {
 			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
-			this.__events_mixin_events[event].add({
-				callback: callback,
-				context: context
-			});
+			this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
 		}
 		return this;
 	},
@@ -1012,7 +1060,10 @@ BetaJS.Events.EventsMixin = {
 			while (event = events.shift())
 				if (this.__events_mixin_events[event]) {
 					this.__events_mixin_events[event].remove_by_filter(function (object) {
-						return (!callback || object.callback == callback) && (!context || object.context == context);
+						var result = (!callback || object.callback == callback) && (!context || object.context == context);
+						if (result && this.__destroy_event_object)
+							this.__destroy_event_object(object);
+						return result;
 					});
 					if (this.__events_mixin_events[event].count() == 0) {
 						this.__events_mixin_events[event].destroy();
@@ -1022,7 +1073,10 @@ BetaJS.Events.EventsMixin = {
 		} else {
 			for (event in this.__events_mixin_events) {
 				this.__events_mixin_events[event].remove_by_filter(function (object) {
-					return (!callback || object.callback == callback) && (!context || object.context == context);
+					var result = (!callback || object.callback == callback) && (!context || object.context == context);
+					if (result && this.__destroy_event_object)
+						this.__destroy_event_object(object);
+					return result;
 				});
 				if (this.__events_mixin_events[event].count() == 0) {
 					this.__events_mixin_events[event].destroy();
@@ -1043,24 +1097,24 @@ BetaJS.Events.EventsMixin = {
     	while (event = events.shift())
     		if (this.__events_mixin_events && this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
-    				object.callback.apply(object.context || self, rest);
+    				self.__call_event_object(object, rest);
     			});
 		if (this.__events_mixin_events && "all" in this.__events_mixin_events)
 			this.__events_mixin_events["all"].iterate(function (object) {
-				object.callback.apply(object.context || self, rest);
+				self.__call_event_object(object, rest);
 			});
     	return this;
     },
     
-    once: function (events, callback, context) {
+    once: function (events, callback, context, options) {
         var self = this;
         var once = BetaJS.Functions.once(function() {
           self.off(events, once);
           callback.apply(this, arguments);
         });
         once._callback = callback;
-        return this.on(name, once, context);
-    }    
+        return this.on(name, once, context, options);
+    }
 	
 };
 
@@ -1074,16 +1128,16 @@ BetaJS.Events.ListenMixin = {
 		"destroy": "listenOff" 
 	},
 		
-	listenOn: function (target, events, callback) {
+	listenOn: function (target, events, callback, options) {
 		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
-		target.on(events, callback, this);
+		target.on(events, callback, this, options);
 	},
 	
-	listenOnce: function (target, events, callback) {
+	listenOnce: function (target, events, callback, options) {
 		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
-		target.once(events, callback, this);
+		target.once(events, callback, this, options);
 	},
 	
 	listenOff: function (target, events, callback) {
@@ -1125,16 +1179,16 @@ BetaJS.Properties.PropertiesMixin = {
 		return true;
 	},
 	
-	_afterSet: function (key, value) {
+	_afterSet: function (key, value, options) {
 	},
 	
 	has: function (key) {
 		return key in this.__properties;
 	},
 	
-	setAll: function (obj) {
+	setAll: function (obj, options) {
 		for (var key in obj)
-			this.set(key, obj[key]);
+			this.set(key, obj[key], options);
 	},
 	
 	keys: function (mapped) {
@@ -1190,64 +1244,68 @@ BetaJS.Properties.PropertiesMixin = {
 		};
 	},
 	
-	set: function (key, value) {
-		if (this.get(key) != value) {
-			var self = this;
-			var entry = this.__properties[key];
-			if (this._isBinding(value)) {
+	_set_changed: function (key, old_value, options) {
+		this._afterSet(key, this.get(key), old_value, options);
+		this.trigger("change", key, this.get(key), old_value, options);
+		this.trigger("change:" + key, this.get(key), old_value, options);
+	},
+	
+	set: function (key, value, options) {
+		var old = this.get(key);
+		if (old == value)
+			return; 
+		var self = this;
+		var entry = this.__properties[key];
+		if (this._isBinding(value)) {
+			this.unset(key);
+			this.__properties[key] = {
+				type: BetaJS.Properties.TYPE_BINDING,
+				bindee: value.bindee,
+				property: value.property,
+				value: value.bindee.get(value.property)
+			};
+			value.bindee.on("change:" + value.property, function () {
+				var old = self.__properties[key].value;
+				var value = value.bindee.get(value.property);
+				self.__properties[key].value = value;
+				self._set_changed(key, old);
+			}, this.__properties[key]);
+			this._set_changed(key, old, options);
+		} else if (this._isComputed(value)) {
+			this.unset(key);
+			this.__properties[key] = {
+				type: BetaJS.Properties.TYPE_COMPUTED,
+				func: value.func,
+				dependencies: value.dependencies,
+				value: value.func.apply(self)
+			};
+			BetaJS.Objs.iter(value.dependencies, function (dep) {
+				if (this._isBinding(dep))
+					dep.bindee.on("change:" + dep.property, function () {
+						var old = self.__properties[key].value;
+						var val = value.func.apply(self);
+						self.__properties[key].value = val;
+						self._set_changed(key, old);
+					}, this.__properties[key]);
+				else
+					self.on("change:" + dep, function () {
+						var old = self.__properties[key].value;
+						var val = value.func.apply(self);
+						self.__properties[key].value = val;
+						self._set_changed(key, old);
+					}, this.__properties[key]);
+			}, this);
+			this._set_changed(key, old);
+		} else if (this._canSet(key, value)) {
+			if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
+				this.__properties[key].bindee.set(this.__properties[key].property, value);
+			} else {
 				this.unset(key);
 				this.__properties[key] = {
-					type: BetaJS.Properties.TYPE_BINDING,
-					bindee: value.bindee,
-					property: value.property,
-					value: value.bindee.get(value.property)
+					type: BetaJS.Properties.TYPE_VALUE,
+					value: value
 				};
-				value.bindee.on("change:" + value.property, function () {
-					self.__properties[key].value = value.bindee.get(value.property);
-					self.trigger("change");
-					self.trigger("change:" + key);
-				}, this.__properties[key]);
-				this._afterSet(key, this.__properties[key].value);
-				this.trigger("change");
-				this.trigger("change:" + key);
-			} else if (this._isComputed(value)) {
-				this.unset(key);
-				this.__properties[key] = {
-					type: BetaJS.Properties.TYPE_COMPUTED,
-					func: value.func,
-					dependencies: value.dependencies,
-					value: value.func.apply(self)
-				};
-				BetaJS.Objs.iter(value.dependencies, function (dep) {
-					if (this._isBinding(dep))
-						dep.bindee.on("change:" + dep.property, function () {
-							self.__properties[key].value = value.func.apply(self);
-							self.trigger("change");
-							self.trigger("change:" + key);
-						}, this.__properties[key]);
-					else
-						self.on("change:" + dep, function () {
-							self.__properties[key].value = value.func.apply(self);
-							self.trigger("change");
-							self.trigger("change:" + key);
-						}, this.__properties[key]);
-				}, this);
-				this._afterSet(key, this.__properties[key].value);
-				this.trigger("change");
-				this.trigger("change:" + key);
-			} else if (this._canSet(key, value)) {
-				if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
-					this.__properties[key].bindee.set(this.__properties[key].property, value);
-				} else {
-					this.unset(key);
-					this.__properties[key] = {
-						type: BetaJS.Properties.TYPE_VALUE,
-						value: value
-					};
-					this._afterSet(key, value);
-					this.trigger("change");
-					this.trigger("change:" + key);
-				}
+				this._set_changed(key, old, options);
 			}
 		}
 	},
@@ -1572,3 +1630,80 @@ BetaJS.Time = {
 	}
 	
 };
+
+BetaJS.Timers = {};
+
+BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
+	
+	/*
+	 * int delay (mandatory): number of milliseconds until it fires
+	 * bool once (optional, default false): should it fire infinitely often
+	 * func fire (optional): will be fired
+	 * object contenxt (optional): for fire
+	 * bool start (optiona, default true): should it start immediately
+	 * 
+	 */
+	constructor: function (options) {
+		this._inherited(BetaJS.Timers.Timer, "constructor");
+		options = BetaJS.Objs.extend({
+			once: false,
+			start: true,
+			fire: null,
+			context: this,
+			destroy_on_fire: false,
+		}, options);
+		this.__delay = options.delay;
+		this.__destroy_on_fire = options.destroy_on_fire;
+		this.__once = options.once;
+		this.__fire = options.fire;
+		this.__context = options.context;
+		this.__started = false;
+		if (options.start)
+			this.start();
+	},
+	
+	destroy: function () {
+		this.stop();
+		this._inherited(BetaJS.Timers.Timer, "destroy");
+	},
+	
+	fire: function () {
+		if (this.__once)
+			this.__started = false;
+		if (this.__fire)
+			this.__fire.apply(this.__context, [this]);
+		if (this.__destroy_on_fire)
+			this.destroy();
+	},
+	
+	stop: function () {
+		if (!this.__started)
+			return;
+		if (this.__once)
+			clearTimeout(this.__timer)
+		else
+			clearInterval(this.__timer);
+		this.__started = false;
+	},
+	
+	start: function () {
+		if (this.__started)
+			return;
+		var self = this;
+		if (this.__once)
+			this.__timer = setTimeout(function () {
+				self.fire();
+			}, this.__delay)
+		else
+			this.__timer = setInterval(function () {
+				self.fire();
+			}, this.__delay);
+		this.__started = true;
+	},
+	
+	restart: function () {
+		this.stop();
+		this.start();
+	}
+	
+});

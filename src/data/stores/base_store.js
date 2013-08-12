@@ -16,14 +16,32 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 		this._id_key = options.id_key || "id";
 		this._create_ids = options.create_ids || false;
 		this._last_id = 1;
-		this._async = "async" in options ? options.async : false;
-		this._async = this._async && this._supports_async();
+		this._async_write = "async_write" in options ? options.async_write : false;
+		this._async_write = this._async_write && this._supports_async_write();
+		this._async_read = "async_read" in options ? options.async_read : false;
+		this._async_read = this._async_read && this._supports_async_read();
 	},
 	
-	_supports_async: function () {
+	id_key: function () {
+		return this._id_key;
+	},
+	
+	_supports_async_read: function () {
 		return false;
 	},
+	
+	async_read: function () {
+		return this._async_read;
+	},
 			
+	_supports_async_write: function () {
+		return false;
+	},
+	
+	async_write: function () {
+		return this._async_write;
+	},
+
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -75,7 +93,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 
 	insert: function (data, callbacks) {
 		if (this._create_ids && !(this._id_key in data)) {
-			if (this._async)
+			if (this._async_write)
 				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
 			while (this.get(this._last_id))
 				this._last_id++;
@@ -93,7 +111,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 			else
 				throw e;
 		};
-		if (this._async)
+		if (this._async_write)
 			this._insert(data, {success: success_call, exception: exception_call})
 		else
 			try {
@@ -103,6 +121,25 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+	},
+	
+	insert_all: function (data) {
+		if (this._async_write) {
+			var i = -1;
+			var self = this;
+			var success = function () {
+				i++;
+				if (i < data.length)
+					self.insert(data[i], {success: success});
+			};
+			success();
+		} else {
+			var result = true;
+			BetaJS.Objs.iter(data, function (obj) {
+				result = result && this.insert(obj, callbacks);
+			}, this);
+			return result;
+		}
 	},
 
 	remove: function (id, callbacks) {
@@ -118,7 +155,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 			else
 				throw e;
 		};
-		if (this._async)
+		if (this._async_write)
 			this._remove(id, {success: success_call, exception: exception_call})
 		else
 			try {
@@ -141,7 +178,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 			else
 				throw e;
 		};
-		if (this._async)
+		if (this._async_read)
 			this._get(id, {success: success_call, exception: exception_call})
 		else
 			try {
@@ -166,7 +203,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 			else
 				throw e;
 		};
-		if (this._async)
+		if (this._async_write)
 			this._update(id, data, {success: success_call, exception: exception_call})
 		else
 			try {

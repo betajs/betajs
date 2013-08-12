@@ -111,7 +111,8 @@ module.exports = function(grunt) {
 					'src/base/comparators.js',
 					'src/base/tokens.js',
 					'src/base/locales.js',
-					'src/base/time.js'
+					'src/base/time.js',
+					'src/base/timers.js',
 				]
 			},
 			dist_beta_data : {
@@ -128,8 +129,8 @@ module.exports = function(grunt) {
 					'src/data/stores/dumb_store.js',
 					'src/data/stores/assoc_dumb_store.js',
 					'src/data/stores/local_store.js',
-					'src/data/stores/query_cached_store.js',
-					'src/data/stores/fully_cached_store.js',
+					'src/data/stores/dual_store.js',
+					'src/data/stores/cached_stores.js',
 					'src/data/stores/remote_store.js',
 					'src/data/stores/conversion_store.js',
 				]
@@ -137,9 +138,12 @@ module.exports = function(grunt) {
 			dist_beta_models : {
 				dest : 'dist/beta-models.js',
 				src : [
+					'src/net/http_header.js',
+					'src/modelling/properties.js',
 					'src/modelling/models.js',
 					'src/modelling/tables.js',
 					'src/modelling/associations/associations.js', 
+					'src/modelling/associations/table_associations.js', 
 					'src/modelling/associations/has_many_associations.js', 
 					'src/modelling/associations/has_many_through_array_associations.js', 
 					'src/modelling/associations/has_one_associations.js', 
@@ -203,6 +207,7 @@ module.exports = function(grunt) {
 				src: [
 					'dist/beta-common.js',
 					
+					'src/net/http_header.js',
 					'src/server/databases/databases.js',
 					'src/server/databases/database_tables.js',
 					'src/server/databases/mongo_database.js',

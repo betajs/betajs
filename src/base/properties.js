@@ -17,16 +17,16 @@ BetaJS.Properties.PropertiesMixin = {
 		return true;
 	},
 	
-	_afterSet: function (key, value) {
+	_afterSet: function (key, value, options) {
 	},
 	
 	has: function (key) {
 		return key in this.__properties;
 	},
 	
-	setAll: function (obj) {
+	setAll: function (obj, options) {
 		for (var key in obj)
-			this.set(key, obj[key]);
+			this.set(key, obj[key], options);
 	},
 	
 	keys: function (mapped) {
@@ -82,64 +82,68 @@ BetaJS.Properties.PropertiesMixin = {
 		};
 	},
 	
-	set: function (key, value) {
-		if (this.get(key) != value) {
-			var self = this;
-			var entry = this.__properties[key];
-			if (this._isBinding(value)) {
+	_set_changed: function (key, old_value, options) {
+		this._afterSet(key, this.get(key), old_value, options);
+		this.trigger("change", key, this.get(key), old_value, options);
+		this.trigger("change:" + key, this.get(key), old_value, options);
+	},
+	
+	set: function (key, value, options) {
+		var old = this.get(key);
+		if (old == value)
+			return; 
+		var self = this;
+		var entry = this.__properties[key];
+		if (this._isBinding(value)) {
+			this.unset(key);
+			this.__properties[key] = {
+				type: BetaJS.Properties.TYPE_BINDING,
+				bindee: value.bindee,
+				property: value.property,
+				value: value.bindee.get(value.property)
+			};
+			value.bindee.on("change:" + value.property, function () {
+				var old = self.__properties[key].value;
+				var value = value.bindee.get(value.property);
+				self.__properties[key].value = value;
+				self._set_changed(key, old);
+			}, this.__properties[key]);
+			this._set_changed(key, old, options);
+		} else if (this._isComputed(value)) {
+			this.unset(key);
+			this.__properties[key] = {
+				type: BetaJS.Properties.TYPE_COMPUTED,
+				func: value.func,
+				dependencies: value.dependencies,
+				value: value.func.apply(self)
+			};
+			BetaJS.Objs.iter(value.dependencies, function (dep) {
+				if (this._isBinding(dep))
+					dep.bindee.on("change:" + dep.property, function () {
+						var old = self.__properties[key].value;
+						var val = value.func.apply(self);
+						self.__properties[key].value = val;
+						self._set_changed(key, old);
+					}, this.__properties[key]);
+				else
+					self.on("change:" + dep, function () {
+						var old = self.__properties[key].value;
+						var val = value.func.apply(self);
+						self.__properties[key].value = val;
+						self._set_changed(key, old);
+					}, this.__properties[key]);
+			}, this);
+			this._set_changed(key, old);
+		} else if (this._canSet(key, value)) {
+			if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
+				this.__properties[key].bindee.set(this.__properties[key].property, value);
+			} else {
 				this.unset(key);
 				this.__properties[key] = {
-					type: BetaJS.Properties.TYPE_BINDING,
-					bindee: value.bindee,
-					property: value.property,
-					value: value.bindee.get(value.property)
+					type: BetaJS.Properties.TYPE_VALUE,
+					value: value
 				};
-				value.bindee.on("change:" + value.property, function () {
-					self.__properties[key].value = value.bindee.get(value.property);
-					self.trigger("change");
-					self.trigger("change:" + key);
-				}, this.__properties[key]);
-				this._afterSet(key, this.__properties[key].value);
-				this.trigger("change");
-				this.trigger("change:" + key);
-			} else if (this._isComputed(value)) {
-				this.unset(key);
-				this.__properties[key] = {
-					type: BetaJS.Properties.TYPE_COMPUTED,
-					func: value.func,
-					dependencies: value.dependencies,
-					value: value.func.apply(self)
-				};
-				BetaJS.Objs.iter(value.dependencies, function (dep) {
-					if (this._isBinding(dep))
-						dep.bindee.on("change:" + dep.property, function () {
-							self.__properties[key].value = value.func.apply(self);
-							self.trigger("change");
-							self.trigger("change:" + key);
-						}, this.__properties[key]);
-					else
-						self.on("change:" + dep, function () {
-							self.__properties[key].value = value.func.apply(self);
-							self.trigger("change");
-							self.trigger("change:" + key);
-						}, this.__properties[key]);
-				}, this);
-				this._afterSet(key, this.__properties[key].value);
-				this.trigger("change");
-				this.trigger("change:" + key);
-			} else if (this._canSet(key, value)) {
-				if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
-					this.__properties[key].bindee.set(this.__properties[key].property, value);
-				} else {
-					this.unset(key);
-					this.__properties[key] = {
-						type: BetaJS.Properties.TYPE_VALUE,
-						value: value
-					};
-					this._afterSet(key, value);
-					this.trigger("change");
-					this.trigger("change:" + key);
-				}
+				this._set_changed(key, old, options);
 			}
 		}
 	},

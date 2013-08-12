@@ -5,7 +5,12 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	_events: function () {
 		return [{
 			"keyup input": "__keyupEvent",
-			"blur input": "__leaveEvent"	
+			"blur input": "__leaveEvent",
+		}, {
+			"keyup input": "__changeEvent",
+			"change input": "__changeEvent",
+			"input input": "__changeEvent",
+			"paste input": "__changeEvent",
 		}];
 	},
 	constructor: function(options) {
@@ -21,6 +26,9 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	},
 	__leaveEvent: function () {
 		this.trigger("leave");
+	},
+	__changeEvent: function () {
+		this.trigger("change", this.get("value"));
 	},
 	focus: function (select_all) {
 		this.$("input").focus();
