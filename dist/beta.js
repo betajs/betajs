@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-12
+  betajs - v0.0.1 - 2013-08-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-12
+  betajs - v0.0.1 - 2013-08-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-12
+  betajs - v0.0.1 - 2013-08-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1743,7 +1743,7 @@ BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
 	
 });
 /*!
-  betajs - v0.0.1 - 2013-08-12
+  betajs - v0.0.1 - 2013-08-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3550,7 +3550,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-08-12
+  betajs - v0.0.1 - 2013-08-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4402,7 +4402,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-08-12
+  betajs - v0.0.1 - 2013-08-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5906,7 +5906,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		options = options || {};
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
 		this._setOption(options, "alignment", "horizontal");
-		this._setOption(options, "float", true);	
+		this._setOption(options, "positioning", "float"); // float, computed, none	
 	},
 	
 	isHorizontal: function () {
@@ -5925,9 +5925,9 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 		if (this.isActive())
 			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
-		if (this.isHorizontal() && !("float" in options) && this.__float)
+		if (this.isHorizontal() && !("float" in options) && this.__positioning == "float")
 			options["float"] = "left";
-		if (this.isActive() && "float" in options && this.__float) {
+		if (this.isActive() && "float" in options && this.__positioning == "float") {
 			var container = this.$("[data-view-id='" + child.cid() + "']");
 			container.css("float", options["float"]);
 		}			
@@ -5935,7 +5935,44 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	
 	__removeChildContainer: function (child) {
 		this.$data({"view-id": child.cid()}).remove();
+	},
+	
+	__updatePositioningHelper: function (arr, pos_string, size_string) {
+		var pos = 0;
+		BetaJS.Objs.iter(arr, function (child) {
+			var opts = this.childOptions(child);
+			if (!(opts['type'] && opts['type'] == 'ignore')) {
+				child.$el.css(pos_string, pos + 'px');
+				if (child.isVisible())
+					pos += parseInt(child.$el.css(size_string));
+				if (opts['type'] && opts['type'] == 'dynamic')
+					return false;
+			}
+		}, this);
+	},
+	
+	__updatePositioning: function () {
+		var ltr = BetaJS.Objs.values(this.children());
+		var rtl = BetaJS.Objs.clone(ltr, 1).reverse();
+		var left_string = this.isHorizontal() ? "left" : "top";
+		var right_string = this.isHorizontal() ? "right" : "bottom";
+		var width_string = this.isHorizontal() ? "width" : "height";
+		this.__updatePositioningHelper(rtl, right_string, width_string);
+		this.__updatePositioningHelper(ltr, left_string, width_string);
+	},
+
+	updateChildVisibility: function (child) {
+		this._inherited(BetaJS.Views.ListContainerView, "updateChildVisibility", child);
+		if (this.__positioning == "computed")
+			this.__updatePositioning();
+	},
+	
+	_after_show: function () {
+		this._inherited(BetaJS.Views.ListContainerView, "_after_show");
+		if (this.__positioning == "computed")
+			this.__updatePositioning();
 	}
+	
 	
 });
 BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView", {
