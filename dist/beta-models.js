@@ -394,9 +394,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			// Validation options
 			store_validation_conversion: true,
 			// Update options
-			auto_update: false,
-//			auto_update_min_delay: null,
-//			auto_update_max_delay: null,
+			auto_update: true,
 			update_exception: true,
 			invalid_update_exception: true,
 			invalid_update_save: false,
@@ -527,6 +525,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 				return true;		
 			},
 			exception : function (e) {
+				e = BetaJS.Exceptions.ensure(e);
 				e = self.__exception_conversion(model, e);
 				if (options && options.exception)
 					options.exception(e);
@@ -543,7 +542,6 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			var confirmed = this.__store.insert(attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
-			e = self.__exception_conversion(model, e);
 			return callback.exception(e);
 		}
 	},
@@ -778,8 +776,8 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 
 	_change_id: function (new_id, old_id) {
 		var objects = this._yield();
-		BetaJS.Objs.iter(this._yield())
-		if (object) {
+		while (objects.hasNext()) {
+			var object = objects.next();
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}

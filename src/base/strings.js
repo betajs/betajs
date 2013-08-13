@@ -35,6 +35,14 @@ BetaJS.Strings = {
 		return s.replace(this.JS_ESCAPER_REGEX(), function(match) {
 			return '\\' + self.JS_ESCAPES[match];
 		});
+	},
+	
+	starts_with: function (s, needle) {
+		return s.substring(0, needle.length) == needle;
+	},
+	
+	strip_start: function (s, needle) {
+		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
 	}
 
 };

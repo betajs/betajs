@@ -6,8 +6,8 @@ BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
 	 * int delay (mandatory): number of milliseconds until it fires
 	 * bool once (optional, default false): should it fire infinitely often
 	 * func fire (optional): will be fired
-	 * object contenxt (optional): for fire
-	 * bool start (optiona, default true): should it start immediately
+	 * object context (optional): for fire
+	 * bool start (optional, default true): should it start immediately
 	 * 
 	 */
 	constructor: function (options) {

@@ -122,6 +122,14 @@ BetaJS.Strings = {
 		return s.replace(this.JS_ESCAPER_REGEX(), function(match) {
 			return '\\' + self.JS_ESCAPES[match];
 		});
+	},
+	
+	starts_with: function (s, needle) {
+		return s.substring(0, needle.length) == needle;
+	},
+	
+	strip_start: function (s, needle) {
+		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
 	}
 
 };
@@ -1241,6 +1249,8 @@ BetaJS.Properties.PropertiesMixin = {
 				BetaJS.Objs.iter(entry.dependencies, function (dep) {
 					if (this._isBinding(dep))
 						dep.bindee.off("change:" + dep.property, null, this.__properties[key])
+					else if (this._isTimer(dep))
+						entry.timers[dep].destroy
 					else
 						self.off("change:" + dep, null, this.__properties[key]);
 				}, this);
@@ -1253,6 +1263,14 @@ BetaJS.Properties.PropertiesMixin = {
 		this._afterSet(key, this.get(key), old_value, options);
 		this.trigger("change", key, this.get(key), old_value, options);
 		this.trigger("change:" + key, this.get(key), old_value, options);
+	},
+	
+	_isTimer: function (dep) {
+		return BetaJS.Strings.starts_with("dep", "timer:");
+	},
+	
+	_parseTimer: function (dep) {
+		return parseInt(BetaJS.Strings.strip_start("timer:"));
 	},
 	
 	set: function (key, value, options) {
@@ -1271,8 +1289,7 @@ BetaJS.Properties.PropertiesMixin = {
 			};
 			value.bindee.on("change:" + value.property, function () {
 				var old = self.__properties[key].value;
-				var value = value.bindee.get(value.property);
-				self.__properties[key].value = value;
+				self.__properties[key].value = value.bindee.get(value.property);
 				self._set_changed(key, old);
 			}, this.__properties[key]);
 			this._set_changed(key, old, options);
@@ -1282,21 +1299,29 @@ BetaJS.Properties.PropertiesMixin = {
 				type: BetaJS.Properties.TYPE_COMPUTED,
 				func: value.func,
 				dependencies: value.dependencies,
-				value: value.func.apply(self)
+				value: value.func.apply(self),
+				timers: {}
 			};
 			BetaJS.Objs.iter(value.dependencies, function (dep) {
 				if (this._isBinding(dep))
 					dep.bindee.on("change:" + dep.property, function () {
 						var old = self.__properties[key].value;
-						var val = value.func.apply(self);
-						self.__properties[key].value = val;
+						self.__properties[key].value = value.func.apply(self);
 						self._set_changed(key, old);
 					}, this.__properties[key]);
-				else
+				else if (this._isTimer(dep)) {
+					this.__properties[key].timers[dep] = new BetaJS.Timers.Timer({
+						delay: this._parseTimer(dep),
+						fire: function () {
+							var old = self.__properties[key].value;
+							self.__properties[key].value = value.func.apply(self);
+							self._set_changed(key, old);
+						}
+					});
+				} else
 					self.on("change:" + dep, function () {
 						var old = self.__properties[key].value;
-						var val = value.func.apply(self);
-						self.__properties[key].value = val;
+						self.__properties[key].value = value.func.apply(self);
 						self._set_changed(key, old);
 					}, this.__properties[key]);
 			}, this);
@@ -1644,8 +1669,8 @@ BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
 	 * int delay (mandatory): number of milliseconds until it fires
 	 * bool once (optional, default false): should it fire infinitely often
 	 * func fire (optional): will be fired
-	 * object contenxt (optional): for fire
-	 * bool start (optiona, default true): should it start immediately
+	 * object context (optional): for fire
+	 * bool start (optional, default true): should it start immediately
 	 * 
 	 */
 	constructor: function (options) {
@@ -3915,9 +3940,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			// Validation options
 			store_validation_conversion: true,
 			// Update options
-			auto_update: false,
-//			auto_update_min_delay: null,
-//			auto_update_max_delay: null,
+			auto_update: true,
 			update_exception: true,
 			invalid_update_exception: true,
 			invalid_update_save: false,
@@ -4048,6 +4071,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 				return true;		
 			},
 			exception : function (e) {
+				e = BetaJS.Exceptions.ensure(e);
 				e = self.__exception_conversion(model, e);
 				if (options && options.exception)
 					options.exception(e);
@@ -4064,7 +4088,6 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 			var confirmed = this.__store.insert(attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
-			e = self.__exception_conversion(model, e);
 			return callback.exception(e);
 		}
 	},
@@ -4299,8 +4322,8 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 
 	_change_id: function (new_id, old_id) {
 		var objects = this._yield();
-		BetaJS.Objs.iter(this._yield())
-		if (object) {
+		while (objects.hasNext()) {
+			var object = objects.next();
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}

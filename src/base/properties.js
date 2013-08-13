@@ -74,6 +74,8 @@ BetaJS.Properties.PropertiesMixin = {
 				BetaJS.Objs.iter(entry.dependencies, function (dep) {
 					if (this._isBinding(dep))
 						dep.bindee.off("change:" + dep.property, null, this.__properties[key])
+					else if (this._isTimer(dep))
+						entry.timers[dep].destroy
 					else
 						self.off("change:" + dep, null, this.__properties[key]);
 				}, this);
@@ -86,6 +88,14 @@ BetaJS.Properties.PropertiesMixin = {
 		this._afterSet(key, this.get(key), old_value, options);
 		this.trigger("change", key, this.get(key), old_value, options);
 		this.trigger("change:" + key, this.get(key), old_value, options);
+	},
+	
+	_isTimer: function (dep) {
+		return BetaJS.Strings.starts_with("dep", "timer:");
+	},
+	
+	_parseTimer: function (dep) {
+		return parseInt(BetaJS.Strings.strip_start("timer:"));
 	},
 	
 	set: function (key, value, options) {
@@ -104,8 +114,7 @@ BetaJS.Properties.PropertiesMixin = {
 			};
 			value.bindee.on("change:" + value.property, function () {
 				var old = self.__properties[key].value;
-				var value = value.bindee.get(value.property);
-				self.__properties[key].value = value;
+				self.__properties[key].value = value.bindee.get(value.property);
 				self._set_changed(key, old);
 			}, this.__properties[key]);
 			this._set_changed(key, old, options);
@@ -115,21 +124,29 @@ BetaJS.Properties.PropertiesMixin = {
 				type: BetaJS.Properties.TYPE_COMPUTED,
 				func: value.func,
 				dependencies: value.dependencies,
-				value: value.func.apply(self)
+				value: value.func.apply(self),
+				timers: {}
 			};
 			BetaJS.Objs.iter(value.dependencies, function (dep) {
 				if (this._isBinding(dep))
 					dep.bindee.on("change:" + dep.property, function () {
 						var old = self.__properties[key].value;
-						var val = value.func.apply(self);
-						self.__properties[key].value = val;
+						self.__properties[key].value = value.func.apply(self);
 						self._set_changed(key, old);
 					}, this.__properties[key]);
-				else
+				else if (this._isTimer(dep)) {
+					this.__properties[key].timers[dep] = new BetaJS.Timers.Timer({
+						delay: this._parseTimer(dep),
+						fire: function () {
+							var old = self.__properties[key].value;
+							self.__properties[key].value = value.func.apply(self);
+							self._set_changed(key, old);
+						}
+					});
+				} else
 					self.on("change:" + dep, function () {
 						var old = self.__properties[key].value;
-						var val = value.func.apply(self);
-						self.__properties[key].value = val;
+						self.__properties[key].value = value.func.apply(self);
 						self._set_changed(key, old);
 					}, this.__properties[key]);
 			}, this);

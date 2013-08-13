@@ -26,8 +26,8 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 
 	_change_id: function (new_id, old_id) {
 		var objects = this._yield();
-		BetaJS.Objs.iter(this._yield())
-		if (object) {
+		while (objects.hasNext()) {
+			var object = objects.next();
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}
