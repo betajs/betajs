@@ -719,7 +719,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 				self.__hide_on_leave_skip = false;
 				return;
 			}
-			if (e.target !== el && !$.contains(el, e.target))
+			if (document.contains(e.target) && e.target !== el && !$.contains(el, e.target))
 				self.hide();
 		};
 		this.__hide_on_leave_skip = true;

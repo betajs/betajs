@@ -40,6 +40,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 				object.off(null, null, this);
 		});
 		this.__data.destroy();
+		this.trigger("destroy");
 		this._inherited(BetaJS.Collections.Collection, "destroy");
 	},
 	
@@ -95,7 +96,8 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		this.trigger("remove", object);
 		if ("off" in object)
 			object.off(null, null, this);
-		return this.__data.remove(object);
+		var result = this.__data.remove(object);
+		return result;
 	},
 	
 	getByIndex: function (index) {

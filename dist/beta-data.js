@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -550,7 +550,7 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		BetaJS.Objs.iter(this.__aqs, function (aq) {
 			if (this.__valid_for_aq(raw, aq)) {
 				aq._add(object);
-				aqs[BetaJS.Ids.objectId(aq)] = aq;
+				aqs[aq.cid()] = aq;
 			}
 		}, this);
 		object.on("change", function () {
@@ -572,25 +572,25 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		BetaJS.Objs.iter(this.__object_to_aqs[BetaJS.Ids.objectId(object)], function (aq) {
 			if (!this.__valid_for_aq(raw, aq)) {
 				aq._remove(object);
-				delete aqs[BetaJS.Ids.objectId(aq)];
+				delete aqs[aq.cid()];
 			}
 		}, this);
 		BetaJS.Objs.iter(this.__aqs, function (aq) {
 			if (this.__valid_for_aq(raw, aq)) {
 				aq._add(object);
-				aqs[BetaJS.Ids.objectId(aq)] = aq;
+				aqs[aq.cid()] = aq;
 			}
 		}, this);
 	},
 	
 	register: function (aq) {
-		this.__aqs[BetaJS.Ids.objectId(aq)] = aq;
+		this.__aqs[aq.cid()] = aq;
 		var query = aq.query();
 		var result = this._query(query);
 		while (result.hasNext()) {
 			var object = result.next();
 			if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
-				this.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)] = aq;
+				this.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()] = aq;
 				aq._add(object);
 			} else
 				this.insert(object);
@@ -598,10 +598,10 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	},
 	
 	unregister: function (aq) {
-		delete this.__aqs[BetaJS.Ids.objectId(aq)];
+		delete this.__aqs[aq.cid()];
 		var self = this;
 		aq.collection().iterate(function (object) {
-			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)];
+			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()];
 		});
 	},
 	
@@ -610,13 +610,19 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	
 });
 
-BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", {
+BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
+
+	BetaJS.Ids.ClientIdMixin,
+	{
 	
 	constructor: function (engine, query) {
 		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
 		this.__engine = engine;
 		this.__query = query;
 		this.__collection = new BetaJS.Collections.Collection();
+		this.__collection.on("destroy", function () {
+			this.destroy();
+		}, this);
 		engine.register(this);
 	},
 	
@@ -656,7 +662,7 @@ BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", {
 		this.__engine.register(this);
 	}
 	
-});
+}]);
 
 BetaJS.Stores = BetaJS.Stores || {};
 

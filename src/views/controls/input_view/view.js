@@ -22,7 +22,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	__keyupEvent: function (e) {
 		 var key = e.keyCode || e.which;
          if (key == 13)
-         	this.trigger("enter_key");
+         	this.trigger("enter_key", this.get("value"));
 	},
 	__leaveEvent: function () {
 		this.trigger("leave");

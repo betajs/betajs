@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -326,8 +326,8 @@ BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
 		var self = this;
 		var opts = BetaJS.Objs.clone(options || {}, 1);
 		opts.success = function () {
-			this.trigger("remove");		
-			this.__removed = true;
+			self.trigger("remove");		
+			self.__removed = true;
 			if (options && options.success)
 				options.success();
 		};
@@ -659,7 +659,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	},
 	
 	active_query_engine: function () {
-		if (!this.__active_query_engine) {
+		if (!this._active_query_engine) {
 			var self = this;
 			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
 			this._active_query_engine._query = function (query) {
@@ -669,7 +669,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 				this._active_query_engine.insert(object);
 			});
 			this.on("remove", function (object) {
-				this._active_query_engine.insert(remove);
+				this._active_query_engine.remove(object);
 			});
 			this.on("change", function (object) {
 				this._active_query_engine.update(object);
@@ -726,27 +726,18 @@ BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.A
 		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "constructor", model, options);
 		this._foreign_table = foreign_table;
 		this._foreign_key = foreign_key;
+		// TODO: Active Query would be better
+		if (this._options["cached"]) 
+			this._foreign_table.on("create update remove", function () {
+				this.invalidate();
+			}, this);
 	},
 	
-	__delete_cascade: function () {
-		var iter = BetaJS.Iterators.ensure(this.yield());
-		while (iter.hasNext())
-			iter.next().remove();
-	},
-	
-	yield: function () {
-		if (this.__cache)
-			return this.__cache;
-		var obj = this._yield();
-		if (this._options["cached"])
-			this.__cache = obj;
-		return obj;
-	},
-	
-	invalidate: function () {
-		delete this["__cache"];
+	destroy: function () {
+		this._foreign_table.off(null, null, this);
+		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "destroy");
 	}
-
+	
 });
 BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasManyAssocation", {
 

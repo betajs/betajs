@@ -322,7 +322,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	},
 	
 	active_query_engine: function () {
-		if (!this.__active_query_engine) {
+		if (!this._active_query_engine) {
 			var self = this;
 			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
 			this._active_query_engine._query = function (query) {
@@ -332,7 +332,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 				this._active_query_engine.insert(object);
 			});
 			this.on("remove", function (object) {
-				this._active_query_engine.insert(remove);
+				this._active_query_engine.remove(object);
 			});
 			this.on("change", function (object) {
 				this._active_query_engine.update(object);

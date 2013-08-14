@@ -75,8 +75,8 @@ BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
 		var self = this;
 		var opts = BetaJS.Objs.clone(options || {}, 1);
 		opts.success = function () {
-			this.trigger("remove");		
-			this.__removed = true;
+			self.trigger("remove");		
+			self.__removed = true;
 			if (options && options.success)
 				options.success();
 		};

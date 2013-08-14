@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -845,7 +845,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 				self.__hide_on_leave_skip = false;
 				return;
 			}
-			if (e.target !== el && !$.contains(el, e.target))
+			if (document.contains(e.target) && e.target !== el && !$.contains(el, e.target))
 				self.hide();
 		};
 		this.__hide_on_leave_skip = true;
@@ -1680,7 +1680,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 	__keyupEvent: function (e) {
 		 var key = e.keyCode || e.which;
          if (key == 13)
-         	this.trigger("enter_key");
+         	this.trigger("enter_key", this.get("value"));
 	},
 	__leaveEvent: function () {
 		this.trigger("leave");
@@ -1854,7 +1854,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 		this.__itemData = {};
 		if ("collection" in options) {
 			this.__collection = options.collection;
-			this.__destroy_collection = false;
+			this.__destroy_collection = "destroy_collection" in options ? options.destroy_collection : false;
 			if ("compare" in options)
 				this.__collection.set_compare(options["compare"]);
 		} else {

@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -126,6 +126,10 @@ BetaJS.Strings = {
 	
 	starts_with: function (s, needle) {
 		return s.substring(0, needle.length) == needle;
+	},
+	
+	ends_with: function(s, needle) {
+    	return s.indexOf(needle, s.length - needle.length) !== -1;
 	},
 	
 	strip_start: function (s, needle) {
@@ -1410,6 +1414,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 				object.off(null, null, this);
 		});
 		this.__data.destroy();
+		this.trigger("destroy");
 		this._inherited(BetaJS.Collections.Collection, "destroy");
 	},
 	
@@ -1465,7 +1470,8 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		this.trigger("remove", object);
 		if ("off" in object)
 			object.off(null, null, this);
-		return this.__data.remove(object);
+		var result = this.__data.remove(object);
+		return result;
 	},
 	
 	getByIndex: function (index) {
@@ -1738,7 +1744,7 @@ BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
 	
 });
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2289,7 +2295,7 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		BetaJS.Objs.iter(this.__aqs, function (aq) {
 			if (this.__valid_for_aq(raw, aq)) {
 				aq._add(object);
-				aqs[BetaJS.Ids.objectId(aq)] = aq;
+				aqs[aq.cid()] = aq;
 			}
 		}, this);
 		object.on("change", function () {
@@ -2311,25 +2317,25 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 		BetaJS.Objs.iter(this.__object_to_aqs[BetaJS.Ids.objectId(object)], function (aq) {
 			if (!this.__valid_for_aq(raw, aq)) {
 				aq._remove(object);
-				delete aqs[BetaJS.Ids.objectId(aq)];
+				delete aqs[aq.cid()];
 			}
 		}, this);
 		BetaJS.Objs.iter(this.__aqs, function (aq) {
 			if (this.__valid_for_aq(raw, aq)) {
 				aq._add(object);
-				aqs[BetaJS.Ids.objectId(aq)] = aq;
+				aqs[aq.cid()] = aq;
 			}
 		}, this);
 	},
 	
 	register: function (aq) {
-		this.__aqs[BetaJS.Ids.objectId(aq)] = aq;
+		this.__aqs[aq.cid()] = aq;
 		var query = aq.query();
 		var result = this._query(query);
 		while (result.hasNext()) {
 			var object = result.next();
 			if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
-				this.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)] = aq;
+				this.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()] = aq;
 				aq._add(object);
 			} else
 				this.insert(object);
@@ -2337,10 +2343,10 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	},
 	
 	unregister: function (aq) {
-		delete this.__aqs[BetaJS.Ids.objectId(aq)];
+		delete this.__aqs[aq.cid()];
 		var self = this;
 		aq.collection().iterate(function (object) {
-			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][BetaJS.Ids.objectId(aq)];
+			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()];
 		});
 	},
 	
@@ -2349,13 +2355,19 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	
 });
 
-BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", {
+BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
+
+	BetaJS.Ids.ClientIdMixin,
+	{
 	
 	constructor: function (engine, query) {
 		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
 		this.__engine = engine;
 		this.__query = query;
 		this.__collection = new BetaJS.Collections.Collection();
+		this.__collection.on("destroy", function () {
+			this.destroy();
+		}, this);
 		engine.register(this);
 	},
 	
@@ -2395,7 +2407,7 @@ BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", {
 		this.__engine.register(this);
 	}
 	
-});
+}]);
 
 BetaJS.Stores = BetaJS.Stores || {};
 
@@ -3545,7 +3557,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3872,8 +3884,8 @@ BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
 		var self = this;
 		var opts = BetaJS.Objs.clone(options || {}, 1);
 		opts.success = function () {
-			this.trigger("remove");		
-			this.__removed = true;
+			self.trigger("remove");		
+			self.__removed = true;
 			if (options && options.success)
 				options.success();
 		};
@@ -4205,7 +4217,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	},
 	
 	active_query_engine: function () {
-		if (!this.__active_query_engine) {
+		if (!this._active_query_engine) {
 			var self = this;
 			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
 			this._active_query_engine._query = function (query) {
@@ -4215,7 +4227,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 				this._active_query_engine.insert(object);
 			});
 			this.on("remove", function (object) {
-				this._active_query_engine.insert(remove);
+				this._active_query_engine.remove(object);
 			});
 			this.on("change", function (object) {
 				this._active_query_engine.update(object);
@@ -4272,27 +4284,18 @@ BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.A
 		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "constructor", model, options);
 		this._foreign_table = foreign_table;
 		this._foreign_key = foreign_key;
+		// TODO: Active Query would be better
+		if (this._options["cached"]) 
+			this._foreign_table.on("create update remove", function () {
+				this.invalidate();
+			}, this);
 	},
 	
-	__delete_cascade: function () {
-		var iter = BetaJS.Iterators.ensure(this.yield());
-		while (iter.hasNext())
-			iter.next().remove();
-	},
-	
-	yield: function () {
-		if (this.__cache)
-			return this.__cache;
-		var obj = this._yield();
-		if (this._options["cached"])
-			this.__cache = obj;
-		return obj;
-	},
-	
-	invalidate: function () {
-		delete this["__cache"];
+	destroy: function () {
+		this._foreign_table.off(null, null, this);
+		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "destroy");
 	}
-
+	
 });
 BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasManyAssocation", {
 

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-13
+  betajs - v0.0.1 - 2013-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -121,6 +121,10 @@ BetaJS.Strings = {
 	
 	starts_with: function (s, needle) {
 		return s.substring(0, needle.length) == needle;
+	},
+	
+	ends_with: function(s, needle) {
+    	return s.indexOf(needle, s.length - needle.length) !== -1;
 	},
 	
 	strip_start: function (s, needle) {
@@ -1405,6 +1409,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 				object.off(null, null, this);
 		});
 		this.__data.destroy();
+		this.trigger("destroy");
 		this._inherited(BetaJS.Collections.Collection, "destroy");
 	},
 	
@@ -1460,7 +1465,8 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 		this.trigger("remove", object);
 		if ("off" in object)
 			object.off(null, null, this);
-		return this.__data.remove(object);
+		var result = this.__data.remove(object);
+		return result;
 	},
 	
 	getByIndex: function (index) {
