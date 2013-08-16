@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-14
+  betajs - v0.0.1 - 2013-08-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1232,12 +1232,14 @@ BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
 			start: "first", // "second"
 			strategy: "or", // "single"
 			clone: true, // false
+			clone_second: false,
 			or_on_null: true // false
 		}, options.get_options);
 		this.__query_options = BetaJS.Objs.extend({
 			start: "first", // "second"
 			strategy: "or", // "single"
 			clone: true, // false (will use "cache_query" if present and inserts otherwise)
+			clone_second: false,
 			or_on_null: true // false
 		}, options.query_options);
 	},
@@ -1386,21 +1388,23 @@ BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
 		}
 		var strategy = this.__get_options.strategy;
 		var clone = this.__get_options.clone;
+		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__get_options.or_on_null;
 		if (strategy == "or")
 			try {
 				var result = first.get(id);
 				if (result == null && or_on_null)
 					throw new {};
-				if (clone) {
+				if (clone_second) {
 					try {
 						if (second.get(id))
-							clone = false;
+							clone_second = false;
 					} catch (e) {
 					}
-					if (clone)
+					if (clone_second)
 						second.insert(result);
 				}
+				return result;
 			} catch (e) {
 				var result = second.get(id);
 				if (result != null && clone)
@@ -1429,19 +1433,20 @@ BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
 		}
 		var strategy = this.__query_options.strategy;
 		var clone = this.__query_options.clone;
+		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__query_options.or_on_null;
 		if (strategy == "or")
 			try {
 				var result = first.query(query, options);
 				if (result == null && or_on_null)
 					throw {};
-				if (clone) {
+				if (clone_second) {
 					try {
 						if (second.get(query, options))
 							clone = false;
 					} catch (e) {
 					}
-					if (clone) {
+					if (clone_second) {
 						if ("cache_query" in second)
 							second.cache_query(result)
 						else
@@ -1525,11 +1530,15 @@ BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCac
 		this.__queries[encoded] = {};
 		for (var i = 0; i < result.length; ++i) {
 			var row = result[i];
-			this.trigger("cache", row);
 			this.insert(row);
 			this.__queries[encoded][row[this.id_key()]] = row;
 		}
-	}	
+	},
+	
+	insert: function (row, callbacks) {
+		this.trigger("cache", row);
+		return this._inherited(BetaJS.Stores.QueryCachedInnerStore, "insert", row, callbacks);
+	}
 	
 });
 
@@ -1543,7 +1552,7 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStor
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
-					strategy: "or"
+					strategy: "or",
 				},
 				query_options: {
 					start: "second",

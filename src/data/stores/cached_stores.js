@@ -58,11 +58,15 @@ BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCac
 		this.__queries[encoded] = {};
 		for (var i = 0; i < result.length; ++i) {
 			var row = result[i];
-			this.trigger("cache", row);
 			this.insert(row);
 			this.__queries[encoded][row[this.id_key()]] = row;
 		}
-	}	
+	},
+	
+	insert: function (row, callbacks) {
+		this.trigger("cache", row);
+		return this._inherited(BetaJS.Stores.QueryCachedInnerStore, "insert", row, callbacks);
+	}
 	
 });
 
@@ -76,7 +80,7 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStor
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
-					strategy: "or"
+					strategy: "or",
 				},
 				query_options: {
 					start: "second",
