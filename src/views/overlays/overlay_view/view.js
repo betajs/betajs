@@ -8,7 +8,7 @@ BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
 	 * anchor: "absolute" | "element" | "relative"
      *
 	 * overlay_left
-	 * overlay_right
+	 * overlay_top
      *
 	 * overlay_align_vertical: "top" | "center" | "bottom"
 	 * overlay_align_horizontal: "left" | "center" | "right"

@@ -1,8 +1,151 @@
 /*!
-  betajs - v0.0.1 - 2013-08-15
+  betajs - v0.0.1 - 2013-08-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
+BetaJS.Net.Browser = {
+	
+	__flash: null,
+	__is_iOS: null,
+	
+	flash: function () {
+		if (!this.__flash)
+			this.__flash = new BetaJS.Net.FlashDetect();
+		return this.__flash;
+	},
+	
+	is_iOS: function () {
+		if (this.__is_iOS == null)
+			this.__is_iOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
+		return this.__is_iOS;
+	}
+	
+}
+
+
+/*
+Copyright (c) Copyright (c) 2007, Carl S. Yestrau All rights reserved.
+Code licensed under the BSD License: http://www.featureblend.com/license.txt
+Version: 1.0.4
+*/
+
+BetaJS.Net.FlashDetect = BetaJS.Class.extend("FlashDetect", {
+	
+	constructor: function () {
+		this._inherited(BetaJS.Net.FlashDetect, "constructor");
+		this.__version = null;
+        if (navigator.plugins && navigator.plugins.length > 0) {
+            var type = 'application/x-shockwave-flash';
+            var mimeTypes = navigator.mimeTypes;
+            if (mimeTypes && mimeTypes[type] && mimeTypes[type].enabledPlugin && mimeTypes[type].enabledPlugin.description)
+                this.__version = this.parseVersion(mimeTypes[type].enabledPlugin.description);
+        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript)
+            for (var i = 0; i < this.__activeXDetectRules.length; i++)
+		        try {
+		            var obj = new ActiveXObject(this.__activeXDetectRules[i].name);
+		            var version = this.__activeXDetectRules[i].version(obj);
+                    if (version) {
+                    	this.__version = this.parseActiveXVersion(version);
+                    	break;
+                    }
+		        } catch (err) { }
+	},
+	
+    parseVersion: function(str) {
+        var descParts = str.split(/ +/);
+        var majorMinor = descParts[2].split(/\./);
+        var revisionStr = descParts[3];
+        return {
+            "raw": str,
+            "major": parseInt(majorMinor[0], 10),
+            "minor": parseInt(majorMinor[1], 10), 
+            "revisionStr": revisionStr,
+            "revision": parseInt(revisionStr.replace(/[a-zA-Z]/g, ""), 10)
+        };
+    },
+	
+    parseActiveXVersion : function(str) {
+        var versionArray = str.split(",");
+        return {
+            "raw": str,
+            "major": parseInt(versionArray[0].split(" ")[1], 10),
+            "minor": parseInt(versionArray[1], 10),
+            "revision": parseInt(versionArray[2], 10),
+            "revisionStr": versionArray[2]
+        };
+    },
+	
+	version: function () {
+		return this.__version;
+	},
+	
+	installed: function () {
+		return this.__version != null;
+	},
+	
+	supported: function () {
+		return this.installed() && !BetaJS.Net.Browser.is_iOS();
+	},
+	
+    majorAtLeast : function (version) {
+        return this.installed() && this.version().major >= version;
+    },
+
+    minorAtLeast : function (version) {
+        return this.installed() && this.version().minor >= version;
+    },
+
+    revisionAtLeast : function (version) {
+        return this.installed() && this.version().revision >= version;
+    },
+
+    versionAtLeast : function (major) {
+    	if (!this.installed())
+    		return false;
+        var properties = [this.version().major, this.version().minor, this.version().revision];
+        var len = Math.min(properties.length, arguments.length);
+        for (i = 0; i < len; i++)
+            if (properties[i] != arguments[i]) 
+            	return properties[i] > arguments[i];
+        return true;
+    },
+	
+    __activeXDetectRules: [{
+        name: "ShockwaveFlash.ShockwaveFlash.7",
+        version: function(obj) {
+	        try {
+	            return obj.GetVariable("$version");
+	        } catch(err) {
+	        	return null;
+	        }
+	    }
+	}, {
+		name: "ShockwaveFlash.ShockwaveFlash.6",
+        version: function(obj) {
+            try {
+                obj.AllowScriptAccess = "always";
+		        try {
+		            return obj.GetVariable("$version");
+		        } catch(err) {
+		        	return null;
+		        }
+            } catch(err) {
+            	return "6,0,21";
+            }
+        }
+	}, {
+		name: "ShockwaveFlash.ShockwaveFlash",
+		version: function(obj) {
+	        try {
+	            return obj.GetVariable("$version");
+	        } catch(err) {
+	        	return null;
+	        }
+        }
+    }],
+
+});
+
 /*
  * Inspired by Underscore's Templating Engine
  * (which itself is inspired by John Resig's implementation)
@@ -318,7 +461,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 */
 	_setOption: function (options, key, value, prefix) {
 		var prefix = prefix ? prefix : "__";
-		this[prefix + key] = key in options ? options[key] : value;
+		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
 	/** Sets property variable (that will be passed to templates and dynamics by default) from an option array
@@ -327,7 +470,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @param value default value of option if not given
 	 */
 	_setOptionProperty: function (options, key, value) {
-		this.set(key, key in options ? options[key] : value);
+		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
 	/** Creates a new view with options
@@ -470,6 +613,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		});
 		if (this.__visible)
 			this._after_show();
+		this._notify("activate");
 		return true;
 	},
 	
@@ -479,6 +623,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	deactivate: function () {
 		if (!this.isActive())
 			return false;
+		this._notify("deactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.deactivate();
 		});
@@ -1440,6 +1585,8 @@ BetaJS.Templates.Cached['link-view-template'] = '  <a href="javascript:{}" {%= b
 
 BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}             {%= bind.css_if_not("text-area-no-resize", "resizable") %}             {%= readonly ? \'readonly\' : \'\' %}             {%= bind.css_if("text-area-horizontal-fill", "horizontal_fill") %}></textarea>  ';
 
+BetaJS.Templates.Cached['progress-template'] = '  <div class="{%= supp.css(\'outer\') %}">   <div data-selector="inner" class="{%= supp.css(\'inner\') %}" style="{%= horizontal ? \'width\': \'height\' %}:{%= value*100 %}%">    {%= label %}   </div>  </div> ';
+
 BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    class="{%= list_container_classes %}"    data-selector="list">   </{%= list_container_element %}>  ';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    class="{%= item_container_classes %}"    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
 
@@ -1823,6 +1970,29 @@ BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 		}, this);
 	}
 });
+BetaJS.Views.ProgressView = BetaJS.Views.View.extend("ProgressView", {
+	_templates: {
+		"default": BetaJS.Templates.Cached["progress-template"]
+	},
+	
+	_css: {
+		outer: "",
+		inner: ""
+	},
+	
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.ProgressView, "constructor", options);
+		this._setOptionProperty(options, "label", "");
+		this._setOptionProperty(options, "horizontal", true);
+		this._setOptionProperty(options, "value", 1);
+		this.on("change:value", function (value) {
+			if (this.isActive())
+				this.$("[data-selector='inner']").css(this.get("horizontal") ? 'width' : 'height', (value * 100) + "%");
+		}, this);
+	},
+	
+});
+
 BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 	
 	_templates: function () {
@@ -2202,7 +2372,7 @@ BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
 	 * anchor: "absolute" | "element" | "relative"
      *
 	 * overlay_left
-	 * overlay_right
+	 * overlay_top
      *
 	 * overlay_align_vertical: "top" | "center" | "bottom"
 	 * overlay_align_horizontal: "left" | "center" | "right"

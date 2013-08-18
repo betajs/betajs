@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-15
+  betajs - v0.0.1 - 2013-08-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1738,3 +1738,16 @@ BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
 	}
 	
 });
+BetaJS.Net = BetaJS.Net || {};
+
+BetaJS.Net.Uri = {
+	
+	encodeUriParams: function (arr) {
+		var res = [];
+		BetaJS.Objs.iter(arr, function (value, key) {
+			res.push(key + "=" + encodeURI(value));
+		});
+		return res.join("&");
+	}
+	
+};

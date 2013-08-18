@@ -192,7 +192,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 */
 	_setOption: function (options, key, value, prefix) {
 		var prefix = prefix ? prefix : "__";
-		this[prefix + key] = key in options ? options[key] : value;
+		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
 	/** Sets property variable (that will be passed to templates and dynamics by default) from an option array
@@ -201,7 +201,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * @param value default value of option if not given
 	 */
 	_setOptionProperty: function (options, key, value) {
-		this.set(key, key in options ? options[key] : value);
+		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
 	/** Creates a new view with options
@@ -344,6 +344,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		});
 		if (this.__visible)
 			this._after_show();
+		this._notify("activate");
 		return true;
 	},
 	
@@ -353,6 +354,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	deactivate: function () {
 		if (!this.isActive())
 			return false;
+		this._notify("deactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.deactivate();
 		});

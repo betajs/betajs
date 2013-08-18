@@ -1,9 +1,9 @@
 /*!
-  betajs - v0.0.1 - 2013-08-15
+  betajs - v0.0.1 - 2013-08-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-BetaJS.Net = {};
+BetaJS.Net = BetaJS.Net || {};
 
 
 /*

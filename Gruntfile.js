@@ -75,6 +75,7 @@ module.exports = function(grunt) {
 							'src/views/controls/link_view/template.html',
 							'src/views/controls/textarea_view/template.html',
 							'src/views/controls/textview_view/template.html',
+							'src/views/controls/progress_view/template.html',
 							
 							'src/views/lists/list_view/template.html',
 
@@ -113,6 +114,7 @@ module.exports = function(grunt) {
 					'src/base/locales.js',
 					'src/base/time.js',
 					'src/base/timers.js',
+					'src/net/uri.js',
 				]
 			},
 			dist_beta_data : {
@@ -155,6 +157,7 @@ module.exports = function(grunt) {
 			dist_beta_ui : {
 				dest : 'dist/beta-ui.js',
 				src : [
+					'src/net/browser.js',
 					'src/views/templates.js', 
 					'src/views/template.js', 
 					'src/views/views.js',
@@ -174,6 +177,7 @@ module.exports = function(grunt) {
 					'src/views/controls/input_label_view/view.js',
 					'src/views/controls/link_view/view.js',
 					'src/views/controls/textarea_view/view.js',
+					'src/views/controls/progress_view/view.js',
 					
 					'src/views/lists/list_view/view.js',
 					'src/views/lists/item_list_view/view.js',

@@ -1,3 +1,5 @@
+BetaJS.Net = BetaJS.Net || {};
+
 BetaJS.Net.HttpHeader = {
 	
 	HTTP_STATUS_OK : 200,

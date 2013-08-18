@@ -1,4 +1,4 @@
-BetaJS.Net = {};
+BetaJS.Net = BetaJS.Net || {};
 
 
 /*
