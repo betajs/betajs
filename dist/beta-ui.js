@@ -1594,7 +1594,7 @@ BetaJS.Templates.Cached['progress-template'] = '  <div class="{%= supp.css(\'out
 BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element %}    {%= supp.attrs(list_container_attrs) %}    class="{%= list_container_classes %}"    data-selector="list">   </{%= list_container_element %}>  ';
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    class="{%= item_container_classes %}"    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
 
-BetaJS.Templates.Cached['overlay-view-template'] = '  <div></div> ';
+BetaJS.Templates.Cached['overlay-view-template'] = '  <div data-selector="container"></div> ';
 
 BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 	_templates: {
@@ -2373,7 +2373,9 @@ BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
 	},
 
 	/*
-	 * anchor: "absolute" | "element" | "relative"
+	 * overlay_inner (optional) : sub view to be bound to the overlay
+	 * 
+	 * anchor: "none" | "absolute" | "element" | "relative"
      *
 	 * overlay_left
 	 * overlay_top
@@ -2404,6 +2406,10 @@ BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
 		this._setOption(options, "overlay_align_horizontal", "left");
 		this._setOption(options, "element_align_vertical", "bottom");
 		this._setOption(options, "element_align_horizontal", "left");
+		if (options.overlay_inner) {
+			options.overlay_inner.setEl('[data-selector="container"]');
+			this.overlay_inner = this.addChild(options.overlay_inner);
+		}
 	},
 	
 	_after_show: function () {	

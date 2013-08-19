@@ -5,7 +5,9 @@ BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
 	},
 
 	/*
-	 * anchor: "absolute" | "element" | "relative"
+	 * overlay_inner (optional) : sub view to be bound to the overlay
+	 * 
+	 * anchor: "none" | "absolute" | "element" | "relative"
      *
 	 * overlay_left
 	 * overlay_top
@@ -36,6 +38,10 @@ BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
 		this._setOption(options, "overlay_align_horizontal", "left");
 		this._setOption(options, "element_align_vertical", "bottom");
 		this._setOption(options, "element_align_horizontal", "left");
+		if (options.overlay_inner) {
+			options.overlay_inner.setEl('[data-selector="container"]');
+			this.overlay_inner = this.addChild(options.overlay_inner);
+		}
 	},
 	
 	_after_show: function () {	
