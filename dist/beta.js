@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-18
+  betajs - v0.0.1 - 2013-08-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-18
+  betajs - v0.0.1 - 2013-08-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-18
+  betajs - v0.0.1 - 2013-08-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1763,7 +1763,7 @@ BetaJS.Net.Uri = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-18
+  betajs - v0.0.1 - 2013-08-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3585,7 +3585,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-08-18
+  betajs - v0.0.1 - 2013-08-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4430,7 +4430,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-08-18
+  betajs - v0.0.1 - 2013-08-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4449,6 +4449,10 @@ BetaJS.Net.Browser = {
 		if (this.__is_iOS == null)
 			this.__is_iOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
 		return this.__is_iOS;
+	},
+	
+	isChrome: function () {
+		return "chrome" in window;
 	}
 	
 }

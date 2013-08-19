@@ -13,6 +13,10 @@ BetaJS.Net.Browser = {
 		if (this.__is_iOS == null)
 			this.__is_iOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
 		return this.__is_iOS;
+	},
+	
+	isChrome: function () {
+		return "chrome" in window;
 	}
 	
 }
