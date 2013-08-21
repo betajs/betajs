@@ -1,4 +1,4 @@
-BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["button-view-template"]
 	},

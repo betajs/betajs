@@ -1,6 +1,4 @@
-BetaJS.Timers = {};
-
-BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
+BetaJS.Class.extend("BetaJS.Timers.Timer", {
 	
 	/*
 	 * int delay (mandatory): number of milliseconds until it fires

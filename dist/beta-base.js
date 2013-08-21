@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -166,7 +166,34 @@ BetaJS.Scopes = {
 		for (var i = 0; i < a.length; ++i)
 			object = object[a[i]];
 		return object;
-	}
+	},
+	
+	touch: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
+		}
+		return object;
+	},
+	
+	set: function (obj, s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length - 1; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
+		}
+		object[a[a.length - 1]] = obj;
+		return obj;
+	},
 	
 };
 
@@ -200,6 +227,19 @@ BetaJS.Objs = {
 			for (var key in obj)
 				result[key] = mapped;
 			return result;
+		}
+	},
+	
+	map: function (obj, f, context) {
+		if (BetaJS.Types.is_array(obj)) {
+			var result = [];
+			for (var i = 0; i < obj.length; ++i)
+				result.push(context ? f.apply(context, obj[i], i) : f(obj[i], i));
+			return result;
+		} else {
+			var result = {};
+			for (var key in obj)
+				result[key] = context ? f.apply(context, obj[key], key) : f(obj[key], key);
 		}
 	},
 	
@@ -375,6 +415,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	result.prototype.cls = result;
 	result.classname = classname;
 	
+	// Enforce ClassName in namespace
+	if (classname)
+		BetaJS.Scopes.set(result, classname);
+	
 	// Setup Prototype
 	result.__notifications = {};
 	if (parent.__notifications)
@@ -478,7 +522,7 @@ BetaJS.Exceptions = {
 };
 
 
-BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
+BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 	
 	constructor: function (message) {
 		this._inherited(BetaJS.Exceptions.Exception, "constructor");
@@ -528,7 +572,7 @@ BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
 });
 
 
-BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Exceptions.NativeException", {
 	
 	constructor: function (object) {
 		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object.toString());
@@ -541,9 +585,7 @@ BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeEx
 	
 });
 
-BetaJS.Lists = {};
-
-BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
+BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	
 	_add: function (object) {},
 	_remove: function (ident) {},
@@ -629,7 +671,7 @@ BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
 
 });
 
-BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 	
 	constructor: function (objects) {
 		this.__first = null;
@@ -677,7 +719,7 @@ BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
 	}
 });
 
-BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 	
 	constructor: function (objects) {
 		this.__map = {};
@@ -714,7 +756,7 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 
 
 
-BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	
 	constructor: function (objects, options) {
 		this.__idToIndex = {};
@@ -833,7 +875,7 @@ BetaJS.Iterators = {
 	
 };
 
-BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
+BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
 	
 	asArray: function () {
 		var arr = [];
@@ -844,7 +886,7 @@ BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
 	
 });
 
-BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 	
 	constructor: function (arr) {
 		this._inherited(BetaJS.Iterators.ArrayIterator, "constructor");
@@ -862,7 +904,7 @@ BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator
 	
 });
 
-BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectKeysIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectKeysIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
@@ -870,7 +912,7 @@ BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("Obj
 	
 });
 
-BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectValuesIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectValuesIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
@@ -878,7 +920,7 @@ BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("O
 	
 });
 
-BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	
 	constructor: function (iterator, map) {
 		this._inherited(BetaJS.Iterators.MappedIterator, "constructor");
@@ -896,7 +938,7 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	
 });
 
-BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	
 	constructor: function (iterator, filter, context) {
 		this._inherited(BetaJS.Iterators.FilteredIterator, "constructor");
@@ -933,7 +975,7 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 });
 
 
-BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
 	
 	constructor: function (iterator, skip) {
 		this._inherited(BetaJS.Iterators.SkipIterator, "constructor");
@@ -955,7 +997,7 @@ BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator",
 });
 
 
-BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
 	
 	constructor: function (iterator, limit) {
 		this._inherited(BetaJS.Iterators.LimitIterator, "constructor");
@@ -977,7 +1019,7 @@ BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator
 });
 
 
-BetaJS.Iterators.SortedIterator = BetaJS.Iterators.Iterator.extend("SortedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
 	
 	constructor: function (iterator, compare) {
 		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");
@@ -1106,15 +1148,16 @@ BetaJS.Events.EventsMixin = {
 		var event;
 		if (!this.__events_mixin_events)
 			return;
-    	while (event = events.shift())
+    	while (event = events.shift()) {
     		if (this.__events_mixin_events && this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
     			});
-		if (this.__events_mixin_events && "all" in this.__events_mixin_events)
-			this.__events_mixin_events["all"].iterate(function (object) {
-				self.__call_event_object(object, rest);
-			});
+			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
+				this.__events_mixin_events["all"].iterate(function (object) {
+					self.__call_event_object(object, rest);
+				});
+		}
     	return this;
     },
     
@@ -1130,7 +1173,7 @@ BetaJS.Events.EventsMixin = {
 	
 };
 
-BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
+BetaJS.Class.extend("BetaJS.Events.Events", BetaJS.Events.EventsMixin);
 
 
 
@@ -1170,7 +1213,7 @@ BetaJS.Events.ListenMixin = {
 	
 }
 
-BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin);
+BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
 
 BetaJS.Properties = {};
 
@@ -1355,7 +1398,7 @@ BetaJS.Properties.PropertiesMixin = {
 	
 };
 
-BetaJS.Properties.Properties = BetaJS.Class.extend("Properties", [
+BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	BetaJS.Events.EventsMixin,
 	BetaJS.Properties.PropertiesMixin, {
 	
@@ -1367,10 +1410,7 @@ BetaJS.Properties.Properties = BetaJS.Class.extend("Properties", [
 	
 }]);
 
-BetaJS.Collections = {};
-
-
-BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
+BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.EventsMixin, {
 		
@@ -1496,7 +1536,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 
 
 
-BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("FilteredCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 	
 	constructor: function (parent, options) {
 		this.__parent = parent;
@@ -1593,8 +1633,16 @@ BetaJS.Tokens = {
 }
 BetaJS.Locales = {
 	
-	get: function (s) {
-		return s;
+	__data: {},
+	
+	get: function (key) {
+		return key in this.__data ? this.__data[key] : key;
+	},
+	
+	register: function (strings, prefix) {
+		prefix = prefix ? prefix + "." : "";
+		for (var key in strings)
+			this.__data[prefix + key] = strings[key];
 	}
 	
 };
@@ -1662,9 +1710,7 @@ BetaJS.Time = {
 	
 };
 
-BetaJS.Timers = {};
-
-BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
+BetaJS.Class.extend("BetaJS.Timers.Timer", {
 	
 	/*
 	 * int delay (mandatory): number of milliseconds until it fires

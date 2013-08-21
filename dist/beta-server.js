@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -176,7 +176,34 @@ BetaJS.Scopes = {
 		for (var i = 0; i < a.length; ++i)
 			object = object[a[i]];
 		return object;
-	}
+	},
+	
+	touch: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
+		}
+		return object;
+	},
+	
+	set: function (obj, s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length - 1; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
+		}
+		object[a[a.length - 1]] = obj;
+		return obj;
+	},
 	
 };
 
@@ -210,6 +237,19 @@ BetaJS.Objs = {
 			for (var key in obj)
 				result[key] = mapped;
 			return result;
+		}
+	},
+	
+	map: function (obj, f, context) {
+		if (BetaJS.Types.is_array(obj)) {
+			var result = [];
+			for (var i = 0; i < obj.length; ++i)
+				result.push(context ? f.apply(context, obj[i], i) : f(obj[i], i));
+			return result;
+		} else {
+			var result = {};
+			for (var key in obj)
+				result[key] = context ? f.apply(context, obj[key], key) : f(obj[key], key);
 		}
 	},
 	
@@ -385,6 +425,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	result.prototype.cls = result;
 	result.classname = classname;
 	
+	// Enforce ClassName in namespace
+	if (classname)
+		BetaJS.Scopes.set(result, classname);
+	
 	// Setup Prototype
 	result.__notifications = {};
 	if (parent.__notifications)
@@ -488,7 +532,7 @@ BetaJS.Exceptions = {
 };
 
 
-BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
+BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 	
 	constructor: function (message) {
 		this._inherited(BetaJS.Exceptions.Exception, "constructor");
@@ -538,7 +582,7 @@ BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
 });
 
 
-BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Exceptions.NativeException", {
 	
 	constructor: function (object) {
 		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object.toString());
@@ -551,9 +595,7 @@ BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeEx
 	
 });
 
-BetaJS.Lists = {};
-
-BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
+BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	
 	_add: function (object) {},
 	_remove: function (ident) {},
@@ -639,7 +681,7 @@ BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
 
 });
 
-BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 	
 	constructor: function (objects) {
 		this.__first = null;
@@ -687,7 +729,7 @@ BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
 	}
 });
 
-BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 	
 	constructor: function (objects) {
 		this.__map = {};
@@ -724,7 +766,7 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 
 
 
-BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	
 	constructor: function (objects, options) {
 		this.__idToIndex = {};
@@ -843,7 +885,7 @@ BetaJS.Iterators = {
 	
 };
 
-BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
+BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
 	
 	asArray: function () {
 		var arr = [];
@@ -854,7 +896,7 @@ BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
 	
 });
 
-BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 	
 	constructor: function (arr) {
 		this._inherited(BetaJS.Iterators.ArrayIterator, "constructor");
@@ -872,7 +914,7 @@ BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator
 	
 });
 
-BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectKeysIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectKeysIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
@@ -880,7 +922,7 @@ BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("Obj
 	
 });
 
-BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectValuesIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectValuesIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
@@ -888,7 +930,7 @@ BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("O
 	
 });
 
-BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	
 	constructor: function (iterator, map) {
 		this._inherited(BetaJS.Iterators.MappedIterator, "constructor");
@@ -906,7 +948,7 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	
 });
 
-BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	
 	constructor: function (iterator, filter, context) {
 		this._inherited(BetaJS.Iterators.FilteredIterator, "constructor");
@@ -943,7 +985,7 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 });
 
 
-BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
 	
 	constructor: function (iterator, skip) {
 		this._inherited(BetaJS.Iterators.SkipIterator, "constructor");
@@ -965,7 +1007,7 @@ BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator",
 });
 
 
-BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
 	
 	constructor: function (iterator, limit) {
 		this._inherited(BetaJS.Iterators.LimitIterator, "constructor");
@@ -987,7 +1029,7 @@ BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator
 });
 
 
-BetaJS.Iterators.SortedIterator = BetaJS.Iterators.Iterator.extend("SortedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
 	
 	constructor: function (iterator, compare) {
 		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");
@@ -1116,15 +1158,16 @@ BetaJS.Events.EventsMixin = {
 		var event;
 		if (!this.__events_mixin_events)
 			return;
-    	while (event = events.shift())
+    	while (event = events.shift()) {
     		if (this.__events_mixin_events && this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
     			});
-		if (this.__events_mixin_events && "all" in this.__events_mixin_events)
-			this.__events_mixin_events["all"].iterate(function (object) {
-				self.__call_event_object(object, rest);
-			});
+			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
+				this.__events_mixin_events["all"].iterate(function (object) {
+					self.__call_event_object(object, rest);
+				});
+		}
     	return this;
     },
     
@@ -1140,7 +1183,7 @@ BetaJS.Events.EventsMixin = {
 	
 };
 
-BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
+BetaJS.Class.extend("BetaJS.Events.Events", BetaJS.Events.EventsMixin);
 
 
 
@@ -1180,7 +1223,7 @@ BetaJS.Events.ListenMixin = {
 	
 }
 
-BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin);
+BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
 
 BetaJS.Properties = {};
 
@@ -1365,7 +1408,7 @@ BetaJS.Properties.PropertiesMixin = {
 	
 };
 
-BetaJS.Properties.Properties = BetaJS.Class.extend("Properties", [
+BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	BetaJS.Events.EventsMixin,
 	BetaJS.Properties.PropertiesMixin, {
 	
@@ -1377,10 +1420,7 @@ BetaJS.Properties.Properties = BetaJS.Class.extend("Properties", [
 	
 }]);
 
-BetaJS.Collections = {};
-
-
-BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
+BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.EventsMixin, {
 		
@@ -1506,7 +1546,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 
 
 
-BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("FilteredCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 	
 	constructor: function (parent, options) {
 		this.__parent = parent;
@@ -1603,8 +1643,16 @@ BetaJS.Tokens = {
 }
 BetaJS.Locales = {
 	
-	get: function (s) {
-		return s;
+	__data: {},
+	
+	get: function (key) {
+		return key in this.__data ? this.__data[key] : key;
+	},
+	
+	register: function (strings, prefix) {
+		prefix = prefix ? prefix + "." : "";
+		for (var key in strings)
+			this.__data[prefix + key] = strings[key];
 	}
 	
 };
@@ -1672,9 +1720,7 @@ BetaJS.Time = {
 	
 };
 
-BetaJS.Timers = {};
-
-BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
+BetaJS.Class.extend("BetaJS.Timers.Timer", {
 	
 	/*
 	 * int delay (mandatory): number of milliseconds until it fires
@@ -1763,13 +1809,10 @@ BetaJS.Net.Uri = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-BetaJS.Net = BetaJS.Net || {};
-
-
 /*
  * <ul>
  *  <li>uri: target uri</li>
@@ -1781,7 +1824,7 @@ BetaJS.Net = BetaJS.Net || {};
  * </ul>
  * 
  */
-BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
+BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
@@ -1869,7 +1912,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 });
 
 
-BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 	
 	constructor: function (status_code, status_text, data) {
 		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
@@ -1893,7 +1936,7 @@ BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
 });
 
 
-BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
+BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 	
 	_syncCall: function (options) {
 		var result;
@@ -1901,8 +1944,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				result = response;
 			},
@@ -1918,8 +1961,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				options.success(response);
 			},
@@ -1941,7 +1984,7 @@ BetaJS.Queries = {
 	 * query :== {pair, ...}
 	 * pair :== string: value | $or : queries | $and: queries
 	 * value :== simple | {condition, ...}  
-	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple
+	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple | $gtic: simple | $ltic: simple | $swic: simple
 	 *
 	 */
 	
@@ -2001,10 +2044,16 @@ BetaJS.Queries = {
 					result = result && BetaJS.Objs.contains_value(tar, object_value);
 				if (op == "$gt")
 					result = result && object_value >= tar;
+				if (op == "$gtic")
+					result = result && object_value.toLowerCase() >= tar.toLowerCase();
 				if (op == "$lt")
 					result = result && object_value <= tar;
+				if (op == "$ltic")
+					result = result && object_value.toLowerCase() <= tar.toLowerCase();
 				if (op == "$sw")
 					result = result && object_value.indexOf(tar) == 0;
+				if (op == "$swic")
+					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) == 0;
 			}, this);
 			return result;
 		}
@@ -2180,7 +2229,7 @@ BetaJS.Queries.Constrained = {
 
 }; 
 
-BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("QueryCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);
@@ -2293,7 +2342,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 	}
 	
 });
-BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
+BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	
 	constructor: function () {
 		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
@@ -2374,7 +2423,7 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	
 });
 
-BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
+BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
 
 	BetaJS.Ids.ClientIdMixin,
 	{
@@ -2428,14 +2477,11 @@ BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
 	
 }]);
 
-BetaJS.Stores = BetaJS.Stores || {};
-
-
-BetaJS.Stores.StoreException = BetaJS.Exceptions.Exception.extend("StoreException");
+BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
 
 /** @class */
-BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
+BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
@@ -2668,7 +2714,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 
 }]);
 
-BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
@@ -2713,7 +2759,7 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
 
 });
 
-BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
+BetaJS.Stores.AssocStore.extend("BetaJS.Stores.MemoryStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.MemoryStore, "constructor", options);
@@ -2738,7 +2784,7 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 	
 });
 
-BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 	
 	_read_last_id: function () {},
 	_write_last_id: function (id) {},
@@ -2866,7 +2912,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	
 });
 
-BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", {
+BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
@@ -2939,7 +2985,7 @@ BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", 
 	
 });
 
-BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
+BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
@@ -2965,7 +3011,7 @@ BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
 	
 });
 
-BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 	
 	constructor: function (first, second, options) {
 		options = BetaJS.Objs.extend({
@@ -3234,9 +3280,9 @@ BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
 
 });
 
-BetaJS.Stores.StoreCacheException = BetaJS.Stores.StoreException.extend("StoreCacheException");
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.StoreCacheException");
 
-BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor",
@@ -3264,7 +3310,7 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStor
 });
 
 
-BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCachedInnerStore", {
+BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedInnerStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.QueryCachedInnerStore, "constructor", options);
@@ -3307,7 +3353,7 @@ BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCac
 });
 
 
-BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
@@ -3335,7 +3381,7 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStor
 		return this.first();
 	}
 });
-BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("RemoteStoreException", {
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
 		source = BetaJS.Net.AjaxException.ensure(source);
@@ -3349,7 +3395,7 @@ BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("Remote
 	
 });
 
-BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
@@ -3482,7 +3528,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 
-BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
+BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 
 	constructor : function(uri, ajax, capability_params, options) {
 		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
@@ -3511,7 +3557,7 @@ BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("Quer
 	}
 
 });
-BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	constructor: function (store, options) {
 		options = options || {};
@@ -3585,7 +3631,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3623,9 +3669,7 @@ BetaJS.Net.HttpHeader = {
 	}
 	
 }
-BetaJS.Modelling = BetaJS.Modelling || {};
-
-BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("SchemedProperties", {
+BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.SchemedProperties, "constructor");
@@ -3790,7 +3834,7 @@ BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("Scheme
 
 
 
-BetaJS.Modelling.AssociatedProperties = BetaJS.Modelling.SchemedProperties.extend("AssociatedProperties", {
+BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.AssociatedProperties, "constructor", attributes, options);
@@ -3837,7 +3881,7 @@ BetaJS.Modelling.AssociatedProperties = BetaJS.Modelling.SchemedProperties.exten
 	},
 
 });
-BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Classes.AutoDestroyMixin,
 	{
@@ -3923,7 +3967,7 @@ BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
 	},
 	
 }]);
-BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
 	
 	constructor: function (model, message) {
 		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
@@ -3937,7 +3981,7 @@ BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelExcep
 });
 
 
-BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend("ModelInvalidException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException", {
 	
 	constructor: function (model) {
 		var message = BetaJS.Objs.values(model.errors()).join("\n");
@@ -3947,7 +3991,7 @@ BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend(
 });
 
 
-BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.extend("ModelMissingIdException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException", {
 	
 	constructor: function (model) {
 		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
@@ -3957,7 +4001,7 @@ BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.exten
 
 
 
-BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
+BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{
 
@@ -4267,9 +4311,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	}
 	
 }]);
-BetaJS.Modelling.Associations = {};
-
-BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
+BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
 
 	constructor: function (model, options) {
 		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");
@@ -4308,7 +4350,7 @@ BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
 	}
 
 });
-BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.Association.extend("TableAssociation", {
+BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.TableAssociation", {
 
 	constructor: function (model, foreign_table, foreign_key, options) {
 		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "constructor", model, options);
@@ -4327,7 +4369,7 @@ BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.A
 	}
 	
 });
-BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasManyAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasManyAssociation", {
 
 	_yield: function () {
 		var query = {};
@@ -4363,7 +4405,7 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 	},
 
 });
-BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.Associations.HasManyAssociation.extend("HasManyThroughArrayAssociation", {
+BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associations.HasManyThroughArrayAssociation", {
 
 	_yield: function () {
 		var result = [];
@@ -4384,7 +4426,7 @@ BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.
 	},
 
 });
-BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasOneAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasOneAssociation", {
 
 	_yield: function (id) {
 		var query = {};
@@ -4401,23 +4443,21 @@ BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.
 	},
 
 });
-BetaJS.Modelling.Associations.BelongsToAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("BelongsToAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
 	
 	_yield: function () {
 		return this._foreign_table.findById(this._model.get(this._foreign_key));
 	},
 	
 });
-BetaJS.Modelling.Validators = {};
-
-BetaJS.Modelling.Validators.Validator = BetaJS.Class.extend("Validator", {
+BetaJS.Class.extend("BetaJS.Modelling.Validators.Validator", {
 	
 	validate: function (value, context) {
 		return null;
 	}
 
 });
-BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Validator.extend("PresentValidator", {
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.PresentValidator", {
 	
 	constructor: function (error_string) {
 		this._inherited(BetaJS.Modelling.Validators.PresentValidator, "constructor");
@@ -4463,9 +4503,7 @@ BetaJS.Net.HttpHeader = {
 	}
 	
 }
-BetaJS.Databases = {};
-
-BetaJS.Databases.Database = BetaJS.Class.extend("Database", {
+BetaJS.Class.extend("BetaJS.Databases.Database", {
 	
 	_tableClass: function () {
 		return null;
@@ -4478,7 +4516,7 @@ BetaJS.Databases.Database = BetaJS.Class.extend("Database", {
 	
 });
 
-BetaJS.Databases.DatabaseTable = BetaJS.Class.extend("DatabaseTable", {
+BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.DatabaseTable, "constructor");
@@ -4548,7 +4586,7 @@ BetaJS.Databases.DatabaseTable = BetaJS.Class.extend("DatabaseTable", {
 });
 /* Needs to be executed within Fiber; requires Mongo-Sync. */
 
-BetaJS.Databases.MongoDatabase = BetaJS.Databases.Database.extend("MongoDatabase", {
+BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	constructor: function (mongo_sync, database_name, server, port) {
 		this._inherited(BetaJS.Databases.MongoDatabase, "constructor");
@@ -4582,7 +4620,7 @@ BetaJS.Databases.MongoDatabase = BetaJS.Databases.Database.extend("MongoDatabase
 	}
 	
 });
-BetaJS.Databases.MongoDatabaseTable = BetaJS.Databases.DatabaseTable.extend("MongoDatabaseTable", {
+BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.MongoDatabaseTable, "constructor", database, table_name);
@@ -4646,7 +4684,7 @@ BetaJS.Databases.MongoDatabaseTable = BetaJS.Databases.DatabaseTable.extend("Mon
 
 });
 
-BetaJS.Stores.DatabaseStore = BetaJS.Stores.BaseStore.extend("DatabaseStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Stores.DatabaseStore, "constructor");
@@ -4692,7 +4730,7 @@ BetaJS.Stores.DatabaseStore = BetaJS.Stores.BaseStore.extend("DatabaseStore", {
 
 });
 
-BetaJS.Stores.MongoDatabaseStore = BetaJS.Stores.ConversionStore.extend("MongoDatabaseStore", {
+BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 	
 	constructor: function (database, table_name, types) {
 		var store = new BetaJS.Stores.DatabaseStore(database, table_name);

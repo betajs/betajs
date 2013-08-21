@@ -1,4 +1,4 @@
-BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
 	
 	constructor: function (model, message) {
 		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
@@ -12,7 +12,7 @@ BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelExcep
 });
 
 
-BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend("ModelInvalidException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException", {
 	
 	constructor: function (model) {
 		var message = BetaJS.Objs.values(model.errors()).join("\n");
@@ -22,7 +22,7 @@ BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend(
 });
 
 
-BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.extend("ModelMissingIdException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException", {
 	
 	constructor: function (model) {
 		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
@@ -32,7 +32,7 @@ BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.exten
 
 
 
-BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
+BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{
 

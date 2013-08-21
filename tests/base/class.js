@@ -1,5 +1,5 @@
 test("test object inheritance", function() {
-	var A = BetaJS.Class.extend("A", {
+	var A = BetaJS.Class.extend(null, {
 		test: function (x) {
 			return x + "a";
 		},
@@ -7,14 +7,14 @@ test("test object inheritance", function() {
 			return "z";
 		}
 	});
-	var B = A.extend("B");
-	var C = B.extend("C", {
+	var B = A.extend(null);
+	var C = B.extend(null, {
 		test: function (x) {
 			return x + "c" + this._inherited(C, "test", "c");
 		},
 	});
-	var D = C.extend("D");
-	var E = D.extend("E", {
+	var D = C.extend(null);
+	var E = D.extend(null, {
 		test: function (x) {
 			return x + "e" + this._inherited(E, "test", "e");
 		},
@@ -26,7 +26,7 @@ test("test object inheritance", function() {
 
 
 test("test constructor & destructor", function() {
-	var A = BetaJS.Class.extend("A", {
+	var A = BetaJS.Class.extend(null, {
 		_notifications: {
 			"construct": "__z"
 		},
@@ -42,7 +42,7 @@ test("test constructor & destructor", function() {
 			this._inherited(A, "destroy");
 		}
 	});
-	var B = A.extend("B", {
+	var B = A.extend(null, {
 		constructor: function (x, y) {
 			this._inherited(B, "constructor", x);
 			this.y = y;
@@ -60,7 +60,7 @@ test("test constructor & destructor", function() {
 
 
 test("test notifications", function() {
-	var A = BetaJS.Class.extend("A", {
+	var A = BetaJS.Class.extend(null, {
 		_notifications: {
 			"test": "test_a"
 		},
@@ -68,7 +68,7 @@ test("test notifications", function() {
 			this.x = b-a;
 		}
 	});
-	var B = A.extend("B", {
+	var B = A.extend(null, {
 		_notifications: {
 			"test": "test_b"
 		},
@@ -85,7 +85,7 @@ test("test notifications", function() {
 });
 
 test("test static inheritance", function() {
-	var A = BetaJS.Class.extend("A", {}, {
+	var A = BetaJS.Class.extend(null, {}, {
 		test: function (x) {
 			return x + "a";
 		},
@@ -93,14 +93,14 @@ test("test static inheritance", function() {
 			return "z";
 		}
 	});
-	var B = A.extend("B");
-	var C = B.extend("C", {}, {
+	var B = A.extend(null);
+	var C = B.extend(null, {}, {
 		test: function (x) {
 			return x + "c" + this._inherited(C, "test", "c");
 		},
 	});
-	var D = C.extend("D");
-	var E = D.extend("E", {}, {
+	var D = C.extend(null);
+	var E = D.extend(null, {}, {
 		test: function (x) {
 			return x + "e" + this._inherited(E, "test", "e");
 		},
@@ -109,19 +109,19 @@ test("test static inheritance", function() {
 });
 
 test("test static variables", function() {
-	var A = BetaJS.Class.extend("A", {}, {
+	var A = BetaJS.Class.extend(null, {}, {
 		obj: {x: 1}
 	});
-	var B = A.extend("B");
+	var B = A.extend(null);
 	A.obj.x = 5;
 	ok(B.obj.x == 5);
 });
 
 test("test class static variables", function() {
-	var A = BetaJS.Class.extend("A", {}, {}, {
+	var A = BetaJS.Class.extend(null, {}, {}, {
 		obj: {x: 1}
 	});
-	var B = A.extend("B");
+	var B = A.extend(null);
 	A.obj.x = 5;
 	ok(B.obj.x == 1);
 });

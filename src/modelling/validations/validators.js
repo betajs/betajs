@@ -1,6 +1,4 @@
-BetaJS.Modelling.Validators = {};
-
-BetaJS.Modelling.Validators.Validator = BetaJS.Class.extend("Validator", {
+BetaJS.Class.extend("BetaJS.Modelling.Validators.Validator", {
 	
 	validate: function (value, context) {
 		return null;

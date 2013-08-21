@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -37,9 +37,7 @@ BetaJS.Net.HttpHeader = {
 	}
 	
 }
-BetaJS.Modelling = BetaJS.Modelling || {};
-
-BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("SchemedProperties", {
+BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.SchemedProperties, "constructor");
@@ -204,7 +202,7 @@ BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("Scheme
 
 
 
-BetaJS.Modelling.AssociatedProperties = BetaJS.Modelling.SchemedProperties.extend("AssociatedProperties", {
+BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.AssociatedProperties, "constructor", attributes, options);
@@ -251,7 +249,7 @@ BetaJS.Modelling.AssociatedProperties = BetaJS.Modelling.SchemedProperties.exten
 	},
 
 });
-BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Classes.AutoDestroyMixin,
 	{
@@ -337,7 +335,7 @@ BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
 	},
 	
 }]);
-BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
 	
 	constructor: function (model, message) {
 		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
@@ -351,7 +349,7 @@ BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelExcep
 });
 
 
-BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend("ModelInvalidException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException", {
 	
 	constructor: function (model) {
 		var message = BetaJS.Objs.values(model.errors()).join("\n");
@@ -361,7 +359,7 @@ BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend(
 });
 
 
-BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.extend("ModelMissingIdException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException", {
 	
 	constructor: function (model) {
 		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
@@ -371,7 +369,7 @@ BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.exten
 
 
 
-BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
+BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{
 
@@ -681,9 +679,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	}
 	
 }]);
-BetaJS.Modelling.Associations = {};
-
-BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
+BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
 
 	constructor: function (model, options) {
 		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");
@@ -722,7 +718,7 @@ BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
 	}
 
 });
-BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.Association.extend("TableAssociation", {
+BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.TableAssociation", {
 
 	constructor: function (model, foreign_table, foreign_key, options) {
 		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "constructor", model, options);
@@ -741,7 +737,7 @@ BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.A
 	}
 	
 });
-BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasManyAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasManyAssociation", {
 
 	_yield: function () {
 		var query = {};
@@ -777,7 +773,7 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 	},
 
 });
-BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.Associations.HasManyAssociation.extend("HasManyThroughArrayAssociation", {
+BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associations.HasManyThroughArrayAssociation", {
 
 	_yield: function () {
 		var result = [];
@@ -798,7 +794,7 @@ BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.
 	},
 
 });
-BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasOneAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasOneAssociation", {
 
 	_yield: function (id) {
 		var query = {};
@@ -815,23 +811,21 @@ BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.
 	},
 
 });
-BetaJS.Modelling.Associations.BelongsToAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("BelongsToAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
 	
 	_yield: function () {
 		return this._foreign_table.findById(this._model.get(this._foreign_key));
 	},
 	
 });
-BetaJS.Modelling.Validators = {};
-
-BetaJS.Modelling.Validators.Validator = BetaJS.Class.extend("Validator", {
+BetaJS.Class.extend("BetaJS.Modelling.Validators.Validator", {
 	
 	validate: function (value, context) {
 		return null;
 	}
 
 });
-BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Validator.extend("PresentValidator", {
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.PresentValidator", {
 	
 	constructor: function (error_string) {
 		this._inherited(BetaJS.Modelling.Validators.PresentValidator, "constructor");

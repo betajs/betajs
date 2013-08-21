@@ -1,11 +1,8 @@
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-BetaJS.Net = BetaJS.Net || {};
-
-
 /*
  * <ul>
  *  <li>uri: target uri</li>
@@ -17,7 +14,7 @@ BetaJS.Net = BetaJS.Net || {};
  * </ul>
  * 
  */
-BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
+BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
@@ -105,7 +102,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 });
 
 
-BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 	
 	constructor: function (status_code, status_text, data) {
 		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
@@ -129,7 +126,7 @@ BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
 });
 
 
-BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
+BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 	
 	_syncCall: function (options) {
 		var result;
@@ -137,8 +134,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				result = response;
 			},
@@ -154,8 +151,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				options.success(response);
 			},
@@ -177,7 +174,7 @@ BetaJS.Queries = {
 	 * query :== {pair, ...}
 	 * pair :== string: value | $or : queries | $and: queries
 	 * value :== simple | {condition, ...}  
-	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple
+	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple | $gtic: simple | $ltic: simple | $swic: simple
 	 *
 	 */
 	
@@ -237,10 +234,16 @@ BetaJS.Queries = {
 					result = result && BetaJS.Objs.contains_value(tar, object_value);
 				if (op == "$gt")
 					result = result && object_value >= tar;
+				if (op == "$gtic")
+					result = result && object_value.toLowerCase() >= tar.toLowerCase();
 				if (op == "$lt")
 					result = result && object_value <= tar;
+				if (op == "$ltic")
+					result = result && object_value.toLowerCase() <= tar.toLowerCase();
 				if (op == "$sw")
 					result = result && object_value.indexOf(tar) == 0;
+				if (op == "$swic")
+					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) == 0;
 			}, this);
 			return result;
 		}
@@ -416,7 +419,7 @@ BetaJS.Queries.Constrained = {
 
 }; 
 
-BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("QueryCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);
@@ -529,7 +532,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 	}
 	
 });
-BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
+BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	
 	constructor: function () {
 		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
@@ -610,7 +613,7 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	
 });
 
-BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
+BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
 
 	BetaJS.Ids.ClientIdMixin,
 	{
@@ -664,14 +667,11 @@ BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
 	
 }]);
 
-BetaJS.Stores = BetaJS.Stores || {};
-
-
-BetaJS.Stores.StoreException = BetaJS.Exceptions.Exception.extend("StoreException");
+BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
 
 /** @class */
-BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
+BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
@@ -904,7 +904,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 
 }]);
 
-BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
@@ -949,7 +949,7 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
 
 });
 
-BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
+BetaJS.Stores.AssocStore.extend("BetaJS.Stores.MemoryStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.MemoryStore, "constructor", options);
@@ -974,7 +974,7 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 	
 });
 
-BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 	
 	_read_last_id: function () {},
 	_write_last_id: function (id) {},
@@ -1102,7 +1102,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	
 });
 
-BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", {
+BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
@@ -1175,7 +1175,7 @@ BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", 
 	
 });
 
-BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
+BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
@@ -1201,7 +1201,7 @@ BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
 	
 });
 
-BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 	
 	constructor: function (first, second, options) {
 		options = BetaJS.Objs.extend({
@@ -1470,9 +1470,9 @@ BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
 
 });
 
-BetaJS.Stores.StoreCacheException = BetaJS.Stores.StoreException.extend("StoreCacheException");
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.StoreCacheException");
 
-BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor",
@@ -1500,7 +1500,7 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStor
 });
 
 
-BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCachedInnerStore", {
+BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedInnerStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.QueryCachedInnerStore, "constructor", options);
@@ -1543,7 +1543,7 @@ BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCac
 });
 
 
-BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
@@ -1571,7 +1571,7 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStor
 		return this.first();
 	}
 });
-BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("RemoteStoreException", {
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
 		source = BetaJS.Net.AjaxException.ensure(source);
@@ -1585,7 +1585,7 @@ BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("Remote
 	
 });
 
-BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
@@ -1718,7 +1718,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 
-BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
+BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 
 	constructor : function(uri, ajax, capability_params, options) {
 		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
@@ -1747,7 +1747,7 @@ BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("Quer
 	}
 
 });
-BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	constructor: function (store, options) {
 		options = options || {};

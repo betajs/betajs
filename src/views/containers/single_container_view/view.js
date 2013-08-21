@@ -1,4 +1,4 @@
-BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.SingleContainerView", {
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.SingleContainerView, "constructor", options);
 		this.__view = null;

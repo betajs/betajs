@@ -44,19 +44,19 @@
 					el: "body"
 				});
 				main.addChildren([input, button, list, button_remove, button_reverse, button_reload]);
-				button.on("clicked", function () {
+				button.on("click", function () {
 					list.add(new BetaJS.Properties.Properties({"text": input.get("value")}));
 					input.set("value", "");
 				});
-				button_remove.on("clicked", function () {
+				button_remove.on("click", function () {
 					list.collection().remove(list.collection().getByIndex(0));
 				});
-				button_reverse.on("clicked", function () {
+				button_reverse.on("click", function () {
 					list.collection().iterate(function (item) {
 						item.set("text", item.get("text").split("").reverse().join(""));
 					});
 				});
-				button_reload.on("clicked", function () {
+				button_reload.on("click", function () {
 					list.invalidate();
 				});
 				main.activate();

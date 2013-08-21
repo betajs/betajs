@@ -1,6 +1,4 @@
-BetaJS.Modelling = BetaJS.Modelling || {};
-
-BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("SchemedProperties", {
+BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.SchemedProperties, "constructor");
@@ -165,7 +163,7 @@ BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("Scheme
 
 
 
-BetaJS.Modelling.AssociatedProperties = BetaJS.Modelling.SchemedProperties.extend("AssociatedProperties", {
+BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.AssociatedProperties, "constructor", attributes, options);

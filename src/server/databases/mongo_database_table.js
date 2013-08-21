@@ -1,4 +1,4 @@
-BetaJS.Databases.MongoDatabaseTable = BetaJS.Databases.DatabaseTable.extend("MongoDatabaseTable", {
+BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.MongoDatabaseTable, "constructor", database, table_name);

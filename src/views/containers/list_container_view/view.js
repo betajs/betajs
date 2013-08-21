@@ -1,4 +1,4 @@
-BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	
 	_templates: {
 		"item": BetaJS.Templates.Cached["list-container-view-item-template"]

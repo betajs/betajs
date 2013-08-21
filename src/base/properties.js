@@ -181,7 +181,7 @@ BetaJS.Properties.PropertiesMixin = {
 	
 };
 
-BetaJS.Properties.Properties = BetaJS.Class.extend("Properties", [
+BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	BetaJS.Events.EventsMixin,
 	BetaJS.Properties.PropertiesMixin, {
 	

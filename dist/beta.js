@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -176,7 +176,34 @@ BetaJS.Scopes = {
 		for (var i = 0; i < a.length; ++i)
 			object = object[a[i]];
 		return object;
-	}
+	},
+	
+	touch: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
+		}
+		return object;
+	},
+	
+	set: function (obj, s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var object = base || window || global;
+		var a = s.split(".");
+		for (var i = 0; i < a.length - 1; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
+		}
+		object[a[a.length - 1]] = obj;
+		return obj;
+	},
 	
 };
 
@@ -210,6 +237,19 @@ BetaJS.Objs = {
 			for (var key in obj)
 				result[key] = mapped;
 			return result;
+		}
+	},
+	
+	map: function (obj, f, context) {
+		if (BetaJS.Types.is_array(obj)) {
+			var result = [];
+			for (var i = 0; i < obj.length; ++i)
+				result.push(context ? f.apply(context, obj[i], i) : f(obj[i], i));
+			return result;
+		} else {
+			var result = {};
+			for (var key in obj)
+				result[key] = context ? f.apply(context, obj[key], key) : f(obj[key], key);
 		}
 	},
 	
@@ -385,6 +425,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	result.prototype.cls = result;
 	result.classname = classname;
 	
+	// Enforce ClassName in namespace
+	if (classname)
+		BetaJS.Scopes.set(result, classname);
+	
 	// Setup Prototype
 	result.__notifications = {};
 	if (parent.__notifications)
@@ -488,7 +532,7 @@ BetaJS.Exceptions = {
 };
 
 
-BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
+BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 	
 	constructor: function (message) {
 		this._inherited(BetaJS.Exceptions.Exception, "constructor");
@@ -538,7 +582,7 @@ BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
 });
 
 
-BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Exceptions.NativeException", {
 	
 	constructor: function (object) {
 		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object.toString());
@@ -551,9 +595,7 @@ BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeEx
 	
 });
 
-BetaJS.Lists = {};
-
-BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
+BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	
 	_add: function (object) {},
 	_remove: function (ident) {},
@@ -639,7 +681,7 @@ BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
 
 });
 
-BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 	
 	constructor: function (objects) {
 		this.__first = null;
@@ -687,7 +729,7 @@ BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
 	}
 });
 
-BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 	
 	constructor: function (objects) {
 		this.__map = {};
@@ -724,7 +766,7 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 
 
 
-BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	
 	constructor: function (objects, options) {
 		this.__idToIndex = {};
@@ -843,7 +885,7 @@ BetaJS.Iterators = {
 	
 };
 
-BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
+BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
 	
 	asArray: function () {
 		var arr = [];
@@ -854,7 +896,7 @@ BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
 	
 });
 
-BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 	
 	constructor: function (arr) {
 		this._inherited(BetaJS.Iterators.ArrayIterator, "constructor");
@@ -872,7 +914,7 @@ BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator
 	
 });
 
-BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectKeysIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectKeysIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
@@ -880,7 +922,7 @@ BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("Obj
 	
 });
 
-BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectValuesIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectValuesIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
@@ -888,7 +930,7 @@ BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("O
 	
 });
 
-BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	
 	constructor: function (iterator, map) {
 		this._inherited(BetaJS.Iterators.MappedIterator, "constructor");
@@ -906,7 +948,7 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	
 });
 
-BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	
 	constructor: function (iterator, filter, context) {
 		this._inherited(BetaJS.Iterators.FilteredIterator, "constructor");
@@ -943,7 +985,7 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 });
 
 
-BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
 	
 	constructor: function (iterator, skip) {
 		this._inherited(BetaJS.Iterators.SkipIterator, "constructor");
@@ -965,7 +1007,7 @@ BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator",
 });
 
 
-BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
 	
 	constructor: function (iterator, limit) {
 		this._inherited(BetaJS.Iterators.LimitIterator, "constructor");
@@ -987,7 +1029,7 @@ BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator
 });
 
 
-BetaJS.Iterators.SortedIterator = BetaJS.Iterators.Iterator.extend("SortedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
 	
 	constructor: function (iterator, compare) {
 		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");
@@ -1116,15 +1158,16 @@ BetaJS.Events.EventsMixin = {
 		var event;
 		if (!this.__events_mixin_events)
 			return;
-    	while (event = events.shift())
+    	while (event = events.shift()) {
     		if (this.__events_mixin_events && this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
     			});
-		if (this.__events_mixin_events && "all" in this.__events_mixin_events)
-			this.__events_mixin_events["all"].iterate(function (object) {
-				self.__call_event_object(object, rest);
-			});
+			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
+				this.__events_mixin_events["all"].iterate(function (object) {
+					self.__call_event_object(object, rest);
+				});
+		}
     	return this;
     },
     
@@ -1140,7 +1183,7 @@ BetaJS.Events.EventsMixin = {
 	
 };
 
-BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
+BetaJS.Class.extend("BetaJS.Events.Events", BetaJS.Events.EventsMixin);
 
 
 
@@ -1180,7 +1223,7 @@ BetaJS.Events.ListenMixin = {
 	
 }
 
-BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin);
+BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
 
 BetaJS.Properties = {};
 
@@ -1365,7 +1408,7 @@ BetaJS.Properties.PropertiesMixin = {
 	
 };
 
-BetaJS.Properties.Properties = BetaJS.Class.extend("Properties", [
+BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	BetaJS.Events.EventsMixin,
 	BetaJS.Properties.PropertiesMixin, {
 	
@@ -1377,10 +1420,7 @@ BetaJS.Properties.Properties = BetaJS.Class.extend("Properties", [
 	
 }]);
 
-BetaJS.Collections = {};
-
-
-BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
+BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.EventsMixin, {
 		
@@ -1506,7 +1546,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 
 
 
-BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("FilteredCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 	
 	constructor: function (parent, options) {
 		this.__parent = parent;
@@ -1603,8 +1643,16 @@ BetaJS.Tokens = {
 }
 BetaJS.Locales = {
 	
-	get: function (s) {
-		return s;
+	__data: {},
+	
+	get: function (key) {
+		return key in this.__data ? this.__data[key] : key;
+	},
+	
+	register: function (strings, prefix) {
+		prefix = prefix ? prefix + "." : "";
+		for (var key in strings)
+			this.__data[prefix + key] = strings[key];
 	}
 	
 };
@@ -1672,9 +1720,7 @@ BetaJS.Time = {
 	
 };
 
-BetaJS.Timers = {};
-
-BetaJS.Timers.Timer = BetaJS.Class.extend("Timer", {
+BetaJS.Class.extend("BetaJS.Timers.Timer", {
 	
 	/*
 	 * int delay (mandatory): number of milliseconds until it fires
@@ -1763,13 +1809,10 @@ BetaJS.Net.Uri = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-BetaJS.Net = BetaJS.Net || {};
-
-
 /*
  * <ul>
  *  <li>uri: target uri</li>
@@ -1781,7 +1824,7 @@ BetaJS.Net = BetaJS.Net || {};
  * </ul>
  * 
  */
-BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
+BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
@@ -1869,7 +1912,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 });
 
 
-BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 	
 	constructor: function (status_code, status_text, data) {
 		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
@@ -1893,7 +1936,7 @@ BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
 });
 
 
-BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
+BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 	
 	_syncCall: function (options) {
 		var result;
@@ -1901,8 +1944,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				result = response;
 			},
@@ -1918,8 +1961,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				options.success(response);
 			},
@@ -1941,7 +1984,7 @@ BetaJS.Queries = {
 	 * query :== {pair, ...}
 	 * pair :== string: value | $or : queries | $and: queries
 	 * value :== simple | {condition, ...}  
-	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple
+	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple | $gtic: simple | $ltic: simple | $swic: simple
 	 *
 	 */
 	
@@ -2001,10 +2044,16 @@ BetaJS.Queries = {
 					result = result && BetaJS.Objs.contains_value(tar, object_value);
 				if (op == "$gt")
 					result = result && object_value >= tar;
+				if (op == "$gtic")
+					result = result && object_value.toLowerCase() >= tar.toLowerCase();
 				if (op == "$lt")
 					result = result && object_value <= tar;
+				if (op == "$ltic")
+					result = result && object_value.toLowerCase() <= tar.toLowerCase();
 				if (op == "$sw")
 					result = result && object_value.indexOf(tar) == 0;
+				if (op == "$swic")
+					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) == 0;
 			}, this);
 			return result;
 		}
@@ -2180,7 +2229,7 @@ BetaJS.Queries.Constrained = {
 
 }; 
 
-BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("QueryCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);
@@ -2293,7 +2342,7 @@ BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("Query
 	}
 	
 });
-BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
+BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	
 	constructor: function () {
 		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
@@ -2374,7 +2423,7 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	
 });
 
-BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
+BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
 
 	BetaJS.Ids.ClientIdMixin,
 	{
@@ -2428,14 +2477,11 @@ BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
 	
 }]);
 
-BetaJS.Stores = BetaJS.Stores || {};
-
-
-BetaJS.Stores.StoreException = BetaJS.Exceptions.Exception.extend("StoreException");
+BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
 
 /** @class */
-BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
+BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
@@ -2668,7 +2714,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
 
 }]);
 
-BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
@@ -2713,7 +2759,7 @@ BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
 
 });
 
-BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
+BetaJS.Stores.AssocStore.extend("BetaJS.Stores.MemoryStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.MemoryStore, "constructor", options);
@@ -2738,7 +2784,7 @@ BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
 	
 });
 
-BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 	
 	_read_last_id: function () {},
 	_write_last_id: function (id) {},
@@ -2866,7 +2912,7 @@ BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
 	
 });
 
-BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", {
+BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},
@@ -2939,7 +2985,7 @@ BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", 
 	
 });
 
-BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
+BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.LocalStore, "constructor", options);
@@ -2965,7 +3011,7 @@ BetaJS.Stores.LocalStore = BetaJS.Stores.AssocDumbStore.extend("LocalStore", {
 	
 });
 
-BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 	
 	constructor: function (first, second, options) {
 		options = BetaJS.Objs.extend({
@@ -3234,9 +3280,9 @@ BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
 
 });
 
-BetaJS.Stores.StoreCacheException = BetaJS.Stores.StoreException.extend("StoreCacheException");
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.StoreCacheException");
 
-BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor",
@@ -3264,7 +3310,7 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStor
 });
 
 
-BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCachedInnerStore", {
+BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedInnerStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.QueryCachedInnerStore, "constructor", options);
@@ -3307,7 +3353,7 @@ BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCac
 });
 
 
-BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
@@ -3335,7 +3381,7 @@ BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStor
 		return this.first();
 	}
 });
-BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("RemoteStoreException", {
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
 		source = BetaJS.Net.AjaxException.ensure(source);
@@ -3349,7 +3395,7 @@ BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("Remote
 	
 });
 
-BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
@@ -3482,7 +3528,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 
-BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
+BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 
 	constructor : function(uri, ajax, capability_params, options) {
 		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
@@ -3511,7 +3557,7 @@ BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("Quer
 	}
 
 });
-BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	constructor: function (store, options) {
 		options = options || {};
@@ -3585,7 +3631,7 @@ BetaJS.Stores.ConversionStore = BetaJS.Stores.BaseStore.extend("ConversionStore"
 });
 
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3623,9 +3669,7 @@ BetaJS.Net.HttpHeader = {
 	}
 	
 }
-BetaJS.Modelling = BetaJS.Modelling || {};
-
-BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("SchemedProperties", {
+BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.SchemedProperties, "constructor");
@@ -3790,7 +3834,7 @@ BetaJS.Modelling.SchemedProperties = BetaJS.Properties.Properties.extend("Scheme
 
 
 
-BetaJS.Modelling.AssociatedProperties = BetaJS.Modelling.SchemedProperties.extend("AssociatedProperties", {
+BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.AssociatedProperties, "constructor", attributes, options);
@@ -3837,7 +3881,7 @@ BetaJS.Modelling.AssociatedProperties = BetaJS.Modelling.SchemedProperties.exten
 	},
 
 });
-BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Classes.AutoDestroyMixin,
 	{
@@ -3923,7 +3967,7 @@ BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
 	},
 	
 }]);
-BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
 	
 	constructor: function (model, message) {
 		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
@@ -3937,7 +3981,7 @@ BetaJS.Modelling.ModelException = BetaJS.Exceptions.Exception.extend("ModelExcep
 });
 
 
-BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend("ModelInvalidException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException", {
 	
 	constructor: function (model) {
 		var message = BetaJS.Objs.values(model.errors()).join("\n");
@@ -3947,7 +3991,7 @@ BetaJS.Modelling.ModelInvalidException = BetaJS.Modelling.ModelException.extend(
 });
 
 
-BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.extend("ModelMissingIdException", {
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException", {
 	
 	constructor: function (model) {
 		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
@@ -3957,7 +4001,7 @@ BetaJS.Modelling.ModelMissingIdException = BetaJS.Modelling.ModelException.exten
 
 
 
-BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
+BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{
 
@@ -4267,9 +4311,7 @@ BetaJS.Modelling.Table = BetaJS.Class.extend("Table", [
 	}
 	
 }]);
-BetaJS.Modelling.Associations = {};
-
-BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
+BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
 
 	constructor: function (model, options) {
 		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");
@@ -4308,7 +4350,7 @@ BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
 	}
 
 });
-BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.Association.extend("TableAssociation", {
+BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.TableAssociation", {
 
 	constructor: function (model, foreign_table, foreign_key, options) {
 		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "constructor", model, options);
@@ -4327,7 +4369,7 @@ BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.A
 	}
 	
 });
-BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasManyAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasManyAssociation", {
 
 	_yield: function () {
 		var query = {};
@@ -4363,7 +4405,7 @@ BetaJS.Modelling.Associations.HasManyAssociation = BetaJS.Modelling.Associations
 	},
 
 });
-BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.Associations.HasManyAssociation.extend("HasManyThroughArrayAssociation", {
+BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associations.HasManyThroughArrayAssociation", {
 
 	_yield: function () {
 		var result = [];
@@ -4384,7 +4426,7 @@ BetaJS.Modelling.Associations.HasManyThroughArrayAssociation = BetaJS.Modelling.
 	},
 
 });
-BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("HasOneAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasOneAssociation", {
 
 	_yield: function (id) {
 		var query = {};
@@ -4401,23 +4443,21 @@ BetaJS.Modelling.Associations.HasOneAssociation = BetaJS.Modelling.Associations.
 	},
 
 });
-BetaJS.Modelling.Associations.BelongsToAssociation = BetaJS.Modelling.Associations.TableAssociation.extend("BelongsToAssocation", {
+BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
 	
 	_yield: function () {
 		return this._foreign_table.findById(this._model.get(this._foreign_key));
 	},
 	
 });
-BetaJS.Modelling.Validators = {};
-
-BetaJS.Modelling.Validators.Validator = BetaJS.Class.extend("Validator", {
+BetaJS.Class.extend("BetaJS.Modelling.Validators.Validator", {
 	
 	validate: function (value, context) {
 		return null;
 	}
 
 });
-BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Validator.extend("PresentValidator", {
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.PresentValidator", {
 	
 	constructor: function (error_string) {
 		this._inherited(BetaJS.Modelling.Validators.PresentValidator, "constructor");
@@ -4430,7 +4470,7 @@ BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Valid
 
 });
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4464,7 +4504,7 @@ Code licensed under the BSD License: http://www.featureblend.com/license.txt
 Version: 1.0.4
 */
 
-BetaJS.Net.FlashDetect = BetaJS.Class.extend("FlashDetect", {
+BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	
 	constructor: function () {
 		this._inherited(BetaJS.Net.FlashDetect, "constructor");
@@ -4680,10 +4720,7 @@ BetaJS.Templates.TOKEN_CODE = 2;
 BetaJS.Templates.TOKEN_EXPR = 3;
 BetaJS.Templates.TOKEN_ESC = 4;
 
-BetaJS.Templates = BetaJS.Templates || {};
-
-
-BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
+BetaJS.Class.extend("BetaJS.Templates.Template", {
 	
 	constructor: function (template_string) {
 		this._inherited(BetaJS.Templates.Template, "constructor");
@@ -4702,12 +4739,10 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 	}
 	
 });
-BetaJS.Views = BetaJS.Views || {};
-
 BetaJS.$ = jQuery || null;
 
 /** @class */
-BetaJS.Views.View = BetaJS.Class.extend("View", [
+BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
@@ -4795,8 +4830,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * 
 	 */
 	_render: function () {
-		if (this.__render_string)
-			this.$el.html(this.__render_string)
+		if (this.__html)
+			this.$el.html(this.__html)
 		else if (this.__templates["default"])
 			this.$el.html(this.evaluateTemplate("default", {}));
 		else if (this.__dynamics["default"])
@@ -4912,7 +4947,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * <ul>
 	 *  <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li> 
 	 *  <li>visible: (default true) should the view be visible initially</li>
-	 *  <li>render_string: (default null) string that should be used as default rendering</li>
+	 *  <li>html: (default null) string that should be used as default rendering</li>
 	 *  <li>events: (default []) events that should be used additionally</li>
 	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
 	 *  <li>el_classes: (default []) css classes that should be attached to container</li>
@@ -4927,6 +4962,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>hide_on_leave: (default: false) hide view if focus leaves</li>
 	 *  <li>invalidate_on_show: (default: false) invalidate view on show</li>
 	 *  <li>append_to_el: (default: false) append to el instead of replacing content</li>
+	 *  <li>vertical_center: (default: false) top:50% + margin-correction</li>
+	 *  <li>horizontal_center: (default: false) left:50% + margin-correction</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -4935,10 +4972,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._inherited(BetaJS.Views.View, "constructor");
 		this._setOption(options, "el", null);
 		this._setOption(options, "visible", true);
-		this._setOption(options, "render_string", null);
+		this._setOption(options, "html", null);
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
 		this._setOption(options, "hide_on_leave", false);
+		this._setOption(options, "vertical_center", false);
+		this._setOption(options, "horizontal_center", false);
 		this._setOption(options, "invalidate_on_show", false);
 		this._setOption(options, "append_to_el", false);
 		this.__old_attributes = {};
@@ -5048,6 +5087,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		});
 		if (this.__visible)
 			this._after_show();
+		if (this.__vertical_center)
+			this.$el.css("margin-top", Math.round(-this.$el.height() / 2) + "px");
+		if (this.__horizontal_center)
+			this.$el.css("margin-left", Math.round(-this.$el.width() / 2) + "px");
 		this._notify("activate");
 		return true;
 	},
@@ -5445,7 +5488,7 @@ BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
 
 
-BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
+BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
 	
 	constructor: function (parent, template_string) {
 		this._inherited(BetaJS.Views.DynamicTemplate, "constructor");
@@ -5497,7 +5540,7 @@ BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 	
 });
 
-BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInstance", [
+BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.ListenMixin, {
 		
@@ -5661,11 +5704,8 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 	
 }]);
 
-BetaJS.Routers = BetaJS.Routers || {};
-
-
 /** @class */
-BetaJS.Routers.Router = BetaJS.Class.extend("Router", [
+BetaJS.Class.extend("BetaJS.Routers.Router", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Routers.Router.prototype */
 	{
@@ -5885,7 +5925,7 @@ BetaJS.Routers.Router = BetaJS.Class.extend("Router", [
 }]);
 
 
-BetaJS.Routers.RouterHistory = BetaJS.Class.extend("RouterHistory", [
+BetaJS.Class.extend("BetaJS.Routers.RouterHistory", [
 	BetaJS.Events.EventsMixin,
 	{
 	
@@ -5944,7 +5984,7 @@ BetaJS.Routers.RouterHistory = BetaJS.Class.extend("RouterHistory", [
 }]);
 
 
-BetaJS.Routers.RouteBinder = BetaJS.Class.extend("RouteBinder", {
+BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 
 	constructor: function (router) {
 		this._inherited(BetaJS.Routers.RouteBinder, "constructor");
@@ -5973,7 +6013,7 @@ BetaJS.Routers.RouteBinder = BetaJS.Class.extend("RouteBinder", {
 });
 
 
-BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBinder", [
+BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
 	BetaJS.Ids.ClientIdMixin,
 	{
 	
@@ -6027,7 +6067,7 @@ BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_con
 
 BetaJS.Templates.Cached['overlay-view-template'] = '  <div data-selector="container"></div> ';
 
-BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
+BetaJS.Views.View.extend("BetaJS.Views.HolygrailView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["holygrail-view-template"]
 	},
@@ -6070,7 +6110,7 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 		return view;
 	},
 });
-BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	
 	_templates: {
 		"item": BetaJS.Templates.Cached["list-container-view-item-template"]
@@ -6154,7 +6194,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	
 	
 });
-BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.SingleContainerView", {
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.SingleContainerView, "constructor", options);
 		this.__view = null;
@@ -6170,7 +6210,7 @@ BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView
 		}
 	},
 });
-BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.SwitchContainerView", {
 	
 	_templates: {
 		"item": BetaJS.Templates.Cached["switch-container-view-item-template"]
@@ -6220,7 +6260,7 @@ BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView
 	}
 	
 });
-BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["button-view-template"]
 	},
@@ -6238,7 +6278,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this.trigger("click");
 	},
 });
-BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
+BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
 	},
@@ -6277,7 +6317,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 			this.$("input").select();
 	}
 });
-BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
+BetaJS.Views.View.extend("BetaJS.Views.CheckBoxView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["check-box-view-template"]
 	},
@@ -6298,7 +6338,7 @@ BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
 		this.trigger("check", this.get("checked"));
 	}
 });
-BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
+BetaJS.Views.View.extend("BetaJS.Views.LabelView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["label-view-template"]
 	},
@@ -6319,7 +6359,7 @@ BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 		this.trigger("click");
 	}
 });
-BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInputView", {
+BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputLabelView, "constructor", options);
@@ -6369,7 +6409,7 @@ BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInpu
 	}
 
 });
-BetaJS.Views.LinkView = BetaJS.Views.View.extend("LinkView", {
+BetaJS.Views.View.extend("BetaJS.Views.LinkView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["link-view-template"]
 	},
@@ -6386,7 +6426,7 @@ BetaJS.Views.LinkView = BetaJS.Views.View.extend("LinkView", {
 		this.trigger("click");
 	}
 });
-BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
+BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["text-area-template"]
 	},
@@ -6405,7 +6445,7 @@ BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 		}, this);
 	}
 });
-BetaJS.Views.ProgressView = BetaJS.Views.View.extend("ProgressView", {
+BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["progress-template"]
 	},
@@ -6428,7 +6468,7 @@ BetaJS.Views.ProgressView = BetaJS.Views.View.extend("ProgressView", {
 	
 });
 
-BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
+BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_templates: function () {
 		return {
@@ -6588,6 +6628,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			}
 		}
 		var element = this._findItemElement(item);
+		if (this.__itemData[BetaJS.Ids.objectId(item)])
+			this._destroyItemData(this.__itemData[BetaJS.Ids.objectId(item)]);
 		this.__itemData[BetaJS.Ids.objectId(item)] = this._newItemData(item);
 		this._addItem(item, element, is_new_item);
 		this._addElement(element, is_new_item);
@@ -6641,7 +6683,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 
 
 
-BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
@@ -6677,7 +6719,7 @@ BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
 });
 
 
-BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.SubViewListView, "constructor", options);
@@ -6711,12 +6753,12 @@ BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListVi
 	},
 	
 });
-BetaJS.Views.ItemListItemView = BetaJS.Views.View.extend("ItemListItemView", {
+BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ItemListItemView, "constructor", options);
 		this._setOptionProperty(options, "item", null);
-		this._setOptionProperty(options, "_selected");
+		this._setOptionProperty(options, "_selected", false);
 	},
 	
 	_events: function () {
@@ -6744,12 +6786,35 @@ BetaJS.Views.ItemListItemView = BetaJS.Views.View.extend("ItemListItemView", {
 
 });
 
-BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.ItemListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ItemListView, "constructor", options);
 		this._setOption(options, "sub_view", BetaJS.Views.ItemListItemView);
-		this._setOption(options, "sub_view_options", this._sub_view_options || {});
+		if (this._sub_view_options) {
+			if (!BetaJS.Types.is_function(this._sub_view_options)) {
+				var svo = this._sub_view_options;
+				this._sub_view_options = function (item) {
+					return svo;
+				};
+			}
+		};
+		if (options.sub_view_options) {
+			if (!BetaJS.Types.is_function(options.sub_view_options)) {
+				var svo = options.sub_view_options;
+				options.sub_view_options = function (item) {
+					return svo;
+				};
+			}
+			this.__sub_view_options = options.sub_view_options;
+			var self = this;
+			if (this._sub_view_options)
+				this.__sub_view_options = function (item) {
+					return BetaJS.Objs.extend(self._sub_view_options(item), options.sub_view_options(item));
+				};
+		}
+		else
+			this.__sub_view_options = this._sub_view_options;
 		this._setOption(options, "selectable", true);
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", true);
@@ -6759,7 +6824,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 		var view = new this.__sub_view(BetaJS.Objs.extend({
 			el: element,
 			item: item
-		}, this.__sub_view_options));
+		}, this.__sub_view_options(item)));
 		this.itemData(item).view = view;
 		this.addChild(view);
 	},
@@ -6797,7 +6862,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 	}
 	
 });
-BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
+BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 	
 	_templates: {
 		"default": BetaJS.Templates.Cached["overlay-view-template"]

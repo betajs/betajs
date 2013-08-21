@@ -1,4 +1,4 @@
-BetaJS.Databases.DatabaseTable = BetaJS.Class.extend("DatabaseTable", {
+BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.DatabaseTable, "constructor");

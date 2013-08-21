@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -33,7 +33,7 @@ Code licensed under the BSD License: http://www.featureblend.com/license.txt
 Version: 1.0.4
 */
 
-BetaJS.Net.FlashDetect = BetaJS.Class.extend("FlashDetect", {
+BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	
 	constructor: function () {
 		this._inherited(BetaJS.Net.FlashDetect, "constructor");
@@ -249,10 +249,7 @@ BetaJS.Templates.TOKEN_CODE = 2;
 BetaJS.Templates.TOKEN_EXPR = 3;
 BetaJS.Templates.TOKEN_ESC = 4;
 
-BetaJS.Templates = BetaJS.Templates || {};
-
-
-BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
+BetaJS.Class.extend("BetaJS.Templates.Template", {
 	
 	constructor: function (template_string) {
 		this._inherited(BetaJS.Templates.Template, "constructor");
@@ -271,12 +268,10 @@ BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
 	}
 	
 });
-BetaJS.Views = BetaJS.Views || {};
-
 BetaJS.$ = jQuery || null;
 
 /** @class */
-BetaJS.Views.View = BetaJS.Class.extend("View", [
+BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
@@ -364,8 +359,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * 
 	 */
 	_render: function () {
-		if (this.__render_string)
-			this.$el.html(this.__render_string)
+		if (this.__html)
+			this.$el.html(this.__html)
 		else if (this.__templates["default"])
 			this.$el.html(this.evaluateTemplate("default", {}));
 		else if (this.__dynamics["default"])
@@ -481,7 +476,7 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 * <ul>
 	 *  <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li> 
 	 *  <li>visible: (default true) should the view be visible initially</li>
-	 *  <li>render_string: (default null) string that should be used as default rendering</li>
+	 *  <li>html: (default null) string that should be used as default rendering</li>
 	 *  <li>events: (default []) events that should be used additionally</li>
 	 *  <li>attributes: (default {}) attributes that should be attached to container</li>
 	 *  <li>el_classes: (default []) css classes that should be attached to container</li>
@@ -496,6 +491,8 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 	 *  <li>hide_on_leave: (default: false) hide view if focus leaves</li>
 	 *  <li>invalidate_on_show: (default: false) invalidate view on show</li>
 	 *  <li>append_to_el: (default: false) append to el instead of replacing content</li>
+	 *  <li>vertical_center: (default: false) top:50% + margin-correction</li>
+	 *  <li>horizontal_center: (default: false) left:50% + margin-correction</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -504,10 +501,12 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		this._inherited(BetaJS.Views.View, "constructor");
 		this._setOption(options, "el", null);
 		this._setOption(options, "visible", true);
-		this._setOption(options, "render_string", null);
+		this._setOption(options, "html", null);
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
 		this._setOption(options, "hide_on_leave", false);
+		this._setOption(options, "vertical_center", false);
+		this._setOption(options, "horizontal_center", false);
 		this._setOption(options, "invalidate_on_show", false);
 		this._setOption(options, "append_to_el", false);
 		this.__old_attributes = {};
@@ -617,6 +616,10 @@ BetaJS.Views.View = BetaJS.Class.extend("View", [
 		});
 		if (this.__visible)
 			this._after_show();
+		if (this.__vertical_center)
+			this.$el.css("margin-top", Math.round(-this.$el.height() / 2) + "px");
+		if (this.__horizontal_center)
+			this.$el.css("margin-left", Math.round(-this.$el.width() / 2) + "px");
 		this._notify("activate");
 		return true;
 	},
@@ -1014,7 +1017,7 @@ BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
 
 
-BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
+BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
 	
 	constructor: function (parent, template_string) {
 		this._inherited(BetaJS.Views.DynamicTemplate, "constructor");
@@ -1066,7 +1069,7 @@ BetaJS.Views.DynamicTemplate = BetaJS.Class.extend("DynamicTemplate", {
 	
 });
 
-BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInstance", [
+BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.ListenMixin, {
 		
@@ -1230,11 +1233,8 @@ BetaJS.Views.DynamicTemplateInstance = BetaJS.Class.extend("DynamicTemplateInsta
 	
 }]);
 
-BetaJS.Routers = BetaJS.Routers || {};
-
-
 /** @class */
-BetaJS.Routers.Router = BetaJS.Class.extend("Router", [
+BetaJS.Class.extend("BetaJS.Routers.Router", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Routers.Router.prototype */
 	{
@@ -1454,7 +1454,7 @@ BetaJS.Routers.Router = BetaJS.Class.extend("Router", [
 }]);
 
 
-BetaJS.Routers.RouterHistory = BetaJS.Class.extend("RouterHistory", [
+BetaJS.Class.extend("BetaJS.Routers.RouterHistory", [
 	BetaJS.Events.EventsMixin,
 	{
 	
@@ -1513,7 +1513,7 @@ BetaJS.Routers.RouterHistory = BetaJS.Class.extend("RouterHistory", [
 }]);
 
 
-BetaJS.Routers.RouteBinder = BetaJS.Class.extend("RouteBinder", {
+BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 
 	constructor: function (router) {
 		this._inherited(BetaJS.Routers.RouteBinder, "constructor");
@@ -1542,7 +1542,7 @@ BetaJS.Routers.RouteBinder = BetaJS.Class.extend("RouteBinder", {
 });
 
 
-BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBinder", [
+BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
 	BetaJS.Ids.ClientIdMixin,
 	{
 	
@@ -1596,7 +1596,7 @@ BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_con
 
 BetaJS.Templates.Cached['overlay-view-template'] = '  <div data-selector="container"></div> ';
 
-BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
+BetaJS.Views.View.extend("BetaJS.Views.HolygrailView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["holygrail-view-template"]
 	},
@@ -1639,7 +1639,7 @@ BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
 		return view;
 	},
 });
-BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	
 	_templates: {
 		"item": BetaJS.Templates.Cached["list-container-view-item-template"]
@@ -1723,7 +1723,7 @@ BetaJS.Views.ListContainerView = BetaJS.Views.View.extend("ListContainerView", {
 	
 	
 });
-BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.SingleContainerView", {
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.SingleContainerView, "constructor", options);
 		this.__view = null;
@@ -1739,7 +1739,7 @@ BetaJS.Views.SingleContainerView = BetaJS.Views.View.extend("SingleContainerView
 		}
 	},
 });
-BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.SwitchContainerView", {
 	
 	_templates: {
 		"item": BetaJS.Templates.Cached["switch-container-view-item-template"]
@@ -1789,7 +1789,7 @@ BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView
 	}
 	
 });
-BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
+BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["button-view-template"]
 	},
@@ -1807,7 +1807,7 @@ BetaJS.Views.ButtonView = BetaJS.Views.View.extend("ButtonView", {
 		this.trigger("click");
 	},
 });
-BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
+BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
 	},
@@ -1846,7 +1846,7 @@ BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
 			this.$("input").select();
 	}
 });
-BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
+BetaJS.Views.View.extend("BetaJS.Views.CheckBoxView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["check-box-view-template"]
 	},
@@ -1867,7 +1867,7 @@ BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
 		this.trigger("check", this.get("checked"));
 	}
 });
-BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
+BetaJS.Views.View.extend("BetaJS.Views.LabelView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["label-view-template"]
 	},
@@ -1888,7 +1888,7 @@ BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
 		this.trigger("click");
 	}
 });
-BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInputView", {
+BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputLabelView, "constructor", options);
@@ -1938,7 +1938,7 @@ BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInpu
 	}
 
 });
-BetaJS.Views.LinkView = BetaJS.Views.View.extend("LinkView", {
+BetaJS.Views.View.extend("BetaJS.Views.LinkView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["link-view-template"]
 	},
@@ -1955,7 +1955,7 @@ BetaJS.Views.LinkView = BetaJS.Views.View.extend("LinkView", {
 		this.trigger("click");
 	}
 });
-BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
+BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["text-area-template"]
 	},
@@ -1974,7 +1974,7 @@ BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
 		}, this);
 	}
 });
-BetaJS.Views.ProgressView = BetaJS.Views.View.extend("ProgressView", {
+BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["progress-template"]
 	},
@@ -1997,7 +1997,7 @@ BetaJS.Views.ProgressView = BetaJS.Views.View.extend("ProgressView", {
 	
 });
 
-BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
+BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_templates: function () {
 		return {
@@ -2157,6 +2157,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			}
 		}
 		var element = this._findItemElement(item);
+		if (this.__itemData[BetaJS.Ids.objectId(item)])
+			this._destroyItemData(this.__itemData[BetaJS.Ids.objectId(item)]);
 		this.__itemData[BetaJS.Ids.objectId(item)] = this._newItemData(item);
 		this._addItem(item, element, is_new_item);
 		this._addElement(element, is_new_item);
@@ -2210,7 +2212,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 
 
 
-BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
@@ -2246,7 +2248,7 @@ BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
 });
 
 
-BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.SubViewListView, "constructor", options);
@@ -2280,12 +2282,12 @@ BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListVi
 	},
 	
 });
-BetaJS.Views.ItemListItemView = BetaJS.Views.View.extend("ItemListItemView", {
+BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ItemListItemView, "constructor", options);
 		this._setOptionProperty(options, "item", null);
-		this._setOptionProperty(options, "_selected");
+		this._setOptionProperty(options, "_selected", false);
 	},
 	
 	_events: function () {
@@ -2313,12 +2315,35 @@ BetaJS.Views.ItemListItemView = BetaJS.Views.View.extend("ItemListItemView", {
 
 });
 
-BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.ItemListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ItemListView, "constructor", options);
 		this._setOption(options, "sub_view", BetaJS.Views.ItemListItemView);
-		this._setOption(options, "sub_view_options", this._sub_view_options || {});
+		if (this._sub_view_options) {
+			if (!BetaJS.Types.is_function(this._sub_view_options)) {
+				var svo = this._sub_view_options;
+				this._sub_view_options = function (item) {
+					return svo;
+				};
+			}
+		};
+		if (options.sub_view_options) {
+			if (!BetaJS.Types.is_function(options.sub_view_options)) {
+				var svo = options.sub_view_options;
+				options.sub_view_options = function (item) {
+					return svo;
+				};
+			}
+			this.__sub_view_options = options.sub_view_options;
+			var self = this;
+			if (this._sub_view_options)
+				this.__sub_view_options = function (item) {
+					return BetaJS.Objs.extend(self._sub_view_options(item), options.sub_view_options(item));
+				};
+		}
+		else
+			this.__sub_view_options = this._sub_view_options;
 		this._setOption(options, "selectable", true);
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", true);
@@ -2328,7 +2353,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 		var view = new this.__sub_view(BetaJS.Objs.extend({
 			el: element,
 			item: item
-		}, this.__sub_view_options));
+		}, this.__sub_view_options(item)));
 		this.itemData(item).view = view;
 		this.addChild(view);
 	},
@@ -2366,7 +2391,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 	}
 	
 });
-BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
+BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 	
 	_templates: {
 		"default": BetaJS.Templates.Cached["overlay-view-template"]

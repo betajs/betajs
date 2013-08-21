@@ -1,4 +1,4 @@
-BetaJS.Views.TextAreaView = BetaJS.Views.View.extend("TextAreaView", {
+BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["text-area-template"]
 	},

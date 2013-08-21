@@ -1,4 +1,4 @@
-BetaJS.Stores.MongoDatabaseStore = BetaJS.Stores.ConversionStore.extend("MongoDatabaseStore", {
+BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 	
 	constructor: function (database, table_name, types) {
 		var store = new BetaJS.Stores.DatabaseStore(database, table_name);

@@ -1,4 +1,4 @@
-BetaJS.Modelling.Associations.TableAssociation = BetaJS.Modelling.Associations.Association.extend("TableAssociation", {
+BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.TableAssociation", {
 
 	constructor: function (model, foreign_table, foreign_key, options) {
 		this._inherited(BetaJS.Modelling.Associations.TableAssociation, "constructor", model, options);

@@ -1,11 +1,9 @@
 /*!
-  betajs - v0.0.1 - 2013-08-19
+  betajs - v0.0.1 - 2013-08-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-BetaJS.Profiling = {};
-
-BetaJS.Profiling.Profiler = BetaJS.Class.extend("Profiler", [
+BetaJS.Class.extend("BetaJS.Profiling.Profiler", [
     BetaJS.Events.EventsMixin, {
 	
 	constructor: function (cls) {
@@ -103,7 +101,7 @@ BetaJS.Profiling.Profiler = BetaJS.Class.extend("Profiler", [
 }]);
 
 
-BetaJS.Profiling.ProfilerHtmlViewer = BetaJS.Class.extend("ProfilerHtmlViewer", {
+BetaJS.Class.extend("BetaJS.Profiling.ProfilerHtmlViewer", {
                                                                                        
     constructor: function (profiler) {
     	this._inherited(BetaJS.Profiling.ProfilerHtmlViewer, "constructor");

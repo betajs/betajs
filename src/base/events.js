@@ -108,15 +108,16 @@ BetaJS.Events.EventsMixin = {
 		var event;
 		if (!this.__events_mixin_events)
 			return;
-    	while (event = events.shift())
+    	while (event = events.shift()) {
     		if (this.__events_mixin_events && this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
     			});
-		if (this.__events_mixin_events && "all" in this.__events_mixin_events)
-			this.__events_mixin_events["all"].iterate(function (object) {
-				self.__call_event_object(object, rest);
-			});
+			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
+				this.__events_mixin_events["all"].iterate(function (object) {
+					self.__call_event_object(object, rest);
+				});
+		}
     	return this;
     },
     
@@ -132,7 +133,7 @@ BetaJS.Events.EventsMixin = {
 	
 };
 
-BetaJS.Events.Events = BetaJS.Class.extend("Events", BetaJS.Events.EventsMixin);
+BetaJS.Class.extend("BetaJS.Events.Events", BetaJS.Events.EventsMixin);
 
 
 
@@ -172,4 +173,4 @@ BetaJS.Events.ListenMixin = {
 	
 }
 
-BetaJS.Events.Listen = BetaJS.Class.extend("Listen", BetaJS.Events.ListenMixin);
+BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);

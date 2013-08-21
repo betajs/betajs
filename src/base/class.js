@@ -64,6 +64,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	result.prototype.cls = result;
 	result.classname = classname;
 	
+	// Enforce ClassName in namespace
+	if (classname)
+		BetaJS.Scopes.set(result, classname);
+	
 	// Setup Prototype
 	result.__notifications = {};
 	if (parent.__notifications)

@@ -9,7 +9,7 @@ BetaJS.Exceptions = {
 };
 
 
-BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
+BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 	
 	constructor: function (message) {
 		this._inherited(BetaJS.Exceptions.Exception, "constructor");
@@ -59,7 +59,7 @@ BetaJS.Exceptions.Exception = BetaJS.Class.extend("Exception", {
 });
 
 
-BetaJS.Exceptions.NativeException = BetaJS.Exceptions.Exception.extend("NativeException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Exceptions.NativeException", {
 	
 	constructor: function (object) {
 		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object.toString());

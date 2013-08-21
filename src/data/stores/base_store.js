@@ -1,11 +1,8 @@
-BetaJS.Stores = BetaJS.Stores || {};
-
-
-BetaJS.Stores.StoreException = BetaJS.Exceptions.Exception.extend("StoreException");
+BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
 
 /** @class */
-BetaJS.Stores.BaseStore = BetaJS.Class.extend("BaseStore", [
+BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{

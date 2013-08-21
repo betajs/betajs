@@ -1,4 +1,4 @@
-BetaJS.Modelling.Validators.PresentValidator = BetaJS.Modelling.Validators.Validator.extend("PresentValidator", {
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.PresentValidator", {
 	
 	constructor: function (error_string) {
 		this._inherited(BetaJS.Modelling.Validators.PresentValidator, "constructor");

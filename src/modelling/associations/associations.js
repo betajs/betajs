@@ -1,6 +1,4 @@
-BetaJS.Modelling.Associations = {};
-
-BetaJS.Modelling.Associations.Association = BetaJS.Class.extend("Assocation", {
+BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
 
 	constructor: function (model, options) {
 		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");

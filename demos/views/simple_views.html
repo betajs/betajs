@@ -9,9 +9,9 @@
 			$(document).ready(function () {
 				var main = new BetaJS.Views.View({
 					el: "#main",
-					render_string: "<div id='input'></div><div id='button'></div><div id='list'></div>"
+					html: "<div id='input'></div><div id='button'></div><div id='list'></div>"
 				});
-				var InputView = BetaJS.Views.View.extend("InputView", {
+				BetaJS.Views.View.extend("InputView", {
 					constructor: function(options) {
 						this._inherited(InputView, "constructor", options);
 						this._setOption(options, "value", "");
@@ -26,7 +26,7 @@
 						this.$el.find("input").val(value);
 					}
 				});
-				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
+				BetaJS.Views.View.extend("ButtonView", {
 					constructor: function(options) {
 						this._inherited(ButtonView, "constructor", options);
 						this._setOption(options, "label", "");
@@ -40,10 +40,10 @@
 						}]);
 					},
 					__clickButton: function () {
-						this.trigger("clicked");
+						this.trigger("click");
 					}
 				});
-				var ListView = BetaJS.Views.View.extend("ListView", {
+				BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
 						this._inherited(ListView, "constructor", options);
 						this._setOption(options, "items", []);
@@ -75,7 +75,7 @@
 					items: ["Example 1", "Example 2"]
 				});
 				main.addChildren([input, button, list]);
-				button.on("clicked", function () {
+				button.on("click", function () {
 					list.add(input.getValue());
 					input.setValue("");
 				});

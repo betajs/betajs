@@ -1,4 +1,4 @@
-BetaJS.Stores.AssocDumbStore = BetaJS.Stores.DumbStore.extend("AssocDumbStore", {
+BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},

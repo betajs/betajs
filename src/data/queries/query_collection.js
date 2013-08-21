@@ -1,4 +1,4 @@
-BetaJS.Collections.QueryCollection = BetaJS.Collections.Collection.extend("QueryCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);

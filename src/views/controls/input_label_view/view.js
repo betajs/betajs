@@ -1,4 +1,4 @@
-BetaJS.Views.InputLabelView = BetaJS.Views.SwitchContainerView.extend("LabelInputView", {
+BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.InputLabelView, "constructor", options);

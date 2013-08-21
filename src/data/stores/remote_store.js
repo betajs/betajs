@@ -1,4 +1,4 @@
-BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("RemoteStoreException", {
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
 		source = BetaJS.Net.AjaxException.ensure(source);
@@ -12,7 +12,7 @@ BetaJS.Stores.RemoteStoreException = BetaJS.Stores.StoreException.extend("Remote
 	
 });
 
-BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	constructor : function(uri, ajax, options) {
 		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
@@ -145,7 +145,7 @@ BetaJS.Stores.RemoteStore = BetaJS.Stores.BaseStore.extend("RemoteStore", {
 });
 
 
-BetaJS.Stores.QueryGetParamsRemoteStore = BetaJS.Stores.RemoteStore.extend("QueryGetParamsRemoteStore", {
+BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 
 	constructor : function(uri, ajax, capability_params, options) {
 		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);

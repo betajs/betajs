@@ -1,6 +1,4 @@
-BetaJS.Profiling = {};
-
-BetaJS.Profiling.Profiler = BetaJS.Class.extend("Profiler", [
+BetaJS.Class.extend("BetaJS.Profiling.Profiler", [
     BetaJS.Events.EventsMixin, {
 	
 	constructor: function (cls) {
@@ -98,7 +96,7 @@ BetaJS.Profiling.Profiler = BetaJS.Class.extend("Profiler", [
 }]);
 
 
-BetaJS.Profiling.ProfilerHtmlViewer = BetaJS.Class.extend("ProfilerHtmlViewer", {
+BetaJS.Class.extend("BetaJS.Profiling.ProfilerHtmlViewer", {
                                                                                        
     constructor: function (profiler) {
     	this._inherited(BetaJS.Profiling.ProfilerHtmlViewer, "constructor");

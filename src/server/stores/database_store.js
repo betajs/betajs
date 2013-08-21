@@ -1,4 +1,4 @@
-BetaJS.Stores.DatabaseStore = BetaJS.Stores.BaseStore.extend("DatabaseStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Stores.DatabaseStore, "constructor");

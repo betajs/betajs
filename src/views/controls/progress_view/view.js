@@ -1,4 +1,4 @@
-BetaJS.Views.ProgressView = BetaJS.Views.View.extend("ProgressView", {
+BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["progress-template"]
 	},

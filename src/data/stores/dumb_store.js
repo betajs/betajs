@@ -1,4 +1,4 @@
-BetaJS.Stores.DumbStore = BetaJS.Stores.BaseStore.extend("DumbStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 	
 	_read_last_id: function () {},
 	_write_last_id: function (id) {},

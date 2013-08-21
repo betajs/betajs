@@ -11,7 +11,7 @@
 				var main = new BetaJS.Views.ListContainerView({
 					el: "body"
 				});
-				var ListView = BetaJS.Views.View.extend("ListView", {
+				BetaJS.Views.View.extend("ListView", {
 					constructor: function(options) {
 						this._inherited(ListView, "constructor", options);
 						this._setOption(options, "items", []);
@@ -45,7 +45,7 @@
 					items: ["Example 1", "Example 2"]
 				});
 				main.addChildren([input, button, list, label]);
-				button.on("clicked", function () {
+				button.on("click", function () {
 					list.add(input.get("value"));
 					input.set("value", "");
 				});

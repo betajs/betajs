@@ -1,4 +1,4 @@
-BetaJS.Views.LabelView = BetaJS.Views.View.extend("LabelView", {
+BetaJS.Views.View.extend("BetaJS.Views.LabelView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["label-view-template"]
 	},

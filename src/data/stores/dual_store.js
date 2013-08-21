@@ -1,4 +1,4 @@
-BetaJS.Stores.DualStore = BetaJS.Stores.BaseStore.extend("DualStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 	
 	constructor: function (first, second, options) {
 		options = BetaJS.Objs.extend({

@@ -1,7 +1,4 @@
-BetaJS.Collections = {};
-
-
-BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
+BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.EventsMixin, {
 		
@@ -127,7 +124,7 @@ BetaJS.Collections.Collection = BetaJS.Class.extend("Collection", [
 
 
 
-BetaJS.Collections.FilteredCollection = BetaJS.Collections.Collection.extend("FilteredCollection", {
+BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 	
 	constructor: function (parent, options) {
 		this.__parent = parent;

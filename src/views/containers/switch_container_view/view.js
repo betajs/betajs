@@ -1,4 +1,4 @@
-BetaJS.Views.SwitchContainerView = BetaJS.Views.View.extend("SwitchContainerView", {
+BetaJS.Views.View.extend("BetaJS.Views.SwitchContainerView", {
 	
 	_templates: {
 		"item": BetaJS.Templates.Cached["switch-container-view-item-template"]

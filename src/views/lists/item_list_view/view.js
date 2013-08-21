@@ -1,9 +1,9 @@
-BetaJS.Views.ItemListItemView = BetaJS.Views.View.extend("ItemListItemView", {
+BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ItemListItemView, "constructor", options);
 		this._setOptionProperty(options, "item", null);
-		this._setOptionProperty(options, "_selected");
+		this._setOptionProperty(options, "_selected", false);
 	},
 	
 	_events: function () {
@@ -31,12 +31,35 @@ BetaJS.Views.ItemListItemView = BetaJS.Views.View.extend("ItemListItemView", {
 
 });
 
-BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.ItemListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ItemListView, "constructor", options);
 		this._setOption(options, "sub_view", BetaJS.Views.ItemListItemView);
-		this._setOption(options, "sub_view_options", this._sub_view_options || {});
+		if (this._sub_view_options) {
+			if (!BetaJS.Types.is_function(this._sub_view_options)) {
+				var svo = this._sub_view_options;
+				this._sub_view_options = function (item) {
+					return svo;
+				};
+			}
+		};
+		if (options.sub_view_options) {
+			if (!BetaJS.Types.is_function(options.sub_view_options)) {
+				var svo = options.sub_view_options;
+				options.sub_view_options = function (item) {
+					return svo;
+				};
+			}
+			this.__sub_view_options = options.sub_view_options;
+			var self = this;
+			if (this._sub_view_options)
+				this.__sub_view_options = function (item) {
+					return BetaJS.Objs.extend(self._sub_view_options(item), options.sub_view_options(item));
+				};
+		}
+		else
+			this.__sub_view_options = this._sub_view_options;
 		this._setOption(options, "selectable", true);
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", true);
@@ -46,7 +69,7 @@ BetaJS.Views.ItemListView = BetaJS.Views.CustomListView.extend("ItemListView", {
 		var view = new this.__sub_view(BetaJS.Objs.extend({
 			el: element,
 			item: item
-		}, this.__sub_view_options));
+		}, this.__sub_view_options(item)));
 		this.itemData(item).view = view;
 		this.addChild(view);
 	},

@@ -1,6 +1,3 @@
-BetaJS.Net = BetaJS.Net || {};
-
-
 /*
  * <ul>
  *  <li>uri: target uri</li>
@@ -12,7 +9,7 @@ BetaJS.Net = BetaJS.Net || {};
  * </ul>
  * 
  */
-BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
+BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
@@ -100,7 +97,7 @@ BetaJS.Net.AbstractAjax = BetaJS.Class.extend("AbstractAjax", {
 });
 
 
-BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 	
 	constructor: function (status_code, status_text, data) {
 		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
@@ -124,7 +121,7 @@ BetaJS.Net.AjaxException = BetaJS.Exceptions.Exception.extend("AjaxException", {
 });
 
 
-BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
+BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 	
 	_syncCall: function (options) {
 		var result;
@@ -132,8 +129,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: false,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				result = response;
 			},
@@ -149,8 +146,8 @@ BetaJS.Net.JQueryAjax = BetaJS.Net.AbstractAjax.extend("JQueryAjax", {
 			type: options.method,
 			async: true,
 			url: options.uri,
-//			dataType: "json", 
-			data: JSON.stringify(options.data), //options.data
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
 				options.success(response);
 			},

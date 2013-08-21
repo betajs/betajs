@@ -1,4 +1,4 @@
-BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
+BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	
 	constructor: function () {
 		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
@@ -79,7 +79,7 @@ BetaJS.Queries.ActiveQueryEngine = BetaJS.Class.extend("ActiveQueryEngine", {
 	
 });
 
-BetaJS.Queries.ActiveQuery = BetaJS.Class.extend("ActiveQuery", [
+BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
 
 	BetaJS.Ids.ClientIdMixin,
 	{

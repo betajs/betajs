@@ -31,6 +31,19 @@ BetaJS.Objs = {
 		}
 	},
 	
+	map: function (obj, f, context) {
+		if (BetaJS.Types.is_array(obj)) {
+			var result = [];
+			for (var i = 0; i < obj.length; ++i)
+				result.push(context ? f.apply(context, obj[i], i) : f(obj[i], i));
+			return result;
+		} else {
+			var result = {};
+			for (var key in obj)
+				result[key] = context ? f.apply(context, obj[key], key) : f(obj[key], key);
+		}
+	},
+	
 	values: function (obj) {
 		var result = [];
 		for (var key in obj)

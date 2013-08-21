@@ -48,14 +48,14 @@
 					el: "body"
 				});
 				main.addChildren([input, button, list, button_remove, button_reverse, list2]);
-				button.on("clicked", function () {
+				button.on("click", function () {
 					list.add(new BetaJS.Properties.Properties({"text": input.get("value")}));
 					input.set("value", "");
 				});
-				button_remove.on("clicked", function () {
+				button_remove.on("click", function () {
 					collection.remove(collection.getByIndex(0));
 				});
-				button_reverse.on("clicked", function () {
+				button_reverse.on("click", function () {
 					collection.iterate(function (item) {
 						item.set("text", item.get("text").split("").reverse().join(""));
 					});

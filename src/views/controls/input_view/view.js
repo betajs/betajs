@@ -1,4 +1,4 @@
-BetaJS.Views.InputView = BetaJS.Views.View.extend("InputView", {
+BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["input-view-template"]
 	},

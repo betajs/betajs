@@ -1,4 +1,4 @@
-BetaJS.Views.LinkView = BetaJS.Views.View.extend("LinkView", {
+BetaJS.Views.View.extend("BetaJS.Views.LinkView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["link-view-template"]
 	},

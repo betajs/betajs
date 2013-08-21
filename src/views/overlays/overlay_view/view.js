@@ -1,4 +1,4 @@
-BetaJS.Views.OverlayView = BetaJS.Views.View.extend("OverlayView", {
+BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 	
 	_templates: {
 		"default": BetaJS.Templates.Cached["overlay-view-template"]

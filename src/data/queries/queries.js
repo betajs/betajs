@@ -8,7 +8,7 @@ BetaJS.Queries = {
 	 * query :== {pair, ...}
 	 * pair :== string: value | $or : queries | $and: queries
 	 * value :== simple | {condition, ...}  
-	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple
+	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple | $gtic: simple | $ltic: simple | $swic: simple
 	 *
 	 */
 	
@@ -68,10 +68,16 @@ BetaJS.Queries = {
 					result = result && BetaJS.Objs.contains_value(tar, object_value);
 				if (op == "$gt")
 					result = result && object_value >= tar;
+				if (op == "$gtic")
+					result = result && object_value.toLowerCase() >= tar.toLowerCase();
 				if (op == "$lt")
 					result = result && object_value <= tar;
+				if (op == "$ltic")
+					result = result && object_value.toLowerCase() <= tar.toLowerCase();
 				if (op == "$sw")
 					result = result && object_value.indexOf(tar) == 0;
+				if (op == "$swic")
+					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) == 0;
 			}, this);
 			return result;
 		}

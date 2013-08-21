@@ -12,7 +12,7 @@ BetaJS.Iterators = {
 	
 };
 
-BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
+BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
 	
 	asArray: function () {
 		var arr = [];
@@ -23,7 +23,7 @@ BetaJS.Iterators.Iterator = BetaJS.Class.extend("Iterator", {
 	
 });
 
-BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 	
 	constructor: function (arr) {
 		this._inherited(BetaJS.Iterators.ArrayIterator, "constructor");
@@ -41,7 +41,7 @@ BetaJS.Iterators.ArrayIterator = BetaJS.Iterators.Iterator.extend("ArrayIterator
 	
 });
 
-BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectKeysIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectKeysIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
@@ -49,7 +49,7 @@ BetaJS.Iterators.ObjectKeysIterator = BetaJS.Iterators.ArrayIterator.extend("Obj
 	
 });
 
-BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("ObjectValuesIterator", {
+BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectValuesIterator", {
 	
 	constructor: function (obj) {
 		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
@@ -57,7 +57,7 @@ BetaJS.Iterators.ObjectValuesIterator = BetaJS.Iterators.ArrayIterator.extend("O
 	
 });
 
-BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	
 	constructor: function (iterator, map) {
 		this._inherited(BetaJS.Iterators.MappedIterator, "constructor");
@@ -75,7 +75,7 @@ BetaJS.Iterators.MappedIterator = BetaJS.Iterators.Iterator.extend("MappedIterat
 	
 });
 
-BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	
 	constructor: function (iterator, filter, context) {
 		this._inherited(BetaJS.Iterators.FilteredIterator, "constructor");
@@ -112,7 +112,7 @@ BetaJS.Iterators.FilteredIterator = BetaJS.Iterators.Iterator.extend("FilteredIt
 });
 
 
-BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
 	
 	constructor: function (iterator, skip) {
 		this._inherited(BetaJS.Iterators.SkipIterator, "constructor");
@@ -134,7 +134,7 @@ BetaJS.Iterators.SkipIterator = BetaJS.Iterators.Iterator.extend("SkipIterator",
 });
 
 
-BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
 	
 	constructor: function (iterator, limit) {
 		this._inherited(BetaJS.Iterators.LimitIterator, "constructor");
@@ -156,7 +156,7 @@ BetaJS.Iterators.LimitIterator = BetaJS.Iterators.Iterator.extend("LimitIterator
 });
 
 
-BetaJS.Iterators.SortedIterator = BetaJS.Iterators.Iterator.extend("SortedIterator", {
+BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
 	
 	constructor: function (iterator, compare) {
 		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");

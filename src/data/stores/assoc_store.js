@@ -1,4 +1,4 @@
-BetaJS.Stores.AssocStore = BetaJS.Stores.BaseStore.extend("AssocStore", {
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	
 	_read_key: function (key) {},
 	_write_key: function (key, value) {},

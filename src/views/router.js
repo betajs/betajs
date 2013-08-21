@@ -1,8 +1,5 @@
-BetaJS.Routers = BetaJS.Routers || {};
-
-
 /** @class */
-BetaJS.Routers.Router = BetaJS.Class.extend("Router", [
+BetaJS.Class.extend("BetaJS.Routers.Router", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Routers.Router.prototype */
 	{
@@ -222,7 +219,7 @@ BetaJS.Routers.Router = BetaJS.Class.extend("Router", [
 }]);
 
 
-BetaJS.Routers.RouterHistory = BetaJS.Class.extend("RouterHistory", [
+BetaJS.Class.extend("BetaJS.Routers.RouterHistory", [
 	BetaJS.Events.EventsMixin,
 	{
 	
@@ -281,7 +278,7 @@ BetaJS.Routers.RouterHistory = BetaJS.Class.extend("RouterHistory", [
 }]);
 
 
-BetaJS.Routers.RouteBinder = BetaJS.Class.extend("RouteBinder", {
+BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 
 	constructor: function (router) {
 		this._inherited(BetaJS.Routers.RouteBinder, "constructor");
@@ -310,7 +307,7 @@ BetaJS.Routers.RouteBinder = BetaJS.Class.extend("RouteBinder", {
 });
 
 
-BetaJS.Routers.HashRouteBinder = BetaJS.Routers.RouteBinder.extend("HashRouteBinder", [
+BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
 	BetaJS.Ids.ClientIdMixin,
 	{
 	

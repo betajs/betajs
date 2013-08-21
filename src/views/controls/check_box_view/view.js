@@ -1,4 +1,4 @@
-BetaJS.Views.CheckBoxView = BetaJS.Views.View.extend("CheckBoxView", {
+BetaJS.Views.View.extend("BetaJS.Views.CheckBoxView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["check-box-view-template"]
 	},

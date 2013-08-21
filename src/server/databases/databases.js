@@ -1,6 +1,4 @@
-BetaJS.Databases = {};
-
-BetaJS.Databases.Database = BetaJS.Class.extend("Database", {
+BetaJS.Class.extend("BetaJS.Databases.Database", {
 	
 	_tableClass: function () {
 		return null;

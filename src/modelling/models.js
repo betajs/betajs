@@ -1,4 +1,4 @@
-BetaJS.Modelling.Model = BetaJS.Modelling.AssociatedProperties.extend("Model", [
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Classes.AutoDestroyMixin,
 	{

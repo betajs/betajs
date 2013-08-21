@@ -1,6 +1,6 @@
-BetaJS.Stores.StoreCacheException = BetaJS.Stores.StoreException.extend("StoreCacheException");
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.StoreCacheException");
 
-BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor",
@@ -28,7 +28,7 @@ BetaJS.Stores.FullyCachedStore = BetaJS.Stores.DualStore.extend("FullyCachedStor
 });
 
 
-BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCachedInnerStore", {
+BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedInnerStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.QueryCachedInnerStore, "constructor", options);
@@ -71,7 +71,7 @@ BetaJS.Stores.QueryCachedInnerStore = BetaJS.Stores.MemoryStore.extend("QueryCac
 });
 
 
-BetaJS.Stores.QueryCachedStore = BetaJS.Stores.DualStore.extend("QueryCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
 		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",

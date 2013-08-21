@@ -1,6 +1,4 @@
-BetaJS.Lists = {};
-
-BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
+BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	
 	_add: function (object) {},
 	_remove: function (ident) {},
@@ -86,7 +84,7 @@ BetaJS.Lists.AbstractList = BetaJS.Class.extend("AbstractList", {
 
 });
 
-BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 	
 	constructor: function (objects) {
 		this.__first = null;
@@ -134,7 +132,7 @@ BetaJS.Lists.LinkedList = BetaJS.Lists.AbstractList.extend("LinkedList", {
 	}
 });
 
-BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 	
 	constructor: function (objects) {
 		this.__map = {};
@@ -171,7 +169,7 @@ BetaJS.Lists.ObjectIdList = BetaJS.Lists.AbstractList.extend("ObjectIdList",  {
 
 
 
-BetaJS.Lists.ArrayList = BetaJS.Lists.AbstractList.extend("ArrayList", {
+BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	
 	constructor: function (objects, options) {
 		this.__idToIndex = {};

@@ -1,6 +1,6 @@
 /* Needs to be executed within Fiber; requires Mongo-Sync. */
 
-BetaJS.Databases.MongoDatabase = BetaJS.Databases.Database.extend("MongoDatabase", {
+BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	constructor: function (mongo_sync, database_name, server, port) {
 		this._inherited(BetaJS.Databases.MongoDatabase, "constructor");

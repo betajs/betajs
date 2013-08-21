@@ -1,7 +1,4 @@
-BetaJS.Templates = BetaJS.Templates || {};
-
-
-BetaJS.Templates.Template = BetaJS.Class.extend("Template", {
+BetaJS.Class.extend("BetaJS.Templates.Template", {
 	
 	constructor: function (template_string) {
 		this._inherited(BetaJS.Templates.Template, "constructor");

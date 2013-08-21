@@ -1,4 +1,4 @@
-BetaJS.Stores.MemoryStore = BetaJS.Stores.AssocStore.extend("MemoryStore", {
+BetaJS.Stores.AssocStore.extend("BetaJS.Stores.MemoryStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.MemoryStore, "constructor", options);

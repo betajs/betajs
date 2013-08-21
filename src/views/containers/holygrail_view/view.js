@@ -1,4 +1,4 @@
-BetaJS.Views.HolygrailView = BetaJS.Views.View.extend("HolygrailView", {
+BetaJS.Views.View.extend("BetaJS.Views.HolygrailView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["holygrail-view-template"]
 	},

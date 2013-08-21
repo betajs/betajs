@@ -28,7 +28,7 @@ Code licensed under the BSD License: http://www.featureblend.com/license.txt
 Version: 1.0.4
 */
 
-BetaJS.Net.FlashDetect = BetaJS.Class.extend("FlashDetect", {
+BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	
 	constructor: function () {
 		this._inherited(BetaJS.Net.FlashDetect, "constructor");

@@ -1,4 +1,4 @@
-BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
+BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_templates: function () {
 		return {
@@ -158,6 +158,8 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 			}
 		}
 		var element = this._findItemElement(item);
+		if (this.__itemData[BetaJS.Ids.objectId(item)])
+			this._destroyItemData(this.__itemData[BetaJS.Ids.objectId(item)]);
 		this.__itemData[BetaJS.Ids.objectId(item)] = this._newItemData(item);
 		this._addItem(item, element, is_new_item);
 		this._addElement(element, is_new_item);
@@ -211,7 +213,7 @@ BetaJS.Views.CustomListView = BetaJS.Views.View.extend("CustomListView", {
 
 
 
-BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
@@ -247,7 +249,7 @@ BetaJS.Views.ListView = BetaJS.Views.CustomListView.extend("ListView", {
 });
 
 
-BetaJS.Views.SubViewListView = BetaJS.Views.CustomListView.extend("SubViewListView", {
+BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.SubViewListView, "constructor", options);
