@@ -36,6 +36,8 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ItemListView", {
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ItemListView, "constructor", options);
 		this._setOption(options, "sub_view", BetaJS.Views.ItemListItemView);
+		if (!this._sub_view_options)
+			this._sub_view_options = {};
 		if (this._sub_view_options) {
 			if (!BetaJS.Types.is_function(this._sub_view_options)) {
 				var svo = this._sub_view_options;
