@@ -28,10 +28,10 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 });
 
 
-BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedInnerStore", {
+BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 	
 	constructor: function (options) {
-		this._inherited(BetaJS.Stores.QueryCachedInnerStore, "constructor", options);
+		this._inherited(BetaJS.Stores.QueryCachedStore.InnerStore, "constructor", options);
 		this.__queries = {};
 	},
 	
@@ -65,7 +65,7 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedInnerStore", {
 	
 	insert: function (row, callbacks) {
 		this.trigger("cache", row);
-		return this._inherited(BetaJS.Stores.QueryCachedInnerStore, "insert", row, callbacks);
+		return this._inherited(BetaJS.Stores.QueryCachedStore.InnerStore, "insert", row, callbacks);
 	}
 	
 });
@@ -76,7 +76,7 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 		options = options || {};
 		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
 			parent,
-			new BetaJS.Stores.QueryCachedInnerStore({id_key: parent.id_key()}),
+			new BetaJS.Stores.QueryCachedStore.InnerStore({id_key: parent.id_key()}),
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",

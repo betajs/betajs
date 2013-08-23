@@ -1,5 +1,16 @@
 BetaJS.Objs = {
 	
+	count: function (obj) {
+		if (BetaJS.Types.is_array(obj))
+			return obj.length
+		else {
+			var c = 0;
+			for (var key in obj)
+				++c;
+			return c;
+		}
+	},
+	
 	clone: function (item, depth) {
 		if (!depth || depth <= 0)
 			return item;

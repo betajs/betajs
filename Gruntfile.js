@@ -126,6 +126,7 @@ module.exports = function(grunt) {
 					'src/data/queries/query_collection.js',
 					'src/data/queries/active_queries.js',
 					'src/data/stores/base_store.js',
+					'src/data/stores/stores_monitor.js',
 					'src/data/stores/assoc_store.js',
 					'src/data/stores/memory_store.js',
 					'src/data/stores/dumb_store.js',
@@ -135,6 +136,8 @@ module.exports = function(grunt) {
 					'src/data/stores/cached_stores.js',
 					'src/data/stores/remote_store.js',
 					'src/data/stores/conversion_store.js',
+					'src/data/stores/passthrough_store.js',
+					'src/data/stores/write_queue_store.js',
 				]
 			},
 			dist_beta_models : {

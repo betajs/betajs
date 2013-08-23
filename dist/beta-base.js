@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-21
+  betajs - v0.0.1 - 2013-08-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -198,6 +198,17 @@ BetaJS.Scopes = {
 };
 
 BetaJS.Objs = {
+	
+	count: function (obj) {
+		if (BetaJS.Types.is_array(obj))
+			return obj.length
+		else {
+			var c = 0;
+			for (var key in obj)
+				++c;
+			return c;
+		}
+	},
 	
 	clone: function (item, depth) {
 		if (!depth || depth <= 0)
