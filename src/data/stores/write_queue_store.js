@@ -8,6 +8,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		this.__id_to_queue = {};
 		this.__combine_updates = "combine_updates" in options ? options.combine_updates : true;
 		this.__auto_clear_updates = "auto_clear_updates" in options ? options.auto_clear_updates : true;
+		this.__cache = {};
 		if (this.__auto_clear_updates)
 			this.on("remove", function (id) {
 				this.__remove_update(id);
@@ -26,6 +27,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		delete this.__id_to_queue[id];
 		for (var rev in rev)
 			delete this.__update_queue[rev];
+		delete this.__cache[id];
 	},
 	
 	__insert_update: function (id, data) {
@@ -45,6 +47,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 			data: data,
 			revision_id: this.__revision_id
 		};
+		this.__cache[id] = BetaJS.Objs.extend(this.__cache[id] || {}, data);
 		this.__revision_id++;
 		this.trigger("queue", "update", id, data);
 		this.trigger("queue:update", id, data);
@@ -96,6 +99,22 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 	
 	changed: function () {
 		return !BetaJS.Types.is_empty(this.__update_queue);
+	},
+	
+	get: function (id) {
+		var obj = this.__store.get(id);
+		if (obj && this.__cache[id])
+			return BetaJS.Objs.extend(obj, this.__cache[id]);
+		return obj;
+	},
+	
+	query: function (query, options) {
+		var self = this;
+		return new BetaJS.Iterators.MappedIterator(this.__store.query(query, options), function (item) {
+			if (self.__cache[item[self.id_key()]])
+				return BetaJS.Objs.extend(item, self.__cache[item[self.id_key()]]);
+			return item;
+		});
 	}
 	
 });

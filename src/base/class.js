@@ -70,8 +70,9 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	// Setup Prototype
 	result.__notifications = {};
+	
 	if (parent.__notifications)
-		BetaJS.Objs.extend(result.__notifications, parent.__notifications);
+		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
 		if (object._notifications) {

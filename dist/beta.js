@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-23
+  betajs - v0.0.1 - 2013-08-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-23
+  betajs - v0.0.1 - 2013-08-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-23
+  betajs - v0.0.1 - 2013-08-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -442,8 +442,9 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	// Setup Prototype
 	result.__notifications = {};
+	
 	if (parent.__notifications)
-		BetaJS.Objs.extend(result.__notifications, parent.__notifications);
+		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
 		if (object._notifications) {
@@ -514,23 +515,77 @@ BetaJS.Class.is_class_instance = function (object) {
 
 BetaJS.Classes = {};
 
+
 BetaJS.Classes.AutoDestroyMixin = {
 	
-	enter: function () {
-		if (!this.__enter_count)
-			this.__enter_count = 0;
-		this.__enter_count++;
+	_notifications: {
+		construct: "__initialize_auto_destroy",
+		destroy: "__finalize_auto_destroy"
 	},
 	
-	leave: function () {
-		if (!this.__enter_count)
-			this.__enter_count = 0;
-		this.__enter_count--;
-		if (this.__enter_count < 1)
+	__initialize_auto_destroy: function () {
+		this.__auto_destroy = {};
+	},
+	
+	__finalize_auto_destroy: function () {
+		var copy = this.__auto_destroy;
+		this.__auto_destroy = {};
+		BetaJS.Objs.iter(copy, function (object) {
+			object.unregister(this);
+		}, this);
+	},
+
+	register_auto_destroy: function (object) {
+		if (object.cid() in this.__auto_destroy)
+			return;
+		this.__auto_destroy[object.cid()] = object;
+		object.register(this);
+	},
+	
+	unregister_auto_destroy: function (object) {
+		if (!(object.cid() in this.__auto_destroy))
+			return;
+		delete this.__auto_destroy[object.cid()];
+		object.unregister(this);
+		if (BetaJS.Types.is_empty(this.__auto_destroy))
 			this.destroy();
 	}
 		
 };
+
+
+BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
+	BetaJS.Ids.ClientIdMixin,
+	{
+		
+	constructor: function () {
+		this._inherited(BetaJS.Classes.AutoDestroyObject, "constructor");
+		this.__objects = {};
+	},
+	
+	register: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		if (id in this.__objects)
+			return;
+		this.__objects[id] = object;
+		object.register_auto_destroy(this);
+	},
+	
+	unregister: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		if (!(id in this.__objects))
+			return;
+		delete this.__objects[id];
+		object.unregister_auto_destroy(this);
+	},
+	
+	clear: function () {
+		BetaJS.Objs.iter(this.__objects, function (object) {
+			this.unregister(object);
+		}, this);
+	},
+	
+}]);
 
 BetaJS.Exceptions = {
 	
@@ -1669,6 +1724,55 @@ BetaJS.Locales = {
 };
 BetaJS.Time = {
 	
+	format_time: function(t, s) {
+		var seconds = this.seconds(t);
+		var minutes = this.minutes(t);
+		var hours = this.hours(t);
+		var replacers = {
+			"hh": hours < 10 ? "0" + hours : hours, 
+			"h": hours, 
+			"mm": minutes < 10 ? "0" + minutes : minutes, 
+			"m": minutes, 
+			"ss": seconds < 10 ? "0" + seconds : seconds, 
+			"s": seconds, 
+		};
+		for (var key in replacers)
+			s = s.replace(key, replacers[key]);
+		return s;
+	},
+	
+	make: function (data) {
+		var t = 0;
+		var multipliers = {
+			hours: 60,
+			minutes: 60,
+			seconds: 60,
+			milliseconds: 1000
+		};
+		for (var key in multipliers) {
+			t *= multipliers[key];
+			if (key in data)
+				t += data[key];
+		}
+		return t;
+	},
+	
+	seconds: function (t) {
+		return Math.floor(t / 1000) % 60;
+	},
+	
+	minutes: function (t) {
+		return Math.floor(t / 60 / 1000) % 60;
+	},
+
+	hours: function (t) {
+		return Math.floor(t / 60 / 60 / 1000) % 24;
+	},
+
+	days: function (t) {
+		return Math.floor(t / 24 / 60 / 60 / 1000);
+	},
+
 	now: function () {
 		var d = new Date();
 		return d.getTime();
@@ -1679,7 +1783,7 @@ BetaJS.Time = {
 	},
 	
 	days_ago: function (t) {
-		return Math.round(this.ago(t) / 1000 / 60 / 60 / 24);
+		return this.days(this.ago(t));
 	},
 	
 	format_ago: function (t) {
@@ -1820,7 +1924,7 @@ BetaJS.Net.Uri = {
 };
 
 /*!
-  betajs - v0.0.1 - 2013-08-23
+  betajs - v0.0.1 - 2013-08-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3715,6 +3819,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		this.__id_to_queue = {};
 		this.__combine_updates = "combine_updates" in options ? options.combine_updates : true;
 		this.__auto_clear_updates = "auto_clear_updates" in options ? options.auto_clear_updates : true;
+		this.__cache = {};
 		if (this.__auto_clear_updates)
 			this.on("remove", function (id) {
 				this.__remove_update(id);
@@ -3733,6 +3838,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		delete this.__id_to_queue[id];
 		for (var rev in rev)
 			delete this.__update_queue[rev];
+		delete this.__cache[id];
 	},
 	
 	__insert_update: function (id, data) {
@@ -3752,6 +3858,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 			data: data,
 			revision_id: this.__revision_id
 		};
+		this.__cache[id] = BetaJS.Objs.extend(this.__cache[id] || {}, data);
 		this.__revision_id++;
 		this.trigger("queue", "update", id, data);
 		this.trigger("queue:update", id, data);
@@ -3803,6 +3910,22 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 	
 	changed: function () {
 		return !BetaJS.Types.is_empty(this.__update_queue);
+	},
+	
+	get: function (id) {
+		var obj = this.__store.get(id);
+		if (obj && this.__cache[id])
+			return BetaJS.Objs.extend(obj, this.__cache[id]);
+		return obj;
+	},
+	
+	query: function (query, options) {
+		var self = this;
+		return new BetaJS.Iterators.MappedIterator(this.__store.query(query, options), function (item) {
+			if (self.__cache[item[self.id_key()]])
+				return BetaJS.Objs.extend(item, self.__cache[item[self.id_key()]]);
+			return item;
+		});
 	}
 	
 });
@@ -3889,7 +4012,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-08-23
+  betajs - v0.0.1 - 2013-08-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4728,7 +4851,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.1 - 2013-08-23
+  betajs - v0.0.1 - 2013-08-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
