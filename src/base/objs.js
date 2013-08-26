@@ -98,14 +98,15 @@ BetaJS.Objs = {
 			for (var i = 0; i < obj.length; ++i) {
 				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i)
 				if (BetaJS.Types.is_defined(result) && !result)
-					return;
+					return false;
 			}
 		else
 			for (var key in obj) {
 				var result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
 				if (BetaJS.Types.is_defined(result) && !result)
-					return;
+					return false;
 			}
+		return true;
 	},
 	
 	intersect: function (a, b) {

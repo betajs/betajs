@@ -139,6 +139,10 @@ BetaJS.Strings = {
 	
 	strip_start: function (s, needle) {
 		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
+	},
+	
+	last_after: function (s, needle) {
+		return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
 	}
 
 };
@@ -307,14 +311,15 @@ BetaJS.Objs = {
 			for (var i = 0; i < obj.length; ++i) {
 				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i)
 				if (BetaJS.Types.is_defined(result) && !result)
-					return;
+					return false;
 			}
 		else
 			for (var key in obj) {
 				var result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
 				if (BetaJS.Types.is_defined(result) && !result)
-					return;
+					return false;
 			}
+		return true;
 	},
 	
 	intersect: function (a, b) {
@@ -1919,10 +1924,33 @@ BetaJS.Net.Uri = {
 			res.push(key + "=" + encodeURI(value));
 		});
 		return res.join("&");
-	}
+	},
 	
-};
+	// parseUri 1.2.2
+	// (c) Steven Levithan <stevenlevithan.com>
+	// MIT License
 
+	parse: function (str, strict) {
+		var parser = strict ? this.__parse_strict_regex : this.__parse_loose_regex;
+		var m = parser.exec(str);
+		var uri = {},
+		i = 14;
+		while (i--)
+			uri[this.__parse_key[i]] = m[i] || "";
+		uri.queryKey = {};
+		uri[this.__parse_key[12]].replace(this.__parse_key_parser, function ($0, $1, $2) {
+			if ($1) uri.queryKey[$1] = $2;
+		});
+
+		return uri;
+	},
+	
+	__parse_strict_regex: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+	__parse_loose_regex: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/,
+	__parse_key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+	__parse_key_parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+
+};
 /*!
   betajs - v0.0.1 - 2013-08-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
@@ -4858,22 +4886,77 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 BetaJS.Net.Browser = {
 	
 	__flash: null,
-	__is_iOS: null,
-	
+	__isiOS: null,
+	__isAndroid: null,
+	__iOSversion: null,
+	__isWebOS: null,
+	__isWindowsPhone: null,
+	__isBlackberry: null,
+	__isMobile: null,
+	__isInternetExplorer: null,
+
 	flash: function () {
 		if (!this.__flash)
 			this.__flash = new BetaJS.Net.FlashDetect();
 		return this.__flash;
 	},
 	
-	is_iOS: function () {
-		if (this.__is_iOS == null)
-			this.__is_iOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
-		return this.__is_iOS;
+	isiOS: function () {
+		if (this.__isiOS == null)
+			this.__isiOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
+		return this.__isiOS;
 	},
 	
 	isChrome: function () {
 		return "chrome" in window;
+	},
+	
+	isAndroid: function () {
+		if (this.__isAndroid == null)
+			this.__isAndroid = navigator.userAgent.toLowerCase().indexOf("android") != -1;
+		return this.__isAndroid;
+	},
+	
+	isWebOS: function () {
+		if (this.__isWebOS == null)
+			this.__isWebOS = navigator.userAgent.toLowerCase().indexOf("webos") != -1;
+		return this.__isWebOS;
+	},
+
+	isWindowsPhone: function () {
+		if (this.__isWindowsPhone == null)
+			this.__isWindowsPhone = navigator.userAgent.toLowerCase().indexOf("windows phone") != -1;
+		return this.__isWindowsPhone;
+	},
+
+	isBlackberry: function () {
+		if (this.__isBlackberry == null)
+			this.__isBlackberry = navigator.userAgent.toLowerCase().indexOf("blackberry") != -1;
+		return this.__isBlackberry;
+	},
+
+	iOSversion: function () {
+		if (this.__iOSversion == null && this.isiOS()) {
+		    var v = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
+		    this.__iOSversion = {
+		    	major: parseInt(v[1], 10),
+		    	minor: parseInt(v[2], 10),
+		    	revision: parseInt(v[3] || 0, 10)
+		    };
+		}
+		return this.__iOSversion;
+	},
+	
+	isMobile: function () {
+		if (this.__isMobile == null)
+			this.__isMobile = this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
+		return this.__isMobile;
+	},
+	
+	isInternetExplorer: function () {
+		if (this.__isInternetExplorer == null)
+			this.__isInternetExplorer = navigator.appName == 'Microsoft Internet Explorer';
+		return this.__isInternetExplorer;
 	}
 	
 }

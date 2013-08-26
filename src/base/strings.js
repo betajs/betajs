@@ -47,6 +47,10 @@ BetaJS.Strings = {
 	
 	strip_start: function (s, needle) {
 		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
+	},
+	
+	last_after: function (s, needle) {
+		return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
 	}
 
 };
