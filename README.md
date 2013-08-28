@@ -13,6 +13,10 @@ This is a preliminary version. It is neither complete nor ready for production.
 - Victor Lingenthal
 
 
+## Plugins
+- BetaJS-Video-Player: A view for playing videos (https://github.com/oliverfriedmann/betajs-video-player)
+
+
 ## License
 MIT Software License.
 
