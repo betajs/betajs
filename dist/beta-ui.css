@@ -1,5 +1,5 @@
 /*
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -24,3 +24,32 @@
 .overlay-container-class {
   position: absolute;
   z-index: 20000; }
+
+.fullscreen-overlay-background {
+  background-color: white;
+  opacity: 0.85;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 10000;
+  cursor: default;
+  pointer: default; }
+
+.fullscreen-overlay {
+  background-color: black;
+  opacity: 1;
+  z-index: 10001;
+  padding: 8px 8px 8px 8px;
+  position: relative; }
+
+.fullscreen-overlay-float {
+  position: fixed; }
+
+.fullscreen-overlay-fit {
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px; }

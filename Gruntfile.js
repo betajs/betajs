@@ -80,6 +80,7 @@ module.exports = function(grunt) {
 							'src/views/lists/list_view/template.html',
 
 							'src/views/overlays/overlay_view/template.html',
+							'src/views/overlays/fullscreen_overlay_view/template.html',
 						]
 				}
 			}
@@ -186,6 +187,7 @@ module.exports = function(grunt) {
 					'src/views/lists/item_list_view/view.js',
 
 					'src/views/overlays/overlay_view/view.js',
+					'src/views/overlays/fullscreen_overlay_view/view.js',
 				]
 			},
 			dist_beta_common : {
@@ -230,6 +232,7 @@ module.exports = function(grunt) {
 			            'src/views/containers/holygrail_view/styles.scss',
 			            'src/views/controls/textarea_view/styles.css',
 						'src/views/overlays/overlay_view/styles.css',
+						'src/views/overlays/fullscreen_overlay_view/styles.css',
 			        ]
 		    	}
 		    }

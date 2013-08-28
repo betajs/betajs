@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1281,6 +1281,17 @@ BetaJS.Events.EventsMixin = {
         });
         once._callback = callback;
         return this.on(name, once, context, options);
+    },
+    
+    delegateEvents: function (events, source) {
+    	if (!BetaJS.Types.is_array(events))
+    		events = [events];
+   		BetaJS.Objs.iter(events, function (event) {
+			source.on(event, function () {
+				var rest = Array.prototype.slice.call(arguments, 0);
+				this.trigger.apply(this, [event].concat(rest));
+			}, this);
+		}, this);
     }
 	
 };
@@ -1990,7 +2001,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4080,7 +4091,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4946,11 +4957,23 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 BetaJS.Net.Browser = {
+	
+	getNavigator: function () {
+		return {
+			appCodeName: navigator.appCodeName,
+			appName: navigator.appName,
+			appVersion: navigator.appVersion,
+			cookieEnabled: navigator.cookieEnabled,
+			onLine: navigator.onLine,
+			platform: navigator.platform,
+			userAgent: navigator.userAgent
+		};
+	},
 	
 	__flash: null,
 	__isiOS: null,
@@ -5152,6 +5175,28 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 
 });
 
+
+
+BetaJS.Net.Browser.Loader = {
+	
+	loadScript: function (url, callback, context) {
+		var executed = false;
+		var head = document.getElementsByTagName("head")[0];
+		var script = document.createElement("script");
+		script.src = url;
+		script.onload = script.onreadystatechange = function() {
+			if (!executed && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
+				executed = true;
+				script.onload = script.onreadystatechange = null;
+				if (callback)
+					callback.apply(context || this, [url]);
+				head.removeChild(script);
+			}
+		};
+		head.appendChild(script);
+	}
+
+}
 /*
  * Inspired by Underscore's Templating Engine
  * (which itself is inspired by John Resig's implementation)
@@ -5774,7 +5819,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.__unbind();
 		BetaJS.Objs.iter(this.__events, function (obj) {
 			BetaJS.Objs.iter(obj, function (value, key) {
-				var func = self[value];
+				var func = BetaJS.Types.is_function(value) ? value : self[value];
 		        var match = key.match(BetaJS.Views.BIND_EVENT_SPLITTER);
 		        var event = match[1];
 		        var selector = match[2];
@@ -6597,6 +6642,8 @@ BetaJS.Templates.Cached['list-view-template'] = '   <{%= list_container_element 
 BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_container_element %}    {%= supp.attrs(item_container_attrs) %}    class="{%= item_container_classes %}"    {%= supp.list_item_attr(item) %}>   </{%= item_container_element %}>  ';
 
 BetaJS.Templates.Cached['overlay-view-template'] = '  <div data-selector="container"></div> ';
+
+BetaJS.Templates.Cached['fullscreen-overlay-view-template'] = '  <div class="fullscreen-overlay-background" data-selector="outer"></div>  <div class="fullscreen-overlay" data-selector="inner"></div> ';
 
 BetaJS.Views.View.extend("BetaJS.Views.HolygrailView", {
 	_templates: {
@@ -7485,6 +7532,58 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		}
 		overlay.css("left", left + "px");
 		overlay.css("top", top + "px");
+	},
+
+});
+BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
+	
+	_templates: {
+		"default": BetaJS.Templates.Cached["fullscreen-overlay-view-template"]
+	},
+	
+	_events: function () {
+		return [{
+			'click [data-selector="outer"]': function () {
+				if (this.__destroy_on_unfocus)
+					this.destroy()
+				else if (this.__hide_on_unfocus)
+					this.hide();
+			}
+		}];
+	},
+
+	constructor: function (options) {
+		options = options || {};
+		options.el = options.el || "body";
+		options.append_to_el = "append_to_el" in options ? options.append_to_el : true;
+		options.visible = "visible" in options ? options.visible : false;
+		this._inherited(BetaJS.Views.FullscreenOverlayView, "constructor", options);
+		options.overlay_inner.setEl('[data-selector="inner"]');
+		this.overlay_inner = this.addChild(options.overlay_inner);
+		this._setOption(options, "hide_on_unfocus", true);
+		this._setOption(options, "destroy_on_unfocus", false);
+	},
+	
+	_after_show: function () {	
+		var outer = this.$('[data-selector="outer"]');
+		var inner = this.$('[data-selector="inner"]');
+		inner.removeClass("fullscreen-overlay-float");
+		inner.removeClass("fullscreen-overlay-fit");
+		var outer_width = outer.outerWidth();
+		var outer_height = outer.outerHeight();
+		var inner_width = inner.outerWidth();
+		var inner_height = inner.outerHeight();
+		var left = Math.floor((outer_width - inner_width) / 2);
+		var top = Math.floor((outer_height - inner_height) / 2);
+		if (left >= 0 && top >= 0) {
+			inner.css("left", left + "px");
+			inner.css("top", top + "px");
+			inner.addClass("fullscreen-overlay-float");
+		} else {
+			inner.css("left", "0px");
+			inner.css("top", "0px");
+			inner.addClass("fullscreen-overlay-fit");
+		}
 	},
 
 });

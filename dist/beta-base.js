@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-27
+  betajs - v0.0.1 - 2013-08-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1271,6 +1271,17 @@ BetaJS.Events.EventsMixin = {
         });
         once._callback = callback;
         return this.on(name, once, context, options);
+    },
+    
+    delegateEvents: function (events, source) {
+    	if (!BetaJS.Types.is_array(events))
+    		events = [events];
+   		BetaJS.Objs.iter(events, function (event) {
+			source.on(event, function () {
+				var rest = Array.prototype.slice.call(arguments, 0);
+				this.trigger.apply(this, [event].concat(rest));
+			}, this);
+		}, this);
     }
 	
 };

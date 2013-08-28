@@ -502,7 +502,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.__unbind();
 		BetaJS.Objs.iter(this.__events, function (obj) {
 			BetaJS.Objs.iter(obj, function (value, key) {
-				var func = self[value];
+				var func = BetaJS.Types.is_function(value) ? value : self[value];
 		        var match = key.match(BetaJS.Views.BIND_EVENT_SPLITTER);
 		        var event = match[1];
 		        var selector = match[2];

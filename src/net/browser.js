@@ -1,5 +1,17 @@
 BetaJS.Net.Browser = {
 	
+	getNavigator: function () {
+		return {
+			appCodeName: navigator.appCodeName,
+			appName: navigator.appName,
+			appVersion: navigator.appVersion,
+			cookieEnabled: navigator.cookieEnabled,
+			onLine: navigator.onLine,
+			platform: navigator.platform,
+			userAgent: navigator.userAgent
+		};
+	},
+	
 	__flash: null,
 	__isiOS: null,
 	__isAndroid: null,
@@ -199,3 +211,26 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
     }],
 
 });
+
+
+
+BetaJS.Net.Browser.Loader = {
+	
+	loadScript: function (url, callback, context) {
+		var executed = false;
+		var head = document.getElementsByTagName("head")[0];
+		var script = document.createElement("script");
+		script.src = url;
+		script.onload = script.onreadystatechange = function() {
+			if (!executed && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
+				executed = true;
+				script.onload = script.onreadystatechange = null;
+				if (callback)
+					callback.apply(context || this, [url]);
+				head.removeChild(script);
+			}
+		};
+		head.appendChild(script);
+	}
+
+}
