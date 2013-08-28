@@ -66,6 +66,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	_remove : function(id, callbacks) {
 		try {
+			var data = {};
+			data[this._id_key] = id;
 			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
 			if (this._async_write) {
 				var self = this;

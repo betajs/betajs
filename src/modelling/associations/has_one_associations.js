@@ -2,7 +2,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 
 	_yield: function (id) {
 		var query = {};
-		query[this._foreign_key] = id || this._model.id();
+		if (id)
+			query[this._foreign_key] = id
+		else if (this._primary_key) 
+			query[this._foreign_key] = this._model.get(this._primary_key)
+		else
+			query[this._foreign_key] = this._model.id();
 		return this._foreign_table.findBy(query);
 	},
 	

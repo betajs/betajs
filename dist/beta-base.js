@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-26
+  betajs - v0.0.1 - 2013-08-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -76,6 +76,16 @@ BetaJS.Types = {
 			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
 		}
 		return x.localeCompare(y);			
+	},
+	
+	parseBool: function (x) {
+		if (this.is_boolean(x))
+			return x;
+		if (x == "true")
+			return true;
+		if (x == "false")
+			return false;
+		return null;
 	}
 
 };
@@ -162,12 +172,32 @@ BetaJS.Functions = {
 
 BetaJS.Scopes = {
 	
+	base: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		if (base)
+			return base[s];
+		try {
+			if (window)
+				return window[s];
+		} catch (e) {}
+		try {
+			if (global && global[s])
+				return global[s];
+		} catch (e) {}
+		try {
+			if (module && module.exports)
+				return module.exports;
+		} catch (e) {}
+		return null;
+	},
+	
 	resolve: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var object = base || window || global;
-		var a = s.split(".");
-		for (var i = 0; i < a.length; ++i)
+		var a = s.split(".");			
+		var object = this.base(a[0], base);
+		for (var i = 1; i < a.length; ++i)
 			object = object[a[i]];
 		return object;
 	},
@@ -175,9 +205,9 @@ BetaJS.Scopes = {
 	touch: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var object = base || window || global;
-		var a = s.split(".");
-		for (var i = 0; i < a.length; ++i) {
+		var a = s.split(".");			
+		var object = this.base(a[0], base);
+		for (var i = 1; i < a.length; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};
 			object = object[a[i]];
@@ -188,14 +218,15 @@ BetaJS.Scopes = {
 	set: function (obj, s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var object = base || window || global;
-		var a = s.split(".");
-		for (var i = 0; i < a.length - 1; ++i) {
+		var a = s.split(".");			
+		var object = this.base(a[0], base);
+		for (var i = 1; i < a.length - 1; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};
 			object = object[a[i]];
 		}
-		object[a[a.length - 1]] = obj;
+		if (a.length > 1)
+			object[a[a.length - 1]] = obj;
 		return obj;
 	},
 	
@@ -1305,6 +1336,10 @@ BetaJS.Properties.PropertiesMixin = {
 		return true;
 	},
 	
+	_beforeSet: function (key, value) {
+		return value;
+	},
+	
 	_afterSet: function (key, value, options) {
 	},
 	
@@ -1439,16 +1474,19 @@ BetaJS.Properties.PropertiesMixin = {
 					}, this.__properties[key]);
 			}, this);
 			this._set_changed(key, old);
-		} else if (this._canSet(key, value)) {
-			if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
-				this.__properties[key].bindee.set(this.__properties[key].property, value);
-			} else {
-				this.unset(key);
-				this.__properties[key] = {
-					type: BetaJS.Properties.TYPE_VALUE,
-					value: value
-				};
-				this._set_changed(key, old, options);
+		} else {
+			value = this._beforeSet(key, value);
+			if (this._canSet(key, value)) {
+				if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
+					this.__properties[key].bindee.set(this.__properties[key].property, value);
+				} else {
+					this.unset(key);
+					this.__properties[key] = {
+						type: BetaJS.Properties.TYPE_VALUE,
+						value: value
+					};
+					this._set_changed(key, old, options);
+				}
 			}
 		}
 	},

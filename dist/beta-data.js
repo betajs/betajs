@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-26
+  betajs - v0.0.1 - 2013-08-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -802,7 +802,7 @@ BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		} else {
 			var result = true;
 			BetaJS.Objs.iter(data, function (obj) {
-				result = result && this.insert(obj, callbacks);
+				result = result && this.insert(obj);
 			}, this);
 			return result;
 		}
@@ -1659,6 +1659,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	_remove : function(id, callbacks) {
 		try {
+			var data = {};
+			data[this._id_key] = id;
 			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
 			if (this._async_write) {
 				var self = this;

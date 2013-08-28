@@ -25,6 +25,16 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		delete this._properties_changed[key];
 	},
 	
+	_beforeSet: function (key, value) {
+		var scheme = this.cls.scheme();
+		if (!(key in scheme))
+			return value;
+		var sch = scheme[key];
+		if (sch.type == "boolean")
+			return BetaJS.Types.parseBool(value);
+		return value;
+	},
+	
 	_afterSet: function (key, value) {
 		var scheme = this.cls.scheme();
 		if (!(key in scheme))

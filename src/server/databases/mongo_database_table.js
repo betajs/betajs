@@ -45,7 +45,8 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	},
 	
 	_updateRow: function (query, row) {
-		return this.table().update(query, row, true, false);
+		var result = this.table().update(query, {"$set" : row}, true, false);
+		return row;
 	},
 	
 	_find: function (query, options) {

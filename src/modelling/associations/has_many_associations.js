@@ -1,8 +1,12 @@
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasManyAssociation", {
 
+	_id: function () {
+		return this._primary_key ? this._model.get(this._primary_key) : this._model.id();
+	},
+
 	_yield: function () {
 		var query = {};
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.allBy(query);
 	},
 
@@ -15,12 +19,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	},
 	
 	findBy: function (query) {
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.findBy(query);
 	},
 
 	allBy: function (query) {
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.allBy(query);
 	},
 

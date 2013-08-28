@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-26
+  betajs - v0.0.1 - 2013-08-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -62,6 +62,16 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	_unsetChanged: function (key) {
 		delete this._properties_changed[key];
+	},
+	
+	_beforeSet: function (key, value) {
+		var scheme = this.cls.scheme();
+		if (!(key in scheme))
+			return value;
+		var sch = scheme[key];
+		if (sch.type == "boolean")
+			return BetaJS.Types.parseBool(value);
+		return value;
 	},
 	
 	_afterSet: function (key, value) {
@@ -725,6 +735,8 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 		this._foreign_table = foreign_table;
 		this._foreign_key = foreign_key;
 		// TODO: Active Query would be better
+		if (options["primary_key"])
+			this._primary_key = options.primary_key;
 		if (this._options["cached"]) 
 			this._foreign_table.on("create update remove", function () {
 				this.invalidate();
@@ -739,9 +751,13 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasManyAssociation", {
 
+	_id: function () {
+		return this._primary_key ? this._model.get(this._primary_key) : this._model.id();
+	},
+
 	_yield: function () {
 		var query = {};
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.allBy(query);
 	},
 
@@ -754,12 +770,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	},
 	
 	findBy: function (query) {
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.findBy(query);
 	},
 
 	allBy: function (query) {
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.allBy(query);
 	},
 
@@ -798,7 +814,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 
 	_yield: function (id) {
 		var query = {};
-		query[this._foreign_key] = id || this._model.id();
+		if (id)
+			query[this._foreign_key] = id
+		else if (this._primary_key) 
+			query[this._foreign_key] = this._model.get(this._primary_key)
+		else
+			query[this._foreign_key] = this._model.id();
 		return this._foreign_table.findBy(query);
 	},
 	
@@ -814,7 +835,13 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
 	
 	_yield: function () {
-		return this._foreign_table.findById(this._model.get(this._foreign_key));
+		if (this._primary_key) {
+			var obj = {};
+			obj[this._primary_key] = this._model.get(this._foreign_key);
+			return this._foreign_table.findBy(obj);
+		}
+		else
+			return this._foreign_table.findById(this._model.get(this._foreign_key));
 	},
 	
 });

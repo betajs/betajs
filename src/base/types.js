@@ -64,6 +64,16 @@ BetaJS.Types = {
 			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
 		}
 		return x.localeCompare(y);			
+	},
+	
+	parseBool: function (x) {
+		if (this.is_boolean(x))
+			return x;
+		if (x == "true")
+			return true;
+		if (x == "false")
+			return false;
+		return null;
 	}
 
 };

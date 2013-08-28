@@ -133,7 +133,7 @@ BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		} else {
 			var result = true;
 			BetaJS.Objs.iter(data, function (obj) {
-				result = result && this.insert(obj, callbacks);
+				result = result && this.insert(obj);
 			}, this);
 			return result;
 		}

@@ -17,6 +17,10 @@ BetaJS.Properties.PropertiesMixin = {
 		return true;
 	},
 	
+	_beforeSet: function (key, value) {
+		return value;
+	},
+	
 	_afterSet: function (key, value, options) {
 	},
 	
@@ -151,16 +155,19 @@ BetaJS.Properties.PropertiesMixin = {
 					}, this.__properties[key]);
 			}, this);
 			this._set_changed(key, old);
-		} else if (this._canSet(key, value)) {
-			if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
-				this.__properties[key].bindee.set(this.__properties[key].property, value);
-			} else {
-				this.unset(key);
-				this.__properties[key] = {
-					type: BetaJS.Properties.TYPE_VALUE,
-					value: value
-				};
-				this._set_changed(key, old, options);
+		} else {
+			value = this._beforeSet(key, value);
+			if (this._canSet(key, value)) {
+				if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
+					this.__properties[key].bindee.set(this.__properties[key].property, value);
+				} else {
+					this.unset(key);
+					this.__properties[key] = {
+						type: BetaJS.Properties.TYPE_VALUE,
+						value: value
+					};
+					this._set_changed(key, old, options);
+				}
 			}
 		}
 	},

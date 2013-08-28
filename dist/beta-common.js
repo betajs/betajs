@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-08-26
+  betajs - v0.0.1 - 2013-08-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-08-26
+  betajs - v0.0.1 - 2013-08-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -81,6 +81,16 @@ BetaJS.Types = {
 			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
 		}
 		return x.localeCompare(y);			
+	},
+	
+	parseBool: function (x) {
+		if (this.is_boolean(x))
+			return x;
+		if (x == "true")
+			return true;
+		if (x == "false")
+			return false;
+		return null;
 	}
 
 };
@@ -167,12 +177,32 @@ BetaJS.Functions = {
 
 BetaJS.Scopes = {
 	
+	base: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		if (base)
+			return base[s];
+		try {
+			if (window)
+				return window[s];
+		} catch (e) {}
+		try {
+			if (global && global[s])
+				return global[s];
+		} catch (e) {}
+		try {
+			if (module && module.exports)
+				return module.exports;
+		} catch (e) {}
+		return null;
+	},
+	
 	resolve: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var object = base || window || global;
-		var a = s.split(".");
-		for (var i = 0; i < a.length; ++i)
+		var a = s.split(".");			
+		var object = this.base(a[0], base);
+		for (var i = 1; i < a.length; ++i)
 			object = object[a[i]];
 		return object;
 	},
@@ -180,9 +210,9 @@ BetaJS.Scopes = {
 	touch: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var object = base || window || global;
-		var a = s.split(".");
-		for (var i = 0; i < a.length; ++i) {
+		var a = s.split(".");			
+		var object = this.base(a[0], base);
+		for (var i = 1; i < a.length; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};
 			object = object[a[i]];
@@ -193,14 +223,15 @@ BetaJS.Scopes = {
 	set: function (obj, s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var object = base || window || global;
-		var a = s.split(".");
-		for (var i = 0; i < a.length - 1; ++i) {
+		var a = s.split(".");			
+		var object = this.base(a[0], base);
+		for (var i = 1; i < a.length - 1; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};
 			object = object[a[i]];
 		}
-		object[a[a.length - 1]] = obj;
+		if (a.length > 1)
+			object[a[a.length - 1]] = obj;
 		return obj;
 	},
 	
@@ -1310,6 +1341,10 @@ BetaJS.Properties.PropertiesMixin = {
 		return true;
 	},
 	
+	_beforeSet: function (key, value) {
+		return value;
+	},
+	
 	_afterSet: function (key, value, options) {
 	},
 	
@@ -1444,16 +1479,19 @@ BetaJS.Properties.PropertiesMixin = {
 					}, this.__properties[key]);
 			}, this);
 			this._set_changed(key, old);
-		} else if (this._canSet(key, value)) {
-			if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
-				this.__properties[key].bindee.set(this.__properties[key].property, value);
-			} else {
-				this.unset(key);
-				this.__properties[key] = {
-					type: BetaJS.Properties.TYPE_VALUE,
-					value: value
-				};
-				this._set_changed(key, old, options);
+		} else {
+			value = this._beforeSet(key, value);
+			if (this._canSet(key, value)) {
+				if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
+					this.__properties[key].bindee.set(this.__properties[key].property, value);
+				} else {
+					this.unset(key);
+					this.__properties[key] = {
+						type: BetaJS.Properties.TYPE_VALUE,
+						value: value
+					};
+					this._set_changed(key, old, options);
+				}
 			}
 		}
 	},
@@ -1947,7 +1985,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-08-26
+  betajs - v0.0.1 - 2013-08-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2750,7 +2788,7 @@ BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		} else {
 			var result = true;
 			BetaJS.Objs.iter(data, function (obj) {
-				result = result && this.insert(obj, callbacks);
+				result = result && this.insert(obj);
 			}, this);
 			return result;
 		}
@@ -3607,6 +3645,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	_remove : function(id, callbacks) {
 		try {
+			var data = {};
+			data[this._id_key] = id;
 			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
 			if (this._async_write) {
 				var self = this;
@@ -4035,7 +4075,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-08-26
+  betajs - v0.0.1 - 2013-08-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4098,6 +4138,16 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	_unsetChanged: function (key) {
 		delete this._properties_changed[key];
+	},
+	
+	_beforeSet: function (key, value) {
+		var scheme = this.cls.scheme();
+		if (!(key in scheme))
+			return value;
+		var sch = scheme[key];
+		if (sch.type == "boolean")
+			return BetaJS.Types.parseBool(value);
+		return value;
 	},
 	
 	_afterSet: function (key, value) {
@@ -4761,6 +4811,8 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 		this._foreign_table = foreign_table;
 		this._foreign_key = foreign_key;
 		// TODO: Active Query would be better
+		if (options["primary_key"])
+			this._primary_key = options.primary_key;
 		if (this._options["cached"]) 
 			this._foreign_table.on("create update remove", function () {
 				this.invalidate();
@@ -4775,9 +4827,13 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasManyAssociation", {
 
+	_id: function () {
+		return this._primary_key ? this._model.get(this._primary_key) : this._model.id();
+	},
+
 	_yield: function () {
 		var query = {};
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.allBy(query);
 	},
 
@@ -4790,12 +4846,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	},
 	
 	findBy: function (query) {
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.findBy(query);
 	},
 
 	allBy: function (query) {
-		query[this._foreign_key] = this._model.id();
+		query[this._foreign_key] = this._id();
 		return this._foreign_table.allBy(query);
 	},
 
@@ -4834,7 +4890,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 
 	_yield: function (id) {
 		var query = {};
-		query[this._foreign_key] = id || this._model.id();
+		if (id)
+			query[this._foreign_key] = id
+		else if (this._primary_key) 
+			query[this._foreign_key] = this._model.get(this._primary_key)
+		else
+			query[this._foreign_key] = this._model.id();
 		return this._foreign_table.findBy(query);
 	},
 	
@@ -4850,7 +4911,13 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
 	
 	_yield: function () {
-		return this._foreign_table.findById(this._model.get(this._foreign_key));
+		if (this._primary_key) {
+			var obj = {};
+			obj[this._primary_key] = this._model.get(this._foreign_key);
+			return this._foreign_table.findBy(obj);
+		}
+		else
+			return this._foreign_table.findById(this._model.get(this._foreign_key));
 	},
 	
 });
