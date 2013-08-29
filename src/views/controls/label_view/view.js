@@ -3,7 +3,7 @@ BetaJS.Views.View.extend("BetaJS.Views.LabelView", {
 		"default": BetaJS.Templates.Cached["label-view-template"]
 	},
 	_css: function () {
-		return {"label": "label"};
+		return {"label": "label-view-class"};
 	},
 	_events: function () {
 		return [{

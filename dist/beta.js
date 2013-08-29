@@ -3522,6 +3522,36 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 });
 
 
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
+	constructor: function (parent, options) {
+		options = options || {};
+		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
+			parent,
+			new BetaJS.Stores.QueryCachedStore.InnerStore({id_key: parent.id_key()}),
+			BetaJS.Objs.extend({
+				get_options: {
+					start: "second",
+					strategy: "or",
+				},
+				query_options: {
+					start: "second",
+					strategy: "or",
+					clone: false,
+					or_on_null: false
+				}
+			}, options));
+	},
+	
+	cache: function () {
+		return this.second();
+	},
+	
+	store: function () {
+		return this.first();
+	}
+});
+
+
 BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 	
 	constructor: function (options) {
@@ -3564,35 +3594,6 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 	
 });
 
-
-BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
-	constructor: function (parent, options) {
-		options = options || {};
-		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
-			parent,
-			new BetaJS.Stores.QueryCachedStore.InnerStore({id_key: parent.id_key()}),
-			BetaJS.Objs.extend({
-				get_options: {
-					start: "second",
-					strategy: "or",
-				},
-				query_options: {
-					start: "second",
-					strategy: "or",
-					clone: false,
-					or_on_null: false
-				}
-			}, options));
-	},
-	
-	cache: function () {
-		return this.second();
-	},
-	
-	store: function () {
-		return this.first();
-	}
-});
 BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
@@ -5190,7 +5191,8 @@ BetaJS.Net.Browser.Loader = {
 				script.onload = script.onreadystatechange = null;
 				if (callback)
 					callback.apply(context || this, [url]);
-				head.removeChild(script);
+				// Does not work properly if we remove the script for some reason if it is used the second time !?
+				//head.removeChild(script);
 			}
 		};
 		head.appendChild(script);
@@ -5608,11 +5610,11 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	activate: function () {
 		if (this.isActive())
-			return true;
+			return this;
 		if (this.__el == null) 
-			return false;
+			return null;
 		if (this.__parent && !this.__parent.isActive())
-			return false;
+			return null;
 		if (this.__parent)
 			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el)
 		else
@@ -5620,7 +5622,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		if (this.$el.size() == 0)
 			this.$el = null;
 		if (!this.$el)
-			return false;
+			return null;
 		if (this.__append_to_el) {
 			this.$el.append("<div data-view-id='" + this.cid() + "'></div>");
 			this.$el = this.$el.find("[data-view-id='" + this.cid() + "']");
@@ -5663,12 +5665,16 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		});
 		if (this.__visible)
 			this._after_show();
-		if (this.__vertical_center)
+		if (this.__vertical_center) {
+			this.$el.css("top", "50%");
 			this.$el.css("margin-top", Math.round(-this.$el.height() / 2) + "px");
-		if (this.__horizontal_center)
+		}
+		if (this.__horizontal_center) {
+			this.$el.css("left", "50%");
 			this.$el.css("margin-left", Math.round(-this.$el.width() / 2) + "px");
+		}
 		this._notify("activate");
-		return true;
+		return this;
 	},
 	
 	/** Deactivates view and all added sub views
@@ -6921,7 +6927,7 @@ BetaJS.Views.View.extend("BetaJS.Views.LabelView", {
 		"default": BetaJS.Templates.Cached["label-view-template"]
 	},
 	_css: function () {
-		return {"label": "label"};
+		return {"label": "label-view-class"};
 	},
 	_events: function () {
 		return [{

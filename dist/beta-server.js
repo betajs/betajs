@@ -3522,6 +3522,36 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 });
 
 
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
+	constructor: function (parent, options) {
+		options = options || {};
+		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
+			parent,
+			new BetaJS.Stores.QueryCachedStore.InnerStore({id_key: parent.id_key()}),
+			BetaJS.Objs.extend({
+				get_options: {
+					start: "second",
+					strategy: "or",
+				},
+				query_options: {
+					start: "second",
+					strategy: "or",
+					clone: false,
+					or_on_null: false
+				}
+			}, options));
+	},
+	
+	cache: function () {
+		return this.second();
+	},
+	
+	store: function () {
+		return this.first();
+	}
+});
+
+
 BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 	
 	constructor: function (options) {
@@ -3564,35 +3594,6 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 	
 });
 
-
-BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
-	constructor: function (parent, options) {
-		options = options || {};
-		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
-			parent,
-			new BetaJS.Stores.QueryCachedStore.InnerStore({id_key: parent.id_key()}),
-			BetaJS.Objs.extend({
-				get_options: {
-					start: "second",
-					strategy: "or",
-				},
-				query_options: {
-					start: "second",
-					strategy: "or",
-					clone: false,
-					or_on_null: false
-				}
-			}, options));
-	},
-	
-	cache: function () {
-		return this.second();
-	},
-	
-	store: function () {
-		return this.first();
-	}
-});
 BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {

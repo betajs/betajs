@@ -227,7 +227,8 @@ BetaJS.Net.Browser.Loader = {
 				script.onload = script.onreadystatechange = null;
 				if (callback)
 					callback.apply(context || this, [url]);
-				head.removeChild(script);
+				// Does not work properly if we remove the script for some reason if it is used the second time !?
+				//head.removeChild(script);
 			}
 		};
 		head.appendChild(script);
