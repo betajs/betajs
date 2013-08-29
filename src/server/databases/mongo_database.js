@@ -2,11 +2,13 @@
 
 BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
-	constructor: function (mongo_sync, database_name, server, port) {
+	constructor: function (mongo_sync, options) {
+		this.__options = BetaJS.Objs.extend({
+			database: "database",
+			server: "localhost",
+			port: "27017"			
+		}, options || {});
 		this._inherited(BetaJS.Databases.MongoDatabase, "constructor");
-		this.__server = server || "localhost";
-		this.__port = port || 27017;
-		this.__database_name = database_name;
 		this.__mongodb = null;
 		this.__mongo_sync = mongo_sync;
 	},
@@ -21,8 +23,10 @@ BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	mongodb: function () {
 		if (!this.__mongodb) {
-			this.__mongo_server = new this.__mongo_sync.Server(this.__server, this.__port);
-			this.__mongodb = this.__mongo_server.db(this.__database_name);
+			this.__mongo_server = new this.__mongo_sync.Server("mongodb://" + this.__options.server + ":" + this.__options.port);
+			this.__mongodb = this.__mongo_server.db(this.__options.database);
+			if (this.__options.username)
+				this.__mongodb.auth(this.__options.username, this.__options.password);
 		}
 		return this.__mongodb;
 	},

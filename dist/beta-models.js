@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-28
+  betajs - v0.0.1 - 2013-08-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
