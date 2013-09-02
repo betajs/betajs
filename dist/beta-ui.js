@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-08-29
+  betajs - v0.0.1 - 2013-09-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1681,7 +1681,7 @@ BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="{%= s
 
 BetaJS.Templates.Cached['link-view-template'] = '  <a href="javascript:{}" {%= bind.inner("label") %}></a> ';
 
-BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}             {%= bind.css_if_not("text-area-no-resize", "resizable") %}             {%= readonly ? \'readonly\' : \'\' %}             {%= bind.css_if("text-area-horizontal-fill", "horizontal_fill") %}></textarea>  ';
+BetaJS.Templates.Cached['text-area-template'] = '   <textarea {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %}             {%= bind.css_if_not("text-area-no-resize", "resizable") %}             {%= readonly ? \'readonly\' : \'\' %}             style="resize: {%= horizontal_resize ? (vertical_resize ? \'both\' : \'horizontal\') : (vertical_resize ? \'vertical\' : \'none\') %}"             {%= bind.css_if("text-area-horizontal-fill", "horizontal_fill") %}></textarea>  ';
 
 BetaJS.Templates.Cached['progress-template'] = '  <div class="{%= supp.css(\'outer\') %}">   <div data-selector="inner" class="{%= supp.css(\'inner\') %}" style="{%= horizontal ? \'width\': \'height\' %}:{%= value*100 %}%">    {%= label %}   </div>  </div> ';
 
@@ -2059,7 +2059,8 @@ BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
 		this._inherited(BetaJS.Views.TextAreaView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");
-		this._setOptionProperty(options, "resizable", true);
+		this._setOptionProperty(options, "horizontal_resize", false);
+		this._setOptionProperty(options, "vertical_resize", true);
 		this._setOptionProperty(options, "horizontal_fill", false);
 		this._setOptionProperty(options, "readonly", false);
 		this.on("change:readonly", function () {

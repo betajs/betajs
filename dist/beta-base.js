@@ -1,8 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-08-29
+  betajs - v0.0.1 - 2013-09-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
+"use strict";
+
 var BetaJS = BetaJS || {};
 /*
  * Export for NodeJS
@@ -496,6 +498,12 @@ BetaJS.Class.prototype.as_method = function (s) {
 	return BetaJS.Functions.as_method(this[s], this);
 }
 
+BetaJS.Class.prototype._auto_destroy = function (obj) {
+	if (!this.__auto_destroy_list)
+		this.__auto_destroy_list = [];
+	this.__auto_destroy_list.push(obj);
+}
+
 BetaJS.Class.prototype._notify = function (name) {
 	if (!this.cls.__notifications)
 		return;
@@ -508,6 +516,9 @@ BetaJS.Class.prototype._notify = function (name) {
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
+	for (var i = 0; i < this.__auto_destroy_list.length; ++i)
+		if ("destroy" in this.__auto_destroy_list[i])
+			this.__auto_destroy_list[i].destroy();
 	for (var key in this)
 		delete this[key];
 }

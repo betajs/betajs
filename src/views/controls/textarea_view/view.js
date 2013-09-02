@@ -6,7 +6,8 @@ BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
 		this._inherited(BetaJS.Views.TextAreaView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");
-		this._setOptionProperty(options, "resizable", true);
+		this._setOptionProperty(options, "horizontal_resize", false);
+		this._setOptionProperty(options, "vertical_resize", true);
 		this._setOptionProperty(options, "horizontal_fill", false);
 		this._setOptionProperty(options, "readonly", false);
 		this.on("change:readonly", function () {
