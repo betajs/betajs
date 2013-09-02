@@ -226,6 +226,13 @@ module.exports = function(grunt) {
 					'src/server/net/http_header.js'
 				]
 			},
+			dist_strict: {
+				dest: 'dist/beta.strict.js',
+				src: [
+					'src/base/strict.js',
+					'dist/beta.js'
+				]
+			},
 		    dist_ui_scss: {
 		    	files: {
 			        'dist/beta-ui.scss': [

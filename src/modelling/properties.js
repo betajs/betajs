@@ -62,7 +62,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	validate: function () {
 		this.trigger("validate");
-		for (key in this.__unvalidated)
+		for (var key in this.__unvalidated)
 			this.validateAttr(key);
 		return BetaJS.Types.is_empty(this.__errors);
 	},

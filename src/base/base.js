@@ -1,5 +1,3 @@
-"use strict";
-
 var BetaJS = BetaJS || {};
 /*
  * Export for NodeJS

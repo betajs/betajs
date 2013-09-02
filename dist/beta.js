@@ -13,8 +13,6 @@
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-"use strict";
-
 var BetaJS = BetaJS || {};
 /*
  * Export for NodeJS
@@ -526,9 +524,10 @@ BetaJS.Class.prototype._notify = function (name) {
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
-	for (var i = 0; i < this.__auto_destroy_list.length; ++i)
-		if ("destroy" in this.__auto_destroy_list[i])
-			this.__auto_destroy_list[i].destroy();
+	if (this.__auto_destroy_list)
+		for (var i = 0; i < this.__auto_destroy_list.length; ++i)
+			if ("destroy" in this.__auto_destroy_list[i])
+				this.__auto_destroy_list[i].destroy();
 	for (var key in this)
 		delete this[key];
 }
@@ -2225,7 +2224,7 @@ BetaJS.Queries = {
 	
 	
 	__evaluate_query: function (query, object) {
-		for (key in query)
+		for (var key in query)
 			if (!this.__evaluate_pair(key, query[key], object))
 				return false;
 		return true;
@@ -4205,7 +4204,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	validate: function () {
 		this.trigger("validate");
-		for (key in this.__unvalidated)
+		for (var key in this.__unvalidated)
 			this.validateAttr(key);
 		return BetaJS.Types.is_empty(this.__errors);
 	},
@@ -6963,7 +6962,9 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 		this._setOption(options, "edit_on_click", true);
 		this._setOption(options, "label_mode", true);
 		this.label = this.addChild(new BetaJS.Views.LabelView({
-			label: this.binding("value")
+			label: this.binding("value"),
+			el_classes: options["label_el_classes"],
+			children_classes: options["label_children_classes"],
 		}));
 		this.input = this.addChild(new BetaJS.Views.InputView({
 			value: this.binding("value"),

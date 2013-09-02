@@ -116,9 +116,10 @@ BetaJS.Class.prototype._notify = function (name) {
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
-	for (var i = 0; i < this.__auto_destroy_list.length; ++i)
-		if ("destroy" in this.__auto_destroy_list[i])
-			this.__auto_destroy_list[i].destroy();
+	if (this.__auto_destroy_list)
+		for (var i = 0; i < this.__auto_destroy_list.length; ++i)
+			if ("destroy" in this.__auto_destroy_list[i])
+				this.__auto_destroy_list[i].destroy();
 	for (var key in this)
 		delete this[key];
 }

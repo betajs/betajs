@@ -212,7 +212,7 @@ BetaJS.Queries = {
 	
 	
 	__evaluate_query: function (query, object) {
-		for (key in query)
+		for (var key in query)
 			if (!this.__evaluate_pair(key, query[key], object))
 				return false;
 		return true;
