@@ -1003,16 +1003,16 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 	
 	constructor: function (arr) {
 		this._inherited(BetaJS.Iterators.ArrayIterator, "constructor");
-		this.__arr = arr;
+		this.__array = arr;
 		this.__i = 0;
 	},
 	
 	hasNext: function () {
-		return this.__i < this.__arr.length;
+		return this.__i < this.__array.length;
 	},
 	
 	next: function () {
-		return this.__arr[this.__i++];
+		return this.__array[this.__i++];
 	}
 	
 });
@@ -1136,17 +1136,17 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
 	
 	constructor: function (iterator, compare) {
 		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");
-		this.__arr = iterator.asArray();
-		this.__arr.sort(compare);
+		this.__array = iterator.asArray();
+		this.__array.sort(compare);
 		this.__i = 0;
 	},
 	
 	hasNext: function () {
-		return this.__i < this.__arr.length;
+		return this.__i < this.__array.length;
 	},
 	
 	next: function () {
-		return this.__arr[this.__i++];
+		return this.__array[this.__i++];
 	}
 	
 });

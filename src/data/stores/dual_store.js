@@ -244,20 +244,24 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 					} catch (e) {
 					}
 					if (clone_second) {
+						result = result.asArray();
 						if ("cache_query" in second)
-							second.cache_query(result)
+							second.cache_query(query, options, result)
 						else
-							second.insert_all(result.asArray());
+							second.insert_all(result);
+						result = new BetaJS.Iterators.ArrayIterator(result);
 					}
 				}
 				return result;
 			} catch (e) {
 				var result = second.query(query, options);
 				if (result != null && clone) {
+					result = result.asArray();
 					if ("cache_query" in first)
-						first.cache_query(result)
+						first.cache_query(query, options, result)
 					else
-						first.insert_all(result.asArray());
+						first.insert_all(result);
+					result = new BetaJS.Iterators.ArrayIterator(result);
 				}
 				return result;
 			}

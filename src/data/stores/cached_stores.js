@@ -42,8 +42,8 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 				query_options: {
 					start: "second",
 					strategy: "or",
-					clone: false,
-					or_on_null: false
+					clone: true,
+					or_on_null: true
 				}
 			}, options));
 	},
