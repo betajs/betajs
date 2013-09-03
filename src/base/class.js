@@ -102,6 +102,7 @@ BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
 	this.__auto_destroy_list.push(obj);
+	return obj;
 }
 
 BetaJS.Class.prototype._notify = function (name) {

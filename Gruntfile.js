@@ -111,6 +111,7 @@ module.exports = function(grunt) {
 					'src/base/properties.js',
 					'src/base/collections.js',
 					'src/base/comparators.js',
+					'src/base/sort.js',
 					'src/base/tokens.js',
 					'src/base/locales.js',
 					'src/base/time.js',

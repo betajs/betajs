@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-09-02
+  betajs - v0.0.1 - 2013-09-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-02
+  betajs - v0.0.1 - 2013-09-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-02
+  betajs - v0.0.1 - 2013-09-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -510,6 +510,7 @@ BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
 	this.__auto_destroy_list.push(obj);
+	return obj;
 }
 
 BetaJS.Class.prototype._notify = function (name) {
@@ -1764,6 +1765,55 @@ BetaJS.Comparators = {
 	
 };
 
+BetaJS.Sort = {
+	
+	dependency_sort: function (items, identifier, before, after) {
+		var identifierf = BetaJS.Types.is_string(identifier) ? function (obj) { return obj[identifier]; } : identifier;
+		var beforef = BetaJS.Types.is_string(before) ? function (obj) { return obj[before]; } : before;
+		var afterf = BetaJS.Types.is_string(after) ? function (obj) { return obj[after]; } : after;
+		var n = items.length;
+		var data = [];
+		var identifier_to_index = {};
+		var todo = {};
+		for (var i = 0; i < n; ++i) {
+			todo[i] = true;
+			var ident = identifierf(items[i], i);
+			identifier_to_index[ident] = i;
+			data.push({
+				before: {},
+				after: {}
+			});		
+		}
+		for (var i = 0; i < n; ++i) {
+			BetaJS.Objs.iter(beforef(items[i], i) || [], function (before) {
+				var before_index = identifier_to_index[before];
+				if (BetaJS.Types.is_defined(before_index)) {
+					data[i].before[before_index] = true;
+					data[before_index].after[i] = true;
+				}
+			});
+			BetaJS.Objs.iter(afterf(items[i]) || [], function (after) {
+				var after_index = identifier_to_index[after];
+				if (BetaJS.Types.is_defined(after_index)) {
+					data[i].after[after_index] = true;
+					data[after_index].before[i] = true;
+				}
+			});
+		}
+		var result = [];
+		while (!BetaJS.Types.is_empty(todo))
+			for (var i in todo)
+				if (BetaJS.Types.is_empty(data[i].after)) {
+					delete todo[i];
+					result.push(items[i]);
+					for (var before in data[i].before)
+						delete data[before].after[i];
+				}
+		return result;
+	}
+	
+};
+
 BetaJS.Tokens = {
 	
 	generate_token: function () {
@@ -2011,7 +2061,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-02
+  betajs - v0.0.1 - 2013-09-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4102,7 +4152,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-02
+  betajs - v0.0.1 - 2013-09-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4968,7 +5018,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.1 - 2013-09-02
+  betajs - v0.0.1 - 2013-09-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
