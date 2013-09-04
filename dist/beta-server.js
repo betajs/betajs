@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-09-03
+  betajs - v0.0.1 - 2013-09-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-03
+  betajs - v0.0.1 - 2013-09-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-03
+  betajs - v0.0.1 - 2013-09-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1901,6 +1901,7 @@ BetaJS.Time = {
 	},
 	
 	format_ago: function (t) {
+		t = Math.max(t, 0);
 		if (this.days_ago(t) > 1)
 			return this.format(t, {time: false})
 		else
@@ -2061,7 +2062,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-03
+  betajs - v0.0.1 - 2013-09-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4156,7 +4157,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-03
+  betajs - v0.0.1 - 2013-09-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

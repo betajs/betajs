@@ -63,6 +63,7 @@ BetaJS.Time = {
 	},
 	
 	format_ago: function (t) {
+		t = Math.max(t, 0);
 		if (this.days_ago(t) > 1)
 			return this.format(t, {time: false})
 		else
