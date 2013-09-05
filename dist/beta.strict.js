@@ -5845,8 +5845,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			child.view.deactivate();
 		});
 		this.__active = false;
-		if (this.__visible)
+		if (this.__visible) {
 			this.__unbind_hide_on_leave();
+			this._after_hide();
+		}
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.reset();
 		}, this);
@@ -5958,8 +5960,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 				this.__bind_hide_on_leave();
 				this._after_show();
 			}
-			else
-				this.__unbind_hide_on_leave()
+			else {
+				this.__unbind_hide_on_leave();
+				this._after_hide();
+			}
 		}
 		if (this.__parent)
 			this.__parent.updateChildVisibility(this);	
@@ -5973,6 +5977,9 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.invalidate();	
 	},
 	
+	_after_hide: function () {	
+	},
+
 	toggle: function () {
 		this.setVisibility(!this.isVisible());
 	},
@@ -7731,6 +7738,7 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	},
 	
 	_after_show: function () {	
+		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_show");
 		var outer = this.$('[data-selector="outer"]');
 		var inner = this.$('[data-selector="inner"]');
 		inner.removeClass("fullscreen-overlay-float");
@@ -7750,6 +7758,14 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 			inner.css("top", "0px");
 			inner.addClass("fullscreen-overlay-fit");
 		}
+		BetaJS.$("body").addClass("fullscreen-overlay-body");
 	},
+	
+	_after_hide: function () {
+		BetaJS.$("body").removeClass("fullscreen-overlay-body");
+		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_hide");
+	}
+	
+	
 
 });

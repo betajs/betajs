@@ -27,3 +27,6 @@
 	right: 0px;
 	bottom: 0px;
 }
+.fullscreen-overlay-body {
+	overflow: hidden;
+}
