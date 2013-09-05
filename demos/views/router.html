@@ -10,10 +10,10 @@
 			$(document).ready(function () {
 				router = new BetaJS.Routers.Router({
 					routes: {
-						"main": "main",
-						"about": "about",
-						"pages": "pages",
-						"pages/([0-9]+)": "pages"
+						"/main": "main",
+						"/about": "about",
+						"/pages": "pages",
+						"/pages/([0-9]+)": "pages"
 					},
 				})
 				router.main = function () {
@@ -27,7 +27,7 @@
 				router.pages = function (index) {
 					index = parseInt(index || 1);
 					$("#pages #index").html(index);
-					$("#pages #next").attr("href", "javascript:router.navigate('pages/" + (index+1) + "')");
+					$("#pages #next").attr("href", "javascript:router.navigate('/pages/" + (index+1) + "')");
 					$("[data-selector='page']").css("display", "none");
 					$("#pages").css("display", "");
 				};
@@ -37,17 +37,18 @@
 					for (var i = 0; i < router_history.count(); ++i) 
 						$("#history").append("<li>" + router_history.getRoute(i) + "</li>");
 				});
-				hash_binder = new BetaJS.Routers.HashRouteBinder(router);
+				//binder = new BetaJS.Routers.HistoryRouteBinder(router);
+				binder = new BetaJS.Routers.HashRouteBinder(router);				
 			});
 		</script>		
 	</head>
 	<body>
 		<div>
-			<a href="javascript:router.navigate('main')">Main</a>
+			<a href="javascript:router.navigate('/main')">Main</a>
 			|
-			<a href="javascript:router.navigate('pages')">Pages</a>
+			<a href="javascript:router.navigate('/pages')">Pages</a>
 			|
-			<a href="javascript:router.navigate('about')">About</a>
+			<a href="javascript:router.navigate('/about')">About</a>
 			|
 			<a href="javascript:router_history.back()">Back</a>
 		</div>

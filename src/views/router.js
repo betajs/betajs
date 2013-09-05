@@ -169,8 +169,8 @@ BetaJS.Class.extend("BetaJS.Routers.Router", [
 		route = route || this.path(object.key, params);
 		this.trigger("before_invoke", object, params, route);
 		this.__enter(object, params, route);
-		var result = this._invoke(object, params);
 		this.trigger("after_invoke", object, params, route);
+		var result = this._invoke(object, params);
 		return result;
 	},
 	
@@ -302,7 +302,7 @@ BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 	},
 	
 	_getExternalRoute: function () { return "" },
-	_setExternalRoute: function (route) { }
+	_setExternalRoute: function (route) { },
 	
 });
 
@@ -334,3 +334,45 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
 	}
 
 }]);
+
+
+BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
+	BetaJS.Ids.ClientIdMixin,
+	{
+		
+	constructor: function (router) {
+		this._inherited(BetaJS.Routers.HistoryRouteBinder, "constructor", router);
+		var self = this;
+		BetaJS.$(window).on("popstate.events" + this.cid(), function () {
+			self._setRoute(self._getExternalRoute());
+		});
+	},
+	
+	destroy: function () {
+		BetaJS.$(window).off("popstate.events" + this.cid());
+		this._inherited(BetaJS.Routers.HistoryRouteBinder, "destroy");
+	},
+
+	_getExternalRoute: function () {
+		return window.location.pathname;
+	},
+	
+	_setExternalRoute: function (route) {
+		window.history.pushState(this, document.title, route);
+	}
+}], {
+	supported: function () {
+		return window.history && window.history.pushState;
+	}
+});
+
+
+BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.LocationRouteBinder", {
+	_getExternalRoute: function () {
+		return window.location.pathname;
+	},
+	
+	_setExternalRoute: function (route) {
+		window.location.pathname = route;
+	}
+});
