@@ -28,6 +28,7 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	},
 	
 	_after_show: function () {	
+		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_show");
 		var outer = this.$('[data-selector="outer"]');
 		var inner = this.$('[data-selector="inner"]');
 		inner.removeClass("fullscreen-overlay-float");
@@ -47,6 +48,14 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 			inner.css("top", "0px");
 			inner.addClass("fullscreen-overlay-fit");
 		}
+		BetaJS.$("body").addClass("fullscreen-overlay-body");
 	},
+	
+	_after_hide: function () {
+		BetaJS.$("body").removeClass("fullscreen-overlay-body");
+		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_hide");
+	}
+	
+	
 
 });
