@@ -1,6 +1,5 @@
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	BetaJS.Ids.ClientIdMixin,
-	BetaJS.Classes.AutoDestroyMixin,
 	{
 	
 	constructor: function (attributes, options) {

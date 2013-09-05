@@ -132,6 +132,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 	}
 });
 
+
 BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 	
 	constructor: function (objects) {

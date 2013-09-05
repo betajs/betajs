@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-03
+  betajs - v0.0.1 - 2013-09-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -261,7 +261,6 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 });
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	BetaJS.Ids.ClientIdMixin,
-	BetaJS.Classes.AutoDestroyMixin,
 	{
 	
 	constructor: function (attributes, options) {
@@ -388,9 +387,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		this.__store = store;
 		this.__model_type = model_type;
 		this.__models_by_id = {};
-		this.__models_by_cid = {};
 		this.__models_changed = {};
 		this.__options = BetaJS.Objs.extend({
+			// Cache Size
+			model_cache_size: null,
 			// Attribute that describes the type
 			type_column: null,
 			// Removing options
@@ -410,6 +410,12 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			invalid_update_save: false,
 			greedy_update: false
 		}, options || {});
+		this.__models_by_cid = new BetaJS.Classes.ObjectCache({ size: this.__options.model_cache_size });
+		this._auto_destroy(this.__models_by_cid);
+		this.__models_by_cid.on("release", function (model) {
+			if (model.hasId())
+				delete this.__models_by_id[model.id()];
+		}, this);
 	},
 	
 	async_read: function () {
@@ -424,7 +430,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		if (this.hasModel(model))
 			return;
 		this.trigger("register", model);
-		this.__models_by_cid[model.cid()] = model;
+		this.__models_by_cid.add(model);
 		if (model.hasId())
 			this.__models_by_id[model.id()] = model;
 		if (model.isNew() && this.__options.auto_create)
@@ -435,14 +441,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		if (!this.hasModel(model))
 			return;
 		model.save();
-		delete this.__models_by_cid[model.cid()];
+		this.__models_by_cid.remove(model);
 		if (model.hasId())
 			delete this.__models_by_id[model.id()];
 		this.trigger("unregister", model);
 	},
 	
 	hasModel: function (model) {
-		return model.cid() in this.__models_by_cid;
+		return this.__models_by_cid.get(model) != null;
 	},
 
 	_model_remove: function (model, options) {
