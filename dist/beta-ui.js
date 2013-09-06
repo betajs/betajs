@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-05
+  betajs - v0.0.1 - 2013-09-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1694,7 +1694,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
 	},
 	
 	_setExternalRoute: function (route) {
-		window.history.pushState(this, document.title, route);
+		window.history.pushState({}, document.title, route);
 	}
 }], {
 	supported: function () {
@@ -2040,6 +2040,7 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 		this._setOptionProperty(options, "placeholder", "");
 		this._setOption(options, "edit_on_click", true);
 		this._setOption(options, "label_mode", true);
+		this._setOption(options, "read_only", false);
 		this.label = this.addChild(new BetaJS.Views.LabelView({
 			label: this.binding("value"),
 			el_classes: options["label_el_classes"],
@@ -2076,7 +2077,7 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 	},
 	
 	edit_mode: function () {
-		if (this.is_edit_mode())
+		if (this.is_edit_mode() || this.__read_only)
 			return;
 		this.__label_mode = false;
 		this.select(this.input);

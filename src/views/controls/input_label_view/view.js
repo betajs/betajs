@@ -6,6 +6,7 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 		this._setOptionProperty(options, "placeholder", "");
 		this._setOption(options, "edit_on_click", true);
 		this._setOption(options, "label_mode", true);
+		this._setOption(options, "read_only", false);
 		this.label = this.addChild(new BetaJS.Views.LabelView({
 			label: this.binding("value"),
 			el_classes: options["label_el_classes"],
@@ -42,7 +43,7 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 	},
 	
 	edit_mode: function () {
-		if (this.is_edit_mode())
+		if (this.is_edit_mode() || this.__read_only)
 			return;
 		this.__label_mode = false;
 		this.select(this.input);

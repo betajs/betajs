@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-09-05
+  betajs - v0.0.1 - 2013-09-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-05
+  betajs - v0.0.1 - 2013-09-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2137,7 +2137,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-05
+  betajs - v0.0.1 - 2013-09-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4232,7 +4232,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-05
+  betajs - v0.0.1 - 2013-09-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

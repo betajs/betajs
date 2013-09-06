@@ -358,7 +358,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
 	},
 	
 	_setExternalRoute: function (route) {
-		window.history.pushState(this, document.title, route);
+		window.history.pushState({}, document.title, route);
 	}
 }], {
 	supported: function () {
