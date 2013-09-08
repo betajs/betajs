@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-06
+  betajs - v0.0.1 - 2013-09-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2102,11 +2102,15 @@ BetaJS.Net = BetaJS.Net || {};
 
 BetaJS.Net.Uri = {
 	
-	encodeUriParams: function (arr) {
+	encodeUriParams: function (arr, prefix) {
+		prefix = prefix || "";
 		var res = [];
 		BetaJS.Objs.iter(arr, function (value, key) {
-			res.push(key + "=" + encodeURI(value));
-		});
+			if (BetaJS.Types.is_object(value))
+				res = res.concat(this.encodeUriParams(value, prefix + key + "_"))
+			else
+				res.push(prefix + key + "=" + encodeURI(value));
+		}, this);
 		return res.join("&");
 	},
 	

@@ -346,6 +346,12 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		});
 		if (this.__visible)
 			this._after_show();
+		this.__updateViewPosition();
+		this._notify("activate");
+		return this;
+	},
+	
+	__updateViewPosition: function () {
 		if (this.__vertical_center) {
 			this.$el.css("top", "50%");
 			this.$el.css("margin-top", Math.round(-this.$el.height() / 2) + "px");
@@ -354,8 +360,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el.css("left", "50%");
 			this.$el.css("margin-left", Math.round(-this.$el.width() / 2) + "px");
 		}
-		this._notify("activate");
-		return this;
 	},
 	
 	/** Deactivates view and all added sub views
@@ -658,6 +662,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			};
 			this._notify("addChild", child, options);
 			child.setParent(this);
+			if (this.isActive())
+				this.__updateViewPosition();
 			return child;
 		}
 		return null;
@@ -683,6 +689,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			child.setParent(null);
 			child.off(null, null, this);
 			this._notify("removeChild", child);
+			if (this.isActive())
+				this.__updateViewPosition();
 		}
 	},
 	

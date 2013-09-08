@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-09-06
+  betajs - v0.0.1 - 2013-09-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-06
+  betajs - v0.0.1 - 2013-09-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-06
+  betajs - v0.0.1 - 2013-09-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2112,11 +2112,15 @@ BetaJS.Net = BetaJS.Net || {};
 
 BetaJS.Net.Uri = {
 	
-	encodeUriParams: function (arr) {
+	encodeUriParams: function (arr, prefix) {
+		prefix = prefix || "";
 		var res = [];
 		BetaJS.Objs.iter(arr, function (value, key) {
-			res.push(key + "=" + encodeURI(value));
-		});
+			if (BetaJS.Types.is_object(value))
+				res = res.concat(this.encodeUriParams(value, prefix + key + "_"))
+			else
+				res.push(prefix + key + "=" + encodeURI(value));
+		}, this);
 		return res.join("&");
 	},
 	
@@ -2146,7 +2150,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-06
+  betajs - v0.0.1 - 2013-09-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4241,7 +4245,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-06
+  betajs - v0.0.1 - 2013-09-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5113,7 +5117,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.1 - 2013-09-06
+  betajs - v0.0.1 - 2013-09-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5820,6 +5824,12 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		});
 		if (this.__visible)
 			this._after_show();
+		this.__updateViewPosition();
+		this._notify("activate");
+		return this;
+	},
+	
+	__updateViewPosition: function () {
 		if (this.__vertical_center) {
 			this.$el.css("top", "50%");
 			this.$el.css("margin-top", Math.round(-this.$el.height() / 2) + "px");
@@ -5828,8 +5838,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el.css("left", "50%");
 			this.$el.css("margin-left", Math.round(-this.$el.width() / 2) + "px");
 		}
-		this._notify("activate");
-		return this;
 	},
 	
 	/** Deactivates view and all added sub views
@@ -6132,6 +6140,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			};
 			this._notify("addChild", child, options);
 			child.setParent(this);
+			if (this.isActive())
+				this.__updateViewPosition();
 			return child;
 		}
 		return null;
@@ -6157,6 +6167,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			child.setParent(null);
 			child.off(null, null, this);
 			this._notify("removeChild", child);
+			if (this.isActive())
+				this.__updateViewPosition();
 		}
 	},
 	
@@ -6833,7 +6845,7 @@ BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view
 
 BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="switch-container" data-selector="switch-container-item"></div> ';
 
-BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner"    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
+BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
@@ -7051,10 +7063,17 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["button-view-template"]
 	},
+	_css: function () {
+		return {
+			"disabled": "",
+			"default": ""
+		};
+	},
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
 		this._setOptionProperty(options, "label", "");
 		this._setOptionProperty(options, "button_container_element", "button");
+		this._setOptionProperty(options, "disabled", false);
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
@@ -7062,7 +7081,8 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		}]);
 	},
 	__clickButton: function () {
-		this.trigger("click");
+		if (!this.get("disabled"))
+			this.trigger("click");
 	},
 });
 BetaJS.Views.View.extend("BetaJS.Views.InputView", {

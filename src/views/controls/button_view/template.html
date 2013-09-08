@@ -1,5 +1,6 @@
 <script type="text/template" id="button-view-template">
-	<{%= button_container_element %} data-selector="button-inner"
+	<{%= button_container_element %} data-selector="button-inner" class="{%= supp.css("default") %}"
+	 {%= bind.css_if("disabled", "disabled") %}
 	 {%= bind.inner("label") %}>
 	</{%= button_container_element %}>
 </script>
