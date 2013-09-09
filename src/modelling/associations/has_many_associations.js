@@ -5,9 +5,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	},
 
 	_yield: function () {
-		var query = {};
-		query[this._foreign_key] = this._id();
-		return this._foreign_table.allBy(query);
+		return this.allBy({});
 	},
 
 	yield: function () {
@@ -15,9 +13,21 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			return this._yield();
 		if (!this.__cache)
 			this.__cache = this._yield().asArray();
+		BetaJS.Objs.iter(this.__cache, function (model) {
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		}, this);
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
 	},
 	
+	invalidate: function () {
+		BetaJS.Objs.iter(this.__cache, function (model) {
+			model.off(null, null, this);
+		}, this);
+		this._inherited(BetaJS.Modelling.Associations.HasManyAssociation, "invalidate");
+	},
+
 	findBy: function (query) {
 		query[this._foreign_key] = this._id();
 		return this._foreign_table.findBy(query);

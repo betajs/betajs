@@ -4260,7 +4260,7 @@ BetaJS.Net.HttpHeader = {
 		var ret = "";
 		if (code == this.HTTP_STATUS_OK)
 			ret = "OK"
-		else if (code == this.HTTP.STATUS_CREATED)
+		else if (code == this.HTTP_STATUS_CREATED)
 			ret = "Created"
 		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
 			ret = "Payment Required"
@@ -4274,7 +4274,7 @@ BetaJS.Net.HttpHeader = {
 			ret = "Internal Server Error"
 		else
 			ret = "Other Error";
-		return prepend_code ? code + " " + ret : ret;
+		return prepend_code ? (code + " " + ret) : ret;
 	}
 	
 }
@@ -4874,6 +4874,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		return result;
 	},
 	
+	primary_key: function () {
+		return BetaJS.Scopes.resolve(this.__model_type).primary_key();
+	},
+	
 	__materialize: function (obj) {
 		if (!obj)
 			return null;
@@ -4881,8 +4885,8 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
 		var cls = BetaJS.Scopes.resolve(type);
-		if (this.__models_by_id[obj[cls.primary_key()]])
-			return this.__models_by_id[obj[cls.primary_key()]];
+		if (this.__models_by_id[obj[this.primary_key()]])
+			return this.__models_by_id[obj[this.primary_key()]];
 		var model = new cls(obj, {
 			table: this,
 			saved: true,
@@ -5003,9 +5007,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	},
 
 	_yield: function () {
-		var query = {};
-		query[this._foreign_key] = this._id();
-		return this._foreign_table.allBy(query);
+		return this.allBy({});
 	},
 
 	yield: function () {
@@ -5013,9 +5015,21 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			return this._yield();
 		if (!this.__cache)
 			this.__cache = this._yield().asArray();
+		BetaJS.Objs.iter(this.__cache, function (model) {
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		}, this);
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
 	},
 	
+	invalidate: function () {
+		BetaJS.Objs.iter(this.__cache, function (model) {
+			model.off(null, null, this);
+		}, this);
+		this._inherited(BetaJS.Modelling.Associations.HasManyAssociation, "invalidate");
+	},
+
 	findBy: function (query) {
 		query[this._foreign_key] = this._id();
 		return this._foreign_table.findBy(query);
@@ -5053,6 +5067,11 @@ BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associ
 			return new BetaJS.Iterators.ArrayIterator(this._yield());
 		if (!this.__cache)
 			this.__cache = this._yield();
+		BetaJS.Objs.iter(this.__cache, function (model) {
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		}, this);
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
 	},
 
@@ -5067,7 +5086,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			query[this._foreign_key] = this._model.get(this._primary_key)
 		else
 			query[this._foreign_key] = this._model.id();
-		return this._foreign_table.findBy(query);
+		var model = this._foreign_table.findBy(query);
+		if (model)
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		return model;
 	},
 	
 	_change_id: function (new_id, old_id) {
@@ -5082,13 +5106,19 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
 	
 	_yield: function () {
+		var model = null;
 		if (this._primary_key) {
 			var obj = {};
 			obj[this._primary_key] = this._model.get(this._foreign_key);
-			return this._foreign_table.findBy(obj);
+			model = this._foreign_table.findBy(obj);
 		}
 		else
-			return this._foreign_table.findById(this._model.get(this._foreign_key));
+			model = this._foreign_table.findById(this._model.get(this._foreign_key));
+		if (model)
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		return model;
 	},
 	
 });

@@ -287,6 +287,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		return result;
 	},
 	
+	primary_key: function () {
+		return BetaJS.Scopes.resolve(this.__model_type).primary_key();
+	},
+	
 	__materialize: function (obj) {
 		if (!obj)
 			return null;
@@ -294,8 +298,8 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		if (this.__options.type_column && obj[this.__options.type_column])
 			type = obj[this.__options.type_column];
 		var cls = BetaJS.Scopes.resolve(type);
-		if (this.__models_by_id[obj[cls.primary_key()]])
-			return this.__models_by_id[obj[cls.primary_key()]];
+		if (this.__models_by_id[obj[this.primary_key()]])
+			return this.__models_by_id[obj[this.primary_key()]];
 		var model = new cls(obj, {
 			table: this,
 			saved: true,

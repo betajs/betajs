@@ -15,6 +15,11 @@ BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associ
 			return new BetaJS.Iterators.ArrayIterator(this._yield());
 		if (!this.__cache)
 			this.__cache = this._yield();
+		BetaJS.Objs.iter(this.__cache, function (model) {
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		}, this);
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
 	},
 

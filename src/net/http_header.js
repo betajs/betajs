@@ -14,7 +14,7 @@ BetaJS.Net.HttpHeader = {
 		var ret = "";
 		if (code == this.HTTP_STATUS_OK)
 			ret = "OK"
-		else if (code == this.HTTP.STATUS_CREATED)
+		else if (code == this.HTTP_STATUS_CREATED)
 			ret = "Created"
 		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
 			ret = "Payment Required"
@@ -28,7 +28,7 @@ BetaJS.Net.HttpHeader = {
 			ret = "Internal Server Error"
 		else
 			ret = "Other Error";
-		return prepend_code ? code + " " + ret : ret;
+		return prepend_code ? (code + " " + ret) : ret;
 	}
 	
 }

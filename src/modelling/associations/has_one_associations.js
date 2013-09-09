@@ -8,7 +8,12 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			query[this._foreign_key] = this._model.get(this._primary_key)
 		else
 			query[this._foreign_key] = this._model.id();
-		return this._foreign_table.findBy(query);
+		var model = this._foreign_table.findBy(query);
+		if (model)
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		return model;
 	},
 	
 	_change_id: function (new_id, old_id) {

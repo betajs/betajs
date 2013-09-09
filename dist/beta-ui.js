@@ -1639,6 +1639,10 @@ BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 		this._inherited(BetaJS.Routers.RouteBinder, "destroy");
 	},
 	
+	current: function () {
+		return this._getExternalRoute();
+	},
+	
 	_setRoute: function (route) {
 		var current = this.__router.current();
 		if (current && current.route == route)
