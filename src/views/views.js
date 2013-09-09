@@ -145,7 +145,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			},
 			selector: function (name) {
 				return "data-selector='" + name + "' ";
-			}
+			},
+			view_id: this.cid()
 		}
 	},
 	

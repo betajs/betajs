@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-08
+  betajs - v0.0.1 - 2013-09-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -505,7 +505,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			},
 			selector: function (name) {
 				return "data-selector='" + name + "' ";
-			}
+			},
+			view_id: this.cid()
 		}
 	},
 	
