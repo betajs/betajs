@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-09
+  betajs - v0.0.1 - 2013-09-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1692,8 +1692,10 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
 	constructor: function (router) {
 		this._inherited(BetaJS.Routers.HistoryRouteBinder, "constructor", router);
 		var self = this;
+		this.__used = false;
 		BetaJS.$(window).on("popstate.events" + this.cid(), function () {
-			self._setRoute(self._getExternalRoute());
+			if (self.__used)
+				self._setRoute(self._getExternalRoute());
 		});
 	},
 	
@@ -1708,6 +1710,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
 	
 	_setExternalRoute: function (route) {
 		window.history.pushState({}, document.title, route);
+		this.__used = true;
 	}
 }], {
 	supported: function () {
