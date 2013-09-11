@@ -3,9 +3,11 @@ BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 		"default": BetaJS.Templates.Cached["progress-template"]
 	},
 	
-	_css: {
-		outer: "",
-		inner: ""
+	_css: function () {
+		return {
+			outer: "",
+			inner: ""
+		};
 	},
 	
 	constructor: function(options) {

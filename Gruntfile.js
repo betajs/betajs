@@ -241,6 +241,7 @@ module.exports = function(grunt) {
 			            'src/views/controls/textarea_view/styles.css',
 						'src/views/overlays/overlay_view/styles.css',
 						'src/views/overlays/fullscreen_overlay_view/styles.css',
+						'src/views/controls/progress_view/styles.css',
 			        ]
 		    	}
 		    }

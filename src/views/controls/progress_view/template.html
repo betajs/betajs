@@ -1,6 +1,8 @@
 <script type="text/template" id="progress-template">
 	<div class="{%= supp.css('outer') %}">
 		<div data-selector="inner" class="{%= supp.css('inner') %}" style="{%= horizontal ? 'width': 'height' %}:{%= value*100 %}%">
+		</div>
+		<div class="progress-view-overlay">
 			{%= label %}
 		</div>
 	</div>
