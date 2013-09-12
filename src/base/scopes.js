@@ -33,7 +33,7 @@ BetaJS.Scopes = {
 	touch: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var a = s.split(".");			
+		var a = s.split(".");		
 		var object = this.base(a[0], base);
 		for (var i = 1; i < a.length; ++i) {
 			if (!(a[i] in object))

@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.1 - 2013-09-11
+  betajs - v0.0.1 - 2013-09-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-11
+  betajs - v0.0.1 - 2013-09-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -210,7 +210,7 @@ BetaJS.Scopes = {
 	touch: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
-		var a = s.split(".");			
+		var a = s.split(".");		
 		var object = this.base(a[0], base);
 		for (var i = 1; i < a.length; ++i) {
 			if (!(a[i] in object))
@@ -2145,7 +2145,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-11
+  betajs - v0.0.1 - 2013-09-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4240,7 +4240,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-11
+  betajs - v0.0.1 - 2013-09-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
