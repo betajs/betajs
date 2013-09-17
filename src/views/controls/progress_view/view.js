@@ -19,6 +19,10 @@ BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 			if (this.isActive())
 				this.$("[data-selector='inner']").css(this.get("horizontal") ? 'width' : 'height', (value * 100) + "%");
 		}, this);
+		this.on("change:label", function (label) {
+			if (this.isActive())
+				this.$("[data-selector='label']").html(label);
+		}, this);
 	},
 	
 });
