@@ -6,7 +6,7 @@ BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 		this.__options = BetaJS.Objs.extend({
 			database: "database",
 			server: "localhost",
-			port: "27017"			
+			port: 27017		
 		}, options || {});
 		this._inherited(BetaJS.Databases.MongoDatabase, "constructor");
 		this.__mongodb = null;
