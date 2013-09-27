@@ -56,6 +56,6 @@ BetaJS.Scopes = {
 		if (a.length > 1)
 			object[a[a.length - 1]] = obj;
 		return obj;
-	},
+	}
 	
 };

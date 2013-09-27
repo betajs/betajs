@@ -14,6 +14,6 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 				this.invalidate();
 			}, this);
 		return model;
-	},
+	}
 	
 });

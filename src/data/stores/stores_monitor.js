@@ -14,6 +14,6 @@ BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
 			this.trigger("update", ident, store, row, data);
 			this.trigger("write", "update", ident, store, row, data);
 		}, this);
-	},	
+	}
 		
 }]);

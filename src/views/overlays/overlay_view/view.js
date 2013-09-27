@@ -88,6 +88,6 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		}
 		overlay.css("left", left + "px");
 		overlay.css("top", top + "px");
-	},
+	}
 
 });

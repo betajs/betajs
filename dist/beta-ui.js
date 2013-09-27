@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -213,7 +213,7 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	        	return null;
 	        }
         }
-    }],
+    }]
 
 });
 
@@ -349,7 +349,7 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 	
 	evaluate: function (obj) {
 		return this.__compiled.apply(this, [obj]);
-	},
+	}
 	
 }, {
 	
@@ -1651,7 +1651,7 @@ BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 	},
 	
 	_getExternalRoute: function () { return "" },
-	_setExternalRoute: function (route) { },
+	_setExternalRoute: function (route) { }
 	
 });
 
@@ -1797,7 +1797,7 @@ BetaJS.Views.View.extend("BetaJS.Views.HolygrailView", {
 			this["__" + key] = this.addChild(view);
 		}
 		return view;
-	},
+	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	
@@ -1897,7 +1897,7 @@ BetaJS.Views.View.extend("BetaJS.Views.SingleContainerView", {
 			view.setEl("");
 			this.__view = this.addChild(view);
 		}
-	},
+	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.SwitchContainerView", {
 	
@@ -1973,7 +1973,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	__clickButton: function () {
 		if (!this.get("disabled"))
 			this.trigger("click");
-	},
+	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	_dynamics: {
@@ -1982,12 +1982,12 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	_events: function () {
 		return [{
 			"keyup input": "__keyupEvent",
-			"blur input": "__leaveEvent",
+			"blur input": "__leaveEvent"
 		}, {
 			"keyup input": "__changeEvent",
 			"change input": "__changeEvent",
 			"input input": "__changeEvent",
-			"paste input": "__changeEvent",
+			"paste input": "__changeEvent"
 		}];
 	},
 	constructor: function(options) {
@@ -2068,7 +2068,7 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 		this.label = this.addChild(new BetaJS.Views.LabelView({
 			label: this.binding("value"),
 			el_classes: options["label_el_classes"],
-			children_classes: options["label_children_classes"],
+			children_classes: options["label_children_classes"]
 		}));
 		this.input = this.addChild(new BetaJS.Views.InputView({
 			value: this.binding("value"),
@@ -2171,7 +2171,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 			if (this.isActive())
 				this.$("[data-selector='label']").html(label);
 		}, this);
-	},
+	}
 	
 });
 
@@ -2180,7 +2180,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	_templates: function () {
 		return {
 			"default": BetaJS.Templates.Cached["list-view-template"],
-			"item-container": BetaJS.Templates.Cached["list-view-item-container-template"],
+			"item-container": BetaJS.Templates.Cached["list-view-item-container-template"]
 		};
 	},
 	
@@ -2384,7 +2384,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	__sort: function () {
 		for (var index = this.collection().count() - 1; index >= 0; index--)
 			this.$selector_list.prepend(this._findIndexElement(index));
-	},
+	}
 	
 });
 
@@ -2421,7 +2421,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	_removeItem: function (item, element) {
 		if (this.dynamics("item") != null)
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
-	},
+	}
 	
 });
 
@@ -2457,7 +2457,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	_destroyItemData: function (data) {
 		this.removeChild(data.view);
 		data.view.destroy();
-	},
+	}
 	
 });
 BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
@@ -2661,7 +2661,7 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		}
 		overlay.css("left", left + "px");
 		overlay.css("top", top + "px");
-	},
+	}
 
 });
 BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {

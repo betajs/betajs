@@ -39,6 +39,6 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	
 	_query: function (query, options) {
 		return this._iterate();
-	},	
+	}
 
 });

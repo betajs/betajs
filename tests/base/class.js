@@ -11,13 +11,13 @@ test("test object inheritance", function() {
 	var C = B.extend(null, {
 		test: function (x) {
 			return x + "c" + this._inherited(C, "test", "c");
-		},
+		}
 	});
 	var D = C.extend(null);
 	var E = D.extend(null, {
 		test: function (x) {
 			return x + "e" + this._inherited(E, "test", "e");
-		},
+		}
 	});
 	var e = new E();
 	ok(e.test("g") == "geecca" && e.test2() == "z");
@@ -97,13 +97,13 @@ test("test static inheritance", function() {
 	var C = B.extend(null, {}, {
 		test: function (x) {
 			return x + "c" + this._inherited(C, "test", "c");
-		},
+		}
 	});
 	var D = C.extend(null);
 	var E = D.extend(null, {}, {
 		test: function (x) {
 			return x + "e" + this._inherited(E, "test", "e");
-		},
+		}
 	});
 	ok(E.test("g") == "geecca" && E.test2() == "z");
 });

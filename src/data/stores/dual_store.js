@@ -6,7 +6,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			update_options: {},
 			delete_options: {},
 			get_options: {},
-			query_options: {},
+			query_options: {}
 		}, options || {});
 		options.id_key = first._id_key;
 		options.async_write = first.async_write();
@@ -267,6 +267,6 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			}
 		else
 			return first.query(query, options);
-	},
+	}
 
 });

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -228,7 +228,7 @@ BetaJS.Scopes = {
 		if (a.length > 1)
 			object[a[a.length - 1]] = obj;
 		return obj;
-	},
+	}
 	
 };
 
@@ -473,6 +473,11 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
+
+		// Note: Required for Internet Explorer
+		if ("constructor" in object)
+			result.prototype.constructor = object.constructor;
+
 		if (object._notifications) {
 			for (var key in object._notifications) {
 				if (!result.__notifications[key])
@@ -911,7 +916,7 @@ BetaJS.Iterators = {
 		if (BetaJS.Types.is_array(mixed))
 			return new BetaJS.Iterators.ArrayIterator(mixed);
 		return new BetaJS.Iterators.ArrayIterator([mixed]);
-	},
+	}
 	
 };
 
@@ -1032,7 +1037,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
 	
 	next: function () {
 		return this.__iterator.next();
-	},
+	}
 
 });
 
@@ -1054,7 +1059,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
 			return null;
 		this.__limit--;
 		return this.__iterator.next();
-	},
+	}
 
 });
 
@@ -1088,7 +1093,7 @@ BetaJS.Events.EventsMixin = {
 		options = options || {};
 		var obj = {
 			callback: callback,
-			context: context,
+			context: context
 		};
 		if (options.min_delay)
 			obj.min_delay = new BetaJS.Timers.Timer({
@@ -1338,7 +1343,7 @@ BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
 		BetaJS.Objs.iter(this.__objects, function (object) {
 			this.unregister(object);
 		}, this);
-	},
+	}
 	
 }]);
 
@@ -1371,7 +1376,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		var container = {
 			object: object,
 			prev: this.__last,
-			next: null,
+			next: null
 		};
 		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
 		if (this.__first)
@@ -1606,7 +1611,7 @@ BetaJS.Properties.PropertiesMixin = {
 	__properties_destroy: function () {
 		for (var key in this.__properties) 
 			this.unset(key);
-	},
+	}
 	
 };
 
@@ -1923,7 +1928,7 @@ BetaJS.Time = {
 			"mm": minutes < 10 ? "0" + minutes : minutes, 
 			"m": minutes, 
 			"ss": seconds < 10 ? "0" + seconds : seconds, 
-			"s": seconds, 
+			"s": seconds
 		};
 		for (var key in replacers)
 			s = s.replace(key, replacers[key]);
@@ -2041,7 +2046,7 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 			start: true,
 			fire: null,
 			context: this,
-			destroy_on_fire: false,
+			destroy_on_fire: false
 		}, options);
 		this.__delay = options.delay;
 		this.__destroy_on_fire = options.destroy_on_fire;

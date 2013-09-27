@@ -75,7 +75,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	},
 	
 	_query: function (query) {
-	},	
+	}
 	
 });
 

@@ -8,7 +8,7 @@ BetaJS.Iterators = {
 		if (BetaJS.Types.is_array(mixed))
 			return new BetaJS.Iterators.ArrayIterator(mixed);
 		return new BetaJS.Iterators.ArrayIterator([mixed]);
-	},
+	}
 	
 };
 
@@ -129,7 +129,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
 	
 	next: function () {
 		return this.__iterator.next();
-	},
+	}
 
 });
 
@@ -151,7 +151,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
 			return null;
 		this.__limit--;
 		return this.__iterator.next();
-	},
+	}
 
 });
 

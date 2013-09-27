@@ -10,7 +10,7 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 		this.label = this.addChild(new BetaJS.Views.LabelView({
 			label: this.binding("value"),
 			el_classes: options["label_el_classes"],
-			children_classes: options["label_children_classes"],
+			children_classes: options["label_children_classes"]
 		}));
 		this.input = this.addChild(new BetaJS.Views.InputView({
 			value: this.binding("value"),

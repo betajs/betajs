@@ -75,6 +75,11 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
+
+		// Note: Required for Internet Explorer
+		if ("constructor" in object)
+			result.prototype.constructor = object.constructor;
+
 		if (object._notifications) {
 			for (var key in object._notifications) {
 				if (!result.__notifications[key])

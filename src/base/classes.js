@@ -70,7 +70,7 @@ BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
 		BetaJS.Objs.iter(this.__objects, function (object) {
 			this.unregister(object);
 		}, this);
-	},
+	}
 	
 }]);
 
@@ -103,7 +103,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		var container = {
 			object: object,
 			prev: this.__last,
-			next: null,
+			next: null
 		};
 		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
 		if (this.__first)

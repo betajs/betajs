@@ -208,7 +208,7 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	        	return null;
 	        }
         }
-    }],
+    }]
 
 });
 

@@ -29,6 +29,6 @@ BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associ
 				results.push(foreigns.next());
 		}
 		return results;
-	},
+	}
 
 });

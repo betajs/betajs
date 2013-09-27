@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -97,7 +97,7 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	
 	_syncCall: function (options) {},
 	
-	_asyncCall: function (options) {},
+	_asyncCall: function (options) {}
 	
 });
 
@@ -160,7 +160,7 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
 			}
 		});
-	},
+	}
 
 });
 
@@ -209,8 +209,7 @@ BetaJS.Queries = {
 	dependencies : function(query) {
 		return this.__dependencies_query(query, {});
 	},
-	
-	
+		
 	__evaluate_query: function (query, object) {
 		for (var key in query)
 			if (!this.__evaluate_pair(key, query[key], object))
@@ -609,7 +608,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	},
 	
 	_query: function (query) {
-	},	
+	}
 	
 });
 
@@ -920,7 +919,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
 			this.trigger("update", ident, store, row, data);
 			this.trigger("write", "update", ident, store, row, data);
 		}, this);
-	},	
+	}
 		
 }]);
 
@@ -965,7 +964,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	
 	_query: function (query, options) {
 		return this._iterate();
-	},	
+	}
 
 });
 
@@ -1117,8 +1116,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 			}
 		});
 		return iter;
-	},	
-	
+	}	
 	
 });
 
@@ -1217,7 +1215,7 @@ BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	
 	_remove_key: function (key) {
 		delete localStorage[this.__key(key)];
-	},
+	}
 	
 });
 
@@ -1229,7 +1227,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			update_options: {},
 			delete_options: {},
 			get_options: {},
-			query_options: {},
+			query_options: {}
 		}, options || {});
 		options.id_key = first._id_key;
 		options.async_write = first.async_write();
@@ -1490,7 +1488,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			}
 		else
 			return first.query(query, options);
-	},
+	}
 
 });
 
@@ -1533,7 +1531,7 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
-					strategy: "or",
+					strategy: "or"
 				},
 				query_options: {
 					start: "second",
@@ -1888,7 +1886,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	
 	_query: function (query, options) {
 		return this.__store.query(query, options)
-	},	
+	}
 
 });
 BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {

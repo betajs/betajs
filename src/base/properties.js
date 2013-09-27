@@ -184,7 +184,7 @@ BetaJS.Properties.PropertiesMixin = {
 	__properties_destroy: function () {
 		for (var key in this.__properties) 
 			this.unset(key);
-	},
+	}
 	
 };
 

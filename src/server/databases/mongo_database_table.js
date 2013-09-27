@@ -59,6 +59,6 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 		if ("limit" in options)
 			result = result.limit(options.limit);
 		return new BetaJS.Iterators.ArrayIterator(result.toArray());
-	},
+	}
 
 });

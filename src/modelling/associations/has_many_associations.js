@@ -45,6 +45,6 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}
-	},
+	}
 
 });

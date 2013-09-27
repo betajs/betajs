@@ -132,6 +132,6 @@ BetaJS.Class.extend("BetaJS.Profiling.ProfilerHtmlViewer", {
     		this.__$tbody.append("<tr data-class='" + cls.classname + "'>" + s + "</tr>")
     	else
     		elem.html(s);
-    },
+    }
 
 });

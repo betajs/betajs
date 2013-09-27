@@ -40,6 +40,6 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	
 	_query: function (query, options) {
 		return this.table().find(query, options);
-	},	
+	}
 
 });

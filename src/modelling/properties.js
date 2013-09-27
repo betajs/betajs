@@ -144,7 +144,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
-	},
+	}
 	
 }, {
 
@@ -217,6 +217,6 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 
 	primary_key: function () {
 		return "id";
-	},
+	}
 
 });

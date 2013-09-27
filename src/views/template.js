@@ -8,7 +8,7 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 	
 	evaluate: function (obj) {
 		return this.__compiled.apply(this, [obj]);
-	},
+	}
 	
 }, {
 	

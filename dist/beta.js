@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -238,7 +238,7 @@ BetaJS.Scopes = {
 		if (a.length > 1)
 			object[a[a.length - 1]] = obj;
 		return obj;
-	},
+	}
 	
 };
 
@@ -483,6 +483,11 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
+
+		// Note: Required for Internet Explorer
+		if ("constructor" in object)
+			result.prototype.constructor = object.constructor;
+
 		if (object._notifications) {
 			for (var key in object._notifications) {
 				if (!result.__notifications[key])
@@ -921,7 +926,7 @@ BetaJS.Iterators = {
 		if (BetaJS.Types.is_array(mixed))
 			return new BetaJS.Iterators.ArrayIterator(mixed);
 		return new BetaJS.Iterators.ArrayIterator([mixed]);
-	},
+	}
 	
 };
 
@@ -1042,7 +1047,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
 	
 	next: function () {
 		return this.__iterator.next();
-	},
+	}
 
 });
 
@@ -1064,7 +1069,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
 			return null;
 		this.__limit--;
 		return this.__iterator.next();
-	},
+	}
 
 });
 
@@ -1098,7 +1103,7 @@ BetaJS.Events.EventsMixin = {
 		options = options || {};
 		var obj = {
 			callback: callback,
-			context: context,
+			context: context
 		};
 		if (options.min_delay)
 			obj.min_delay = new BetaJS.Timers.Timer({
@@ -1348,7 +1353,7 @@ BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
 		BetaJS.Objs.iter(this.__objects, function (object) {
 			this.unregister(object);
 		}, this);
-	},
+	}
 	
 }]);
 
@@ -1381,7 +1386,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		var container = {
 			object: object,
 			prev: this.__last,
-			next: null,
+			next: null
 		};
 		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
 		if (this.__first)
@@ -1616,7 +1621,7 @@ BetaJS.Properties.PropertiesMixin = {
 	__properties_destroy: function () {
 		for (var key in this.__properties) 
 			this.unset(key);
-	},
+	}
 	
 };
 
@@ -1933,7 +1938,7 @@ BetaJS.Time = {
 			"mm": minutes < 10 ? "0" + minutes : minutes, 
 			"m": minutes, 
 			"ss": seconds < 10 ? "0" + seconds : seconds, 
-			"s": seconds, 
+			"s": seconds
 		};
 		for (var key in replacers)
 			s = s.replace(key, replacers[key]);
@@ -2051,7 +2056,7 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 			start: true,
 			fire: null,
 			context: this,
-			destroy_on_fire: false,
+			destroy_on_fire: false
 		}, options);
 		this.__delay = options.delay;
 		this.__destroy_on_fire = options.destroy_on_fire;
@@ -2150,7 +2155,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2248,7 +2253,7 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	
 	_syncCall: function (options) {},
 	
-	_asyncCall: function (options) {},
+	_asyncCall: function (options) {}
 	
 });
 
@@ -2311,7 +2316,7 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
 			}
 		});
-	},
+	}
 
 });
 
@@ -2360,8 +2365,7 @@ BetaJS.Queries = {
 	dependencies : function(query) {
 		return this.__dependencies_query(query, {});
 	},
-	
-	
+		
 	__evaluate_query: function (query, object) {
 		for (var key in query)
 			if (!this.__evaluate_pair(key, query[key], object))
@@ -2760,7 +2764,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	},
 	
 	_query: function (query) {
-	},	
+	}
 	
 });
 
@@ -3071,7 +3075,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
 			this.trigger("update", ident, store, row, data);
 			this.trigger("write", "update", ident, store, row, data);
 		}, this);
-	},	
+	}
 		
 }]);
 
@@ -3116,7 +3120,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	
 	_query: function (query, options) {
 		return this._iterate();
-	},	
+	}
 
 });
 
@@ -3268,8 +3272,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 			}
 		});
 		return iter;
-	},	
-	
+	}	
 	
 });
 
@@ -3368,7 +3371,7 @@ BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	
 	_remove_key: function (key) {
 		delete localStorage[this.__key(key)];
-	},
+	}
 	
 });
 
@@ -3380,7 +3383,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			update_options: {},
 			delete_options: {},
 			get_options: {},
-			query_options: {},
+			query_options: {}
 		}, options || {});
 		options.id_key = first._id_key;
 		options.async_write = first.async_write();
@@ -3641,7 +3644,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			}
 		else
 			return first.query(query, options);
-	},
+	}
 
 });
 
@@ -3684,7 +3687,7 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
-					strategy: "or",
+					strategy: "or"
 				},
 				query_options: {
 					start: "second",
@@ -4039,7 +4042,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	
 	_query: function (query, options) {
 		return this.__store.query(query, options)
-	},	
+	}
 
 });
 BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
@@ -4245,7 +4248,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4429,7 +4432,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
-	},
+	}
 	
 }, {
 
@@ -4502,7 +4505,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 
 	primary_key: function () {
 		return "id";
-	},
+	}
 
 });
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
@@ -4587,7 +4590,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 				options.success();
 		};
 		return this.__table._model_remove(this, opts);
-	},
+	}
 	
 }]);
 BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
@@ -4609,7 +4612,7 @@ BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException",
 	constructor: function (model) {
 		var message = BetaJS.Objs.values(model.errors()).join("\n");
 		this._inherited(BetaJS.Modelling.ModelInvalidException, "constructor", model, message);
-	},
+	}
 
 });
 
@@ -4618,7 +4621,7 @@ BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException
 	
 	constructor: function (model) {
 		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
-	},
+	}
 
 });
 
@@ -5052,7 +5055,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}
-	},
+	}
 
 });
 BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associations.HasManyThroughArrayAssociation", {
@@ -5078,7 +5081,7 @@ BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associ
 			}, this);
 		}, this);
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
-	},
+	}
 
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasOneAssociation", {
@@ -5105,7 +5108,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}
-	},
+	}
 
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
@@ -5124,7 +5127,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 				this.invalidate();
 			}, this);
 		return model;
-	},
+	}
 	
 });
 BetaJS.Class.extend("BetaJS.Modelling.Validators.Validator", {
@@ -5147,7 +5150,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5361,7 +5364,7 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	        	return null;
 	        }
         }
-    }],
+    }]
 
 });
 
@@ -5497,7 +5500,7 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 	
 	evaluate: function (obj) {
 		return this.__compiled.apply(this, [obj]);
-	},
+	}
 	
 }, {
 	
@@ -6799,7 +6802,7 @@ BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 	},
 	
 	_getExternalRoute: function () { return "" },
-	_setExternalRoute: function (route) { },
+	_setExternalRoute: function (route) { }
 	
 });
 
@@ -6945,7 +6948,7 @@ BetaJS.Views.View.extend("BetaJS.Views.HolygrailView", {
 			this["__" + key] = this.addChild(view);
 		}
 		return view;
-	},
+	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	
@@ -7045,7 +7048,7 @@ BetaJS.Views.View.extend("BetaJS.Views.SingleContainerView", {
 			view.setEl("");
 			this.__view = this.addChild(view);
 		}
-	},
+	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.SwitchContainerView", {
 	
@@ -7121,7 +7124,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	__clickButton: function () {
 		if (!this.get("disabled"))
 			this.trigger("click");
-	},
+	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	_dynamics: {
@@ -7130,12 +7133,12 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	_events: function () {
 		return [{
 			"keyup input": "__keyupEvent",
-			"blur input": "__leaveEvent",
+			"blur input": "__leaveEvent"
 		}, {
 			"keyup input": "__changeEvent",
 			"change input": "__changeEvent",
 			"input input": "__changeEvent",
-			"paste input": "__changeEvent",
+			"paste input": "__changeEvent"
 		}];
 	},
 	constructor: function(options) {
@@ -7216,7 +7219,7 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 		this.label = this.addChild(new BetaJS.Views.LabelView({
 			label: this.binding("value"),
 			el_classes: options["label_el_classes"],
-			children_classes: options["label_children_classes"],
+			children_classes: options["label_children_classes"]
 		}));
 		this.input = this.addChild(new BetaJS.Views.InputView({
 			value: this.binding("value"),
@@ -7319,7 +7322,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 			if (this.isActive())
 				this.$("[data-selector='label']").html(label);
 		}, this);
-	},
+	}
 	
 });
 
@@ -7328,7 +7331,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	_templates: function () {
 		return {
 			"default": BetaJS.Templates.Cached["list-view-template"],
-			"item-container": BetaJS.Templates.Cached["list-view-item-container-template"],
+			"item-container": BetaJS.Templates.Cached["list-view-item-container-template"]
 		};
 	},
 	
@@ -7532,7 +7535,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	__sort: function () {
 		for (var index = this.collection().count() - 1; index >= 0; index--)
 			this.$selector_list.prepend(this._findIndexElement(index));
-	},
+	}
 	
 });
 
@@ -7569,7 +7572,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	_removeItem: function (item, element) {
 		if (this.dynamics("item") != null)
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
-	},
+	}
 	
 });
 
@@ -7605,7 +7608,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	_destroyItemData: function (data) {
 		this.removeChild(data.view);
 		data.view.destroy();
-	},
+	}
 	
 });
 BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
@@ -7809,7 +7812,7 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		}
 		overlay.css("left", left + "px");
 		overlay.css("top", top + "px");
-	},
+	}
 
 });
 BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {

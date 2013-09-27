@@ -39,5 +39,5 @@ BetaJS.Views.View.extend("BetaJS.Views.HolygrailView", {
 			this["__" + key] = this.addChild(view);
 		}
 		return view;
-	},
+	}
 });

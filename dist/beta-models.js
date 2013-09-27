@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-17
+  betajs - v0.0.1 - 2013-09-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -183,7 +183,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
-	},
+	}
 	
 }, {
 
@@ -256,7 +256,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 
 	primary_key: function () {
 		return "id";
-	},
+	}
 
 });
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
@@ -341,7 +341,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 				options.success();
 		};
 		return this.__table._model_remove(this, opts);
-	},
+	}
 	
 }]);
 BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
@@ -363,7 +363,7 @@ BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException",
 	constructor: function (model) {
 		var message = BetaJS.Objs.values(model.errors()).join("\n");
 		this._inherited(BetaJS.Modelling.ModelInvalidException, "constructor", model, message);
-	},
+	}
 
 });
 
@@ -372,7 +372,7 @@ BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException
 	
 	constructor: function (model) {
 		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
-	},
+	}
 
 });
 
@@ -806,7 +806,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}
-	},
+	}
 
 });
 BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associations.HasManyThroughArrayAssociation", {
@@ -832,7 +832,7 @@ BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associ
 			}, this);
 		}, this);
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
-	},
+	}
 
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasOneAssociation", {
@@ -859,7 +859,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			object.set(this._foreign_key, new_id);
 			object.save();
 		}
-	},
+	}
 
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
@@ -878,7 +878,7 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 				this.invalidate();
 			}, this);
 		return model;
-	},
+	}
 	
 });
 BetaJS.Class.extend("BetaJS.Modelling.Validators.Validator", {

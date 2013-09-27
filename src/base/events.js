@@ -8,7 +8,7 @@ BetaJS.Events.EventsMixin = {
 		options = options || {};
 		var obj = {
 			callback: callback,
-			context: context,
+			context: context
 		};
 		if (options.min_delay)
 			obj.min_delay = new BetaJS.Timers.Timer({

@@ -17,7 +17,7 @@ BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException",
 	constructor: function (model) {
 		var message = BetaJS.Objs.values(model.errors()).join("\n");
 		this._inherited(BetaJS.Modelling.ModelInvalidException, "constructor", model, message);
-	},
+	}
 
 });
 
@@ -26,7 +26,7 @@ BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException
 	
 	constructor: function (model) {
 		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
-	},
+	}
 
 });
 

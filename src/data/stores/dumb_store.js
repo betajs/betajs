@@ -121,7 +121,6 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 			}
 		});
 		return iter;
-	},	
-	
+	}	
 	
 });

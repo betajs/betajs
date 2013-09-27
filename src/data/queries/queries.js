@@ -43,8 +43,7 @@ BetaJS.Queries = {
 	dependencies : function(query) {
 		return this.__dependencies_query(query, {});
 	},
-	
-	
+		
 	__evaluate_query: function (query, object) {
 		for (var key in query)
 			if (!this.__evaluate_pair(key, query[key], object))

@@ -306,7 +306,7 @@ BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 	},
 	
 	_getExternalRoute: function () { return "" },
-	_setExternalRoute: function (route) { },
+	_setExternalRoute: function (route) { }
 	
 });
 

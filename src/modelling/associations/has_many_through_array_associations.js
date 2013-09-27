@@ -21,6 +21,6 @@ BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associ
 			}, this);
 		}, this);
 		return new BetaJS.Iterators.ArrayIterator(this.__cache);
-	},
+	}
 
 });

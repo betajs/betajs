@@ -10,7 +10,7 @@ BetaJS.Time = {
 			"mm": minutes < 10 ? "0" + minutes : minutes, 
 			"m": minutes, 
 			"ss": seconds < 10 ? "0" + seconds : seconds, 
-			"s": seconds, 
+			"s": seconds
 		};
 		for (var key in replacers)
 			s = s.replace(key, replacers[key]);

@@ -15,7 +15,7 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 			start: true,
 			fire: null,
 			context: this,
-			destroy_on_fire: false,
+			destroy_on_fire: false
 		}, options);
 		this.__delay = options.delay;
 		this.__destroy_on_fire = options.destroy_on_fire;

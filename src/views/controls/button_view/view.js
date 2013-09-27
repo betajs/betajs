@@ -22,5 +22,5 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	__clickButton: function () {
 		if (!this.get("disabled"))
 			this.trigger("click");
-	},
+	}
 });

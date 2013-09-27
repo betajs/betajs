@@ -92,7 +92,7 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	
 	_syncCall: function (options) {},
 	
-	_asyncCall: function (options) {},
+	_asyncCall: function (options) {}
 	
 });
 
@@ -155,6 +155,6 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
 			}
 		});
-	},
+	}
 
 });

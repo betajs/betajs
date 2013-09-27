@@ -20,6 +20,6 @@ BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	
 	_remove_key: function (key) {
 		delete localStorage[this.__key(key)];
-	},
+	}
 	
 });

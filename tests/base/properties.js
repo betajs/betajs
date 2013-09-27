@@ -2,7 +2,7 @@ test("test properties", function () {
 	var e = new BetaJS.Properties.Properties();
 	var z = 0;
 	e.on("change:test", function () {
-		z++
+		z++;
 	});
 	e.set("test", 1);
 	ok(z==1);

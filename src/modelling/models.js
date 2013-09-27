@@ -80,6 +80,6 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 				options.success();
 		};
 		return this.__table._model_remove(this, opts);
-	},
+	}
 	
 }]);

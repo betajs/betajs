@@ -3,7 +3,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	_templates: function () {
 		return {
 			"default": BetaJS.Templates.Cached["list-view-template"],
-			"item-container": BetaJS.Templates.Cached["list-view-item-container-template"],
+			"item-container": BetaJS.Templates.Cached["list-view-item-container-template"]
 		};
 	},
 	
@@ -207,7 +207,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	__sort: function () {
 		for (var index = this.collection().count() - 1; index >= 0; index--)
 			this.$selector_list.prepend(this._findIndexElement(index));
-	},
+	}
 	
 });
 
@@ -244,7 +244,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	_removeItem: function (item, element) {
 		if (this.dynamics("item") != null)
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
-	},
+	}
 	
 });
 
@@ -280,6 +280,6 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	_destroyItemData: function (data) {
 		this.removeChild(data.view);
 		data.view.destroy();
-	},
+	}
 	
 });

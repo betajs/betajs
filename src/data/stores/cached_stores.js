@@ -37,7 +37,7 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
-					strategy: "or",
+					strategy: "or"
 				},
 				query_options: {
 					start: "second",

@@ -23,6 +23,6 @@ BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 			if (this.isActive())
 				this.$("[data-selector='label']").html(label);
 		}, this);
-	},
+	}
 	
 });
