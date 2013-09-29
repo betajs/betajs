@@ -67,6 +67,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 		return new BetaJS.Iterators.MappedIterator(result, function (row) {
 			return self.decode_object(row);
 		});
+	},
+	
+	_ensure_index: function (key) {
+		return this.__store.ensure_index(key);
 	}
+	
 
 });

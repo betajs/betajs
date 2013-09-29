@@ -231,6 +231,13 @@ BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		var iter = this.query({});
 		while (iter.hasNext())
 			this.remove(iter.next().id);
+	},
+	
+	_ensure_index: function (key) {
+	},
+	
+	ensure_index: function (key) {
+		this._ensure_index(key);
 	}
 
 }]);

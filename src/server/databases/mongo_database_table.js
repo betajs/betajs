@@ -59,6 +59,12 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 		if ("limit" in options)
 			result = result.limit(options.limit);
 		return new BetaJS.Iterators.ArrayIterator(result.toArray());
-	}
+	},
+	
+	ensureIndex: function (key) {
+		var obj = {};
+		obj[key] = 1;
+		return this.table().ensureIndex(obj);
+	}	
 
 });

@@ -39,6 +39,10 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	
 	_query: function (query, options) {
 		return this.__store.query(query, options)
-	}
+	},
+	
+	_ensure_index: function (key) {
+		return this.__store.ensure_index(key);
+	}	
 
 });

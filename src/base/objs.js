@@ -28,6 +28,29 @@ BetaJS.Objs = {
 		return target;
 	},
 	
+	merge: function (secondary, primary, options) {
+		secondary = secondary || {};
+		primary = primary || {};
+		var result = {};
+		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
+		for (var key in keys) {
+			var opt = key in options ? options[key] : "primary";
+			if (opt == "primary" || opt == "secondary") {
+				if (key in primary || key in secondary) {
+					if (opt == "primary")
+						result[key] = key in primary ? primary[key] : secondary[key]
+					else
+						result[key] = key in secondary ? secondary[key] : primary[key];
+				}			
+			}
+			else if (BetaJS.Types.is_function(opt))
+				result[key] = opt(secondary[key], primary[key])
+			else if (BetaJS.Types.is_object(opt))
+				result[key] = BetaJS.Objs.merge(secondary[key], primary[key], opt);
+		}
+		return result;
+	},
+	
 	keys: function(obj, mapped) {
 		if (BetaJS.Types.is_undefined(mapped)) {
 			var result = [];

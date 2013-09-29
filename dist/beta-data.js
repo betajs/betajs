@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.1 - 2013-09-28
+  betajs - v0.0.1 - 2013-09-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -899,6 +899,13 @@ BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		var iter = this.query({});
 		while (iter.hasNext())
 			this.remove(iter.next().id);
+	},
+	
+	_ensure_index: function (key) {
+	},
+	
+	ensure_index: function (key) {
+		this._ensure_index(key);
 	}
 
 }]);
@@ -1841,7 +1848,12 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 		return new BetaJS.Iterators.MappedIterator(result, function (row) {
 			return self.decode_object(row);
 		});
+	},
+	
+	_ensure_index: function (key) {
+		return this.__store.ensure_index(key);
 	}
+	
 
 });
 
@@ -1886,7 +1898,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	
 	_query: function (query, options) {
 		return this.__store.query(query, options)
-	}
+	},
+	
+	_ensure_index: function (key) {
+		return this.__store.ensure_index(key);
+	}	
 
 });
 BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {

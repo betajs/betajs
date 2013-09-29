@@ -350,6 +350,20 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			});
 		}
 		return this._active_query_engine;
+	},
+	
+	scheme: function () {
+		return this.__model_type.scheme();
+	},
+	
+	ensure_indices: function () {
+		if (!("ensure_index" in this.__store))
+			return false;
+		var scheme = this.scheme();
+		for (var key in scheme)
+			if (scheme[key].index)
+				this.__store.ensure_index(key);
+		return true;
 	}
 	
 }]);

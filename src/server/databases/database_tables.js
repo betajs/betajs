@@ -63,6 +63,8 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
 	
 	updateById: function (id, data) {
 		return this.updateRow({id: id}, data);
-	}
+	},
+	
+	ensureIndex: function (key) {}
 	
 });

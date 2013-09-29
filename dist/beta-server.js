@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.1 - 2013-09-28
+  betajs - v0.0.1 - 2013-09-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-28
+  betajs - v0.0.1 - 2013-09-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-28
+  betajs - v0.0.1 - 2013-09-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -270,6 +270,29 @@ BetaJS.Objs = {
 		for (var key in source)
 			target[key] = this.clone(source[key], depth);
 		return target;
+	},
+	
+	merge: function (secondary, primary, options) {
+		secondary = secondary || {};
+		primary = primary || {};
+		var result = {};
+		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
+		for (var key in keys) {
+			var opt = key in options ? options[key] : "primary";
+			if (opt == "primary" || opt == "secondary") {
+				if (key in primary || key in secondary) {
+					if (opt == "primary")
+						result[key] = key in primary ? primary[key] : secondary[key]
+					else
+						result[key] = key in secondary ? secondary[key] : primary[key];
+				}			
+			}
+			else if (BetaJS.Types.is_function(opt))
+				result[key] = opt(secondary[key], primary[key])
+			else if (BetaJS.Types.is_object(opt))
+				result[key] = BetaJS.Objs.merge(secondary[key], primary[key], opt);
+		}
+		return result;
 	},
 	
 	keys: function(obj, mapped) {
@@ -2155,7 +2178,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-28
+  betajs - v0.0.1 - 2013-09-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3055,6 +3078,13 @@ BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		var iter = this.query({});
 		while (iter.hasNext())
 			this.remove(iter.next().id);
+	},
+	
+	_ensure_index: function (key) {
+	},
+	
+	ensure_index: function (key) {
+		this._ensure_index(key);
 	}
 
 }]);
@@ -3997,7 +4027,12 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 		return new BetaJS.Iterators.MappedIterator(result, function (row) {
 			return self.decode_object(row);
 		});
+	},
+	
+	_ensure_index: function (key) {
+		return this.__store.ensure_index(key);
 	}
+	
 
 });
 
@@ -4042,7 +4077,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	
 	_query: function (query, options) {
 		return this.__store.query(query, options)
-	}
+	},
+	
+	_ensure_index: function (key) {
+		return this.__store.ensure_index(key);
+	}	
 
 });
 BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
@@ -4248,7 +4287,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-28
+  betajs - v0.0.1 - 2013-09-29
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4945,6 +4984,20 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			});
 		}
 		return this._active_query_engine;
+	},
+	
+	scheme: function () {
+		return this.__model_type.scheme();
+	},
+	
+	ensure_indices: function () {
+		if (!("ensure_index" in this.__store))
+			return false;
+		var scheme = this.scheme();
+		for (var key in scheme)
+			if (scheme[key].index)
+				this.__store.ensure_index(key);
+		return true;
 	}
 	
 }]);
@@ -5261,7 +5314,9 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
 	
 	updateById: function (id, data) {
 		return this.updateRow({id: id}, data);
-	}
+	},
+	
+	ensureIndex: function (key) {}
 	
 });
 /* Needs to be executed within Fiber; requires Mongo-Sync. */
@@ -5289,7 +5344,7 @@ BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	mongodb: function () {
 		if (!this.__mongodb) {
-			this.__mongo_server = new this.__mongo_sync.Server("mongodb://" + this.__options.server + ":" + this.__options.port);
+			this.__mongo_server = new this.__mongo_sync.Server(this.__options.server + ":" + this.__options.port);
 			this.__mongodb = this.__mongo_server.db(this.__options.database);
 			if (this.__options.username)
 				this.__mongodb.auth(this.__options.username, this.__options.password);
@@ -5365,7 +5420,13 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 		if ("limit" in options)
 			result = result.limit(options.limit);
 		return new BetaJS.Iterators.ArrayIterator(result.toArray());
-	}
+	},
+	
+	ensureIndex: function (key) {
+		var obj = {};
+		obj[key] = 1;
+		return this.table().ensureIndex(obj);
+	}	
 
 });
 
@@ -5411,6 +5472,10 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	
 	_query: function (query, options) {
 		return this.table().find(query, options);
+	},
+	
+	_ensure_index: function (key) {
+		this.table().ensureIndex(key);
 	}
 
 });

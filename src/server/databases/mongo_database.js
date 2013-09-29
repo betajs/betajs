@@ -23,7 +23,7 @@ BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	mongodb: function () {
 		if (!this.__mongodb) {
-			this.__mongo_server = new this.__mongo_sync.Server("mongodb://" + this.__options.server + ":" + this.__options.port);
+			this.__mongo_server = new this.__mongo_sync.Server(this.__options.server + ":" + this.__options.port);
 			this.__mongodb = this.__mongo_server.db(this.__options.database);
 			if (this.__options.username)
 				this.__mongodb.auth(this.__options.username, this.__options.password);
