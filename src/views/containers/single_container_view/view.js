@@ -12,5 +12,6 @@ BetaJS.Views.View.extend("BetaJS.Views.SingleContainerView", {
 			view.setEl("");
 			this.__view = this.addChild(view);
 		}
+		return view;
 	}
 });
