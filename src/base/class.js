@@ -116,8 +116,10 @@ BetaJS.Class.prototype._notify = function (name) {
 	var rest = Array.prototype.slice.call(arguments, 1);
 	var table = this.cls.__notifications[name];
 	if (table)
-		for (var i in table)
-			this[table[i]].apply(this, rest);
+		for (var i in table) {
+			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
+			method.apply(this, rest);
+		}
 }
 
 BetaJS.Class.prototype.destroy = function () {

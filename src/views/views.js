@@ -6,6 +6,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Properties.PropertiesMixin,
+	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
     
@@ -203,6 +204,12 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
+	/** Returns all hotkeys that the view is listening to.
+	 */
+	_hotkeys: function () {
+		return [];
+	},
+	
 	/** Creates a new view with options
 	 * <ul>
 	 *  <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li> 
@@ -219,11 +226,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
 	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
 	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
-	 *  <li>hide_on_leave: (default: false) hide view if focus leaves</li>
 	 *  <li>invalidate_on_show: (default: false) invalidate view on show</li>
 	 *  <li>append_to_el: (default: false) append to el instead of replacing content</li>
-	 *  <li>vertical_center: (default: false) top:50% + margin-correction</li>
-	 *  <li>horizontal_center: (default: false) left:50% + margin-correction</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -235,9 +239,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this._setOption(options, "html", null);
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
-		this._setOption(options, "hide_on_leave", false);
-		this._setOption(options, "vertical_center", false);
-		this._setOption(options, "horizontal_center", false);
 		this._setOption(options, "invalidate_on_show", false);
 		this._setOption(options, "append_to_el", false);
 		this.__old_attributes = {};
@@ -257,7 +258,13 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.__children = {};
 		this.__active = false;
 		this.$el = null;
-		this.__events = this._events().concat(this.__events);
+		var events = this._events();
+		if (!BetaJS.Types.is_array(events))
+			events = [events]; 
+		this.__events = events.concat(this.__events);
+		this.__hotkeys = this._hotkeys();
+		if (this.__hotkeys.length > 0)
+			this.__events.push({"keyup": "__execute_hotkey"});
 
 		var templates = BetaJS.Objs.extend(BetaJS.Types.is_function(this._templates) ? this._templates() : this._templates, options["templates"] || {});
 		if ("template" in options)
@@ -278,6 +285,74 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.on("change", function () {
 				this.invalidate();
 			}, this);
+
+		this.__modules = {};
+		BetaJS.Objs.iter(options.modules || [], this.add_module, this);
+
+		this._notify("created", options);
+		this.ns = {};
+		var domain = this._domain();
+
+		if (!BetaJS.Types.is_empty(domain)) {
+			var viewlist = [];
+			for (var view_name in domain)
+				viewlist.push({
+					name: view_name,
+					data: domain[view_name],
+				});
+			viewlist = BetaJS.Sort.dependency_sort(viewlist, function (data) {
+				return data.name;
+			}, function (data) {
+				return data.data.before || [];
+			}, function (data) {
+				var after = data.data.after || [];
+				if (data.data.parent)
+					after.push(data.data.parent);
+				return after;
+			});
+			for (var i = 0; i < viewlist.length; ++i) {
+				var view_name = viewlist[i].name;
+				var record = viewlist[i].data;
+				var options = record.options || {};
+				if (BetaJS.Types.is_function(options))
+					options = options.apply(this, [this]);
+				if (record.type in BetaJS.Views)
+					record.type = BetaJS.Views[record.type];
+				if (BetaJS.Types.is_string(record.type))
+					record.type = BetaJS.Scopes.resolve(record.type);
+				var view = new record.type(options);
+				this.ns[view_name] = view;
+				var parent_options = record.parent_options || {};
+				var parent = this;
+				if (record.parent)
+					parent = BetaJS.Scopes.resolve(record.parent, this.ns);
+				if (record.method)
+					record.method(parent, view)
+				else
+					parent.addChild(view, parent_options);
+				view.domain = this;
+				for (var event in record.events || {})
+					view.on(event, record.events[event], view);
+				for (var event in record.listeners || {})
+					this.on(event, record.listeners[event], view);
+			}		
+		}
+	},
+	
+	_domain: function () {
+		return {};
+	},
+	
+	__execute_hotkey: function (event) {
+		BetaJS.Objs.iter(this.__hotkeys, function (inner) {
+			 BetaJS.Objs.iter(inner, function (f, key) {
+			 	var translated = BetaJS.Views.Keys[key] || key;
+			 	if (translated == event.keyCode) {
+					var func = BetaJS.Types.is_function(f) ? f : this[f];
+			 		func.apply(this, event);
+			 	}
+			 }, this);
+		}, this);
 	},
 	
 	/** Returns whether this view is active (i.e. bound and rendered) 
@@ -340,27 +415,15 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
-		if (this.__visible)
-			this.__bind_hide_on_leave();
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});
-		if (this.__visible)
-			this._after_show();
-		this.__updateViewPosition();
 		this._notify("activate");
+		if (this.__visible)
+			this.trigger("show");
+		this.trigger("visibility", this.__visible);
+		this.trigger("resize");
 		return this;
-	},
-	
-	__updateViewPosition: function () {
-		if (this.__vertical_center) {
-			this.$el.css("top", "50%");
-			this.$el.css("margin-top", Math.round(-this.$el.height() / 2) + "px");
-		}
-		if (this.__horizontal_center) {
-			this.$el.css("left", "50%");
-			this.$el.css("margin-left", Math.round(-this.$el.width() / 2) + "px");
-		}
 	},
 	
 	/** Deactivates view and all added sub views
@@ -369,15 +432,14 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	deactivate: function () {
 		if (!this.isActive())
 			return false;
+		if (this.__visible)
+			this.trigger("hide");
+		this.trigger("visibility", false);
 		this._notify("deactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.deactivate();
 		});
 		this.__active = false;
-		if (this.__visible) {
-			this.__unbind_hide_on_leave();
-			this._after_hide();
-		}
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.reset();
 		}, this);
@@ -486,13 +548,12 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		if (this.isActive()) {
 			this.$el.css("display", this.__visible ? "" : "none");
 			if (this.__visible) {
-				this.__bind_hide_on_leave();
-				this._after_show();
+				this.trigger("resize");
+				if (this.__invalidate_on_show)
+					this.invalidate();	
 			}
-			else {
-				this.__unbind_hide_on_leave();
-				this._after_hide();
-			}
+			this.trigger(visible ? "show" : "hide");
+			this.trigger("visibility", visible);		
 		}
 		if (this.__parent)
 			this.__parent.updateChildVisibility(this);	
@@ -501,14 +562,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	updateChildVisibility: function (child) {		
 	},
 	
-	_after_show: function () {	
-		if (this.__invalidate_on_show)
-			this.invalidate();	
-	},
-	
-	_after_hide: function () {	
-	},
-
 	toggle: function () {
 		this.setVisibility(!this.isVisible());
 	},
@@ -663,8 +716,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			};
 			this._notify("addChild", child, options);
 			child.setParent(this);
-			if (this.isActive())
-				this.__updateViewPosition();
+			if (this.isActive() && this.isVisible())
+				this.trigger("resize");
 			return child;
 		}
 		return null;
@@ -690,8 +743,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			child.setParent(null);
 			child.off(null, null, this);
 			this._notify("removeChild", child);
-			if (this.isActive())
-				this.__updateViewPosition();
+			if (this.isActive() && this.isVisible())
+				this.trigger("resize");
 		}
 	},
 	
@@ -735,250 +788,13 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	outerHeight: function () {
 		return this.$el.outerHeight();
-	},
-	
-	__bind_hide_on_leave: function () {
-		if (!this.__hide_on_leave || this.__hide_on_leave_func)
-			return;
-		var el = this.$el.get(0);
-		var self = this;
-		this.__hide_on_leave_func = function (e) {
-			if (self.__hide_on_leave_skip) {
-				self.__hide_on_leave_skip = false;
-				return;
-			}
-			if (document.contains(e.target) && e.target !== el && !$.contains(el, e.target))
-				self.hide();
-		};
-		this.__hide_on_leave_skip = true;
-		BetaJS.$(document.body).on("click", this.__hide_on_leave_func);
-	},
-	
-	__unbind_hide_on_leave: function () {
-		if (!this.__hide_on_leave || !this.__hide_on_leave_func)
-			return;
-		$(document.body).unbind("click", this.__hide_on_leave_func);
-		delete this.__hide_on_leave_func;
 	}
-
+	
 }]);
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
-
-
-BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
-	
-	constructor: function (parent, template_string) {
-		this._inherited(BetaJS.Views.DynamicTemplate, "constructor");
-		this.__parent = parent;
-		this.__template = new BetaJS.Templates.Template(template_string);
-		this.__instances = {};
-		this.__instances_by_name = {};
-	},
-	
-	reset: function () {
-		BetaJS.Objs.iter(this.__instances, function (instance) {
-			this.removeInstance(instance);
-		}, this);
-	},
-	
-	destroy: function () {
-		this.reset();
-		this._inherited(BetaJS.Views.DynamicTemplate, "destroy");
-	},
-	
-	renderInstance: function (binder, options) {
-		options = options || {};
-		if (options["name"])
-			this.removeInstanceByName(options["name"]);
-		var instance = new BetaJS.Views.DynamicTemplateInstance(this, binder, options);
-		this.__instances[instance.cid()] = instance;
-		if (options["name"])
-			this.__instances_by_name[name] = instance;
-	},
-	
-	removeInstanceByName: function (name) {
-		if (name in this.__instances_by_name)
-			this.removeInstance(this.__instances_by_name[name]);
-	},
-	
-	removeInstance: function (instance) {
-		delete this.__instances[instance.cid()];
-		delete this.__instances_by_name[instance.name()];
-		instance.destroy();
-	},
-	
-	view: function () {
-		return this.__parent;
-	},
-	
-	template: function () {
-		return this.__template;
-	}
-	
-});
-
-BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
-	BetaJS.Ids.ClientIdMixin,
-	BetaJS.Events.ListenMixin, {
-		
-	__bind: {
-		attr: function (attribute, variable) {
-			return this.__context.__bind_attribute(attribute, variable);
-		},
-		attrs: function (attributes) {
-			var s = "";
-			for (attribute in attributes)
-				s += this.attr(attribute, attributes[attribute]) + " ";
-			return s;
-		},
-		value: function (variable) {
-			return this.__context.__bind_value(variable);
-		},
-		inner: function (variable) {
-			return this.__context.__bind_inner(variable);
-		},
-		css_if: function (css, variable) {
-			return this.__context.__bind_css_if(css, variable, true);
-		},
-		css_if_not: function (css, variable) {
-			return this.__context.__bind_css_if(css, variable, false);
-		}
-	},
-	
-	__new_element: function (base) {
-		var id = BetaJS.Ids.uniqueId();
-		this.__elements[id] = BetaJS.Objs.extend({
-			id: id,
-			$el: null
-		}, base);
-		return this.__elements[id];
-	},
-	
-	__decompose_variable: function (variable) {
-		var parts = variable.split(".");
-		return {
-			object: parts.length == 1 ? this.__parent.view() : this.__args[parts[0]],
-			key: parts.length == 1 ? variable : parts[1]
-		};
-	},
-	
-	__get_variable: function (variable) {
-		var dec = this.__decompose_variable(variable);
-		return dec.object.get(dec.key);
-	},
-	
-	__set_variable: function (variable, value) {
-		var dec = this.__decompose_variable(variable);
-		return dec.object.set(dec.key, value);
-	},
-
-	__update_element: function (element) {
-		var value = this.__get_variable(element.variable);
-		if (element.type == "inner")
-			element.$el.html(value)
-		else if (element.type == "value") {
-			if (element.$el.val() != value)
-				element.$el.val(value);
-		} else if (element.type == "attribute")
-			element.$el.attr(element.attribute, value)
-		else if (element.type == "css") {
-			if (!element.positive)
-				value = !value;
-			if (value)
-				element.$el.addClass(this.__parent.view().css(element.css))
-			else
-				element.$el.removeClass(this.__parent.view().css(element.css));
-		};
-	},
-	
-	__prepare_element: function (element) {
-		var self = this;
-		element.$el = this.$el.find(element.selector);
-		if (element.type == "inner" || element.type == "css")
-			this.__update_element(element);
-		else if (element.type == "value")
-			element.$el.on("change input keyup paste", function () {
-				self.__set_variable(element.variable, element.$el.val());
-			});
-	},
-	
-	__bind_attribute: function (attribute, variable) {
-		var element = this.__new_element({
-			type: "attribute",
-			attribute: attribute,
-			variable: variable
-		});
-		var selector = "data-bind-" + attribute + "='" + element.id + "'";
-		element.selector = "[" + selector + "]";
-		var dec = this.__decompose_variable(variable);
-		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
-		return selector + " " + attribute + "='" + dec.object.get(dec.key) + "'";
-	},
-	
-	__bind_css_if: function (css, variable, positive) {
-		var element = this.__new_element({
-			type: "css",
-			css: css,
-			variable: variable,
-			positive: positive
-		});
-		var selector = "data-bind-css-" + css + "='" + element.id + "'";
-		element.selector = "[" + selector + "]";
-		var dec = this.__decompose_variable(variable);
-		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
-		return selector;
-	},
-	
-	__bind_value: function (variable) {
-		var element = this.__new_element({
-			type: "value",
-			variable: variable
-		});
-		var selector = "data-bind-value='" + element.id + "'";
-		element.selector = "[" + selector + "]";
-		var dec = this.__decompose_variable(variable);
-		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
-		return selector + " value='" + dec.object.get(dec.key) + "'";
-	},
-
-	__bind_inner: function (variable) {
-		var element = this.__new_element({
-			type: "inner",
-			variable: variable
-		});
-		var selector = "data-bind-inner='" + element.id + "'";
-		element.selector = "[" + selector + "]";
-		var dec = this.__decompose_variable(variable);
-		this.listenOn(dec.object, "change:" + dec.key, function () { this.__update_element(element); }, this);
-		return selector;
-	},
-
-	constructor: function (parent, binder, options) {
-		this._inherited(BetaJS.Views.DynamicTemplateInstance, "constructor");
-		this.__elements = {};
-		this.__inners = {};
-		options = options || {};
-		if (options["name"])
-			this.__name = name;
-		this.__parent = parent;
-		this.$el = binder;
-		this.__args = BetaJS.Objs.extend(options["args"] || {}, this.__parent.view().templateArguments());
-		this.__args.bind = BetaJS.Objs.extend({__context: this}, this.__bind);
-		this.$el.html(parent.template().evaluate(this.__args));
-		BetaJS.Objs.iter(this.__elements, function (element) { this.__prepare_element(element); }, this);
-	},
-	
-	destroy: function () {
-		BetaJS.Objs.iter(this.__elements, function (element) {
-			element.$el.off();
-		}, this);
-		this._inherited(BetaJS.Views.DynamicTemplateInstance, "destroy");
-	},
-	
-	name: function () {
-		return this.__name;
-	}
-	
-}]);
+BetaJS.Views.Keys = {
+	ESCAPE: 27,
+	ENTER: 13,
+};

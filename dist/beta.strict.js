@@ -1,21 +1,21 @@
 /*!
-  betajs - v0.0.1 - 2013-09-30
+  betajs - v0.0.2 - 2013-10-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 "use strict";
 /*!
-  betajs - v0.0.1 - 2013-09-30
+  betajs - v0.0.2 - 2013-10-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-30
+  betajs - v0.0.2 - 2013-10-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.1 - 2013-09-30
+  betajs - v0.0.2 - 2013-10-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -553,8 +553,10 @@ BetaJS.Class.prototype._notify = function (name) {
 	var rest = Array.prototype.slice.call(arguments, 1);
 	var table = this.cls.__notifications[name];
 	if (table)
-		for (var i in table)
-			this[table[i]].apply(this, rest);
+		for (var i in table) {
+			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
+			method.apply(this, rest);
+		}
 }
 
 BetaJS.Class.prototype.destroy = function () {
@@ -1460,9 +1462,102 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		}, this);
 	}
 	
-	
 }]);
 
+
+
+BetaJS.Classes.ModuleMixin = {
+	
+	_notifications: {
+		construct: function () {
+			this.__modules = {};
+		},
+		destroy: function () {
+			BetaJS.Objs.iter(this.__modules, this.remove_module, this);
+		}
+	},
+	
+	add_module: function (module) {
+		if (module.cid() in this.__modules)
+			return;
+		this.__modules[module.cid()] = module;
+		module.register(this);
+		this._notify("add_module", module);
+	},
+	
+	remove_module: function (module) {
+		if (!(module.cid() in this.__modules))
+			return;
+		delete this.__modules[module.cid()];
+		module.unregister(this);
+		this._notify("remove_module", module);
+	}
+	
+};
+
+
+BetaJS.Class.extend("BetaJS.Classes.Module", [
+
+	BetaJS.Ids.ClientIdMixin,
+	{
+		
+	constructor: function (options) {
+		this._inherited(BetaJS.Classes.Module, "constructor");
+		this._objects = {};
+		this.__auto_destroy = "auto_destroy" in options ? options.auto_destroy : true;
+	},
+	
+	destroy: function () {
+		BetaJS.Objs.iter(this._objects, this.unregister, this);
+		this._inherited(BetaJS.Classes.Module, "destroy");
+	},
+	
+	register: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		if (id in this._objects)
+			return;
+		var data = {};
+		this._objects[id] = {
+			object: object,
+			data: data
+		};
+		object.add_module(this);
+		this._register(object, data);
+	},
+	
+	_register: function (object) {},
+	
+	unregister: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		if (!(id in this._objects))
+			return;
+		var data = this._objects[id].data;
+		this._unregister(object, data);
+		delete this._objects[id];
+		object.remove_module(this);
+		if ("off" in object)
+			object.off(null, null, this);
+		if (this.__auto_destroy && BetaJS.Types.is_empty(this._objects))
+			this.destroy();
+	},
+	
+	_unregister: function (object) {},
+	
+	_data: function (object) {
+		return this._objects[BetaJS.Ids.objectId(object)].data;
+	}
+	
+}], {
+	
+	__instance: null,
+	
+	singleton: function () {
+		if (!this.__instance)
+			this.__instance = new this({auto_destroy: false});
+		return this.__instance;
+	}
+	
+});
 
 BetaJS.Properties = {};
 
@@ -2184,7 +2279,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.1 - 2013-09-30
+  betajs - v0.0.2 - 2013-10-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4293,7 +4388,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.1 - 2013-09-30
+  betajs - v0.0.2 - 2013-10-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5209,7 +5304,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.1 - 2013-09-30
+  betajs - v0.0.2 - 2013-10-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5576,6 +5671,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Properties.PropertiesMixin,
+	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
     
@@ -5773,6 +5869,12 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
+	/** Returns all hotkeys that the view is listening to.
+	 */
+	_hotkeys: function () {
+		return [];
+	},
+	
 	/** Creates a new view with options
 	 * <ul>
 	 *  <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li> 
@@ -5789,11 +5891,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	 *  <li>dynamics: (default: {}) dynamics that should be overwritten</li>
 	 *  <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li>
 	 *  <li>invalidate_on_change: (default: false) rerender view on property change</li>
-	 *  <li>hide_on_leave: (default: false) hide view if focus leaves</li>
 	 *  <li>invalidate_on_show: (default: false) invalidate view on show</li>
 	 *  <li>append_to_el: (default: false) append to el instead of replacing content</li>
-	 *  <li>vertical_center: (default: false) top:50% + margin-correction</li>
-	 *  <li>horizontal_center: (default: false) left:50% + margin-correction</li>
 	 * </ul>
 	 * @param options options
 	 */
@@ -5805,9 +5904,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this._setOption(options, "html", null);
 		this._setOption(options, "events", []);
 		this._setOption(options, "attributes", {});
-		this._setOption(options, "hide_on_leave", false);
-		this._setOption(options, "vertical_center", false);
-		this._setOption(options, "horizontal_center", false);
 		this._setOption(options, "invalidate_on_show", false);
 		this._setOption(options, "append_to_el", false);
 		this.__old_attributes = {};
@@ -5827,7 +5923,13 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.__children = {};
 		this.__active = false;
 		this.$el = null;
-		this.__events = this._events().concat(this.__events);
+		var events = this._events();
+		if (!BetaJS.Types.is_array(events))
+			events = [events]; 
+		this.__events = events.concat(this.__events);
+		this.__hotkeys = this._hotkeys();
+		if (this.__hotkeys.length > 0)
+			this.__events.push({"keyup": "__execute_hotkey"});
 
 		var templates = BetaJS.Objs.extend(BetaJS.Types.is_function(this._templates) ? this._templates() : this._templates, options["templates"] || {});
 		if ("template" in options)
@@ -5848,6 +5950,74 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.on("change", function () {
 				this.invalidate();
 			}, this);
+
+		this.__modules = {};
+		BetaJS.Objs.iter(options.modules || [], this.add_module, this);
+
+		this._notify("created", options);
+		this.ns = {};
+		var domain = this._domain();
+
+		if (!BetaJS.Types.is_empty(domain)) {
+			var viewlist = [];
+			for (var view_name in domain)
+				viewlist.push({
+					name: view_name,
+					data: domain[view_name],
+				});
+			viewlist = BetaJS.Sort.dependency_sort(viewlist, function (data) {
+				return data.name;
+			}, function (data) {
+				return data.data.before || [];
+			}, function (data) {
+				var after = data.data.after || [];
+				if (data.data.parent)
+					after.push(data.data.parent);
+				return after;
+			});
+			for (var i = 0; i < viewlist.length; ++i) {
+				var view_name = viewlist[i].name;
+				var record = viewlist[i].data;
+				var options = record.options || {};
+				if (BetaJS.Types.is_function(options))
+					options = options.apply(this, [this]);
+				if (record.type in BetaJS.Views)
+					record.type = BetaJS.Views[record.type];
+				if (BetaJS.Types.is_string(record.type))
+					record.type = BetaJS.Scopes.resolve(record.type);
+				var view = new record.type(options);
+				this.ns[view_name] = view;
+				var parent_options = record.parent_options || {};
+				var parent = this;
+				if (record.parent)
+					parent = BetaJS.Scopes.resolve(record.parent, this.ns);
+				if (record.method)
+					record.method(parent, view)
+				else
+					parent.addChild(view, parent_options);
+				view.domain = this;
+				for (var event in record.events || {})
+					view.on(event, record.events[event], view);
+				for (var event in record.listeners || {})
+					this.on(event, record.listeners[event], view);
+			}		
+		}
+	},
+	
+	_domain: function () {
+		return {};
+	},
+	
+	__execute_hotkey: function (event) {
+		BetaJS.Objs.iter(this.__hotkeys, function (inner) {
+			 BetaJS.Objs.iter(inner, function (f, key) {
+			 	var translated = BetaJS.Views.Keys[key] || key;
+			 	if (translated == event.keyCode) {
+					var func = BetaJS.Types.is_function(f) ? f : this[f];
+			 		func.apply(this, event);
+			 	}
+			 }, this);
+		}, this);
 	},
 	
 	/** Returns whether this view is active (i.e. bound and rendered) 
@@ -5910,27 +6080,15 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
-		if (this.__visible)
-			this.__bind_hide_on_leave();
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});
-		if (this.__visible)
-			this._after_show();
-		this.__updateViewPosition();
 		this._notify("activate");
+		if (this.__visible)
+			this.trigger("show");
+		this.trigger("visibility", this.__visible);
+		this.trigger("resize");
 		return this;
-	},
-	
-	__updateViewPosition: function () {
-		if (this.__vertical_center) {
-			this.$el.css("top", "50%");
-			this.$el.css("margin-top", Math.round(-this.$el.height() / 2) + "px");
-		}
-		if (this.__horizontal_center) {
-			this.$el.css("left", "50%");
-			this.$el.css("margin-left", Math.round(-this.$el.width() / 2) + "px");
-		}
 	},
 	
 	/** Deactivates view and all added sub views
@@ -5939,15 +6097,14 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	deactivate: function () {
 		if (!this.isActive())
 			return false;
+		if (this.__visible)
+			this.trigger("hide");
+		this.trigger("visibility", false);
 		this._notify("deactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.deactivate();
 		});
 		this.__active = false;
-		if (this.__visible) {
-			this.__unbind_hide_on_leave();
-			this._after_hide();
-		}
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.reset();
 		}, this);
@@ -6056,13 +6213,12 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		if (this.isActive()) {
 			this.$el.css("display", this.__visible ? "" : "none");
 			if (this.__visible) {
-				this.__bind_hide_on_leave();
-				this._after_show();
+				this.trigger("resize");
+				if (this.__invalidate_on_show)
+					this.invalidate();	
 			}
-			else {
-				this.__unbind_hide_on_leave();
-				this._after_hide();
-			}
+			this.trigger(visible ? "show" : "hide");
+			this.trigger("visibility", visible);		
 		}
 		if (this.__parent)
 			this.__parent.updateChildVisibility(this);	
@@ -6071,14 +6227,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	updateChildVisibility: function (child) {		
 	},
 	
-	_after_show: function () {	
-		if (this.__invalidate_on_show)
-			this.invalidate();	
-	},
-	
-	_after_hide: function () {	
-	},
-
 	toggle: function () {
 		this.setVisibility(!this.isVisible());
 	},
@@ -6233,8 +6381,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			};
 			this._notify("addChild", child, options);
 			child.setParent(this);
-			if (this.isActive())
-				this.__updateViewPosition();
+			if (this.isActive() && this.isVisible())
+				this.trigger("resize");
 			return child;
 		}
 		return null;
@@ -6260,8 +6408,8 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			child.setParent(null);
 			child.off(null, null, this);
 			this._notify("removeChild", child);
-			if (this.isActive())
-				this.__updateViewPosition();
+			if (this.isActive() && this.isVisible())
+				this.trigger("resize");
 		}
 	},
 	
@@ -6305,38 +6453,16 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	outerHeight: function () {
 		return this.$el.outerHeight();
-	},
-	
-	__bind_hide_on_leave: function () {
-		if (!this.__hide_on_leave || this.__hide_on_leave_func)
-			return;
-		var el = this.$el.get(0);
-		var self = this;
-		this.__hide_on_leave_func = function (e) {
-			if (self.__hide_on_leave_skip) {
-				self.__hide_on_leave_skip = false;
-				return;
-			}
-			if (document.contains(e.target) && e.target !== el && !$.contains(el, e.target))
-				self.hide();
-		};
-		this.__hide_on_leave_skip = true;
-		BetaJS.$(document.body).on("click", this.__hide_on_leave_func);
-	},
-	
-	__unbind_hide_on_leave: function () {
-		if (!this.__hide_on_leave || !this.__hide_on_leave_func)
-			return;
-		$(document.body).unbind("click", this.__hide_on_leave_func);
-		delete this.__hide_on_leave_func;
 	}
-
+	
 }]);
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
-
-
+BetaJS.Views.Keys = {
+	ESCAPE: 27,
+	ENTER: 13,
+};
 BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
 	
 	constructor: function (parent, template_string) {
@@ -6552,6 +6678,108 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	}
 	
 }]);
+
+BetaJS.Classes.Module.extend("BetaJS.Views.Modules.Centering", {
+	
+	constructor: function (options) {
+		this._inherited(BetaJS.Views.Modules.Centering, "constructor", options);
+		this.__vertical = "vertical" in options ? options.vertical : false;
+		this.__horizontal = "horizontal" in options ? options.vertical : false;
+	},
+	
+	_register: function (object, data) {
+		object.on("resize", function () {
+			if (object.isVisible())
+				this.__update(object);
+		}, this);
+		if (object.isActive() && object.isVisible())
+			this.__update(object);
+	},
+	
+	__update: function (object) {
+		if (this.__vertical) {
+			object.$el.css("top", "50%");
+			object.$el.css("margin-top", Math.round(-object.$el.height() / 2) + "px");
+		}
+		if (this.__horizontal) {
+			object.$el.css("left", "50%");
+			object.$el.css("margin-left", Math.round(-object.$el.width() / 2) + "px");
+		}
+	}
+	
+}, {
+	
+	__vertical: null,
+	
+	vertical: function () {
+		if (!this.__vertical)
+			this.__vertical = new this({auto_destroy: false, vertical: true, horizontal: false});
+		return this.__vertical;
+	},
+	
+	__horizontal: null,
+	
+	horizontal: function () {
+		if (!this.__horizontal)
+			this.__horizontal = new this({auto_destroy: false, horizontal: true, vertical: false});
+		return this.__horizontal;
+	},
+	
+	__both: null,
+	
+	both: function () {
+		if (!this.__both)
+			this.__both = new this({auto_destroy: false, vertical: true, horizontal: true});
+		return this.__both;
+	}
+	
+});
+
+BetaJS.Classes.Module.extend("BetaJS.Views.Modules.HideOnLeave", {
+	
+	_register: function (object, data) {
+		data.bound = false;
+		object.on("visibility", function (visible) {
+			if (visible)
+				this.__bind(object)
+			else
+				this.__unbind(object);
+		}, this);
+		if (object.isActive() && object.isVisible())
+			this.__bind(object);
+	},
+	
+	_unregister: function (object, data) {
+		this.__unbind(object);
+	},
+	
+	__bind: function (object) {
+		var data = this._data(object);
+		if (data.bound)
+			return;
+		var el = object.$el.get(0);
+		data.hide_on_leave_func = function (e) {
+			if (data.hide_on_leave_skip) {
+				data.hide_on_leave_skip = false;
+				return;
+			}
+			if (document.contains(e.target) && e.target !== el && !BetaJS.$.contains(el, e.target))
+				object.hide();
+		};
+		data.hide_on_leave_skip = true;
+		BetaJS.$(document.body).on("click", data.hide_on_leave_func);
+		data.bound = true;
+	},
+	
+	__unbind: function (object) {
+		var data = this._data(object);
+		if (!data.bound)
+			return;
+		BetaJS.$(document.body).unbind("click", data.hide_on_leave_func);
+		data.bound = false;
+	}
+	
+});
 
 /** @class */
 BetaJS.Class.extend("BetaJS.Routers.Router", [
@@ -7024,7 +7252,11 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		options = options || {};
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
 		this._setOption(options, "alignment", "horizontal");
-		this._setOption(options, "positioning", "float"); // float, computed, none	
+		this._setOption(options, "positioning", "float"); // float, computed, none
+		this.on("show", function () {
+			if (this.__positioning == "computed")
+				this.__updatePositioning();
+		}, this);
 	},
 	
 	isHorizontal: function () {
@@ -7084,12 +7316,6 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		if (this.__positioning == "computed")
 			this.__updatePositioning();
 	},
-	
-	_after_show: function () {
-		this._inherited(BetaJS.Views.ListContainerView, "_after_show");
-		if (this.__positioning == "computed")
-			this.__updatePositioning();
-	}
 	
 	
 });
@@ -7207,10 +7433,12 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
 	},
-	__keyupEvent: function (e) {
-		 var key = e.keyCode || e.which;
-         if (key == 13)
-         	this.trigger("enter_key", this.get("value"));
+	_hotkeys: function () {
+		return [{
+			"ENTER": function () {
+				this.trigger("enter_key", this.get("value"));
+			}
+		}];
 	},
 	__leaveEvent: function () {
 		this.trigger("leave");
@@ -7807,7 +8035,7 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 	constructor: function (options) {
 		options = options || {};
 		options.anchor = options.anchor || "absolute";
-		options.hide_on_leave = "hide_on_leave" in options ? options.hide_on_leave : true;
+		//options.hide_on_leave = "hide_on_leave" in options ? options.hide_on_leave : true;
 		options.visible = "visible" in options ? options.visible : false;
 		options.children_classes = options.children_classes || [];
 		if (BetaJS.Types.is_string(options.children_classes))
@@ -7826,6 +8054,9 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 			options.overlay_inner.setEl('[data-selector="container"]');
 			this.overlay_inner = this.addChild(options.overlay_inner);
 		}
+		if (!("hide_on_leave" in options) || options.hide_on_leave)
+			this.add_module(BetaJS.Views.Modules.HideOnLeave.singleton());
+		this.on("show", this._after_show, this);
 	},
 	
 	_after_show: function () {	
@@ -7902,10 +8133,11 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 		this.overlay_inner = this.addChild(options.overlay_inner);
 		this._setOption(options, "hide_on_unfocus", true);
 		this._setOption(options, "destroy_on_unfocus", false);
+		this.on("show", this._after_show, this);
+		this.on("hide", this._after_hide, this);
 	},
 	
 	_after_show: function () {	
-		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_show");
 		var outer = this.$('[data-selector="outer"]');
 		var inner = this.$('[data-selector="inner"]');
 		inner.removeClass("fullscreen-overlay-float");
@@ -7930,7 +8162,6 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	_after_hide: function () {
 		BetaJS.$("body").removeClass("fullscreen-overlay-body");
-		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_hide");
 	}
 	
 	

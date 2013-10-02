@@ -166,6 +166,8 @@ module.exports = function(grunt) {
 					'src/views/templates.js', 
 					'src/views/template.js', 
 					'src/views/views.js',
+					'src/views/dynamics.js',
+					'src/views/modules/*.js',
 					'src/views/router.js',
 					 
 					'dist/beta-ui-templates.js',

@@ -25,10 +25,11 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 		this.overlay_inner = this.addChild(options.overlay_inner);
 		this._setOption(options, "hide_on_unfocus", true);
 		this._setOption(options, "destroy_on_unfocus", false);
+		this.on("show", this._after_show, this);
+		this.on("hide", this._after_hide, this);
 	},
 	
 	_after_show: function () {	
-		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_show");
 		var outer = this.$('[data-selector="outer"]');
 		var inner = this.$('[data-selector="inner"]');
 		inner.removeClass("fullscreen-overlay-float");
@@ -53,7 +54,6 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	_after_hide: function () {
 		BetaJS.$("body").removeClass("fullscreen-overlay-body");
-		this._inherited(BetaJS.Views.FullscreenOverlayView, "_after_hide");
 	}
 	
 	

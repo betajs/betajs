@@ -23,7 +23,7 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 	constructor: function (options) {
 		options = options || {};
 		options.anchor = options.anchor || "absolute";
-		options.hide_on_leave = "hide_on_leave" in options ? options.hide_on_leave : true;
+		//options.hide_on_leave = "hide_on_leave" in options ? options.hide_on_leave : true;
 		options.visible = "visible" in options ? options.visible : false;
 		options.children_classes = options.children_classes || [];
 		if (BetaJS.Types.is_string(options.children_classes))
@@ -42,6 +42,9 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 			options.overlay_inner.setEl('[data-selector="container"]');
 			this.overlay_inner = this.addChild(options.overlay_inner);
 		}
+		if (!("hide_on_leave" in options) || options.hide_on_leave)
+			this.add_module(BetaJS.Views.Modules.HideOnLeave.singleton());
+		this.on("show", this._after_show, this);
 	},
 	
 	_after_show: function () {	

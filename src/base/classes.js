@@ -148,6 +148,99 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		}, this);
 	}
 	
-	
 }]);
 
+
+
+BetaJS.Classes.ModuleMixin = {
+	
+	_notifications: {
+		construct: function () {
+			this.__modules = {};
+		},
+		destroy: function () {
+			BetaJS.Objs.iter(this.__modules, this.remove_module, this);
+		}
+	},
+	
+	add_module: function (module) {
+		if (module.cid() in this.__modules)
+			return;
+		this.__modules[module.cid()] = module;
+		module.register(this);
+		this._notify("add_module", module);
+	},
+	
+	remove_module: function (module) {
+		if (!(module.cid() in this.__modules))
+			return;
+		delete this.__modules[module.cid()];
+		module.unregister(this);
+		this._notify("remove_module", module);
+	}
+	
+};
+
+
+BetaJS.Class.extend("BetaJS.Classes.Module", [
+
+	BetaJS.Ids.ClientIdMixin,
+	{
+		
+	constructor: function (options) {
+		this._inherited(BetaJS.Classes.Module, "constructor");
+		this._objects = {};
+		this.__auto_destroy = "auto_destroy" in options ? options.auto_destroy : true;
+	},
+	
+	destroy: function () {
+		BetaJS.Objs.iter(this._objects, this.unregister, this);
+		this._inherited(BetaJS.Classes.Module, "destroy");
+	},
+	
+	register: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		if (id in this._objects)
+			return;
+		var data = {};
+		this._objects[id] = {
+			object: object,
+			data: data
+		};
+		object.add_module(this);
+		this._register(object, data);
+	},
+	
+	_register: function (object) {},
+	
+	unregister: function (object) {
+		var id = BetaJS.Ids.objectId(object);
+		if (!(id in this._objects))
+			return;
+		var data = this._objects[id].data;
+		this._unregister(object, data);
+		delete this._objects[id];
+		object.remove_module(this);
+		if ("off" in object)
+			object.off(null, null, this);
+		if (this.__auto_destroy && BetaJS.Types.is_empty(this._objects))
+			this.destroy();
+	},
+	
+	_unregister: function (object) {},
+	
+	_data: function (object) {
+		return this._objects[BetaJS.Ids.objectId(object)].data;
+	}
+	
+}], {
+	
+	__instance: null,
+	
+	singleton: function () {
+		if (!this.__instance)
+			this.__instance = new this({auto_destroy: false});
+		return this.__instance;
+	}
+	
+});

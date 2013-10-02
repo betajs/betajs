@@ -4,10 +4,6 @@ BetaJS
 BetaJS is a JavaScript Framework for Building Rich Applications.
 
 
-## Status
-This is a preliminary version. It is neither complete nor ready for production.
-
-
 ## Contributors
 - Oliver Friedmann
 - Victor Lingenthal

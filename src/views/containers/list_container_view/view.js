@@ -13,7 +13,11 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		options = options || {};
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
 		this._setOption(options, "alignment", "horizontal");
-		this._setOption(options, "positioning", "float"); // float, computed, none	
+		this._setOption(options, "positioning", "float"); // float, computed, none
+		this.on("show", function () {
+			if (this.__positioning == "computed")
+				this.__updatePositioning();
+		}, this);
 	},
 	
 	isHorizontal: function () {
@@ -73,12 +77,6 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		if (this.__positioning == "computed")
 			this.__updatePositioning();
 	},
-	
-	_after_show: function () {
-		this._inherited(BetaJS.Views.ListContainerView, "_after_show");
-		if (this.__positioning == "computed")
-			this.__updatePositioning();
-	}
 	
 	
 });

@@ -19,10 +19,12 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
 	},
-	__keyupEvent: function (e) {
-		 var key = e.keyCode || e.which;
-         if (key == 13)
-         	this.trigger("enter_key", this.get("value"));
+	_hotkeys: function () {
+		return [{
+			"ENTER": function () {
+				this.trigger("enter_key", this.get("value"));
+			}
+		}];
 	},
 	__leaveEvent: function () {
 		this.trigger("leave");
