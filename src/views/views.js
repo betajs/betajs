@@ -1,5 +1,7 @@
 BetaJS.$ = jQuery || null;
 
+BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
+
 /** @class */
 BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
@@ -168,7 +170,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	 * @return html string of evaluated template
 	 */
 	evaluateTemplate: function (key, args) {
-		args = args || {}
+		args = args || {};
 		return this.__templates[key].evaluate(BetaJS.Objs.extend(args, this.templateArguments()));
 	},
 	
@@ -270,8 +272,11 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("template" in options)
 			templates["default"] = options["template"];
 		this.__templates = {};
-		for (var key in templates)
+		for (var key in templates) {
+			if (templates[key] == null)
+				throw new BetaJS.Views.ViewException("Could not find template '" + key + "' in View '" + this.cls.classname + "'");
 			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html())
+		}
 
 		var dynamics = BetaJS.Objs.extend(BetaJS.Types.is_function(this._dynamics) ? this._dynamics() : this._dynamics, options["dynamics"] || {});
 		if ("dynamic" in options)

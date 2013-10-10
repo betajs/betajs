@@ -3,7 +3,7 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.Centering", {
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.Modules.Centering, "constructor", options);
 		this.__vertical = "vertical" in options ? options.vertical : false;
-		this.__horizontal = "horizontal" in options ? options.vertical : false;
+		this.__horizontal = "horizontal" in options ? options.horizontal : false;
 	},
 	
 	_register: function (object, data) {

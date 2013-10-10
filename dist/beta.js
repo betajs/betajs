@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-10-02
+  betajs - v0.0.2 - 2013-10-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-02
+  betajs - v0.0.2 - 2013-10-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-02
+  betajs - v0.0.2 - 2013-10-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2273,7 +2273,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-02
+  betajs - v0.0.2 - 2013-10-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4382,7 +4382,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-02
+  betajs - v0.0.2 - 2013-10-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5298,7 +5298,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.2 - 2013-10-02
+  betajs - v0.0.2 - 2013-10-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5659,6 +5659,8 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 });
 BetaJS.$ = jQuery || null;
 
+BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
+
 /** @class */
 BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
@@ -5827,7 +5829,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 	 * @return html string of evaluated template
 	 */
 	evaluateTemplate: function (key, args) {
-		args = args || {}
+		args = args || {};
 		return this.__templates[key].evaluate(BetaJS.Objs.extend(args, this.templateArguments()));
 	},
 	
@@ -5929,8 +5931,11 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("template" in options)
 			templates["default"] = options["template"];
 		this.__templates = {};
-		for (var key in templates)
+		for (var key in templates) {
+			if (templates[key] == null)
+				throw new BetaJS.Views.ViewException("Could not find template '" + key + "' in View '" + this.cls.classname + "'");
 			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html())
+		}
 
 		var dynamics = BetaJS.Objs.extend(BetaJS.Types.is_function(this._dynamics) ? this._dynamics() : this._dynamics, options["dynamics"] || {});
 		if ("dynamic" in options)
@@ -6678,7 +6683,7 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.Centering", {
 	constructor: function (options) {
 		this._inherited(BetaJS.Views.Modules.Centering, "constructor", options);
 		this.__vertical = "vertical" in options ? options.vertical : false;
-		this.__horizontal = "horizontal" in options ? options.vertical : false;
+		this.__horizontal = "horizontal" in options ? options.horizontal : false;
 	},
 	
 	_register: function (object, data) {
