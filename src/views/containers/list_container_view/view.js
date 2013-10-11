@@ -76,7 +76,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		this._inherited(BetaJS.Views.ListContainerView, "updateChildVisibility", child);
 		if (this.__positioning == "computed")
 			this.__updatePositioning();
-	},
+	}
 	
 	
 });

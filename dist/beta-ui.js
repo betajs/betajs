@@ -663,7 +663,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			for (var view_name in domain)
 				viewlist.push({
 					name: view_name,
-					data: domain[view_name],
+					data: domain[view_name]
 				});
 			viewlist = BetaJS.Sort.dependency_sort(viewlist, function (data) {
 				return data.name;
@@ -1161,7 +1161,7 @@ BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
 BetaJS.Views.Keys = {
 	ESCAPE: 27,
-	ENTER: 13,
+	ENTER: 13
 };
 BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
 	
@@ -2015,7 +2015,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		this._inherited(BetaJS.Views.ListContainerView, "updateChildVisibility", child);
 		if (this.__positioning == "computed")
 			this.__updatePositioning();
-	},
+	}
 	
 	
 });
