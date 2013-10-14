@@ -144,6 +144,19 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
+	},
+	
+	validation_exception_conversion: function (e) {
+		if (e.instance_of(BetaJS.Stores.RemoteStoreException)) {
+			var source = e.source();
+			if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
+				BetaJS.Objs.iter(source.data(), function (value, key) {
+					this.setError(key, value);
+				}, this);
+				e = new BetaJS.Modelling.ModelInvalidException(model);
+			}
+		}
+		return e;		
 	}
 	
 }, {

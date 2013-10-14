@@ -1,37 +1,3 @@
-BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
-	
-	constructor: function (model, message) {
-		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
-		this.__model = model;
-	},
-	
-	model: function () {
-		return this.__model;
-	}
-	
-});
-
-
-BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException", {
-	
-	constructor: function (model) {
-		var message = BetaJS.Objs.values(model.errors()).join("\n");
-		this._inherited(BetaJS.Modelling.ModelInvalidException, "constructor", model, message);
-	}
-
-});
-
-
-BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException", {
-	
-	constructor: function (model) {
-		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
-	}
-
-});
-
-
-
 BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{
@@ -144,16 +110,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	},
 	
 	__exception_conversion: function (model, e) {
-		if (this.__options.store_validation_conversion && e.instance_of(BetaJS.Stores.RemoteStoreException)) {
-			var source = e.source();
-			if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
-				BetaJS.Objs.iter(source.data(), function (value, key) {
-					model.setError(key, value);
-				}, this);
-				e = new BetaJS.Modelling.ModelInvalidException(model);
-			}
-		}
-		return e;
+		return this.__options.store_validation_conversion ? model.validation_exception_conversion(e) : e;
 	},
 	
 	_model_create: function (model, options) {
