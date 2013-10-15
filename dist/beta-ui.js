@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2814,12 +2814,8 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	_events: function () {
 		return [{
-			'click [data-selector="outer"]': function () {
-				if (this.__destroy_on_unfocus)
-					this.destroy()
-				else if (this.__hide_on_unfocus)
-					this.hide();
-			}
+			'click [data-selector="outer"]': "__unfocus",
+			'touchstart [data-selector="outer"]': "__unfocus"
 		}];
 	},
 
@@ -2862,9 +2858,14 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	_after_hide: function () {
 		BetaJS.$("body").removeClass("fullscreen-overlay-body");
+	},
+	
+	__unfocus: function () {
+		if (this.__destroy_on_unfocus)
+			this.destroy()
+		else if (this.__hide_on_unfocus)
+			this.hide();
 	}
-	
-	
 
 });
 BetaJS.Views.ListContainerView.extend("BetaJS.Views.FormControlView", {
