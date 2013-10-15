@@ -50,12 +50,17 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 			inner.addClass("fullscreen-overlay-fit");
 		}
 		BetaJS.$("body").addClass("fullscreen-overlay-body");
+		BetaJS.$("body").on("touchstart", this._prevent_scroll_on_touch, this);
 	},
 	
 	_after_hide: function () {
 		BetaJS.$("body").removeClass("fullscreen-overlay-body");
+		BetaJS.$("body").off("touchstart", this._prevent_scroll_on_touch, this);
+	},
+	
+	_prevent_scroll_on_touch: function (e) {
+		e.preventDefault();
 	}
-	
-	
+		
 
 });
