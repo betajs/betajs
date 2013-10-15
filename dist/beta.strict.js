@@ -1,21 +1,21 @@
 /*!
-  betajs - v0.0.2 - 2013-10-10
+  betajs - v0.0.2 - 2013-10-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 "use strict";
 /*!
-  betajs - v0.0.2 - 2013-10-10
+  betajs - v0.0.2 - 2013-10-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-10
+  betajs - v0.0.2 - 2013-10-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-10
+  betajs - v0.0.2 - 2013-10-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2279,7 +2279,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-10
+  betajs - v0.0.2 - 2013-10-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4388,7 +4388,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-10
+  betajs - v0.0.2 - 2013-10-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4426,6 +4426,38 @@ BetaJS.Net.HttpHeader = {
 	}
 	
 }
+BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
+	
+	constructor: function (model, message) {
+		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
+		this.__model = model;
+	},
+	
+	model: function () {
+		return this.__model;
+	}
+	
+});
+
+
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException", {
+	
+	constructor: function (model) {
+		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
+	}
+
+});
+
+
+BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException", {
+	
+	constructor: function (model) {
+		var message = BetaJS.Objs.values(model.errors()).join("\n");
+		this._inherited(BetaJS.Modelling.ModelInvalidException, "constructor", model, message);
+	}
+
+});
+
 BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	constructor: function (attributes, options) {
@@ -4572,6 +4604,19 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
+	},
+	
+	validation_exception_conversion: function (e) {
+		if (e.instance_of(BetaJS.Stores.RemoteStoreException)) {
+			var source = e.source();
+			if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
+				BetaJS.Objs.iter(source.data(), function (value, key) {
+					this.setError(key, value);
+				}, this);
+				e = new BetaJS.Modelling.ModelInvalidException(model);
+			}
+		}
+		return e;		
 	}
 	
 }, {
@@ -4733,40 +4778,6 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	}
 	
 }]);
-BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
-	
-	constructor: function (model, message) {
-		this._inherited(BetaJS.Modelling.ModelException, "constructor", message);
-		this.__model = model;
-	},
-	
-	model: function () {
-		return this.__model;
-	}
-	
-});
-
-
-BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelInvalidException", {
-	
-	constructor: function (model) {
-		var message = BetaJS.Objs.values(model.errors()).join("\n");
-		this._inherited(BetaJS.Modelling.ModelInvalidException, "constructor", model, message);
-	}
-
-});
-
-
-BetaJS.Modelling.ModelException.extend("BetaJS.Modelling.ModelMissingIdException", {
-	
-	constructor: function (model) {
-		this._inherited(BetaJS.Modelling.ModelMissingIdException, "constructor", model, "No id given.");
-	}
-
-});
-
-
-
 BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{
@@ -4879,16 +4890,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	},
 	
 	__exception_conversion: function (model, e) {
-		if (this.__options.store_validation_conversion && e.instance_of(BetaJS.Stores.RemoteStoreException)) {
-			var source = e.source();
-			if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
-				BetaJS.Objs.iter(source.data(), function (value, key) {
-					model.setError(key, value);
-				}, this);
-				e = new BetaJS.Modelling.ModelInvalidException(model);
-			}
-		}
-		return e;
+		return this.__options.store_validation_conversion ? model.validation_exception_conversion(e) : e;
 	},
 	
 	_model_create: function (model, options) {
@@ -5284,6 +5286,64 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	}
 	
 });
+BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.ConditionalAssociation", {
+
+	constructor: function (model, options) {
+		this._inherited(BetaJS.Modelling.Associations.ConditionalAssociation, "constructor");
+		this._model = model;
+		this._options = options || {};
+		this.__cache = null;
+		if (options["delete_cascade"])
+			model.on("remove", function () {
+				this.__delete_cascade();
+			}, this);
+		if (!options["ignore_change_id"])
+			model.on("change_id", function (new_id, old_id) {
+				this._change_id(new_id, old_id);
+			}, this);
+	},
+	
+	_yield: function () {
+		return this._model.assocs[this._options.conditional(this._model)];
+	}
+
+});
+BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.PolymorphicHasOneAssociation", {
+
+	constructor: function (model, foreign_table_key, foreign_key, options) {
+		this._inherited(BetaJS.Modelling.Associations.PolymorphicHasOneAssociation, "constructor", model, options);
+		this._foreign_table_key = foreign_table_key;
+		this._foreign_key = foreign_key;
+		if (options["primary_key"])
+			this._primary_key = options.primary_key;
+	},
+
+	_yield: function (id) {
+		var query = {};
+		if (id)
+			query[this._foreign_key] = id
+		else if (this._primary_key) 
+			query[this._foreign_key] = this._model.get(this._primary_key)
+		else
+			query[this._foreign_key] = this._model.id();
+		var foreign_table = BetaJS.Scopes.resolve(this._model.get(this._foreign_table_key));
+		var model = foreign_table ? foreign_table.findBy(query) : null;
+		if (model)
+			model.on("destroy", function () {
+				this.invalidate();
+			}, this);
+		return model;
+	},
+	
+	_change_id: function (new_id, old_id) {
+		var object = this._yield(old_id);
+		if (object) {
+			object.set(this._foreign_key, new_id);
+			object.save();
+		}
+	}
+
+});
 BetaJS.Class.extend("BetaJS.Modelling.Validators.Validator", {
 	
 	validate: function (value, context) {
@@ -5304,7 +5364,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.2 - 2013-10-10
+  betajs - v0.0.2 - 2013-10-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8171,4 +8231,47 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	
 
+});
+BetaJS.Views.ListContainerView.extend("BetaJS.Views.FormControlView", {
+	
+	constructor: function (options) {
+		this._inherited(BetaJS.Views.FormControlView, "constructor", options);
+		this._model = options.model;
+		this._property = options.property;
+		this._setOptions(options, "validate_on_change", false);
+		this._setOptions(options, "error_classes", "");
+		this.control_view = this.addChild(this._createControl(this._model, this._property, options.control_options || {}));
+		this.label_view = this.addChild(new BetaJS.Views.LabelView({
+			visible: false,
+			el_classes: this.__error_classes
+		}));
+		if (this.__validate_on_change)
+			this._model.on("change:" + this._property, this.validate, this);
+	},
+	
+	validate: function () {
+		if (this.isActive()) {
+			var result = this._model.validateAttr(this._property);
+			this.label_view.setVisibility(!result);
+			if (result) {
+				this.control_view.$el.removeClass(this.__error_classes);
+			} else {
+				this.control_view.$el.addClass(this.__error_classes);
+				this.label_view.set("label", this._model.getError(this._property));
+			}
+		}			
+	},
+	
+	_createControl: function (model, property, options) {}
+	
+});
+
+BetaJS.Views.FormControlView.extend("BetaJS.Views.FormInputView", {
+	
+	_createControl: function (model, property, options) {
+		return new BetaJS.Views.InputView(BetaJS.Objs.extend(options, {
+			value: model.binding(property)
+		}));
+	}
+	
 });
