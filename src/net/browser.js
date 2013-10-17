@@ -150,7 +150,7 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	},
 	
 	supported: function () {
-		return this.installed() && !BetaJS.Net.Browser.is_iOS();
+		return this.installed() || !BetaJS.Net.Browser.is_iOS();
 	},
 	
     majorAtLeast : function (version) {

@@ -5525,7 +5525,7 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	},
 	
 	supported: function () {
-		return this.installed() && !BetaJS.Net.Browser.is_iOS();
+		return this.installed() || !BetaJS.Net.Browser.is_iOS();
 	},
 	
     majorAtLeast : function (version) {
@@ -8182,12 +8182,8 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	_events: function () {
 		return [{
-			'click [data-selector="outer"]': function () {
-				if (this.__destroy_on_unfocus)
-					this.destroy()
-				else if (this.__hide_on_unfocus)
-					this.hide();
-			}
+			'click [data-selector="outer"]': "__unfocus",
+			'touchstart [data-selector="outer"]': "__unfocus"
 		}];
 	},
 
@@ -8230,9 +8226,14 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	_after_hide: function () {
 		BetaJS.$("body").removeClass("fullscreen-overlay-body");
+	},
+	
+	__unfocus: function () {
+		if (this.__destroy_on_unfocus)
+			this.destroy()
+		else if (this.__hide_on_unfocus)
+			this.hide();
 	}
-	
-	
 
 });
 BetaJS.Views.ListContainerView.extend("BetaJS.Views.FormControlView", {
