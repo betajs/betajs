@@ -30,7 +30,8 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	},
 
 	_insertRow: function (row) {
-		return this.table().insert(row);
+		var result = this.table().insert(row);
+		return result[0] ? result[0] : result;
 	},
 	
 	_removeRow: function (query) {

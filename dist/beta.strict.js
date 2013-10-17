@@ -1,21 +1,21 @@
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 "use strict";
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2279,7 +2279,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4388,7 +4388,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4749,9 +4749,14 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	_after_create: function () {
 	},
 	
+	_before_create: function () {
+	},
+	
 	save: function (options) {
 		var self = this;
 		var opts = BetaJS.Objs.clone(options || {}, 1);
+		if (this.__new)
+			this._before_create();
 		opts.success = function () {
 			self.trigger("save");		
 			self.__saved = true;
@@ -5364,7 +5369,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 
 });
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7483,9 +7488,7 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 	},
 	_events: function () {
 		return [{
-			"keyup input": "__keyupEvent",
-			"blur input": "__leaveEvent"
-		}, {
+			"blur input": "__leaveEvent",
 			"keyup input": "__changeEvent",
 			"change input": "__changeEvent",
 			"input input": "__changeEvent",

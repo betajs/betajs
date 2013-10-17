@@ -65,6 +65,7 @@ BetaJS.Class.extend("BetaJS.Stores.Migrator", {
 					this._log("Failure! Couldn't roll back " + migration.version + "!\n");
 					throw e;
 				}
+				this._log("Rolled back " + migration.version + "!\n");
 				throw e;
 			}
 		}

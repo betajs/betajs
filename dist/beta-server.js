@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2273,7 +2273,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4382,7 +4382,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-14
+  betajs - v0.0.2 - 2013-10-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4743,9 +4743,14 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	_after_create: function () {
 	},
 	
+	_before_create: function () {
+	},
+	
 	save: function (options) {
 		var self = this;
 		var opts = BetaJS.Objs.clone(options || {}, 1);
+		if (this.__new)
+			this._before_create();
 		opts.success = function () {
 			self.trigger("save");		
 			self.__saved = true;
@@ -5546,7 +5551,8 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	},
 
 	_insertRow: function (row) {
-		return this.table().insert(row);
+		var result = this.table().insert(row);
+		return result[0] ? result[0] : result;
 	},
 	
 	_removeRow: function (query) {
@@ -5647,10 +5653,10 @@ BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 		for (var key in types) {
 			if (types[key] == "id") {
 				encoding[key] = function (value) {
-					return new ObjectId(value);
+					return value ? new ObjectId(value) : null
 				};
 				decoding[key] = function (value) {
-					return value + "";
+					return value ? value + "" : null
 				};
 			}
 		}
@@ -5729,6 +5735,7 @@ BetaJS.Class.extend("BetaJS.Stores.Migrator", {
 					this._log("Failure! Couldn't roll back " + migration.version + "!\n");
 					throw e;
 				}
+				this._log("Rolled back " + migration.version + "!\n");
 				throw e;
 			}
 		}

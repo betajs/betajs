@@ -54,9 +54,14 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	_after_create: function () {
 	},
 	
+	_before_create: function () {
+	},
+	
 	save: function (options) {
 		var self = this;
 		var opts = BetaJS.Objs.clone(options || {}, 1);
+		if (this.__new)
+			this._before_create();
 		opts.success = function () {
 			self.trigger("save");		
 			self.__saved = true;
