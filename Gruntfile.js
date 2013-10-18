@@ -107,6 +107,10 @@ module.exports = function(grunt) {
 					'src/modelling/associations/polymorphic_has_one_associations.js', 
 					'src/modelling/validations/validators.js', 
 					'src/modelling/validations/present_validators.js', 
+					'src/modelling/validations/email_validators.js', 
+					'src/modelling/validations/length_validators.js', 
+					'src/modelling/validations/unique_validators.js', 
+					'src/modelling/validations/conditional_validators.js', 
 				]
 			},
 			dist_beta_ui : {

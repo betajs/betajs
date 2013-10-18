@@ -129,7 +129,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 if (!this.__options.invalid_create_save)
 			 	return false;
 		}
-		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.getAll();
+		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.get_all_properties();
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
 		var callback = {

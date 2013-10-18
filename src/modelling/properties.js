@@ -52,10 +52,18 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		}, this);
 	},
 	
+	get_all_properties: function () {
+		var result = {};
+		var scheme = this.cls.scheme();
+		for (var key in scheme)
+			result[key] = this.get(key);
+		return result;
+	},
+	
 	properties_by: function (filter_valid) {
 		if (!BetaJS.Types.is_boolean(filter_valid))
-			return this.getAll();
-		return BetaJS.Objs.filter(this.getAll(), function (value, key) {
+			return this.get_all_properties();
+		return BetaJS.Objs.filter(this.get_all_properties(), function (value, key) {
 			return this.validateAttr(key) == filter_valid;
 		}, this);
 	},
@@ -108,7 +116,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	asRecord: function (tags) {
 		var rec = {};
 		var scheme = this.cls.scheme();
-		var props = this.getAll();
+		var props = this.get_all_properties();
 		tags = tags || {};
 		for (var key in props) 
 			if (key in scheme) {

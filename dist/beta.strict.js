@@ -1,21 +1,21 @@
 /*!
-  betajs - v0.0.2 - 2013-10-17
+  betajs - v0.0.2 - 2013-10-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 "use strict";
 /*!
-  betajs - v0.0.2 - 2013-10-17
+  betajs - v0.0.2 - 2013-10-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-17
+  betajs - v0.0.2 - 2013-10-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-17
+  betajs - v0.0.2 - 2013-10-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -159,6 +159,12 @@ BetaJS.Strings = {
 	
 	last_after: function (s, needle) {
 		return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
+	},
+	
+	EMAIL_ADDRESS_REGEX: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+	
+	is_email_address: function (s) {
+		return this.EMAIL_ADDRESS_REGEX.test(s);
 	}
 
 };
@@ -2279,7 +2285,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-17
+  betajs - v0.0.2 - 2013-10-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4388,7 +4394,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-17
+  betajs - v0.0.2 - 2013-10-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4512,10 +4518,18 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		}, this);
 	},
 	
+	get_all_properties: function () {
+		var result = {};
+		var scheme = this.cls.scheme();
+		for (var key in scheme)
+			result[key] = this.get(key);
+		return result;
+	},
+	
 	properties_by: function (filter_valid) {
 		if (!BetaJS.Types.is_boolean(filter_valid))
-			return this.getAll();
-		return BetaJS.Objs.filter(this.getAll(), function (value, key) {
+			return this.get_all_properties();
+		return BetaJS.Objs.filter(this.get_all_properties(), function (value, key) {
 			return this.validateAttr(key) == filter_valid;
 		}, this);
 	},
@@ -4568,7 +4582,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	asRecord: function (tags) {
 		var rec = {};
 		var scheme = this.cls.scheme();
-		var props = this.getAll();
+		var props = this.get_all_properties();
 		tags = tags || {};
 		for (var key in props) 
 			if (key in scheme) {
@@ -4780,6 +4794,10 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 				options.success();
 		};
 		return this.__table._model_remove(this, opts);
+	},
+	
+	table: function () {
+		return this.__table;
 	}
 	
 }]);
@@ -4914,7 +4932,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 if (!this.__options.invalid_create_save)
 			 	return false;
 		}
-		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.getAll();
+		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.get_all_properties();
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
 		var callback = {
@@ -5368,8 +5386,83 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 	}
 
 });
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.EmailValidator", {
+	
+	constructor: function (error_string) {
+		this._inherited(BetaJS.Modelling.Validators.EmailValidator, "constructor");
+		this.__error_string = error_string ? error_string : "Not a valid email address";
+	},
+
+	validate: function (value, context) {
+		return BetaJS.Strings.is_email_address(value) ? null : this.__error_string;
+	}
+
+});
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.LengthValidator", {
+	
+	constructor: function (options) {
+		this._inherited(BetaJS.Modelling.Validators.LengthValidator, "constructor");
+		this.__min_length = BetaJS.Types.is_defined(options.min_length) ? options.min_length : null;
+		this.__max_length = BetaJS.Types.is_defined(options.max_length) ? options.max_length : null;
+		this.__error_string = BetaJS.Types.is_defined(options.error_string) ? options.error_string : null;
+		if (!this.__error_string) {
+			if (this.__min_length != null)
+				if (this.__max_length != null)
+					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters"
+				else
+					this.__error_string = "At least " + this.__max_length + " characters"
+			else if (this.__max_length != null)
+				this.__error_string = "At most " + this.__max_length + " characters";
+		}
+	},
+
+	validate: function (value, context) {
+		if (this.__min_length != null && (!value || value.length < this.__min_length))
+			return this.__error_string;
+		if (this.__max_length != null && value.length > this.__max_length)
+			return this.__error_string;
+		return null;
+	}
+
+});
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.UniqueValidator", {
+	
+	constructor: function (key, error_string) {
+		this._inherited(BetaJS.Modelling.Validators.UniqueValidator, "constructor");
+		this.__key = key;
+		this.__error_string = error_string ? error_string : "Key already present";
+	},
+
+	validate: function (value, context) {
+		var query = {};
+		query[this.__key] = value;
+		var item = context.table().findBy(query);
+		return (!item || (!this.isNew() && this.id() == item.id())) ? null : this.__error_string;
+	}
+
+});
+BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.ConditionalValidator", {
+	
+	constructor: function (condition, validator) {
+		this._inherited(BetaJS.Modelling.Validators.ConditionalValidator, "constructor");
+		this.__condition = condition;
+		this.__validator = BetaJS.Types.is_array(validator) ? validator : [validator];
+	},
+
+	validate: function (value, context) {
+		if (!this.__condition(value, context))
+			return null;
+		for (var i = 0; i < this.__validator.length; ++i) {
+			var result = this.__validator[i].validate(value, context);
+			if (result != null)
+				return result;
+		}
+		return null;
+	}
+
+});
 /*!
-  betajs - v0.0.2 - 2013-10-17
+  betajs - v0.0.2 - 2013-10-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
