@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-10-22
+  betajs - v0.0.2 - 2013-10-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-22
+  betajs - v0.0.2 - 2013-10-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-22
+  betajs - v0.0.2 - 2013-10-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2279,7 +2279,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-22
+  betajs - v0.0.2 - 2013-10-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4388,7 +4388,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-22
+  betajs - v0.0.2 - 2013-10-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4502,6 +4502,10 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		this._properties_changed[key] = value;
 		this.__unvalidated[key] = true;
 		delete this.__errors[key];
+		if (scheme[key].after_set) {
+			var f = BetaJS.Types.is_string(scheme[key].after_set) ? this[scheme[key].after_set] : scheme[key].after_set;
+			f.apply(this, value);
+		}
 	},
 
 	properties_changed: function (filter_valid) {
@@ -4641,6 +4645,15 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		return arr.map(function (item) {
 			return item.asRecord(tags);
 		});
+	},
+	
+	filterPersistent: function (obj) {
+		var result = {};
+		var scheme = this.scheme();
+		for (var key in obj)
+			if (!BetaJS.Types.is_defined(scheme[key].persistent) || scheme[key].persistent)
+				result[key] = obj[key];
+		return result;
 	}
 	
 }, {
@@ -4927,6 +4940,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 	return false;
 		}
 		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.get_all_properties();
+		attrs = this.__model_type.filterPersistent(attrs);
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
 		var callback = {
@@ -4989,6 +5003,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 	return false;
 		}
 		var attrs = this.__options.greedy_update ? model.properties_changed(true) : model.properties_changed();
+		attrs = this.__model_type.filterPersistent(attrs);
 		var callback = {
 			success : function (confirmed) {
 				if (!self.__options.greedy_update)

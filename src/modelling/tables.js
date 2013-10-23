@@ -130,6 +130,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 	return false;
 		}
 		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.get_all_properties();
+		attrs = this.__model_type.filterPersistent(attrs);
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
 		var callback = {
@@ -192,6 +193,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 	return false;
 		}
 		var attrs = this.__options.greedy_update ? model.properties_changed(true) : model.properties_changed();
+		attrs = this.__model_type.filterPersistent(attrs);
 		var callback = {
 			success : function (confirmed) {
 				if (!self.__options.greedy_update)
