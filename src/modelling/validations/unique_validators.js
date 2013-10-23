@@ -10,7 +10,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Unique
 		var query = {};
 		query[this.__key] = value;
 		var item = context.table().findBy(query);
-		return (!item || (!this.isNew() && this.id() == item.id())) ? null : this.__error_string;
+		return (!item || (!context.isNew() && context.id() == item.id())) ? null : this.__error_string;
 	}
 
 });

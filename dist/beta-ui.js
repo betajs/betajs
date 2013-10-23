@@ -657,6 +657,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this._notify("created", options);
 		this.ns = {};
 		var domain = this._domain();
+		var domain_defaults = this._domain_defaults();
 
 		if (!BetaJS.Types.is_empty(domain)) {
 			var viewlist = [];
@@ -681,6 +682,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 				var options = record.options || {};
 				if (BetaJS.Types.is_function(options))
 					options = options.apply(this, [this]);
+				var default_options = domain_defaults[record.type] || {};
+				if (BetaJS.Types.is_function(default_options))
+					default_options = default_options.apply(this, [this]);
+				options = BetaJS.Objs.tree_merge(default_options, options);
 				if (record.type in BetaJS.Views)
 					record.type = BetaJS.Views[record.type];
 				if (BetaJS.Types.is_string(record.type))
@@ -708,6 +713,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		return {};
 	},
 	
+	_domain_defaults: function () {
+		return {};
+	},
+
 	__execute_hotkey: function (event) {
 		BetaJS.Objs.iter(this.__hotkeys, function (inner) {
 			 BetaJS.Objs.iter(inner, function (f, key) {
@@ -1869,7 +1878,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.LocationRouteBinder", {
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="right" class=\'holygrail-view-right-container\'></div>  <div data-selector="left" class=\'holygrail-view-left-container\'></div>  <div data-selector="center" class=\'holygrail-view-center-container\'></div> ';
 
-BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}"></div> ';
+BetaJS.Templates.Cached['list-container-view-item-template'] = '  <{%= container_element %} data-view-id="{%= cid %}"></{%= container_element %}> ';
 
 BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="switch-container" data-selector="switch-container-item"></div> ';
 
@@ -1877,7 +1886,7 @@ BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_elem
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
-BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
+BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" type="{%= input_type %}" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="{%= supp.css(\'label\') %}" {%= bind.inner("label") %}></{%= element %}> ';
 
@@ -1953,6 +1962,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
 		this._setOption(options, "alignment", "horizontal");
 		this._setOption(options, "positioning", "float"); // float, computed, none
+		this._setOption(options, "container_element", "div");
 		this.on("show", function () {
 			if (this.__positioning == "computed")
 				this.__updatePositioning();
@@ -1973,7 +1983,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	__addChildContainer: function (child) {
 		var options = this.childOptions(child);
 		if (this.isActive())
-			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
+			this.$el.append(this.evaluateTemplate("item", {cid: child.cid(), container_element: this.__container_element}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
 		if (this.isHorizontal() && !("float" in options) && this.__positioning == "float")
 			options["float"] = "left";
@@ -2130,6 +2140,7 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
+		this._setOptionProperty(options, "input_type", "text");
 	},
 	_hotkeys: function () {
 		return [{
@@ -2872,15 +2883,16 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.FormControlView", {
 		this._inherited(BetaJS.Views.FormControlView, "constructor", options);
 		this._model = options.model;
 		this._property = options.property;
-		this._setOptions(options, "validate_on_change", false);
-		this._setOptions(options, "error_classes", "");
+		this._setOption(options, "validate_on_change", false);
+		this._setOption(options, "validate_on_show", false);
+		this._setOption(options, "error_classes", "");
 		this.control_view = this.addChild(this._createControl(this._model, this._property, options.control_options || {}));
-		this.label_view = this.addChild(new BetaJS.Views.LabelView({
-			visible: false,
-			el_classes: this.__error_classes
-		}));
+		this.label_view = this.addChild(new BetaJS.Views.LabelView(BetaJS.Objs.extend(options.label_options || {}, {visible: false})));
 		if (this.__validate_on_change)
 			this._model.on("change:" + this._property, this.validate, this);
+		if (this.__validate_on_show)
+			this.on("show", this.validate, this);
+		this._model.on("validate:" + this._property, this.validate, this);
 	},
 	
 	validate: function () {
@@ -2888,9 +2900,9 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.FormControlView", {
 			var result = this._model.validateAttr(this._property);
 			this.label_view.setVisibility(!result);
 			if (result) {
-				this.control_view.$el.removeClass(this.__error_classes);
+				this.$el.removeClass(this.__error_classes);
 			} else {
-				this.control_view.$el.addClass(this.__error_classes);
+				this.$el.addClass(this.__error_classes);
 				this.label_view.set("label", this._model.getError(this._property));
 			}
 		}			

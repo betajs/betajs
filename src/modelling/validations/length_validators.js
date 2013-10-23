@@ -10,7 +10,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Length
 				if (this.__max_length != null)
 					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters"
 				else
-					this.__error_string = "At least " + this.__max_length + " characters"
+					this.__error_string = "At least " + this.__min_length + " characters"
 			else if (this.__max_length != null)
 				this.__error_string = "At most " + this.__max_length + " characters";
 		}

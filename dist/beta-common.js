@@ -296,6 +296,20 @@ BetaJS.Objs = {
 		return result;
 	},
 	
+	tree_merge: function (secondary, primary) {
+		secondary = secondary || {};
+		primary = primary || {};
+		var result = {};
+		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
+		for (var key in keys) {
+			if (BetaJS.Types.is_object(primary[key]) && secondary[key])
+				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key])
+			else
+				result[key] = key in primary ? primary[key] : secondary[key];
+		}
+		return result;
+	},
+
 	keys: function(obj, mapped) {
 		if (BetaJS.Types.is_undefined(mapped)) {
 			var result = [];
@@ -4471,7 +4485,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		options = options || {};
 		this._properties_changed = {};
 		this.__errors = {};
-		this.__unvalidated = {};
+		//this.__unvalidated = {};
 		for (key in attributes)
 			this.set(key, attributes[key]);
 	},
@@ -4499,7 +4513,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		delete this.__errors[key];
 		if (scheme[key].after_set) {
 			var f = BetaJS.Types.is_string(scheme[key].after_set) ? this[scheme[key].after_set] : scheme[key].after_set;
-			f.apply(this, value);
+			f.apply(this, [value]);
 		}
 	},
 
@@ -4531,8 +4545,11 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		this.trigger("validate");
 		for (var key in this.__unvalidated)
 			this.validateAttr(key);
+		this._customValidate();
 		return BetaJS.Types.is_empty(this.__errors);
 	},
+	
+	_customValidate: function () {},
 	
 	validateAttr: function (attr) {
 		if (attr in this.__unvalidated) {
@@ -4560,6 +4577,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	setError: function (attr, error) {
 		delete this.__unvalidated[attr];
 		this.__errors[attr] = error;
+		this.trigger("validate:" + attr, !(attr in this.__errors), this.__errors[attr]);
 	},
 	
 	revalidate: function () {
@@ -4570,6 +4588,10 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	errors: function () {
 		return this.__errors;
+	},
+	
+	getError: function (attr) {
+		return this.__errors[attr];
 	},
 	
 	asRecord: function (tags) {
@@ -4614,14 +4636,16 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	},
 	
 	validation_exception_conversion: function (e) {
-		if (e.instance_of(BetaJS.Stores.RemoteStoreException)) {
-			var source = e.source();
-			if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
-				BetaJS.Objs.iter(source.data(), function (value, key) {
-					this.setError(key, value);
-				}, this);
-				e = new BetaJS.Modelling.ModelInvalidException(model);
-			}
+		var source = e;
+		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
+			source = e.source()
+		else if (!e.instance_of(BetaJS.Net.AjaxException))
+			return e;
+		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
+			BetaJS.Objs.iter(source.data(), function (value, key) {
+				this.setError(key, value);
+			}, this);
+			e = new BetaJS.Modelling.ModelInvalidException(model);
 		}
 		return e;		
 	}
@@ -4629,11 +4653,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 }, {
 
 	_initializeScheme: function () {
-		var s = {};
-		s[this.primary_key()] = {
-			type: "id"
-		};
-		return s;
+		return {};
 	},
 	
 	asRecords: function (arr, tags) {
@@ -4706,7 +4726,15 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 
 	primary_key: function () {
 		return "id";
-	}
+	},
+	
+	_initializeScheme: function () {
+		var s = this._inherited(BetaJS.Modelling.AssociatedProperties, "_initializeScheme");
+		s[this.primary_key()] = {
+			type: "id"
+		};
+		return s;
+	},	
 
 });
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
@@ -5414,7 +5442,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Length
 				if (this.__max_length != null)
 					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters"
 				else
-					this.__error_string = "At least " + this.__max_length + " characters"
+					this.__error_string = "At least " + this.__min_length + " characters"
 			else if (this.__max_length != null)
 				this.__error_string = "At most " + this.__max_length + " characters";
 		}
@@ -5441,7 +5469,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Unique
 		var query = {};
 		query[this.__key] = value;
 		var item = context.table().findBy(query);
-		return (!item || (!this.isNew() && this.id() == item.id())) ? null : this.__error_string;
+		return (!item || (!context.isNew() && context.id() == item.id())) ? null : this.__error_string;
 	}
 
 });

@@ -301,6 +301,20 @@ BetaJS.Objs = {
 		return result;
 	},
 	
+	tree_merge: function (secondary, primary) {
+		secondary = secondary || {};
+		primary = primary || {};
+		var result = {};
+		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
+		for (var key in keys) {
+			if (BetaJS.Types.is_object(primary[key]) && secondary[key])
+				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key])
+			else
+				result[key] = key in primary ? primary[key] : secondary[key];
+		}
+		return result;
+	},
+
 	keys: function(obj, mapped) {
 		if (BetaJS.Types.is_undefined(mapped)) {
 			var result = [];
@@ -4476,7 +4490,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		options = options || {};
 		this._properties_changed = {};
 		this.__errors = {};
-		this.__unvalidated = {};
+		//this.__unvalidated = {};
 		for (key in attributes)
 			this.set(key, attributes[key]);
 	},
@@ -4504,7 +4518,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		delete this.__errors[key];
 		if (scheme[key].after_set) {
 			var f = BetaJS.Types.is_string(scheme[key].after_set) ? this[scheme[key].after_set] : scheme[key].after_set;
-			f.apply(this, value);
+			f.apply(this, [value]);
 		}
 	},
 
@@ -4536,8 +4550,11 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		this.trigger("validate");
 		for (var key in this.__unvalidated)
 			this.validateAttr(key);
+		this._customValidate();
 		return BetaJS.Types.is_empty(this.__errors);
 	},
+	
+	_customValidate: function () {},
 	
 	validateAttr: function (attr) {
 		if (attr in this.__unvalidated) {
@@ -4565,6 +4582,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	setError: function (attr, error) {
 		delete this.__unvalidated[attr];
 		this.__errors[attr] = error;
+		this.trigger("validate:" + attr, !(attr in this.__errors), this.__errors[attr]);
 	},
 	
 	revalidate: function () {
@@ -4575,6 +4593,10 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	
 	errors: function () {
 		return this.__errors;
+	},
+	
+	getError: function (attr) {
+		return this.__errors[attr];
 	},
 	
 	asRecord: function (tags) {
@@ -4619,14 +4641,16 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	},
 	
 	validation_exception_conversion: function (e) {
-		if (e.instance_of(BetaJS.Stores.RemoteStoreException)) {
-			var source = e.source();
-			if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
-				BetaJS.Objs.iter(source.data(), function (value, key) {
-					this.setError(key, value);
-				}, this);
-				e = new BetaJS.Modelling.ModelInvalidException(model);
-			}
+		var source = e;
+		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
+			source = e.source()
+		else if (!e.instance_of(BetaJS.Net.AjaxException))
+			return e;
+		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
+			BetaJS.Objs.iter(source.data(), function (value, key) {
+				this.setError(key, value);
+			}, this);
+			e = new BetaJS.Modelling.ModelInvalidException(model);
 		}
 		return e;		
 	}
@@ -4634,11 +4658,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 }, {
 
 	_initializeScheme: function () {
-		var s = {};
-		s[this.primary_key()] = {
-			type: "id"
-		};
-		return s;
+		return {};
 	},
 	
 	asRecords: function (arr, tags) {
@@ -4711,7 +4731,15 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 
 	primary_key: function () {
 		return "id";
-	}
+	},
+	
+	_initializeScheme: function () {
+		var s = this._inherited(BetaJS.Modelling.AssociatedProperties, "_initializeScheme");
+		s[this.primary_key()] = {
+			type: "id"
+		};
+		return s;
+	},	
 
 });
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
@@ -5419,7 +5447,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Length
 				if (this.__max_length != null)
 					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters"
 				else
-					this.__error_string = "At least " + this.__max_length + " characters"
+					this.__error_string = "At least " + this.__min_length + " characters"
 			else if (this.__max_length != null)
 				this.__error_string = "At most " + this.__max_length + " characters";
 		}
@@ -5446,7 +5474,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Unique
 		var query = {};
 		query[this.__key] = value;
 		var item = context.table().findBy(query);
-		return (!item || (!this.isNew() && this.id() == item.id())) ? null : this.__error_string;
+		return (!item || (!context.isNew() && context.id() == item.id())) ? null : this.__error_string;
 	}
 
 });
@@ -6129,6 +6157,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this._notify("created", options);
 		this.ns = {};
 		var domain = this._domain();
+		var domain_defaults = this._domain_defaults();
 
 		if (!BetaJS.Types.is_empty(domain)) {
 			var viewlist = [];
@@ -6153,6 +6182,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 				var options = record.options || {};
 				if (BetaJS.Types.is_function(options))
 					options = options.apply(this, [this]);
+				var default_options = domain_defaults[record.type] || {};
+				if (BetaJS.Types.is_function(default_options))
+					default_options = default_options.apply(this, [this]);
+				options = BetaJS.Objs.tree_merge(default_options, options);
 				if (record.type in BetaJS.Views)
 					record.type = BetaJS.Views[record.type];
 				if (BetaJS.Types.is_string(record.type))
@@ -6180,6 +6213,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		return {};
 	},
 	
+	_domain_defaults: function () {
+		return {};
+	},
+
 	__execute_hotkey: function (event) {
 		BetaJS.Objs.iter(this.__hotkeys, function (inner) {
 			 BetaJS.Objs.iter(inner, function (f, key) {
@@ -7341,7 +7378,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.LocationRouteBinder", {
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="right" class=\'holygrail-view-right-container\'></div>  <div data-selector="left" class=\'holygrail-view-left-container\'></div>  <div data-selector="center" class=\'holygrail-view-center-container\'></div> ';
 
-BetaJS.Templates.Cached['list-container-view-item-template'] = '  <div data-view-id="{%= cid %}"></div> ';
+BetaJS.Templates.Cached['list-container-view-item-template'] = '  <{%= container_element %} data-view-id="{%= cid %}"></{%= container_element %}> ';
 
 BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="switch-container" data-selector="switch-container-item"></div> ';
 
@@ -7349,7 +7386,7 @@ BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_elem
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
 
-BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
+BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" type="{%= input_type %}" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="{%= supp.css(\'label\') %}" {%= bind.inner("label") %}></{%= element %}> ';
 
@@ -7425,6 +7462,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
 		this._setOption(options, "alignment", "horizontal");
 		this._setOption(options, "positioning", "float"); // float, computed, none
+		this._setOption(options, "container_element", "div");
 		this.on("show", function () {
 			if (this.__positioning == "computed")
 				this.__updatePositioning();
@@ -7445,7 +7483,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	__addChildContainer: function (child) {
 		var options = this.childOptions(child);
 		if (this.isActive())
-			this.$el.append(this.evaluateTemplate("item", {cid: child.cid()}));
+			this.$el.append(this.evaluateTemplate("item", {cid: child.cid(), container_element: this.__container_element}));
 		child.setEl("[data-view-id='" + child.cid() + "']");
 		if (this.isHorizontal() && !("float" in options) && this.__positioning == "float")
 			options["float"] = "left";
@@ -7602,6 +7640,7 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
+		this._setOptionProperty(options, "input_type", "text");
 	},
 	_hotkeys: function () {
 		return [{
@@ -8344,15 +8383,16 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.FormControlView", {
 		this._inherited(BetaJS.Views.FormControlView, "constructor", options);
 		this._model = options.model;
 		this._property = options.property;
-		this._setOptions(options, "validate_on_change", false);
-		this._setOptions(options, "error_classes", "");
+		this._setOption(options, "validate_on_change", false);
+		this._setOption(options, "validate_on_show", false);
+		this._setOption(options, "error_classes", "");
 		this.control_view = this.addChild(this._createControl(this._model, this._property, options.control_options || {}));
-		this.label_view = this.addChild(new BetaJS.Views.LabelView({
-			visible: false,
-			el_classes: this.__error_classes
-		}));
+		this.label_view = this.addChild(new BetaJS.Views.LabelView(BetaJS.Objs.extend(options.label_options || {}, {visible: false})));
 		if (this.__validate_on_change)
 			this._model.on("change:" + this._property, this.validate, this);
+		if (this.__validate_on_show)
+			this.on("show", this.validate, this);
+		this._model.on("validate:" + this._property, this.validate, this);
 	},
 	
 	validate: function () {
@@ -8360,9 +8400,9 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.FormControlView", {
 			var result = this._model.validateAttr(this._property);
 			this.label_view.setVisibility(!result);
 			if (result) {
-				this.control_view.$el.removeClass(this.__error_classes);
+				this.$el.removeClass(this.__error_classes);
 			} else {
-				this.control_view.$el.addClass(this.__error_classes);
+				this.$el.addClass(this.__error_classes);
 				this.label_view.set("label", this._model.getError(this._property));
 			}
 		}			

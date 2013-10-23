@@ -297,6 +297,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this._notify("created", options);
 		this.ns = {};
 		var domain = this._domain();
+		var domain_defaults = this._domain_defaults();
 
 		if (!BetaJS.Types.is_empty(domain)) {
 			var viewlist = [];
@@ -321,6 +322,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 				var options = record.options || {};
 				if (BetaJS.Types.is_function(options))
 					options = options.apply(this, [this]);
+				var default_options = domain_defaults[record.type] || {};
+				if (BetaJS.Types.is_function(default_options))
+					default_options = default_options.apply(this, [this]);
+				options = BetaJS.Objs.tree_merge(default_options, options);
 				if (record.type in BetaJS.Views)
 					record.type = BetaJS.Views[record.type];
 				if (BetaJS.Types.is_string(record.type))
@@ -348,6 +353,10 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		return {};
 	},
 	
+	_domain_defaults: function () {
+		return {};
+	},
+
 	__execute_hotkey: function (event) {
 		BetaJS.Objs.iter(this.__hotkeys, function (inner) {
 			 BetaJS.Objs.iter(inner, function (f, key) {

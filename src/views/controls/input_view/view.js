@@ -16,6 +16,7 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
+		this._setOptionProperty(options, "input_type", "text");
 	},
 	_hotkeys: function () {
 		return [{

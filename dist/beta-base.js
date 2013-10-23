@@ -291,6 +291,20 @@ BetaJS.Objs = {
 		return result;
 	},
 	
+	tree_merge: function (secondary, primary) {
+		secondary = secondary || {};
+		primary = primary || {};
+		var result = {};
+		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
+		for (var key in keys) {
+			if (BetaJS.Types.is_object(primary[key]) && secondary[key])
+				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key])
+			else
+				result[key] = key in primary ? primary[key] : secondary[key];
+		}
+		return result;
+	},
+
 	keys: function(obj, mapped) {
 		if (BetaJS.Types.is_undefined(mapped)) {
 			var result = [];
