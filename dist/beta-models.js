@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-10-23
+  betajs - v0.0.2 - 2013-10-24
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -565,7 +565,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 	return false;
 		}
 		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.get_all_properties();
-		attrs = this.__model_type.filterPersistent(attrs);
+		attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(attrs);
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
 		var callback = {
@@ -628,7 +628,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			 	return false;
 		}
 		var attrs = this.__options.greedy_update ? model.properties_changed(true) : model.properties_changed();
-		attrs = this.__model_type.filterPersistent(attrs);
+		attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(attrs);
 		var callback = {
 			success : function (confirmed) {
 				if (!self.__options.greedy_update)
