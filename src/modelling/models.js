@@ -11,9 +11,13 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 			this._properties_changed = {};
 		this.__table = options["table"];
 		this.__table._model_register(this);
+		this.__destroying = false;
 	},
 	
 	destroy: function () {
+		if (this.__destroying)
+			return;
+		this.__destroying = true;
 		this.__table._model_unregister(this);
 		this.trigger("destroy");
 		this._inherited(BetaJS.Modelling.Model, "destroy");

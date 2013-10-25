@@ -32,6 +32,8 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var sch = scheme[key];
 		if (sch.type == "boolean")
 			return BetaJS.Types.parseBool(value);
+		if (sch.transform)
+			value = sch.transform.apply(this, [value]);
 		return value;
 	},
 	

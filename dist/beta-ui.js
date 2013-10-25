@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-10-24
+  betajs - v0.0.2 - 2013-10-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1884,7 +1884,7 @@ BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-vi
 
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
-BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} />  {%= label %} ';
+BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} id="check-{%= supp.view_id %}" />  <label for="check-{%= supp.view_id %}">{%= label %}</label> ';
 
 BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" type="{%= input_type %}" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
@@ -2917,6 +2917,16 @@ BetaJS.Views.FormControlView.extend("BetaJS.Views.FormInputView", {
 	_createControl: function (model, property, options) {
 		return new BetaJS.Views.InputView(BetaJS.Objs.extend(options, {
 			value: model.binding(property)
+		}));
+	}
+	
+});
+
+BetaJS.Views.FormControlView.extend("BetaJS.Views.FormCheckBoxView", {
+	
+	_createControl: function (model, property, options) {
+		return new BetaJS.Views.CheckBoxView(BetaJS.Objs.extend(options, {
+			checked: model.binding(property)
 		}));
 	}
 	

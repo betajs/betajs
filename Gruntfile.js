@@ -148,7 +148,7 @@ module.exports = function(grunt) {
 					
 					'src/views/form_views/form_control_view/view.js',
 					'src/views/form_views/form_input_view/view.js',
-					'src/views/form_views/form_checkbox_view/view.js',
+					'src/views/form_views/form_check_box_view/view.js',
 				]
 			},
 			dist_beta_common : {
