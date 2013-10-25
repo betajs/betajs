@@ -1,21 +1,21 @@
 /*!
-  betajs - v0.0.2 - 2013-10-25
+  betajs - v0.0.2 - 2013-10-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 "use strict";
 /*!
-  betajs - v0.0.2 - 2013-10-25
+  betajs - v0.0.2 - 2013-10-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-25
+  betajs - v0.0.2 - 2013-10-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-25
+  betajs - v0.0.2 - 2013-10-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2299,7 +2299,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-25
+  betajs - v0.0.2 - 2013-10-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4408,7 +4408,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-25
+  betajs - v0.0.2 - 2013-10-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5511,7 +5511,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-10-25
+  betajs - v0.0.2 - 2013-10-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7858,10 +7858,10 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.CustomListView, "constructor", options);
-		this._setOption(options, "list_container_element", "ul");
+		this._setOption(options, "list_container_element", "div");
 		this._setOption(options, "list_container_attrs", {});
 		this._setOption(options, "list_container_classes", "");
-		this._setOption(options, "item_container_element", "li");
+		this._setOption(options, "item_container_element", "div");
 		this._setOption(options, "item_container_classes", "");
 		this.__itemData = {};
 		if ("collection" in options) {
