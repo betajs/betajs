@@ -10,7 +10,8 @@ BetaJS is a JavaScript Framework for Building Rich Applications.
 
 
 ## Plugins
-- BetaJS-Video-Player: A view for playing videos (https://github.com/oliverfriedmann/betajs-video-player)
+- BetaJS-Video-Player: A view for playing videos (https://github.com/betajs/betajs-video-player)
+- Grunt-BetaJS-Templates: A template compiler for Grunt (https://github.com/betajs/grunt-betajs-templates)
 
 
 ## License

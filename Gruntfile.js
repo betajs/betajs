@@ -1,14 +1,10 @@
-CompileTemplate = require("./compile-template.js");
-
 module.exports = function(grunt) {
 
-	grunt.registerMultiTask('templates', 'Converts templates javascript', CompileTemplate(grunt, "BetaJS.Templates.Cached"));
-	
 	grunt.initConfig({
 		pkg : grunt.file.readJSON('package.json'),
-		templates: {
+		betajs_templates: {
 			dist: {
-			    files: {
+ 			    files: {
 				      "dist/beta-ui-templates.js": [ 
 							'src/views/containers/holygrail_view/template.html',
 							'src/views/containers/list_container_view/template.html',
@@ -253,8 +249,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-sass');	
 	grunt.loadNpmTasks('grunt-contrib-cssmin');	
 	grunt.loadNpmTasks('grunt-contrib-clean');	
+	grunt.loadNpmTasks('grunt-betajs-templates');	
 	
 
-	grunt.registerTask('default', ['templates', 'concat', 'uglify', 'sass', 'cssmin', 'clean']);
+	grunt.registerTask('default', ['betajs_templates', 'concat', 'uglify', 'sass', 'cssmin', 'clean']);
 
 };
