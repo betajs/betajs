@@ -125,3 +125,24 @@ test("test class static variables", function() {
 	A.obj.x = 5;
 	ok(B.obj.x == 1);
 });
+
+
+test("test inheritance", function() {
+	var A = BetaJS.Class.extend(null, {
+		constructor: function () {
+			this._inherited(A, "constructor");
+			this.x = 1;
+		}
+	});
+	var B = A.extend(null, {
+	});
+	var C = B.extend(null, {
+		constructor: function () {
+			this._inherited(C, "constructor");
+			this.y = 1;
+		}
+	});
+	var instance = new C();
+	ok(instance.y == 1);
+	ok(instance.x == 1);
+});

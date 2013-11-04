@@ -1,4 +1,6 @@
-BetaJS.Net.Browser = {
+BetaJS.Browser = BetaJS.Browser || {};
+
+BetaJS.Browser.Info = {
 	
 	getNavigator: function () {
 		return {
@@ -24,7 +26,7 @@ BetaJS.Net.Browser = {
 
 	flash: function () {
 		if (!this.__flash)
-			this.__flash = new BetaJS.Net.FlashDetect();
+			this.__flash = new BetaJS.Browser.FlashDetect();
 		return this.__flash;
 	},
 	
@@ -95,10 +97,10 @@ Code licensed under the BSD License: http://www.featureblend.com/license.txt
 Version: 1.0.4
 */
 
-BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
+BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
 	
 	constructor: function () {
-		this._inherited(BetaJS.Net.FlashDetect, "constructor");
+		this._inherited(BetaJS.Browser.FlashDetect, "constructor");
 		this.__version = null;
         if (navigator.plugins && navigator.plugins.length > 0) {
             var type = 'application/x-shockwave-flash';
@@ -150,7 +152,7 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	},
 	
 	supported: function () {
-		return this.installed() || !BetaJS.Net.Browser.is_iOS();
+		return this.installed() || !BetaJS.Browser.Info.is_iOS();
 	},
 	
     majorAtLeast : function (version) {
@@ -211,27 +213,3 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
     }]
 
 });
-
-
-
-BetaJS.Net.Browser.Loader = {
-	
-	loadScript: function (url, callback, context) {
-		var executed = false;
-		var head = document.getElementsByTagName("head")[0];
-		var script = document.createElement("script");
-		script.src = url;
-		script.onload = script.onreadystatechange = function() {
-			if (!executed && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
-				executed = true;
-				script.onload = script.onreadystatechange = null;
-				if (callback)
-					callback.apply(context || this, [url]);
-				// Does not work properly if we remove the script for some reason if it is used the second time !?
-				//head.removeChild(script);
-			}
-		};
-		head.appendChild(script);
-	}
-
-}

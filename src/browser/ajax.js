@@ -9,10 +9,10 @@
  * </ul>
  * 
  */
-BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
+BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 	
 	constructor: function (options) {
-		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
+		this._inherited(BetaJS.Browser.AbstractAjax, "constructor");
 		this.__options = BetaJS.Objs.extend({
 			"method": "GET",
 			"data": {}
@@ -37,7 +37,7 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 			return result;
 		} catch (e) {
 			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
+			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
 				failure_callback(e.status_code(), e.status_text(), e.data())
 			else
@@ -66,7 +66,7 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 					if (failure_callback)
 						failure_callback(status_code, status_text, data)
 					else
-						throw new BetaJS.Net.AjaxException(status_code, status_text, data);
+						throw new BetaJS.Browser.AjaxException(status_code, status_text, data);
 					if (complete_callback)
 						complete_callback();
 				}
@@ -74,7 +74,7 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 			return result;
 		} catch (e) {
 			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
+			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
 				failure_callback(e.status_code(), e.status_text(), e.data())
 			else
@@ -97,10 +97,10 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 });
 
 
-BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
+BetaJS.Exceptions.Exception.extend("BetaJS.Browser.AjaxException", {
 	
 	constructor: function (status_code, status_text, data) {
-		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
+		this._inherited(BetaJS.Browser.AjaxException, "constructor", status_code + ": " + status_text);
 		this.__status_code = status_code;
 		this.__status_text = status_text;
 		this.__data = data;
@@ -121,7 +121,7 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 });
 
 
-BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
+BetaJS.Browser.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 	
 	_syncCall: function (options) {
 		var result;
@@ -135,7 +135,7 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
 				result = response;
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				throw new BetaJS.Browser.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
 			}
 		});
 		return result;

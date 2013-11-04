@@ -172,6 +172,24 @@ BetaJS.Objs = {
 					return true;
 		}
 		return false;
-	}
+	},
 	
+	exists: function (obj, f, context) {
+		var success = false;
+		BetaJS.Objs.iter(obj, function () {
+			success = success || f.apply(this, arguments);
+			return !success;
+		}, context);
+		return success;
+	},
+	
+	all: function (obj, f, context) {
+		var success = true;
+		BetaJS.Objs.iter(obj, function () {
+			success = success && f.apply(this, arguments);
+			return success;
+		}, context);
+		return success;
+	}
+
 };

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -243,7 +243,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var source = e;
 		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
 			source = e.source()
-		else if (!e.instance_of(BetaJS.Net.AjaxException))
+		else if (!("status_code" in source && "data" in source))
 			return e;
 		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
 			BetaJS.Objs.iter(source.data(), function (value, key) {

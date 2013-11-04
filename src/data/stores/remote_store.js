@@ -1,7 +1,7 @@
 BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
-		source = BetaJS.Net.AjaxException.ensure(source);
+		source = BetaJS.Browser.AjaxException.ensure(source);
 		this._inherited(BetaJS.Stores.RemoteStoreException, "constructor", source.toString());
 		this.__source = source;
 	},
@@ -46,7 +46,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	_include_callbacks: function (opts, error_callback, success_callback) {
 		opts.failure = function (status_code, status_text, data) {
-			error_callback(new BetaJS.Stores.RemoteStoreException(new BetaJS.Net.AjaxException(status_code, status_text, data)));
+			error_callback(new BetaJS.Stores.RemoteStoreException(new BetaJS.Browser.AjaxException(status_code, status_text, data)));
 		};
 		opts.success = success_callback;
 		return opts;

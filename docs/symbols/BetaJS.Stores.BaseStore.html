@@ -191,9 +191,11 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
-	<li><a href="../symbols/BetaJS.Routers.Router.html">BetaJS.Routers.Router</a></li>
+	<li><a href="../symbols/BetaJS.Browser.Router.html">BetaJS.Browser.Router</a></li>
 	
 	<li><a href="../symbols/BetaJS.Stores.BaseStore.html">BetaJS.Stores.BaseStore</a></li>
+	
+	<li><a href="../symbols/BetaJS.Types.html">BetaJS.Types</a></li>
 	
 	<li><a href="../symbols/BetaJS.Views.View.html">BetaJS.Views.View</a></li>
 	
@@ -265,7 +267,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;private&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_get">_get</a></b>(id)
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_get">_get</a></b>(id, callbacks)
 								</div>
 								<div class="description">Get data from store by id.</div>
 							</td>
@@ -274,7 +276,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;private&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_insert">_insert</a></b>(data)
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_insert">_insert</a></b>(data, callbacks)
 								</div>
 								<div class="description">Insert data to store.</div>
 							</td>
@@ -283,7 +285,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;private&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_remove">_remove</a></b>(id)
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_remove">_remove</a></b>(id, callbacks)
 								</div>
 								<div class="description">Remove data from store.</div>
 							</td>
@@ -292,7 +294,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&lt;private&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_update">_update</a></b>(id, data)
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_update">_update</a></b>(id, data, callbacks)
 								</div>
 								<div class="description">Update data by id.</div>
 							</td>
@@ -350,7 +352,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;private&gt; 
 					
 					
-					<b>_get</b>(id)
+					<b>_get</b>(id, callbacks)
 					
 					</div>
 					<div class="description">
@@ -371,10 +373,26 @@ ul.inheritsList
 								</dt>
 								<dd>data id</dd>
 							
+								<dt>
+									<b>callbacks</b>
+									
+								</dt>
+								<dd></dd>
+							
 							</dl>
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Throws:</dt>
+							
+								<dt>
+									 <b></b>
+								</dt>
+								<dd>if it fails</dd>
+							
+							</dl>
 						
 						
 							<dl class="detailList">
@@ -393,7 +411,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;private&gt; 
 					
 					
-					<b>_insert</b>(data)
+					<b>_insert</b>(data, callbacks)
 					
 					</div>
 					<div class="description">
@@ -414,10 +432,26 @@ ul.inheritsList
 								</dt>
 								<dd>data to be inserted</dd>
 							
+								<dt>
+									<b>callbacks</b>
+									
+								</dt>
+								<dd></dd>
+							
 							</dl>
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Throws:</dt>
+							
+								<dt>
+									 <b></b>
+								</dt>
+								<dd>if it fails</dd>
+							
+							</dl>
 						
 						
 							<dl class="detailList">
@@ -436,7 +470,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;private&gt; 
 					
 					
-					<b>_remove</b>(id)
+					<b>_remove</b>(id, callbacks)
 					
 					</div>
 					<div class="description">
@@ -457,18 +491,27 @@ ul.inheritsList
 								</dt>
 								<dd>data id</dd>
 							
+								<dt>
+									<b>callbacks</b>
+									
+								</dt>
+								<dd></dd>
+							
 							</dl>
-						
 						
 						
 						
 						
 							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
+							<dt class="heading">Throws:</dt>
 							
-								<dd>data</dd>
+								<dt>
+									 <b></b>
+								</dt>
+								<dd>if it fails</dd>
 							
 							</dl>
+						
 						
 						
 						
@@ -479,7 +522,7 @@ ul.inheritsList
 					<div class="fixedFont">&lt;private&gt; 
 					
 					
-					<b>_update</b>(id, data)
+					<b>_update</b>(id, data, callbacks)
 					
 					</div>
 					<div class="description">
@@ -506,10 +549,26 @@ ul.inheritsList
 								</dt>
 								<dd>updated data</dd>
 							
+								<dt>
+									<b>callbacks</b>
+									
+								</dt>
+								<dd></dd>
+							
 							</dl>
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Throws:</dt>
+							
+								<dt>
+									 <b></b>
+								</dt>
+								<dd>if it fails</dd>
+							
+							</dl>
 						
 						
 							<dl class="detailList">
@@ -536,7 +595,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Jun 29 2013 01:23:24 GMT-0400 (EDT)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Mon Nov 04 2013 14:34:26 GMT-0500 (EST)
 		</div>
 	</body>
 </html>

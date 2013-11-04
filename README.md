@@ -28,3 +28,4 @@ This software uses modified portions of
 - Backbone, MIT Software License, (c) 2009-2013 Jeremy Ashkenas, DocumentCloud
 - FlashDetect, BSD Software License, (c) 2007, Carl S. Yestrau
 - parseUri, MIT Software License, (c) Steven Levithan
+- Keyboard Shortcuts, BSD Software License, (c) Binny V A

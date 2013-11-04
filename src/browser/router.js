@@ -1,7 +1,9 @@
+BetaJS.Browser = BetaJS.Browser || {}; 
+
 /** @class */
-BetaJS.Class.extend("BetaJS.Routers.Router", [
+BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 	BetaJS.Events.EventsMixin,
-	/** @lends BetaJS.Routers.Router.prototype */
+	/** @lends BetaJS.Browser.Router.prototype */
 	{
 		
 	/** Specifies all routes. Can either be an associative array, an array of associative arrays or a function returning one of those.
@@ -45,7 +47,7 @@ BetaJS.Class.extend("BetaJS.Routers.Router", [
 	 * @param options options
 	 */
 	constructor: function (options) {
-		this._inherited(BetaJS.Routers.Router, "constructor");
+		this._inherited(BetaJS.Browser.Router, "constructor");
 		var routes = BetaJS.Types.is_function(this.routes) ? this.routes() : this.routes;
 		if (!BetaJS.Types.is_array(routes))
 			routes = [routes];
@@ -86,7 +88,7 @@ BetaJS.Class.extend("BetaJS.Routers.Router", [
 	
 	destroy: function() {
 		this.__leave();
-		this._inherited(BetaJS.Routers.Router, "destroy");
+		this._inherited(BetaJS.Browser.Router, "destroy");
 	},
 	
 	/** Parse a given route and map it to the first applicable object that is valid
@@ -219,12 +221,12 @@ BetaJS.Class.extend("BetaJS.Routers.Router", [
 }]);
 
 
-BetaJS.Class.extend("BetaJS.Routers.RouterHistory", [
+BetaJS.Class.extend("BetaJS.Browser.RouterHistory", [
 	BetaJS.Events.EventsMixin,
 	{
 	
 	constructor: function (router) {
-		this._inherited(BetaJS.Routers.RouterHistory, "constructor");
+		this._inherited(BetaJS.Browser.RouterHistory, "constructor");
 		this.__router = router;
 		this.__history = [];
 		router.on("after_invoke", this.__after_invoke, this);
@@ -232,7 +234,7 @@ BetaJS.Class.extend("BetaJS.Routers.RouterHistory", [
 	
 	destroy: function () {
 		this.__router.off(null, null, this);
-		this._inherited(BetaJS.Routers.RouterHistory, "destroy");
+		this._inherited(BetaJS.Browser.RouterHistory, "destroy");
 	},
 	
 	__after_invoke: function (object, params) {
@@ -278,10 +280,10 @@ BetaJS.Class.extend("BetaJS.Routers.RouterHistory", [
 }]);
 
 
-BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
+BetaJS.Class.extend("BetaJS.Browser.RouteBinder", {
 
 	constructor: function (router) {
-		this._inherited(BetaJS.Routers.RouteBinder, "constructor");
+		this._inherited(BetaJS.Browser.RouteBinder, "constructor");
 		this.__router = router;
 		this.__router.on("after_invoke", function (object, params, route) {
 			if (this._getExternalRoute() != route)
@@ -291,7 +293,7 @@ BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 	
 	destroy: function () {
 		this.__router.off(null, null, this);
-		this._inherited(BetaJS.Routers.RouteBinder, "destroy");
+		this._inherited(BetaJS.Browser.RouteBinder, "destroy");
 	},
 	
 	current: function () {
@@ -311,12 +313,12 @@ BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
 });
 
 
-BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", [
 	BetaJS.Ids.ClientIdMixin,
 	{
 	
 	constructor: function (router) {
-		this._inherited(BetaJS.Routers.HashRouteBinder, "constructor", router);
+		this._inherited(BetaJS.Browser.HashRouteBinder, "constructor", router);
 		var self = this;
 		BetaJS.$(window).on("hashchange.events" + this.cid(), function () {
 			self._setRoute(self._getExternalRoute());
@@ -325,7 +327,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
 	
 	destroy: function () {
 		BetaJS.$(window).off("hashchange.events" + this.cid());
-		this._inherited(BetaJS.Routers.HashRouteBinder, "destroy");
+		this._inherited(BetaJS.Browser.HashRouteBinder, "destroy");
 	},
 	
 	_getExternalRoute: function () {
@@ -340,12 +342,12 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
 }]);
 
 
-BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", [
 	BetaJS.Ids.ClientIdMixin,
 	{
 		
 	constructor: function (router) {
-		this._inherited(BetaJS.Routers.HistoryRouteBinder, "constructor", router);
+		this._inherited(BetaJS.Browser.HistoryRouteBinder, "constructor", router);
 		var self = this;
 		this.__used = false;
 		BetaJS.$(window).on("popstate.events" + this.cid(), function () {
@@ -356,7 +358,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
 	
 	destroy: function () {
 		BetaJS.$(window).off("popstate.events" + this.cid());
-		this._inherited(BetaJS.Routers.HistoryRouteBinder, "destroy");
+		this._inherited(BetaJS.Browser.HistoryRouteBinder, "destroy");
 	},
 
 	_getExternalRoute: function () {
@@ -374,7 +376,7 @@ BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
 });
 
 
-BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.LocationRouteBinder", {
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.LocationRouteBinder", {
 	_getExternalRoute: function () {
 		return window.location.pathname;
 	},

@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -15,32 +15,68 @@ var BetaJS = BetaJS || {};
 if (typeof module != "undefined" && "exports" in module)
 	module.exports = BetaJS;
 
+/** @class */
 BetaJS.Types = {
 	
+    /** Returns whether argument is an object
+     * 
+     * @param x argument
+     * @return true if x is an object
+     */
 	is_object: function (x) {
 		return typeof x == "object";
 	},
 	
+    /** Returns whether argument is an array
+     * 
+     * @param x argument
+     * @return true if x is an array
+     */
 	is_array: function (x) {
 		return Object.prototype.toString.call(x) === '[object Array]';
 	},
 	
+    /** Returns whether argument is undefined (which is different from being null)
+     * 
+     * @param x argument
+     * @return true if x is undefined
+     */
 	is_undefined: function (x) {
 		return typeof x == "undefined";		
 	},
 	
+    /** Returns whether argument is null (which is different from being undefined)
+     * 
+     * @param x argument
+     * @return true if x is null
+     */
 	is_null: function (x) {
 		return x == null;
 	},
 	
+    /** Returns whether argument is undefined or null
+     * 
+     * @param x argument
+     * @return true if x is undefined or null
+     */
 	is_none: function (x) {
 		return this.is_undefined(x) || this.is_null(x);
 	},
 	
+    /** Returns whether argument is defined (could be null)
+     * 
+     * @param x argument
+     * @return true if x is defined
+     */
 	is_defined: function (x) {
 		return typeof x != "undefined";
 	},
 	
+    /** Returns whether argument is empty (undefined, null, an empty array or an empty object)
+     * 
+     * @param x argument
+     * @return true if x is empty
+     */
 	is_empty: function (x) {
 		if (this.is_none(x)) 
 			return true;
@@ -54,18 +90,43 @@ BetaJS.Types = {
 		return false; 
 	},
 	
+    /** Returns whether argument is a string
+     * 
+     * @param x argument
+     * @return true if x is a a string
+     */
 	is_string: function (x) {
 		return typeof x == "string";
 	},
 	
+    /** Returns whether argument is a function
+     * 
+     * @param x argument
+     * @return true if x is a function
+     */
 	is_function: function (x) {
 		return typeof x == "function";
 	},
 	
+    /** Returns whether argument is boolean
+     * 
+     * @param x argument
+     * @return true if x is boolean
+     */
 	is_boolean: function (x) {
 		return typeof x == "boolean";
 	},
 	
+    /** Compares two values
+     * 
+     * If values are booleans, we compare them directly.
+     * If values are arrays, we compare them recursively by their components.
+     * Otherwise, we use localeCompare which compares strings.
+     * 
+     * @param x left value
+     * @param y right value
+     * @return 1 if x > y, -1 if x < y and 0 if x == y
+     */
 	compare: function (x, y) {
 		if (BetaJS.Types.is_boolean(x) && BetaJS.Types.is_boolean(y))
 			return x == y ? 0 : (x ? 1 : -1);
@@ -83,6 +144,11 @@ BetaJS.Types = {
 		return x.localeCompare(y);			
 	},
 	
+    /** Parses a boolean string
+     * 
+     * @param x boolean as a string
+     * @return boolean value
+     */	
 	parseBool: function (x) {
 		if (this.is_boolean(x))
 			return x;
@@ -417,8 +483,26 @@ BetaJS.Objs = {
 					return true;
 		}
 		return false;
-	}
+	},
 	
+	exists: function (obj, f, context) {
+		var success = false;
+		BetaJS.Objs.iter(obj, function () {
+			success = success || f.apply(this, arguments);
+			return !success;
+		}, context);
+		return success;
+	},
+	
+	all: function (obj, f, context) {
+		var success = true;
+		BetaJS.Objs.iter(obj, function () {
+			success = success && f.apply(this, arguments);
+			return success;
+		}, context);
+		return success;
+	}
+
 };
 
 BetaJS.Ids = {
@@ -468,6 +552,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		if (obj.hasOwnProperty("constructor"))
 			result = obj.constructor;
 	});
+	var has_constructor = BetaJS.Types.is_defined(result);
 	if (!BetaJS.Types.is_defined(result))
 		result = function () { parent.apply(this, arguments); };
 
@@ -504,7 +589,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	// Setup Prototype
 	var ctor = function () {};
 	ctor.prototype = parent.prototype;
-	result.prototype = new ctor();			
+	result.prototype = new ctor();
 
 	// ClassNames
 	result.prototype.cls = result;
@@ -519,6 +604,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	if (parent.__notifications)
 		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
+
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
 
@@ -535,7 +621,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		}
 	});	
 	delete result.prototype._notifications;
-	
+
+	if (!has_constructor)
+		result.prototype.constructor = parent.prototype.constructor;
+		
 	return result; 
 };
 
@@ -2248,6 +2337,40 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 });
 BetaJS.Net = BetaJS.Net || {};
 
+BetaJS.Net.HttpHeader = {
+	
+	HTTP_STATUS_OK : 200,
+	HTTP_STATUS_CREATED : 201,
+	HTTP_STATUS_PAYMENT_REQUIRED : 402,
+	HTTP_STATUS_FORBIDDEN : 403,
+	HTTP_STATUS_NOT_FOUND : 404,
+	HTTP_STATUS_PRECONDITION_FAILED : 412,
+	HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+	
+	format: function (code, prepend_code) {
+		var ret = "";
+		if (code == this.HTTP_STATUS_OK)
+			ret = "OK"
+		else if (code == this.HTTP_STATUS_CREATED)
+			ret = "Created"
+		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
+			ret = "Payment Required"
+		else if (code == this.HTTP_STATUS_FORBIDDEN)
+			ret = "Forbidden"
+		else if (code == this.HTTP_STATUS_NOT_FOUND)
+			ret = "Not found"
+		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
+			ret = "Precondition Failed"
+		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+			ret = "Internal Server Error"
+		else
+			ret = "Other Error";
+		return prepend_code ? (code + " " + ret) : ret;
+	}
+	
+}
+BetaJS.Net = BetaJS.Net || {};
+
 BetaJS.Net.Uri = {
 	
 	encodeUriParams: function (arr, prefix) {
@@ -2288,171 +2411,10 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-/*
- * <ul>
- *  <li>uri: target uri</li>
- *  <li>method: get, post, ...</li>
- *  <li>data: data as JSON to be passed with the request</li>
- *  <li>success_callback(data): will be called when request was successful</li>
- *  <li>failure_callback(status_code, status_text, data): will be called when request was not successful</li>
- *  <li>complete_callback(): will be called when the request has been made</li>
- * </ul>
- * 
- */
-BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
-	
-	constructor: function (options) {
-		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
-		this.__options = BetaJS.Objs.extend({
-			"method": "GET",
-			"data": {}
-		}, options);
-	},
-	
-	syncCall: function (options) {
-		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.Objs.extend(opts, options);
-		var success_callback = opts.success_callback;
-		delete opts["success_callback"];
-		var failure_callback = opts.failure_callback;
-		delete opts["failure_callback"];
-		var complete_callback = opts.complete_callback;
-		delete opts["complete_callback"];
-		try {
-			var result = this._syncCall(opts);
-			if (success_callback)
-				success_callback(result);
-			if (complete_callback)
-				complete_callback();
-			return result;
-		} catch (e) {
-			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
-			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
-			else
-				throw e;
-		}
-	},
-	
-	asyncCall: function (options) {
-		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.Objs.extend(opts, options);
-		var success_callback = opts.success_callback;
-		delete opts["success_callback"];
-		var failure_callback = opts.failure_callback;
-		delete opts["failure_callback"];
-		var complete_callback = opts.complete_callback;
-		delete opts["complete_callback"];
-		try {
-			var result = this._asyncCall(BetaJS.Objs.extend({
-				"success": function (data) {
-					if (success_callback)
-						success_callback(data);
-					if (complete_callback)
-						complete_callback();
-				},
-				"failure": function (status_code, status_text, data) {
-					if (failure_callback)
-						failure_callback(status_code, status_text, data)
-					else
-						throw new BetaJS.Net.AjaxException(status_code, status_text, data);
-					if (complete_callback)
-						complete_callback();
-				}
-			}, opts));
-			return result;
-		} catch (e) {
-			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
-			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
-			else
-				throw e;
-		}
-	},
-	
-	call: function (options) {
-		if (!("async" in options))
-			return false;
-		var async = options["async"];
-		delete options["async"];
-		return async ? this.asyncCall(options) : this.syncCall(options);
-	},
-	
-	_syncCall: function (options) {},
-	
-	_asyncCall: function (options) {}
-	
-});
-
-
-BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
-	
-	constructor: function (status_code, status_text, data) {
-		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
-		this.__status_code = status_code;
-		this.__status_text = status_text;
-		this.__data = data;
-	},
-	
-	status_code: function () {
-		return this.__status_code;
-	},
-	
-	status_text: function () {
-		return this.__status_text;
-	},
-	
-	data: function () {
-		return this.__data;
-	}
-	
-});
-
-
-BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
-	
-	_syncCall: function (options) {
-		var result;
-		BetaJS.$.ajax({
-			type: options.method,
-			async: false,
-			url: options.uri,
-			dataType: options.decodeType ? options.decodeType : null, 
-			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
-			success: function (response) {
-				result = response;
-			},
-			error: function (jqXHR, textStatus, errorThrown) {
-				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
-			}
-		});
-		return result;
-	},
-	
-	_asyncCall: function (options) {
-		BetaJS.$.ajax({
-			type: options.method,
-			async: true,
-			url: options.uri,
-			dataType: options.decodeType ? options.decodeType : null, 
-			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
-			success: function (response) {
-				options.success(response);
-			},
-			error: function (jqXHR, textStatus, errorThrown) {
-				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
-			}
-		});
-	}
-
-});
-
 BetaJS.Queries = {
 
 	/*
@@ -2959,7 +2921,7 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
 
 /** @class */
-BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
+BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
@@ -3890,184 +3852,6 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 	
 });
 
-BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
-	
-	constructor: function (source) {
-		source = BetaJS.Net.AjaxException.ensure(source);
-		this._inherited(BetaJS.Stores.RemoteStoreException, "constructor", source.toString());
-		this.__source = source;
-	},
-	
-	source: function () {
-		return this.__source;
-	}
-	
-});
-
-BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
-
-	constructor : function(uri, ajax, options) {
-		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
-		this._uri = uri;
-		this.__ajax = ajax;
-		this.__options = BetaJS.Objs.extend({
-			"update_method": "PUT",
-			"uri_mappings": {}
-		}, options || {});
-	},
-	
-	_supports_async_write: function () {
-		return true;
-	},
-
-	_supports_async_read: function () {
-		return false;
-	},
-
-	getUri: function () {
-		return this._uri;
-	},
-	
-	prepare_uri: function (action, data) {
-		if (this.__options["uri_mappings"][action])
-			return this.__options["uri_mappings"][action](data);
-		if (action == "remove" || action == "get" || action == "update")
-			return this.getUri() + "/" + data[this._id_key];
-		return this.getUri();
-	},
-
-	_include_callbacks: function (opts, error_callback, success_callback) {
-		opts.failure = function (status_code, status_text, data) {
-			error_callback(new BetaJS.Stores.RemoteStoreException(new BetaJS.Net.AjaxException(status_code, status_text, data)));
-		};
-		opts.success = success_callback;
-		return opts;
-	},
-
-	_insert : function(data, callbacks) {
-		try {
-			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
-			if (this._async_write) 
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-
-	_remove : function(id, callbacks) {
-		try {
-			var data = {};
-			data[this._id_key] = id;
-			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
-			if (this._async_write) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					if (!response) {
-						response = {};
-						response[self._id_key] = id;
-					}
-					callbacks.success(response);
-				});
-				this.__ajax.asyncCall(opts);
-			} else {
-				var response = this.__ajax.syncCall(opts);
-				if (!response) {
-					response = {};
-					response[this._id_key] = id;
-				}
-				return response;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-
-	_get : function(id, callbacks) {
-		var data = {};
-		data[this._id_key] = id;
-		try {
-			var opts = {uri: this.prepare_uri("get", data)};
-			if (this._async_read)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-
-	_update : function(id, data, callbacks) {
-		var copy = BetaJS.Objs.clone(data, 1);
-		copy[this._id_key] = id;
-		try {
-			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
-			if (this._async_write)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-	
-	_query : function(query, options, callbacks) {
-		try {		
-			var opts = this._encode_query(query, options);
-			if (this._async_read) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw)
-				});
-				this.__ajax.asyncCall(opts);
-			} else {
-				var raw = this.__ajax.syncCall(opts);
-				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-	
-	_encode_query: function (query, options) {
-		return {
-			uri: this.prepare_uri("query")
-		};		
-	}
-	
-});
-
-
-BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
-
-	constructor : function(uri, ajax, capability_params, options) {
-		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
-		this.__capability_params = capability_params;
-	},
-	
-	_query_capabilities: function () {
-		var caps = {};
-		if ("skip" in this.__capability_params)
-			caps.skip = true;
-		if ("limit" in this.__capability_params)
-			caps.limit = true;
-		return caps;
-	},
-
-	_encode_query: function (query, options) {
-		options = options || {};
-		var uri = this.getUri() + "?"; 
-		if (options["skip"] && "skip" in this.__capability_params)
-			uri += this.__capability_params["skip"] + "=" + options["skip"] + "&";
-		if (options["limit"] && "limit" in this.__capability_params)
-			uri += this.__capability_params["limit"] + "=" + options["limit"] + "&";
-		return {
-			uri: uri
-		};		
-	}
-
-});
 BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	constructor: function (store, options) {
@@ -4397,7 +4181,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4641,7 +4425,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var source = e;
 		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
 			source = e.source()
-		else if (!e.instance_of(BetaJS.Net.AjaxException))
+		else if (!("status_code" in source && "data" in source))
 			return e;
 		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
 			BetaJS.Objs.iter(source.data(), function (value, key) {

@@ -22,6 +22,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		if (obj.hasOwnProperty("constructor"))
 			result = obj.constructor;
 	});
+	var has_constructor = BetaJS.Types.is_defined(result);
 	if (!BetaJS.Types.is_defined(result))
 		result = function () { parent.apply(this, arguments); };
 
@@ -58,7 +59,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	// Setup Prototype
 	var ctor = function () {};
 	ctor.prototype = parent.prototype;
-	result.prototype = new ctor();			
+	result.prototype = new ctor();
 
 	// ClassNames
 	result.prototype.cls = result;
@@ -73,6 +74,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	if (parent.__notifications)
 		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
+
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
 
@@ -89,7 +91,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		}
 	});	
 	delete result.prototype._notifications;
-	
+
+	if (!has_constructor)
+		result.prototype.constructor = parent.prototype.constructor;
+		
 	return result; 
 };
 

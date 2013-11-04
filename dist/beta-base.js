@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -10,32 +10,68 @@ var BetaJS = BetaJS || {};
 if (typeof module != "undefined" && "exports" in module)
 	module.exports = BetaJS;
 
+/** @class */
 BetaJS.Types = {
 	
+    /** Returns whether argument is an object
+     * 
+     * @param x argument
+     * @return true if x is an object
+     */
 	is_object: function (x) {
 		return typeof x == "object";
 	},
 	
+    /** Returns whether argument is an array
+     * 
+     * @param x argument
+     * @return true if x is an array
+     */
 	is_array: function (x) {
 		return Object.prototype.toString.call(x) === '[object Array]';
 	},
 	
+    /** Returns whether argument is undefined (which is different from being null)
+     * 
+     * @param x argument
+     * @return true if x is undefined
+     */
 	is_undefined: function (x) {
 		return typeof x == "undefined";		
 	},
 	
+    /** Returns whether argument is null (which is different from being undefined)
+     * 
+     * @param x argument
+     * @return true if x is null
+     */
 	is_null: function (x) {
 		return x == null;
 	},
 	
+    /** Returns whether argument is undefined or null
+     * 
+     * @param x argument
+     * @return true if x is undefined or null
+     */
 	is_none: function (x) {
 		return this.is_undefined(x) || this.is_null(x);
 	},
 	
+    /** Returns whether argument is defined (could be null)
+     * 
+     * @param x argument
+     * @return true if x is defined
+     */
 	is_defined: function (x) {
 		return typeof x != "undefined";
 	},
 	
+    /** Returns whether argument is empty (undefined, null, an empty array or an empty object)
+     * 
+     * @param x argument
+     * @return true if x is empty
+     */
 	is_empty: function (x) {
 		if (this.is_none(x)) 
 			return true;
@@ -49,18 +85,43 @@ BetaJS.Types = {
 		return false; 
 	},
 	
+    /** Returns whether argument is a string
+     * 
+     * @param x argument
+     * @return true if x is a a string
+     */
 	is_string: function (x) {
 		return typeof x == "string";
 	},
 	
+    /** Returns whether argument is a function
+     * 
+     * @param x argument
+     * @return true if x is a function
+     */
 	is_function: function (x) {
 		return typeof x == "function";
 	},
 	
+    /** Returns whether argument is boolean
+     * 
+     * @param x argument
+     * @return true if x is boolean
+     */
 	is_boolean: function (x) {
 		return typeof x == "boolean";
 	},
 	
+    /** Compares two values
+     * 
+     * If values are booleans, we compare them directly.
+     * If values are arrays, we compare them recursively by their components.
+     * Otherwise, we use localeCompare which compares strings.
+     * 
+     * @param x left value
+     * @param y right value
+     * @return 1 if x > y, -1 if x < y and 0 if x == y
+     */
 	compare: function (x, y) {
 		if (BetaJS.Types.is_boolean(x) && BetaJS.Types.is_boolean(y))
 			return x == y ? 0 : (x ? 1 : -1);
@@ -78,6 +139,11 @@ BetaJS.Types = {
 		return x.localeCompare(y);			
 	},
 	
+    /** Parses a boolean string
+     * 
+     * @param x boolean as a string
+     * @return boolean value
+     */	
 	parseBool: function (x) {
 		if (this.is_boolean(x))
 			return x;
@@ -412,8 +478,26 @@ BetaJS.Objs = {
 					return true;
 		}
 		return false;
-	}
+	},
 	
+	exists: function (obj, f, context) {
+		var success = false;
+		BetaJS.Objs.iter(obj, function () {
+			success = success || f.apply(this, arguments);
+			return !success;
+		}, context);
+		return success;
+	},
+	
+	all: function (obj, f, context) {
+		var success = true;
+		BetaJS.Objs.iter(obj, function () {
+			success = success && f.apply(this, arguments);
+			return success;
+		}, context);
+		return success;
+	}
+
 };
 
 BetaJS.Ids = {
@@ -463,6 +547,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		if (obj.hasOwnProperty("constructor"))
 			result = obj.constructor;
 	});
+	var has_constructor = BetaJS.Types.is_defined(result);
 	if (!BetaJS.Types.is_defined(result))
 		result = function () { parent.apply(this, arguments); };
 
@@ -499,7 +584,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	// Setup Prototype
 	var ctor = function () {};
 	ctor.prototype = parent.prototype;
-	result.prototype = new ctor();			
+	result.prototype = new ctor();
 
 	// ClassNames
 	result.prototype.cls = result;
@@ -514,6 +599,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	if (parent.__notifications)
 		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
+
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
 
@@ -530,7 +616,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		}
 	});	
 	delete result.prototype._notifications;
-	
+
+	if (!has_constructor)
+		result.prototype.constructor = parent.prototype.constructor;
+		
 	return result; 
 };
 
@@ -2241,6 +2330,40 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 	}
 	
 });
+BetaJS.Net = BetaJS.Net || {};
+
+BetaJS.Net.HttpHeader = {
+	
+	HTTP_STATUS_OK : 200,
+	HTTP_STATUS_CREATED : 201,
+	HTTP_STATUS_PAYMENT_REQUIRED : 402,
+	HTTP_STATUS_FORBIDDEN : 403,
+	HTTP_STATUS_NOT_FOUND : 404,
+	HTTP_STATUS_PRECONDITION_FAILED : 412,
+	HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+	
+	format: function (code, prepend_code) {
+		var ret = "";
+		if (code == this.HTTP_STATUS_OK)
+			ret = "OK"
+		else if (code == this.HTTP_STATUS_CREATED)
+			ret = "Created"
+		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
+			ret = "Payment Required"
+		else if (code == this.HTTP_STATUS_FORBIDDEN)
+			ret = "Forbidden"
+		else if (code == this.HTTP_STATUS_NOT_FOUND)
+			ret = "Not found"
+		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
+			ret = "Precondition Failed"
+		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+			ret = "Internal Server Error"
+		else
+			ret = "Other Error";
+		return prepend_code ? (code + " " + ret) : ret;
+	}
+	
+}
 BetaJS.Net = BetaJS.Net || {};
 
 BetaJS.Net.Uri = {

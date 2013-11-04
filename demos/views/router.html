@@ -8,7 +8,7 @@
 		<script src="../../dist/beta.js"></script>
 		<script>
 			$(document).ready(function () {
-				router = new BetaJS.Routers.Router({
+				router = new BetaJS.Browser.Router({
 					routes: {
 						"/main": "main",
 						"/about": "about",
@@ -31,14 +31,14 @@
 					$("[data-selector='page']").css("display", "none");
 					$("#pages").css("display", "");
 				};
-				router_history = new BetaJS.Routers.RouterHistory(router);
+				router_history = new BetaJS.Browser.RouterHistory(router);
 				router_history.on("change", function () {
 					$("#history").html("");
 					for (var i = 0; i < router_history.count(); ++i) 
 						$("#history").append("<li>" + router_history.getRoute(i) + "</li>");
 				});
-				//binder = new BetaJS.Routers.HistoryRouteBinder(router);
-				binder = new BetaJS.Routers.HashRouteBinder(router);				
+				//binder = new BetaJS.Browser.HistoryRouteBinder(router);
+				binder = new BetaJS.Browser.HashRouteBinder(router);				
 			});
 		</script>		
 	</head>

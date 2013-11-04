@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -20,32 +20,68 @@ var BetaJS = BetaJS || {};
 if (typeof module != "undefined" && "exports" in module)
 	module.exports = BetaJS;
 
+/** @class */
 BetaJS.Types = {
 	
+    /** Returns whether argument is an object
+     * 
+     * @param x argument
+     * @return true if x is an object
+     */
 	is_object: function (x) {
 		return typeof x == "object";
 	},
 	
+    /** Returns whether argument is an array
+     * 
+     * @param x argument
+     * @return true if x is an array
+     */
 	is_array: function (x) {
 		return Object.prototype.toString.call(x) === '[object Array]';
 	},
 	
+    /** Returns whether argument is undefined (which is different from being null)
+     * 
+     * @param x argument
+     * @return true if x is undefined
+     */
 	is_undefined: function (x) {
 		return typeof x == "undefined";		
 	},
 	
+    /** Returns whether argument is null (which is different from being undefined)
+     * 
+     * @param x argument
+     * @return true if x is null
+     */
 	is_null: function (x) {
 		return x == null;
 	},
 	
+    /** Returns whether argument is undefined or null
+     * 
+     * @param x argument
+     * @return true if x is undefined or null
+     */
 	is_none: function (x) {
 		return this.is_undefined(x) || this.is_null(x);
 	},
 	
+    /** Returns whether argument is defined (could be null)
+     * 
+     * @param x argument
+     * @return true if x is defined
+     */
 	is_defined: function (x) {
 		return typeof x != "undefined";
 	},
 	
+    /** Returns whether argument is empty (undefined, null, an empty array or an empty object)
+     * 
+     * @param x argument
+     * @return true if x is empty
+     */
 	is_empty: function (x) {
 		if (this.is_none(x)) 
 			return true;
@@ -59,18 +95,43 @@ BetaJS.Types = {
 		return false; 
 	},
 	
+    /** Returns whether argument is a string
+     * 
+     * @param x argument
+     * @return true if x is a a string
+     */
 	is_string: function (x) {
 		return typeof x == "string";
 	},
 	
+    /** Returns whether argument is a function
+     * 
+     * @param x argument
+     * @return true if x is a function
+     */
 	is_function: function (x) {
 		return typeof x == "function";
 	},
 	
+    /** Returns whether argument is boolean
+     * 
+     * @param x argument
+     * @return true if x is boolean
+     */
 	is_boolean: function (x) {
 		return typeof x == "boolean";
 	},
 	
+    /** Compares two values
+     * 
+     * If values are booleans, we compare them directly.
+     * If values are arrays, we compare them recursively by their components.
+     * Otherwise, we use localeCompare which compares strings.
+     * 
+     * @param x left value
+     * @param y right value
+     * @return 1 if x > y, -1 if x < y and 0 if x == y
+     */
 	compare: function (x, y) {
 		if (BetaJS.Types.is_boolean(x) && BetaJS.Types.is_boolean(y))
 			return x == y ? 0 : (x ? 1 : -1);
@@ -88,6 +149,11 @@ BetaJS.Types = {
 		return x.localeCompare(y);			
 	},
 	
+    /** Parses a boolean string
+     * 
+     * @param x boolean as a string
+     * @return boolean value
+     */	
 	parseBool: function (x) {
 		if (this.is_boolean(x))
 			return x;
@@ -422,8 +488,26 @@ BetaJS.Objs = {
 					return true;
 		}
 		return false;
-	}
+	},
 	
+	exists: function (obj, f, context) {
+		var success = false;
+		BetaJS.Objs.iter(obj, function () {
+			success = success || f.apply(this, arguments);
+			return !success;
+		}, context);
+		return success;
+	},
+	
+	all: function (obj, f, context) {
+		var success = true;
+		BetaJS.Objs.iter(obj, function () {
+			success = success && f.apply(this, arguments);
+			return success;
+		}, context);
+		return success;
+	}
+
 };
 
 BetaJS.Ids = {
@@ -473,6 +557,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		if (obj.hasOwnProperty("constructor"))
 			result = obj.constructor;
 	});
+	var has_constructor = BetaJS.Types.is_defined(result);
 	if (!BetaJS.Types.is_defined(result))
 		result = function () { parent.apply(this, arguments); };
 
@@ -509,7 +594,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	// Setup Prototype
 	var ctor = function () {};
 	ctor.prototype = parent.prototype;
-	result.prototype = new ctor();			
+	result.prototype = new ctor();
 
 	// ClassNames
 	result.prototype.cls = result;
@@ -524,6 +609,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	if (parent.__notifications)
 		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
+
 	BetaJS.Objs.iter(objects, function (object) {
 		BetaJS.Objs.extend(result.prototype, object);
 
@@ -540,7 +626,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		}
 	});	
 	delete result.prototype._notifications;
-	
+
+	if (!has_constructor)
+		result.prototype.constructor = parent.prototype.constructor;
+		
 	return result; 
 };
 
@@ -2253,6 +2342,40 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 });
 BetaJS.Net = BetaJS.Net || {};
 
+BetaJS.Net.HttpHeader = {
+	
+	HTTP_STATUS_OK : 200,
+	HTTP_STATUS_CREATED : 201,
+	HTTP_STATUS_PAYMENT_REQUIRED : 402,
+	HTTP_STATUS_FORBIDDEN : 403,
+	HTTP_STATUS_NOT_FOUND : 404,
+	HTTP_STATUS_PRECONDITION_FAILED : 412,
+	HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+	
+	format: function (code, prepend_code) {
+		var ret = "";
+		if (code == this.HTTP_STATUS_OK)
+			ret = "OK"
+		else if (code == this.HTTP_STATUS_CREATED)
+			ret = "Created"
+		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
+			ret = "Payment Required"
+		else if (code == this.HTTP_STATUS_FORBIDDEN)
+			ret = "Forbidden"
+		else if (code == this.HTTP_STATUS_NOT_FOUND)
+			ret = "Not found"
+		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
+			ret = "Precondition Failed"
+		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+			ret = "Internal Server Error"
+		else
+			ret = "Other Error";
+		return prepend_code ? (code + " " + ret) : ret;
+	}
+	
+}
+BetaJS.Net = BetaJS.Net || {};
+
 BetaJS.Net.Uri = {
 	
 	encodeUriParams: function (arr, prefix) {
@@ -2293,171 +2416,10 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-/*
- * <ul>
- *  <li>uri: target uri</li>
- *  <li>method: get, post, ...</li>
- *  <li>data: data as JSON to be passed with the request</li>
- *  <li>success_callback(data): will be called when request was successful</li>
- *  <li>failure_callback(status_code, status_text, data): will be called when request was not successful</li>
- *  <li>complete_callback(): will be called when the request has been made</li>
- * </ul>
- * 
- */
-BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
-	
-	constructor: function (options) {
-		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
-		this.__options = BetaJS.Objs.extend({
-			"method": "GET",
-			"data": {}
-		}, options);
-	},
-	
-	syncCall: function (options) {
-		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.Objs.extend(opts, options);
-		var success_callback = opts.success_callback;
-		delete opts["success_callback"];
-		var failure_callback = opts.failure_callback;
-		delete opts["failure_callback"];
-		var complete_callback = opts.complete_callback;
-		delete opts["complete_callback"];
-		try {
-			var result = this._syncCall(opts);
-			if (success_callback)
-				success_callback(result);
-			if (complete_callback)
-				complete_callback();
-			return result;
-		} catch (e) {
-			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
-			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
-			else
-				throw e;
-		}
-	},
-	
-	asyncCall: function (options) {
-		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.Objs.extend(opts, options);
-		var success_callback = opts.success_callback;
-		delete opts["success_callback"];
-		var failure_callback = opts.failure_callback;
-		delete opts["failure_callback"];
-		var complete_callback = opts.complete_callback;
-		delete opts["complete_callback"];
-		try {
-			var result = this._asyncCall(BetaJS.Objs.extend({
-				"success": function (data) {
-					if (success_callback)
-						success_callback(data);
-					if (complete_callback)
-						complete_callback();
-				},
-				"failure": function (status_code, status_text, data) {
-					if (failure_callback)
-						failure_callback(status_code, status_text, data)
-					else
-						throw new BetaJS.Net.AjaxException(status_code, status_text, data);
-					if (complete_callback)
-						complete_callback();
-				}
-			}, opts));
-			return result;
-		} catch (e) {
-			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
-			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
-			else
-				throw e;
-		}
-	},
-	
-	call: function (options) {
-		if (!("async" in options))
-			return false;
-		var async = options["async"];
-		delete options["async"];
-		return async ? this.asyncCall(options) : this.syncCall(options);
-	},
-	
-	_syncCall: function (options) {},
-	
-	_asyncCall: function (options) {}
-	
-});
-
-
-BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
-	
-	constructor: function (status_code, status_text, data) {
-		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
-		this.__status_code = status_code;
-		this.__status_text = status_text;
-		this.__data = data;
-	},
-	
-	status_code: function () {
-		return this.__status_code;
-	},
-	
-	status_text: function () {
-		return this.__status_text;
-	},
-	
-	data: function () {
-		return this.__data;
-	}
-	
-});
-
-
-BetaJS.Net.AbstractAjax.extend("BetaJS.Net.JQueryAjax", {
-	
-	_syncCall: function (options) {
-		var result;
-		BetaJS.$.ajax({
-			type: options.method,
-			async: false,
-			url: options.uri,
-			dataType: options.decodeType ? options.decodeType : null, 
-			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
-			success: function (response) {
-				result = response;
-			},
-			error: function (jqXHR, textStatus, errorThrown) {
-				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
-			}
-		});
-		return result;
-	},
-	
-	_asyncCall: function (options) {
-		BetaJS.$.ajax({
-			type: options.method,
-			async: true,
-			url: options.uri,
-			dataType: options.decodeType ? options.decodeType : null, 
-			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
-			success: function (response) {
-				options.success(response);
-			},
-			error: function (jqXHR, textStatus, errorThrown) {
-				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
-			}
-		});
-	}
-
-});
-
 BetaJS.Queries = {
 
 	/*
@@ -2964,7 +2926,7 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
 
 /** @class */
-BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
+BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
@@ -3895,184 +3857,6 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 	
 });
 
-BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
-	
-	constructor: function (source) {
-		source = BetaJS.Net.AjaxException.ensure(source);
-		this._inherited(BetaJS.Stores.RemoteStoreException, "constructor", source.toString());
-		this.__source = source;
-	},
-	
-	source: function () {
-		return this.__source;
-	}
-	
-});
-
-BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
-
-	constructor : function(uri, ajax, options) {
-		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
-		this._uri = uri;
-		this.__ajax = ajax;
-		this.__options = BetaJS.Objs.extend({
-			"update_method": "PUT",
-			"uri_mappings": {}
-		}, options || {});
-	},
-	
-	_supports_async_write: function () {
-		return true;
-	},
-
-	_supports_async_read: function () {
-		return false;
-	},
-
-	getUri: function () {
-		return this._uri;
-	},
-	
-	prepare_uri: function (action, data) {
-		if (this.__options["uri_mappings"][action])
-			return this.__options["uri_mappings"][action](data);
-		if (action == "remove" || action == "get" || action == "update")
-			return this.getUri() + "/" + data[this._id_key];
-		return this.getUri();
-	},
-
-	_include_callbacks: function (opts, error_callback, success_callback) {
-		opts.failure = function (status_code, status_text, data) {
-			error_callback(new BetaJS.Stores.RemoteStoreException(new BetaJS.Net.AjaxException(status_code, status_text, data)));
-		};
-		opts.success = success_callback;
-		return opts;
-	},
-
-	_insert : function(data, callbacks) {
-		try {
-			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
-			if (this._async_write) 
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-
-	_remove : function(id, callbacks) {
-		try {
-			var data = {};
-			data[this._id_key] = id;
-			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
-			if (this._async_write) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					if (!response) {
-						response = {};
-						response[self._id_key] = id;
-					}
-					callbacks.success(response);
-				});
-				this.__ajax.asyncCall(opts);
-			} else {
-				var response = this.__ajax.syncCall(opts);
-				if (!response) {
-					response = {};
-					response[this._id_key] = id;
-				}
-				return response;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-
-	_get : function(id, callbacks) {
-		var data = {};
-		data[this._id_key] = id;
-		try {
-			var opts = {uri: this.prepare_uri("get", data)};
-			if (this._async_read)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-
-	_update : function(id, data, callbacks) {
-		var copy = BetaJS.Objs.clone(data, 1);
-		copy[this._id_key] = id;
-		try {
-			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
-			if (this._async_write)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-	
-	_query : function(query, options, callbacks) {
-		try {		
-			var opts = this._encode_query(query, options);
-			if (this._async_read) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw)
-				});
-				this.__ajax.asyncCall(opts);
-			} else {
-				var raw = this.__ajax.syncCall(opts);
-				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
-	
-	_encode_query: function (query, options) {
-		return {
-			uri: this.prepare_uri("query")
-		};		
-	}
-	
-});
-
-
-BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
-
-	constructor : function(uri, ajax, capability_params, options) {
-		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
-		this.__capability_params = capability_params;
-	},
-	
-	_query_capabilities: function () {
-		var caps = {};
-		if ("skip" in this.__capability_params)
-			caps.skip = true;
-		if ("limit" in this.__capability_params)
-			caps.limit = true;
-		return caps;
-	},
-
-	_encode_query: function (query, options) {
-		options = options || {};
-		var uri = this.getUri() + "?"; 
-		if (options["skip"] && "skip" in this.__capability_params)
-			uri += this.__capability_params["skip"] + "=" + options["skip"] + "&";
-		if (options["limit"] && "limit" in this.__capability_params)
-			uri += this.__capability_params["limit"] + "=" + options["limit"] + "&";
-		return {
-			uri: uri
-		};		
-	}
-
-});
 BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	constructor: function (store, options) {
@@ -4402,7 +4186,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4646,7 +4430,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var source = e;
 		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
 			source = e.source()
-		else if (!e.instance_of(BetaJS.Net.AjaxException))
+		else if (!("status_code" in source && "data" in source))
 			return e;
 		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
 			BetaJS.Objs.iter(source.data(), function (value, key) {
@@ -5505,11 +5289,377 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-10-30
+  betajs - v0.0.2 - 2013-11-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-BetaJS.Net.Browser = {
+/*
+ * <ul>
+ *  <li>uri: target uri</li>
+ *  <li>method: get, post, ...</li>
+ *  <li>data: data as JSON to be passed with the request</li>
+ *  <li>success_callback(data): will be called when request was successful</li>
+ *  <li>failure_callback(status_code, status_text, data): will be called when request was not successful</li>
+ *  <li>complete_callback(): will be called when the request has been made</li>
+ * </ul>
+ * 
+ */
+BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
+	
+	constructor: function (options) {
+		this._inherited(BetaJS.Browser.AbstractAjax, "constructor");
+		this.__options = BetaJS.Objs.extend({
+			"method": "GET",
+			"data": {}
+		}, options);
+	},
+	
+	syncCall: function (options) {
+		var opts = BetaJS.Objs.clone(this.__options, 1);
+		opts = BetaJS.Objs.extend(opts, options);
+		var success_callback = opts.success_callback;
+		delete opts["success_callback"];
+		var failure_callback = opts.failure_callback;
+		delete opts["failure_callback"];
+		var complete_callback = opts.complete_callback;
+		delete opts["complete_callback"];
+		try {
+			var result = this._syncCall(opts);
+			if (success_callback)
+				success_callback(result);
+			if (complete_callback)
+				complete_callback();
+			return result;
+		} catch (e) {
+			e = BetaJS.Exceptions.ensure(e);
+			e.assert(BetaJS.Browser.AjaxException);
+			if (failure_callback)
+				failure_callback(e.status_code(), e.status_text(), e.data())
+			else
+				throw e;
+		}
+	},
+	
+	asyncCall: function (options) {
+		var opts = BetaJS.Objs.clone(this.__options, 1);
+		opts = BetaJS.Objs.extend(opts, options);
+		var success_callback = opts.success_callback;
+		delete opts["success_callback"];
+		var failure_callback = opts.failure_callback;
+		delete opts["failure_callback"];
+		var complete_callback = opts.complete_callback;
+		delete opts["complete_callback"];
+		try {
+			var result = this._asyncCall(BetaJS.Objs.extend({
+				"success": function (data) {
+					if (success_callback)
+						success_callback(data);
+					if (complete_callback)
+						complete_callback();
+				},
+				"failure": function (status_code, status_text, data) {
+					if (failure_callback)
+						failure_callback(status_code, status_text, data)
+					else
+						throw new BetaJS.Browser.AjaxException(status_code, status_text, data);
+					if (complete_callback)
+						complete_callback();
+				}
+			}, opts));
+			return result;
+		} catch (e) {
+			e = BetaJS.Exceptions.ensure(e);
+			e.assert(BetaJS.Browser.AjaxException);
+			if (failure_callback)
+				failure_callback(e.status_code(), e.status_text(), e.data())
+			else
+				throw e;
+		}
+	},
+	
+	call: function (options) {
+		if (!("async" in options))
+			return false;
+		var async = options["async"];
+		delete options["async"];
+		return async ? this.asyncCall(options) : this.syncCall(options);
+	},
+	
+	_syncCall: function (options) {},
+	
+	_asyncCall: function (options) {}
+	
+});
+
+
+BetaJS.Exceptions.Exception.extend("BetaJS.Browser.AjaxException", {
+	
+	constructor: function (status_code, status_text, data) {
+		this._inherited(BetaJS.Browser.AjaxException, "constructor", status_code + ": " + status_text);
+		this.__status_code = status_code;
+		this.__status_text = status_text;
+		this.__data = data;
+	},
+	
+	status_code: function () {
+		return this.__status_code;
+	},
+	
+	status_text: function () {
+		return this.__status_text;
+	},
+	
+	data: function () {
+		return this.__data;
+	}
+	
+});
+
+
+BetaJS.Browser.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
+	
+	_syncCall: function (options) {
+		var result;
+		BetaJS.$.ajax({
+			type: options.method,
+			async: false,
+			url: options.uri,
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
+			success: function (response) {
+				result = response;
+			},
+			error: function (jqXHR, textStatus, errorThrown) {
+				throw new BetaJS.Browser.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+			}
+		});
+		return result;
+	},
+	
+	_asyncCall: function (options) {
+		BetaJS.$.ajax({
+			type: options.method,
+			async: true,
+			url: options.uri,
+			dataType: options.decodeType ? options.decodeType : null, 
+			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
+			success: function (response) {
+				options.success(response);
+			},
+			error: function (jqXHR, textStatus, errorThrown) {
+				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+			}
+		});
+	}
+
+});
+
+BetaJS.Browser.Dom = {
+	
+	parentElementBySelection: function () {
+	  if (window.getSelection) {
+	    var target = window.getSelection().getRangeAt(0).commonAncestorContainer;
+	    return target.nodeType===1 ? target : target.parentNode;
+	  } else if (document.selection)
+	  	return document.selection.createRange().parentElement();
+	  return null;
+	},
+	
+	parentElement: function (current) {
+		return "parentNode" in current ? current.parentNode : current.parentElement();
+	},
+	
+	elementInScope: function (element, ancestor, including) {
+		including = BetaJS.Types.is_defined(including) ? including : true;
+		return element == ancestor ? including : (element == null ? false : this.elementInScope(this.parentElement(element), ancestor, including));
+	},
+	
+	parentElements: function (element, ancestor, including) {
+		var result = [];
+		var current = element;
+		while (current != null && (!ancestor || current != ancestor)) {
+			result.push(current);
+			current = this.parentElement(current);
+		}
+		if (current == null && ancestor)
+			return [];
+		if (ancestor && including)
+			result.push(ancestor);
+		return result;
+	},
+	
+	hasParentElementsTag: function (tag, element, ancestor, including) {
+		var elements = this.parentElements(element, ancestor, including);
+		tag = tag.toLowerCase();
+		return BetaJS.Objs.exists(elements, function (parent) { return parent.tagName.toLowerCase() == tag; });
+	}
+
+};
+
+BetaJS.Browser = BetaJS.Browser || {};
+
+/**
+ * Uses modified portions of:
+ * 
+ * http://www.openjs.com/scripts/events/keyboard_shortcuts/
+ * Version : 2.01.B
+ * By Binny V A
+ * License : BSD
+ */
+
+BetaJS.Browser.Hotkeys = {
+	
+	SHIFT_NUMS: {
+		"`":"~",
+		"1":"!",
+		"2":"@",
+		"3":"#",
+		"4":"$",
+		"5":"%",
+		"6":"^",
+		"7":"&",
+		"8":"*",
+		"9":"(",
+		"0":")",
+		"-":"_",
+		"=":"+",
+		";":":",
+		"'":"\"",
+		",":"<",
+		".":">",
+		"/":"?",
+		"\\":"|"
+	},
+	
+	SPECIAL_KEYS: {
+		'esc':27,
+		'escape':27,
+		'tab':9,
+		'space':32,
+		'return':13,
+		'enter':13,
+		'backspace':8,
+
+		'scrolllock':145,
+		'scroll_lock':145,
+		'scroll':145,
+		'capslock':20,
+		'caps_lock':20,
+		'caps':20,
+		'numlock':144,
+		'num_lock':144,
+		'num':144,
+		
+		'pause':19,
+		'break':19,
+		
+		'insert':45,
+		'home':36,
+		'delete':46,
+		'end':35,
+		
+		'pageup':33,
+		'page_up':33,
+		'pu':33,
+
+		'pagedown':34,
+		'page_down':34,
+		'pd':34,
+
+		'left':37,
+		'up':38,
+		'right':39,
+		'down':40,
+
+		'f1':112,
+		'f2':113,
+		'f3':114,
+		'f4':115,
+		'f5':116,
+		'f6':117,
+		'f7':118,
+		'f8':119,
+		'f9':120,
+		'f10':121,
+		'f11':122,
+		'f12':123
+	},
+	
+	MODIFIERS: ["ctrl", "alt", "shift", "meta"],
+	
+	keyCodeToCharacter: function (code) {
+		if (code == 188)
+			return ",";
+		else if (code == 190)
+			return ".";
+		return String.fromCharCode(code).toLowerCase();
+	},
+	
+	register: function (hotkey, callback, context, options) {
+		options = BetaJS.Objs.extend({
+			"type": "keyup",
+			"propagate": false,
+			"disable_in_input": false,
+			"target": document,
+			"keycode": false
+		}, options);
+		options.target = BetaJS.$(options.target);
+		var keys = hotkey.toLowerCase().split("+");
+		var func = function (e) {
+			if (options.disable_in_input) {
+				var element = e.target || e.srcElement || null;
+				if (element && element.nodeType == 3)
+					element = element.parentNode;
+				if (element && (element.tagName == 'INPUT' || element.tagName == 'TEXTAREA'))
+					return;
+			}
+			var code = e.keyCode || e.which || 0;
+			var character = BetaJS.Browser.Hotkeys.keyCodeToCharacter(code);
+			var kp = 0;
+			var modifier_map = {};
+			BetaJS.Objs.iter(BetaJS.Browser.Hotkeys.MODIFIERS, function (mod) {
+				modifier_map[mod] = {
+					pressed: e[mod + "Key"],
+					wanted: false
+				};
+			}, this);
+			BetaJS.Objs.iter(keys, function (key) {
+				if (key in modifier_map) {
+					modifier_map[key].wanted = true;
+					kp++;
+				} else if (key.length > 1) {
+					if (BetaJS.Browser.Hotkeys.SPECIAL_KEYS[key] == code)
+						kp++;
+				} else if (options.keycode) {
+					if (options.keycode == code)
+						kp++;
+				} else if (character == key || (e.shiftKey && BetaJS.Browser.Hotkeys.SHIFT_NUMS[character] == key)) {
+					kp++;
+				}
+			}, this);
+			if (kp == keys.length && BetaJS.Objs.all(modifier_map, function (data) { return data.wanted == data.pressed; })) {
+				callback.apply(context || this);
+				if (!options.propagate)
+					e.preventDefault();
+			}
+		};
+		options.target.on(options.type, func);
+		return {
+			target: options.target,
+			type: options.type,
+			func: func
+		};
+	},
+	
+	unregister: function (handle) {
+		handle.target.off(handle.type, handle.func);
+	} 
+	
+};
+
+BetaJS.Browser = BetaJS.Browser || {};
+
+BetaJS.Browser.Info = {
 	
 	getNavigator: function () {
 		return {
@@ -5535,7 +5685,7 @@ BetaJS.Net.Browser = {
 
 	flash: function () {
 		if (!this.__flash)
-			this.__flash = new BetaJS.Net.FlashDetect();
+			this.__flash = new BetaJS.Browser.FlashDetect();
 		return this.__flash;
 	},
 	
@@ -5606,10 +5756,10 @@ Code licensed under the BSD License: http://www.featureblend.com/license.txt
 Version: 1.0.4
 */
 
-BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
+BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
 	
 	constructor: function () {
-		this._inherited(BetaJS.Net.FlashDetect, "constructor");
+		this._inherited(BetaJS.Browser.FlashDetect, "constructor");
 		this.__version = null;
         if (navigator.plugins && navigator.plugins.length > 0) {
             var type = 'application/x-shockwave-flash';
@@ -5661,7 +5811,7 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
 	},
 	
 	supported: function () {
-		return this.installed() || !BetaJS.Net.Browser.is_iOS();
+		return this.installed() || !BetaJS.Browser.Info.is_iOS();
 	},
 	
     majorAtLeast : function (version) {
@@ -5722,10 +5872,9 @@ BetaJS.Class.extend("BetaJS.Net.FlashDetect", {
     }]
 
 });
+BetaJS.Browser = BetaJS.Browser || {};
 
-
-
-BetaJS.Net.Browser.Loader = {
+BetaJS.Browser.Loader = {
 	
 	loadScript: function (url, callback, context) {
 		var executed = false;
@@ -5746,6 +5895,571 @@ BetaJS.Net.Browser.Loader = {
 	}
 
 }
+BetaJS.Browser = BetaJS.Browser || {}; 
+
+/** @class */
+BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
+	BetaJS.Events.EventsMixin,
+	/** @lends BetaJS.Browser.Router.prototype */
+	{
+		
+	/** Specifies all routes. Can either be an associative array, an array of associative arrays or a function returning one of those.
+	 * 
+	 * <p>A route is a mapping from a regular expression to a route descriptor. A route descriptor is either a name of a callback function or a route descriptor associative array.</p>
+	 * <p>The callback function should accept the parameters given by the capturing groups of the regular expression</p>
+	 * The route descriptor object may contain the following options:
+	 * <ul>
+	 *   <li>
+	 *     action: the callback function; either a string or a function (mandatory)
+	 *   </li>
+	 *   <li>
+	 *     path: name of the route; can be used to look up route (optional)
+	 *   </li>
+	 *   <li>
+	 *     applicable: array of strings or functions or string or function to determine whether the route is applicable; if it is not, it will be skipped (optional)
+	 *   </li>
+	 *   <li>
+	 *     valid: array of strings or functions or string or function to determine whether an applicable route is valid; if it is not, the routing fails (optional)
+	 *   </li>
+	 * </ul>
+	 * @return routes
+	 * @example
+	 * return {
+	 * 	"users/(\d+)/post/(\d+)" : "users_post",
+	 *  "users/(\d+)/account": {
+	 * 	  action: "users_account",
+	 *    path: "users_account_path",
+	 *    applicable: "is_user",
+	 *    valid: "is_admin"
+	 *  }
+	 * }
+	 */	
+	routes: [],
+	
+	/** Creates a new router with options
+	 * <ul>
+	 *  <li>routes: adds user defined routes</li> 
+	 *  <li>actions: extends the object by user-defined actions</li>
+	 * </ul>
+	 * @param options options
+	 */
+	constructor: function (options) {
+		this._inherited(BetaJS.Browser.Router, "constructor");
+		var routes = BetaJS.Types.is_function(this.routes) ? this.routes() : this.routes;
+		if (!BetaJS.Types.is_array(routes))
+			routes = [routes];
+		if ("routes" in options) {
+			if (BetaJS.Types.is_array(options["routes"]))
+				routes = routes.concat(options["routes"])
+			else
+				routes.push(options["routes"]);
+		}
+		this.__routes = [];
+		this.__paths = {};
+		this.__current = null;
+		BetaJS.Objs.iter(routes, function (assoc) {
+			BetaJS.Objs.iter(assoc, function (obj, key) {
+				if (BetaJS.Types.is_string(obj))
+					obj = {action: obj};
+				obj.key = key;
+				obj.route = new RegExp("^" + key + "$");
+				if (!("applicable" in obj))
+					obj.applicable = []
+				else if (!BetaJS.Types.is_array(obj.applicable))
+					obj.applicable = [obj.applicable];
+				if (!("valid" in obj))
+					obj.valid = []
+				else if (!BetaJS.Types.is_array(obj.valid))
+					obj.valid = [obj.valid];
+				if (!("path" in obj))
+					obj.path = obj.key;
+				this.__routes.push(obj);
+				this.__paths[obj.path] = obj;
+			}, this);
+		}, this);
+		if ("actions" in options)
+			BetaJS.Objs.iter(options.actions, function (action, key) {
+				this[key] = action;
+			}, this);
+	},
+	
+	destroy: function() {
+		this.__leave();
+		this._inherited(BetaJS.Browser.Router, "destroy");
+	},
+	
+	/** Parse a given route and map it to the first applicable object that is valid
+	 * @param route the route given as a strings
+	 * @return either null if nothing applicable and valid could be matched or an associative array with params and routing object as attributes.
+	 */
+	parse: function (route) {
+		for (var i = 0; i < this.__routes.length; ++i) {
+			var obj = this.__routes[i];
+			var result = obj.route.exec(route);
+			if (result != null) {
+				result.shift(1);
+				var applicable = true;
+				BetaJS.Objs.iter(obj.applicable, function (s) {
+					var f = BetaJS.Types.is_string(s) ? this[s] : s;
+					applicable = applicable && f.apply(this, result)
+				}, this);
+				if (!applicable)
+					continue;
+				var valid = true
+				BetaJS.Objs.iter(obj.valid, function (s) {
+					var f = BetaJS.Types.is_string(s) ? this[s] : s;
+					valid = valid && f.apply(this, result)
+				}, this);
+				if (!valid)
+					return null;
+				return {
+					object: obj,
+					params: result
+				}
+			}
+		}
+		return null;
+	},
+	
+	/** Looks up the routing object given a path descriptor
+ 	 * @param path the path descriptor
+ 	 * @return the routing object
+	 */
+	object: function (path) {
+		return this.__paths[path];
+	},
+	
+	/** Returns the route of a path description
+	 * @param path the path descriptor
+	 * @param parameters parameters that should be attached to the route (capturing groups)
+	 */
+	path: function (path) {
+		var key = this.object(path).key;
+		var args = Array.prototype.slice.apply(arguments, [1]);
+		var regex = /\(.*?\)/;
+		while (arg = args.shift())
+			key = key.replace(regex, arg);
+		return key;
+	},
+	
+	/** Navigate to a given route, invoking the matching action.
+ 	 * @param route the route
+	 */
+	navigate: function (route) {
+		this.trigger("navigate", route);
+		var result = this.parse(route);
+		if (result == null) {
+			this.trigger("navigate-fail", route);
+			return false;
+		}
+		this.trigger("navigate-success", result.object, result.params);
+		return this.invoke(result.object, result.params, route);
+	},
+	
+	/** Invoke a routing object with parameters
+	 * <p>
+	 *   Invokes the protected method _invoke
+	 * </p>
+	 * @param object the routing object
+	 * @param params (optional) the parameters that should be attached to the route
+	 * @param route (optional) an associated route that should be saved
+	 */
+	invoke: function (object, params, route) {
+		route = route || this.path(object.key, params);
+		this.trigger("before_invoke", object, params, route);
+		this.__enter(object, params, route);
+		this.trigger("after_invoke", object, params, route);
+		var result = this._invoke(object, params);
+		return result;
+	},
+	
+	/** Invokes a routing object with parameters.
+	 * <p>
+	 *   Can be overwritten and does the invoking.
+	 * </p>
+	 * @param object the routing object
+	 * @param params (optional) the parameters that should be attached to the route
+	 */
+	_invoke: function (object, params) {
+		var f = object.action;
+		if (BetaJS.Types.is_string(f))
+			f = this[f];
+		return f.apply(this, params);
+	},
+	
+	__leave: function () {
+		if (this.__current != null) {
+			this.trigger("leave", this.__current);
+			this.__current.destroy();
+			this.__current = null;
+		}
+	},
+	
+	__enter: function (object, params, route) {
+		this.__leave();
+		this.__current = new BetaJS.Events.Events();
+		this.__current.route = route;
+		this.__current.object = object;
+		this.__current.params = params;
+		this.trigger("enter", this.__current);
+	},
+	
+	/** Returns the current route object.
+	 * <ul>
+	 *  <li>route: the route as string</li>
+	 *  <li>object: the routing object</li>
+	 *  <li>params: the params</li>
+	 * </ul>
+	 */
+	current: function () {
+		return this.__current;
+	}
+		
+}]);
+
+
+BetaJS.Class.extend("BetaJS.Browser.RouterHistory", [
+	BetaJS.Events.EventsMixin,
+	{
+	
+	constructor: function (router) {
+		this._inherited(BetaJS.Browser.RouterHistory, "constructor");
+		this.__router = router;
+		this.__history = [];
+		router.on("after_invoke", this.__after_invoke, this);
+	},
+	
+	destroy: function () {
+		this.__router.off(null, null, this);
+		this._inherited(BetaJS.Browser.RouterHistory, "destroy");
+	},
+	
+	__after_invoke: function (object, params) {
+		this.__history.push({
+			object: object,
+			params: params
+		});
+		this.trigger("change");
+	},
+	
+	last: function (index) {
+		index = index || 0;
+		return this.get(this.count() - 1 - index);
+	},
+	
+	count: function () {
+		return this.__history.length;
+	},
+	
+	get: function (index) {
+		index = index || 0;
+		return this.__history[index];
+	},
+	
+	getRoute: function (index) {
+		var item = this.get(index);
+		return this.__router.path(item.object.path, item.params);
+	},
+	
+	back: function (index) {
+		if (this.count() < 2)
+			return;
+		index = index || 0;
+		while (index >= 0 && this.count() > 1) {
+			this.__history.pop();
+			--index;
+		}
+		var item = this.__history.pop();
+		this.trigger("change");
+		return this.__router.invoke(item.object, item.params);
+	}
+	
+}]);
+
+
+BetaJS.Class.extend("BetaJS.Browser.RouteBinder", {
+
+	constructor: function (router) {
+		this._inherited(BetaJS.Browser.RouteBinder, "constructor");
+		this.__router = router;
+		this.__router.on("after_invoke", function (object, params, route) {
+			if (this._getExternalRoute() != route)
+				this._setExternalRoute(route);
+		}, this);
+	},
+	
+	destroy: function () {
+		this.__router.off(null, null, this);
+		this._inherited(BetaJS.Browser.RouteBinder, "destroy");
+	},
+	
+	current: function () {
+		return this._getExternalRoute();
+	},
+	
+	_setRoute: function (route) {
+		var current = this.__router.current();
+		if (current && current.route == route)
+			return;
+		this.__router.navigate(route);
+	},
+	
+	_getExternalRoute: function () { return "" },
+	_setExternalRoute: function (route) { }
+	
+});
+
+
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", [
+	BetaJS.Ids.ClientIdMixin,
+	{
+	
+	constructor: function (router) {
+		this._inherited(BetaJS.Browser.HashRouteBinder, "constructor", router);
+		var self = this;
+		BetaJS.$(window).on("hashchange.events" + this.cid(), function () {
+			self._setRoute(self._getExternalRoute());
+		});
+	},
+	
+	destroy: function () {
+		BetaJS.$(window).off("hashchange.events" + this.cid());
+		this._inherited(BetaJS.Browser.HashRouteBinder, "destroy");
+	},
+	
+	_getExternalRoute: function () {
+		var hash = window.location.hash;
+		return (hash.length && hash[0] == '#') ? hash.slice(1) : hash;
+	},
+	
+	_setExternalRoute: function (route) {
+		window.location.hash = "#" + route;
+	}
+
+}]);
+
+
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", [
+	BetaJS.Ids.ClientIdMixin,
+	{
+		
+	constructor: function (router) {
+		this._inherited(BetaJS.Browser.HistoryRouteBinder, "constructor", router);
+		var self = this;
+		this.__used = false;
+		BetaJS.$(window).on("popstate.events" + this.cid(), function () {
+			if (self.__used)
+				self._setRoute(self._getExternalRoute());
+		});
+	},
+	
+	destroy: function () {
+		BetaJS.$(window).off("popstate.events" + this.cid());
+		this._inherited(BetaJS.Browser.HistoryRouteBinder, "destroy");
+	},
+
+	_getExternalRoute: function () {
+		return window.location.pathname;
+	},
+	
+	_setExternalRoute: function (route) {
+		window.history.pushState({}, document.title, route);
+		this.__used = true;
+	}
+}], {
+	supported: function () {
+		return window.history && window.history.pushState;
+	}
+});
+
+
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.LocationRouteBinder", {
+	_getExternalRoute: function () {
+		return window.location.pathname;
+	},
+	
+	_setExternalRoute: function (route) {
+		window.location.pathname = route;
+	}
+});
+BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
+	
+	constructor: function (source) {
+		source = BetaJS.Browser.AjaxException.ensure(source);
+		this._inherited(BetaJS.Stores.RemoteStoreException, "constructor", source.toString());
+		this.__source = source;
+	},
+	
+	source: function () {
+		return this.__source;
+	}
+	
+});
+
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
+
+	constructor : function(uri, ajax, options) {
+		this._inherited(BetaJS.Stores.RemoteStore, "constructor", options);
+		this._uri = uri;
+		this.__ajax = ajax;
+		this.__options = BetaJS.Objs.extend({
+			"update_method": "PUT",
+			"uri_mappings": {}
+		}, options || {});
+	},
+	
+	_supports_async_write: function () {
+		return true;
+	},
+
+	_supports_async_read: function () {
+		return false;
+	},
+
+	getUri: function () {
+		return this._uri;
+	},
+	
+	prepare_uri: function (action, data) {
+		if (this.__options["uri_mappings"][action])
+			return this.__options["uri_mappings"][action](data);
+		if (action == "remove" || action == "get" || action == "update")
+			return this.getUri() + "/" + data[this._id_key];
+		return this.getUri();
+	},
+
+	_include_callbacks: function (opts, error_callback, success_callback) {
+		opts.failure = function (status_code, status_text, data) {
+			error_callback(new BetaJS.Stores.RemoteStoreException(new BetaJS.Browser.AjaxException(status_code, status_text, data)));
+		};
+		opts.success = success_callback;
+		return opts;
+	},
+
+	_insert : function(data, callbacks) {
+		try {
+			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
+			if (this._async_write) 
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+			else
+				return this.__ajax.syncCall(opts);
+		} catch (e) {
+			throw new BetaJS.Stores.RemoteStoreException(e); 			
+		}
+	},
+
+	_remove : function(id, callbacks) {
+		try {
+			var data = {};
+			data[this._id_key] = id;
+			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
+			if (this._async_write) {
+				var self = this;
+				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
+					if (!response) {
+						response = {};
+						response[self._id_key] = id;
+					}
+					callbacks.success(response);
+				});
+				this.__ajax.asyncCall(opts);
+			} else {
+				var response = this.__ajax.syncCall(opts);
+				if (!response) {
+					response = {};
+					response[this._id_key] = id;
+				}
+				return response;
+			}
+		} catch (e) {
+			throw new BetaJS.Stores.RemoteStoreException(e); 			
+		}
+	},
+
+	_get : function(id, callbacks) {
+		var data = {};
+		data[this._id_key] = id;
+		try {
+			var opts = {uri: this.prepare_uri("get", data)};
+			if (this._async_read)
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+			else
+				return this.__ajax.syncCall(opts);
+		} catch (e) {
+			throw new BetaJS.Stores.RemoteStoreException(e); 			
+		}
+	},
+
+	_update : function(id, data, callbacks) {
+		var copy = BetaJS.Objs.clone(data, 1);
+		copy[this._id_key] = id;
+		try {
+			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
+			if (this._async_write)
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+			else
+				return this.__ajax.syncCall(opts);
+		} catch (e) {
+			throw new BetaJS.Stores.RemoteStoreException(e); 			
+		}
+	},
+	
+	_query : function(query, options, callbacks) {
+		try {		
+			var opts = this._encode_query(query, options);
+			if (this._async_read) {
+				var self = this;
+				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
+					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw)
+				});
+				this.__ajax.asyncCall(opts);
+			} else {
+				var raw = this.__ajax.syncCall(opts);
+				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;
+			}
+		} catch (e) {
+			throw new BetaJS.Stores.RemoteStoreException(e); 			
+		}
+	},
+	
+	_encode_query: function (query, options) {
+		return {
+			uri: this.prepare_uri("query")
+		};		
+	}
+	
+});
+
+
+BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
+
+	constructor : function(uri, ajax, capability_params, options) {
+		this._inherited(BetaJS.Stores.QueryGetParamsRemoteStore, "constructor", uri, ajax, options);
+		this.__capability_params = capability_params;
+	},
+	
+	_query_capabilities: function () {
+		var caps = {};
+		if ("skip" in this.__capability_params)
+			caps.skip = true;
+		if ("limit" in this.__capability_params)
+			caps.limit = true;
+		return caps;
+	},
+
+	_encode_query: function (query, options) {
+		options = options || {};
+		var uri = this.getUri() + "?"; 
+		if (options["skip"] && "skip" in this.__capability_params)
+			uri += this.__capability_params["skip"] + "=" + options["skip"] + "&";
+		if (options["limit"] && "limit" in this.__capability_params)
+			uri += this.__capability_params["limit"] + "=" + options["limit"] + "&";
+		return {
+			uri: uri
+		};		
+	}
+
+});
 /*
  * Inspired by Underscore's Templating Engine
  * (which itself is inspired by John Resig's implementation)
@@ -5869,7 +6583,7 @@ BetaJS.$ = jQuery || null;
 BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
 
 /** @class */
-BetaJS.Class.extend("BetaJS.Views.View", [
+BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
@@ -6072,12 +6786,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
-	/** Returns all hotkeys that the view is listening to.
-	 */
-	_hotkeys: function () {
-		return [];
-	},
-	
 	/** Creates a new view with options
 	 * <ul>
 	 *  <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li> 
@@ -6130,9 +6838,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		if (!BetaJS.Types.is_array(events))
 			events = [events]; 
 		this.__events = events.concat(this.__events);
-		this.__hotkeys = this._hotkeys();
-		if (this.__hotkeys.length > 0)
-			this.__events.push({"keyup": "__execute_hotkey"});
 
 		var templates = BetaJS.Objs.extend(BetaJS.Types.is_function(this._templates) ? this._templates() : this._templates, options["templates"] || {});
 		if ("template" in options)
@@ -6223,18 +6928,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		return {};
 	},
 
-	__execute_hotkey: function (event) {
-		BetaJS.Objs.iter(this.__hotkeys, function (inner) {
-			 BetaJS.Objs.iter(inner, function (f, key) {
-			 	var translated = BetaJS.Views.Keys[key] || key;
-			 	if (translated == event.keyCode) {
-					var func = BetaJS.Types.is_function(f) ? f : this[f];
-			 		func.apply(this, event);
-			 	}
-			 }, this);
-		}, this);
-	},
-	
 	/** Returns whether this view is active (i.e. bound and rendered) 
 	 * @return active  
 	 */
@@ -6299,6 +6992,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			child.view.activate();
 		});
 		this._notify("activate");
+		this.trigger("activate");
 		if (this.__visible)
 			this.trigger("show");
 		this.trigger("visibility", this.__visible);
@@ -6316,6 +7010,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.trigger("hide");
 		this.trigger("visibility", false);
 		this._notify("deactivate");
+		this.trigger("deactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.deactivate();
 		});
@@ -6674,10 +7369,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
-BetaJS.Views.Keys = {
-	ESCAPE: 27,
-	ENTER: 13
-};
 BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
 	
 	constructor: function (parent, template_string) {
@@ -6950,7 +7641,43 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.Centering", {
 	
 });
 
-BetaJS.Classes.Module.extend("BetaJS.Views.Modules.HideOnLeave", {
+BetaJS.Classes.Module.extend("BetaJS.Views.Modules.BindOnActivate", {
+	
+	_register: function (object, data) {
+		data.bound = false;
+		object.on("activate", function () { this.__bind(object); }, this);
+		object.on("deactivate", function () { this.__unbind(object); }, this);
+		if (object.isActive())
+			this.__bind(object);
+	},
+	
+	_unregister: function (object, data) {
+		this.__unbind(object);
+	},
+	
+	__bind: function (object) {
+		var data = this._data(object);
+		if (data.bound)
+			return;
+		this._bind(object, data);
+		data.bound = true;
+	},
+	
+	__unbind: function (object) {
+		var data = this._data(object);
+		if (!data.bound)
+			return;
+		this._unbind(object, data);
+		data.bound = false;
+	},
+	
+	_bind: function (object, data) {},
+	
+	_unbind: function (object, data) {}
+	
+});
+
+BetaJS.Classes.Module.extend("BetaJS.Views.Modules.BindOnVisible", {
 	
 	_register: function (object, data) {
 		data.bound = false;
@@ -6972,6 +7699,27 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.HideOnLeave", {
 		var data = this._data(object);
 		if (data.bound)
 			return;
+		this._bind(object, data);
+		data.bound = true;
+	},
+	
+	__unbind: function (object) {
+		var data = this._data(object);
+		if (!data.bound)
+			return;
+		this._unbind(object, data);
+		data.bound = false;
+	},
+	
+	_bind: function (object, data) {},
+	
+	_unbind: function (object, data) {}
+	
+});
+
+BetaJS.Views.Modules.BindOnVisible.extend("BetaJS.Views.Modules.HideOnLeave", {
+		
+	_bind: function (object, data) {
 		var el = object.$el.get(0);
 		data.hide_on_leave_func = function (e) {
 			if (data.hide_on_leave_skip) {
@@ -6983,403 +7731,35 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.HideOnLeave", {
 		};
 		data.hide_on_leave_skip = true;
 		BetaJS.$(document.body).on("click", data.hide_on_leave_func);
-		data.bound = true;
 	},
 	
-	__unbind: function (object) {
-		var data = this._data(object);
-		if (!data.bound)
-			return;
+	_unbind: function (object, data) {
 		BetaJS.$(document.body).unbind("click", data.hide_on_leave_func);
-		data.bound = false;
 	}
 	
 });
 
-/** @class */
-BetaJS.Class.extend("BetaJS.Routers.Router", [
-	BetaJS.Events.EventsMixin,
-	/** @lends BetaJS.Routers.Router.prototype */
-	{
+BetaJS.Views.Modules.BindOnActivate.extend("BetaJS.Views.Modules.Hotkeys", {
 		
-	/** Specifies all routes. Can either be an associative array, an array of associative arrays or a function returning one of those.
-	 * 
-	 * <p>A route is a mapping from a regular expression to a route descriptor. A route descriptor is either a name of a callback function or a route descriptor associative array.</p>
-	 * <p>The callback function should accept the parameters given by the capturing groups of the regular expression</p>
-	 * The route descriptor object may contain the following options:
-	 * <ul>
-	 *   <li>
-	 *     action: the callback function; either a string or a function (mandatory)
-	 *   </li>
-	 *   <li>
-	 *     path: name of the route; can be used to look up route (optional)
-	 *   </li>
-	 *   <li>
-	 *     applicable: array of strings or functions or string or function to determine whether the route is applicable; if it is not, it will be skipped (optional)
-	 *   </li>
-	 *   <li>
-	 *     valid: array of strings or functions or string or function to determine whether an applicable route is valid; if it is not, the routing fails (optional)
-	 *   </li>
-	 * </ul>
-	 * @return routes
-	 * @example
-	 * return {
-	 * 	"users/(\d+)/post/(\d+)" : "users_post",
-	 *  "users/(\d+)/account": {
-	 * 	  action: "users_account",
-	 *    path: "users_account_path",
-	 *    applicable: "is_user",
-	 *    valid: "is_admin"
-	 *  }
-	 * }
-	 */	
-	routes: [],
-	
-	/** Creates a new router with options
-	 * <ul>
-	 *  <li>routes: adds user defined routes</li> 
-	 *  <li>actions: extends the object by user-defined actions</li>
-	 * </ul>
-	 * @param options options
-	 */
 	constructor: function (options) {
-		this._inherited(BetaJS.Routers.Router, "constructor");
-		var routes = BetaJS.Types.is_function(this.routes) ? this.routes() : this.routes;
-		if (!BetaJS.Types.is_array(routes))
-			routes = [routes];
-		if ("routes" in options) {
-			if (BetaJS.Types.is_array(options["routes"]))
-				routes = routes.concat(options["routes"])
-			else
-				routes.push(options["routes"]);
-		}
-		this.__routes = [];
-		this.__paths = {};
-		this.__current = null;
-		BetaJS.Objs.iter(routes, function (assoc) {
-			BetaJS.Objs.iter(assoc, function (obj, key) {
-				if (BetaJS.Types.is_string(obj))
-					obj = {action: obj};
-				obj.key = key;
-				obj.route = new RegExp("^" + key + "$");
-				if (!("applicable" in obj))
-					obj.applicable = []
-				else if (!BetaJS.Types.is_array(obj.applicable))
-					obj.applicable = [obj.applicable];
-				if (!("valid" in obj))
-					obj.valid = []
-				else if (!BetaJS.Types.is_array(obj.valid))
-					obj.valid = [obj.valid];
-				if (!("path" in obj))
-					obj.path = obj.key;
-				this.__routes.push(obj);
-				this.__paths[obj.path] = obj;
-			}, this);
-		}, this);
-		if ("actions" in options)
-			BetaJS.Objs.iter(options.actions, function (action, key) {
-				this[key] = action;
-			}, this);
+		this._inherited(BetaJS.Views.Modules.Hotkeys, "constructor", options);
+		this.__hotkeys = options.hotkeys;
 	},
-	
-	destroy: function() {
-		this.__leave();
-		this._inherited(BetaJS.Routers.Router, "destroy");
-	},
-	
-	/** Parse a given route and map it to the first applicable object that is valid
-	 * @param route the route given as a strings
-	 * @return either null if nothing applicable and valid could be matched or an associative array with params and routing object as attributes.
-	 */
-	parse: function (route) {
-		for (var i = 0; i < this.__routes.length; ++i) {
-			var obj = this.__routes[i];
-			var result = obj.route.exec(route);
-			if (result != null) {
-				result.shift(1);
-				var applicable = true;
-				BetaJS.Objs.iter(obj.applicable, function (s) {
-					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					applicable = applicable && f.apply(this, result)
-				}, this);
-				if (!applicable)
-					continue;
-				var valid = true
-				BetaJS.Objs.iter(obj.valid, function (s) {
-					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					valid = valid && f.apply(this, result)
-				}, this);
-				if (!valid)
-					return null;
-				return {
-					object: obj,
-					params: result
-				}
-			}
-		}
-		return null;
-	},
-	
-	/** Looks up the routing object given a path descriptor
- 	 * @param path the path descriptor
- 	 * @return the routing object
-	 */
-	object: function (path) {
-		return this.__paths[path];
-	},
-	
-	/** Returns the route of a path description
-	 * @param path the path descriptor
-	 * @param parameters parameters that should be attached to the route (capturing groups)
-	 */
-	path: function (path) {
-		var key = this.object(path).key;
-		var args = Array.prototype.slice.apply(arguments, [1]);
-		var regex = /\(.*?\)/;
-		while (arg = args.shift())
-			key = key.replace(regex, arg);
-		return key;
-	},
-	
-	/** Navigate to a given route, invoking the matching action.
- 	 * @param route the route
-	 */
-	navigate: function (route) {
-		this.trigger("navigate", route);
-		var result = this.parse(route);
-		if (result == null) {
-			this.trigger("navigate-fail", route);
-			return false;
-		}
-		this.trigger("navigate-success", result.object, result.params);
-		return this.invoke(result.object, result.params, route);
-	},
-	
-	/** Invoke a routing object with parameters
-	 * <p>
-	 *   Invokes the protected method _invoke
-	 * </p>
-	 * @param object the routing object
-	 * @param params (optional) the parameters that should be attached to the route
-	 * @param route (optional) an associated route that should be saved
-	 */
-	invoke: function (object, params, route) {
-		route = route || this.path(object.key, params);
-		this.trigger("before_invoke", object, params, route);
-		this.__enter(object, params, route);
-		this.trigger("after_invoke", object, params, route);
-		var result = this._invoke(object, params);
-		return result;
-	},
-	
-	/** Invokes a routing object with parameters.
-	 * <p>
-	 *   Can be overwritten and does the invoking.
-	 * </p>
-	 * @param object the routing object
-	 * @param params (optional) the parameters that should be attached to the route
-	 */
-	_invoke: function (object, params) {
-		var f = object.action;
-		if (BetaJS.Types.is_string(f))
-			f = this[f];
-		return f.apply(this, params);
-	},
-	
-	__leave: function () {
-		if (this.__current != null) {
-			this.trigger("leave", this.__current);
-			this.__current.destroy();
-			this.__current = null;
-		}
-	},
-	
-	__enter: function (object, params, route) {
-		this.__leave();
-		this.__current = new BetaJS.Events.Events();
-		this.__current.route = route;
-		this.__current.object = object;
-		this.__current.params = params;
-		this.trigger("enter", this.__current);
-	},
-	
-	/** Returns the current route object.
-	 * <ul>
-	 *  <li>route: the route as string</li>
-	 *  <li>object: the routing object</li>
-	 *  <li>params: the params</li>
-	 * </ul>
-	 */
-	current: function () {
-		return this.__current;
-	}
-		
-}]);
 
-
-BetaJS.Class.extend("BetaJS.Routers.RouterHistory", [
-	BetaJS.Events.EventsMixin,
-	{
-	
-	constructor: function (router) {
-		this._inherited(BetaJS.Routers.RouterHistory, "constructor");
-		this.__router = router;
-		this.__history = [];
-		router.on("after_invoke", this.__after_invoke, this);
-	},
-	
-	destroy: function () {
-		this.__router.off(null, null, this);
-		this._inherited(BetaJS.Routers.RouterHistory, "destroy");
-	},
-	
-	__after_invoke: function (object, params) {
-		this.__history.push({
-			object: object,
-			params: params
-		});
-		this.trigger("change");
-	},
-	
-	last: function (index) {
-		index = index || 0;
-		return this.get(this.count() - 1 - index);
-	},
-	
-	count: function () {
-		return this.__history.length;
-	},
-	
-	get: function (index) {
-		index = index || 0;
-		return this.__history[index];
-	},
-	
-	getRoute: function (index) {
-		var item = this.get(index);
-		return this.__router.path(item.object.path, item.params);
-	},
-	
-	back: function (index) {
-		if (this.count() < 2)
-			return;
-		index = index || 0;
-		while (index >= 0 && this.count() > 1) {
-			this.__history.pop();
-			--index;
-		}
-		var item = this.__history.pop();
-		this.trigger("change");
-		return this.__router.invoke(item.object, item.params);
-	}
-	
-}]);
-
-
-BetaJS.Class.extend("BetaJS.Routers.RouteBinder", {
-
-	constructor: function (router) {
-		this._inherited(BetaJS.Routers.RouteBinder, "constructor");
-		this.__router = router;
-		this.__router.on("after_invoke", function (object, params, route) {
-			if (this._getExternalRoute() != route)
-				this._setExternalRoute(route);
+	_bind: function (object, data) {
+		data.hotkeys = {};
+		BetaJS.Objs.iter(this.__hotkeys, function (f, hotkey) {
+			data.hotkeys[hotkey] = BetaJS.Browser.Hotkeys.register(hotkey, BetaJS.Types.is_function(f) ? f : object[f], object); 
 		}, this);
 	},
 	
-	destroy: function () {
-		this.__router.off(null, null, this);
-		this._inherited(BetaJS.Routers.RouteBinder, "destroy");
-	},
-	
-	current: function () {
-		return this._getExternalRoute();
-	},
-	
-	_setRoute: function (route) {
-		var current = this.__router.current();
-		if (current && current.route == route)
-			return;
-		this.__router.navigate(route);
-	},
-	
-	_getExternalRoute: function () { return "" },
-	_setExternalRoute: function (route) { }
-	
-});
-
-
-BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HashRouteBinder", [
-	BetaJS.Ids.ClientIdMixin,
-	{
-	
-	constructor: function (router) {
-		this._inherited(BetaJS.Routers.HashRouteBinder, "constructor", router);
-		var self = this;
-		BetaJS.$(window).on("hashchange.events" + this.cid(), function () {
-			self._setRoute(self._getExternalRoute());
-		});
-	},
-	
-	destroy: function () {
-		BetaJS.$(window).off("hashchange.events" + this.cid());
-		this._inherited(BetaJS.Routers.HashRouteBinder, "destroy");
-	},
-	
-	_getExternalRoute: function () {
-		var hash = window.location.hash;
-		return (hash.length && hash[0] == '#') ? hash.slice(1) : hash;
-	},
-	
-	_setExternalRoute: function (route) {
-		window.location.hash = "#" + route;
+	_unbind: function (object, data) {
+		BetaJS.Objs.iter(data.hotkeys, function (handle) {
+			BetaJS.Browser.Hotkeys.unregister(handle);
+		}, this);
+		data.hotkeys = {};
 	}
-
-}]);
-
-
-BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.HistoryRouteBinder", [
-	BetaJS.Ids.ClientIdMixin,
-	{
-		
-	constructor: function (router) {
-		this._inherited(BetaJS.Routers.HistoryRouteBinder, "constructor", router);
-		var self = this;
-		this.__used = false;
-		BetaJS.$(window).on("popstate.events" + this.cid(), function () {
-			if (self.__used)
-				self._setRoute(self._getExternalRoute());
-		});
-	},
 	
-	destroy: function () {
-		BetaJS.$(window).off("popstate.events" + this.cid());
-		this._inherited(BetaJS.Routers.HistoryRouteBinder, "destroy");
-	},
-
-	_getExternalRoute: function () {
-		return window.location.pathname;
-	},
-	
-	_setExternalRoute: function (route) {
-		window.history.pushState({}, document.title, route);
-		this.__used = true;
-	}
-}], {
-	supported: function () {
-		return window.history && window.history.pushState;
-	}
-});
-
-
-BetaJS.Routers.RouteBinder.extend("BetaJS.Routers.LocationRouteBinder", {
-	_getExternalRoute: function () {
-		return window.location.pathname;
-	},
-	
-	_setExternalRoute: function (route) {
-		window.location.pathname = route;
-	}
 });
 BetaJS.Templates.Cached = BetaJS.Templates.Cached || {};
 BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="right" class=\'holygrail-view-right-container\'></div>  <div data-selector="left" class=\'holygrail-view-left-container\'></div>  <div data-selector="center" class=\'holygrail-view-center-container\'></div> ';
@@ -7613,17 +7993,25 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		};
 	},
 	constructor: function(options) {
+		options = options || {};
 		this._inherited(BetaJS.Views.ButtonView, "constructor", options);
 		this._setOptionProperty(options, "label", "");
 		this._setOptionProperty(options, "button_container_element", "button");
 		this._setOptionProperty(options, "disabled", false);
+		if (options.hotkey) {
+			var hotkeys = {};
+			hotkeys[options.hotkey] = function () {
+				this.click();
+			};
+			this.add_module(new BetaJS.Views.Modules.Hotkeys({hotkeys: hotkeys}));
+		}
 	},
 	_events: function () {
 		return this._inherited(BetaJS.Views.ButtonView, "_events").concat([{
-			"click [data-selector='button-inner']": "__clickButton"
+			"click [data-selector='button-inner']": "click"
 		}]);
 	},
-	__clickButton: function () {
+	click: function () {
 		if (!this.get("disabled"))
 			this.trigger("click");
 	}
@@ -7639,6 +8027,8 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 			"change input": "__changeEvent",
 			"input input": "__changeEvent",
 			"paste input": "__changeEvent"
+		}, {
+			"keyup input": "__keyupEvent"
 		}];
 	},
 	constructor: function(options) {
@@ -7648,13 +8038,11 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		this._setOptionProperty(options, "placeholder", "");	
 		this._setOptionProperty(options, "input_type", "text");
 	},
-	_hotkeys: function () {
-		return [{
-			"ENTER": function () {
-				this.trigger("enter_key", this.get("value"));
-			}
-		}];
-	},
+	__keyupEvent: function (e) {
+		var key = e.keyCode || e.which;
+        if (key == 13)
+			this.trigger("enter_key", this.get("value"));
+    },
 	__leaveEvent: function () {
 		this.trigger("leave");
 	},

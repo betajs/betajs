@@ -59,13 +59,12 @@ module.exports = function(grunt) {
 					'src/base/locales.js',
 					'src/base/time.js',
 					'src/base/timers.js',
-					'src/net/uri.js',
+					'src/net/*.js',
 				]
 			},
 			dist_beta_data : {
 				dest : 'dist/beta-data.js',
 				src : [
-					'src/net/ajax.js',
 					'src/data/queries/queries.js', 
 					'src/data/queries/constrained_queries.js', 
 					'src/data/queries/query_collection.js',
@@ -79,7 +78,6 @@ module.exports = function(grunt) {
 					'src/data/stores/local_store.js',
 					'src/data/stores/dual_store.js',
 					'src/data/stores/cached_stores.js',
-					'src/data/stores/remote_store.js',
 					'src/data/stores/conversion_store.js',
 					'src/data/stores/passthrough_store.js',
 					'src/data/stores/write_queue_store.js',
@@ -112,13 +110,17 @@ module.exports = function(grunt) {
 			dist_beta_ui : {
 				dest : 'dist/beta-ui.js',
 				src : [
-					'src/net/browser.js',
+					'src/browser/*.js',
+					'src/data/stores/remote_store.js',
 					'src/views/templates.js', 
 					'src/views/template.js', 
 					'src/views/views.js',
 					'src/views/dynamics.js',
-					'src/views/modules/*.js',
-					'src/views/router.js',
+					'src/views/modules/centering.js',
+					'src/views/modules/bind_on_activate.js',
+					'src/views/modules/bind_on_visible.js',
+					'src/views/modules/hide_on_leave.js',
+					'src/views/modules/hotkeys.js',
 					 
 					'dist/beta-ui-templates.js',
 					
@@ -173,15 +175,13 @@ module.exports = function(grunt) {
 				src: [
 					'dist/beta-common.js',
 					
-					'src/net/http_header.js',
 					'src/server/databases/databases.js',
 					'src/server/databases/database_tables.js',
 					'src/server/databases/mongo_database.js',
 					'src/server/databases/mongo_database_table.js',
 					'src/server/stores/database_store.js',
 					'src/server/stores/mongo_database_store.js',
-					'src/server/stores/migrator.js',
-					'src/server/net/http_header.js'
+					'src/server/stores/migrator.js'
 				]
 			},
 			dist_strict: {

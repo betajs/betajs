@@ -3,7 +3,7 @@ BetaJS.$ = jQuery || null;
 BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
 
 /** @class */
-BetaJS.Class.extend("BetaJS.Views.View", [
+BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
 	BetaJS.Ids.ClientIdMixin,
@@ -206,12 +206,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
-	/** Returns all hotkeys that the view is listening to.
-	 */
-	_hotkeys: function () {
-		return [];
-	},
-	
 	/** Creates a new view with options
 	 * <ul>
 	 *  <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li> 
@@ -264,9 +258,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		if (!BetaJS.Types.is_array(events))
 			events = [events]; 
 		this.__events = events.concat(this.__events);
-		this.__hotkeys = this._hotkeys();
-		if (this.__hotkeys.length > 0)
-			this.__events.push({"keyup": "__execute_hotkey"});
 
 		var templates = BetaJS.Objs.extend(BetaJS.Types.is_function(this._templates) ? this._templates() : this._templates, options["templates"] || {});
 		if ("template" in options)
@@ -357,18 +348,6 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 		return {};
 	},
 
-	__execute_hotkey: function (event) {
-		BetaJS.Objs.iter(this.__hotkeys, function (inner) {
-			 BetaJS.Objs.iter(inner, function (f, key) {
-			 	var translated = BetaJS.Views.Keys[key] || key;
-			 	if (translated == event.keyCode) {
-					var func = BetaJS.Types.is_function(f) ? f : this[f];
-			 		func.apply(this, event);
-			 	}
-			 }, this);
-		}, this);
-	},
-	
 	/** Returns whether this view is active (i.e. bound and rendered) 
 	 * @return active  
 	 */
@@ -433,6 +412,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			child.view.activate();
 		});
 		this._notify("activate");
+		this.trigger("activate");
 		if (this.__visible)
 			this.trigger("show");
 		this.trigger("visibility", this.__visible);
@@ -450,6 +430,7 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 			this.trigger("hide");
 		this.trigger("visibility", false);
 		this._notify("deactivate");
+		this.trigger("deactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.deactivate();
 		});
@@ -807,8 +788,3 @@ BetaJS.Class.extend("BetaJS.Views.View", [
 }]);
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
-
-BetaJS.Views.Keys = {
-	ESCAPE: 27,
-	ENTER: 13
-};

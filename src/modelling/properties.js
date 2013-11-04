@@ -172,7 +172,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var source = e;
 		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
 			source = e.source()
-		else if (!e.instance_of(BetaJS.Net.AjaxException))
+		else if (!("status_code" in source && "data" in source))
 			return e;
 		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
 			BetaJS.Objs.iter(source.data(), function (value, key) {

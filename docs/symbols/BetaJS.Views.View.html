@@ -191,9 +191,11 @@ ul.inheritsList
 	
 	<li><i><a href="../symbols/_global_.html">_global_</a></i></li>
 	
-	<li><a href="../symbols/BetaJS.Routers.Router.html">BetaJS.Routers.Router</a></li>
+	<li><a href="../symbols/BetaJS.Browser.Router.html">BetaJS.Browser.Router</a></li>
 	
 	<li><a href="../symbols/BetaJS.Stores.BaseStore.html">BetaJS.Stores.BaseStore</a></li>
+	
+	<li><a href="../symbols/BetaJS.Types.html">BetaJS.Types</a></li>
 	
 	<li><a href="../symbols/BetaJS.Views.View.html">BetaJS.Views.View</a></li>
 	
@@ -382,7 +384,7 @@ ul.inheritsList
 						<tr>
 							<td class="attributes">&nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#addChild">addChild</a></b>(child)
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#addChild">addChild</a></b>(child, options)
 								</div>
 								<div class="description">Adds a child view</div>
 							</td>
@@ -411,7 +413,7 @@ ul.inheritsList
 							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#constructor">constructor</a></b>(options)
 								</div>
-								<div class="description">Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>render_string: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>el_classes: (default []) css classes that should be attached to container</li> <li>el_styles: (default {}) styles that should be attached to container</li> <li>children_styles: (default {}) styles that should be attached to all direct children</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li></ul></div>
+								<div class="description">Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>html: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>el_classes: (default []) css classes that should be attached to container</li> <li>el_styles: (default {}) styles that should be attached to container</li> <li>children_classes: (default []) css classes that should be attached to all direct children</li> <li>children_styles: (default {}) styles that should be attached to all direct children</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li> <li>invalidate_on_show: (default: false) invalidate view on show</li> <li>append_to_el: (default: false) append to el instead of replacing content</li></ul></div>
 							</td>
 						</tr>
 					
@@ -1177,7 +1179,7 @@ ul.inheritsList
 					<div class="fixedFont">
 					
 					
-					<b>addChild</b>(child)
+					<b>addChild</b>(child, options)
 					
 					</div>
 					<div class="description">
@@ -1197,6 +1199,12 @@ ul.inheritsList
 									
 								</dt>
 								<dd>view</dd>
+							
+								<dt>
+									<b>options</b>
+									
+								</dt>
+								<dd></dd>
 							
 							</dl>
 						
@@ -1285,7 +1293,7 @@ ul.inheritsList
 					
 					</div>
 					<div class="description">
-						Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>render_string: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>el_classes: (default []) css classes that should be attached to container</li> <li>el_styles: (default {}) styles that should be attached to container</li> <li>children_styles: (default {}) styles that should be attached to all direct children</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li></ul>
+						Creates a new view with options<ul> <li>el: the element to which the view should bind to; either a jquery selector or a jquery element</li>  <li>visible: (default true) should the view be visible initially</li> <li>html: (default null) string that should be used as default rendering</li> <li>events: (default []) events that should be used additionally</li> <li>attributes: (default {}) attributes that should be attached to container</li> <li>el_classes: (default []) css classes that should be attached to container</li> <li>el_styles: (default {}) styles that should be attached to container</li> <li>children_classes: (default []) css classes that should be attached to all direct children</li> <li>children_styles: (default {}) styles that should be attached to all direct children</li> <li>css: (default {}) css classes that should be overwritten</li> <li>templates: (default {}) templates that should be overwritten</li> <li>dynamics: (default: {}) dynamics that should be overwritten</li> <li>properties: (default: {}) properties that should be added (and passed to templates and dynamics)</li> <li>invalidate_on_change: (default: false) rerender view on property change</li> <li>invalidate_on_show: (default: false) invalidate view on show</li> <li>append_to_el: (default: false) append to el instead of replacing content</li></ul>
 						
 						
 					</div>
@@ -2197,7 +2205,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sat Jun 29 2013 01:23:24 GMT-0400 (EDT)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Mon Nov 04 2013 14:34:27 GMT-0500 (EST)
 		</div>
 	</body>
 </html>
