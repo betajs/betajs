@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - BetaJS.Stores.BaseStore</title>
+		<title>JsDoc Reference - BetaJS.Scopes</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -214,7 +214,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class BetaJS.Stores.BaseStore
+				Class BetaJS.Scopes
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -225,13 +225,13 @@ ul.inheritsList
 				
 				
 				
-					<br /><i>Defined in: </i> &lt;./src/data/stores/base_store.js&gt;.
+					<br /><i>Defined in: </i> &lt;./src/base/scopes.js&gt;.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Stores.BaseStore.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Scopes.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -244,7 +244,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/BetaJS.Stores.BaseStore.html#constructor">BetaJS.Stores.BaseStore</a></b>()
+								<b><a href="../symbols/BetaJS.Scopes.html#constructor">BetaJS.Scopes</a></b>()
 							</div>
 							<div class="description"></div>
 						</td>
@@ -260,7 +260,7 @@ ul.inheritsList
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Stores.BaseStore.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Scopes.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -271,38 +271,38 @@ ul.inheritsList
 					<tbody>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_get">_get</a></b>(id, callbacks)
+								<div class="fixedFont">BetaJS.Scopes.<b><a href="../symbols/BetaJS.Scopes.html#.base">base</a></b>(s, base)
 								</div>
-								<div class="description">Get data from store by id.</div>
+								<div class="description">Takes a string and returns the global object associated with it by name.</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_insert">_insert</a></b>(data, callbacks)
+								<div class="fixedFont">BetaJS.Scopes.<b><a href="../symbols/BetaJS.Scopes.html#.resolve">resolve</a></b>(s, base)
 								</div>
-								<div class="description">Insert data to store.</div>
+								<div class="description">Takes an object address string and returns the object associated with it.</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_remove">_remove</a></b>(id, callbacks)
+								<div class="fixedFont">BetaJS.Scopes.<b><a href="../symbols/BetaJS.Scopes.html#.set">set</a></b>(obj, s, base)
 								</div>
-								<div class="description">Remove data from store.</div>
+								<div class="description">Takes an object address string and overwrites it by a given object.</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_update">_update</a></b>(id, data, callbacks)
+								<div class="fixedFont">BetaJS.Scopes.<b><a href="../symbols/BetaJS.Scopes.html#.touch">touch</a></b>(s, base)
 								</div>
-								<div class="description">Update data by id.</div>
+								<div class="description">Takes an object address string and returns the object associated with it.</div>
 							</td>
 						</tr>
 					
@@ -323,7 +323,7 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>BetaJS.Stores.BaseStore</b>()
+						<b>BetaJS.Scopes</b>()
 				</div>
 				
 				<div class="description">
@@ -354,15 +354,15 @@ ul.inheritsList
 					Method Detail
 				</div>
 				
-					<a name="_get"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".base"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_get</b>(id, callbacks)
+					<span class="light">BetaJS.Scopes.</span><b>base</b>(s, base)
 					
 					</div>
 					<div class="description">
-						Get data from store by id.
+						Takes a string and returns the global object associated with it by name.
 						
 						
 					</div>
@@ -374,37 +374,27 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>id</b>
+									<b>s</b>
 									
 								</dt>
-								<dd>data id</dd>
+								<dd>string (example: "BetaJS")</dd>
 							
 								<dt>
-									<b>callbacks</b>
+									<b>base</b>
 									
 								</dt>
-								<dd></dd>
+								<dd>a global namespace base (optional, will autodetect the right one if not provided)</dd>
 							
 							</dl>
 						
 						
 						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
 						
 						
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>data</dd>
+								<dd>global object (example: BetaJS object)</dd>
 							
 							</dl>
 						
@@ -413,15 +403,15 @@ ul.inheritsList
 
 					<hr />
 				
-					<a name="_insert"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".resolve"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_insert</b>(data, callbacks)
+					<span class="light">BetaJS.Scopes.</span><b>resolve</b>(s, base)
 					
 					</div>
 					<div class="description">
-						Insert data to store. Return inserted data with id.
+						Takes an object address string and returns the object associated with it.
 						
 						
 					</div>
@@ -433,37 +423,27 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>data</b>
+									<b>s</b>
 									
 								</dt>
-								<dd>data to be inserted</dd>
+								<dd>string (example: "BetaJS.Strings")</dd>
 							
 								<dt>
-									<b>callbacks</b>
+									<b>base</b>
 									
 								</dt>
-								<dd></dd>
+								<dd>a global namespace base (optional, will autodetect the right one if not provided)</dd>
 							
 							</dl>
 						
 						
 						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
 						
 						
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>data that has been inserted with id.</dd>
+								<dd>global object (example BetaJS.Strings object)</dd>
 							
 							</dl>
 						
@@ -472,15 +452,16 @@ ul.inheritsList
 
 					<hr />
 				
-					<a name="_remove"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".set"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_remove</b>(id, callbacks)
+					<span class="light">BetaJS.Scopes.</span><b>set</b>(obj, s, base)
 					
 					</div>
 					<div class="description">
-						Remove data from store. Return removed data.
+						Takes an object address string and overwrites it by a given object.
+ If the address does not exist, it will be created.
 						
 						
 					</div>
@@ -492,47 +473,51 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>id</b>
+									<b>obj</b>
 									
 								</dt>
-								<dd>data id</dd>
+								<dd>object (example: {test: "foobar"})</dd>
 							
 								<dt>
-									<b>callbacks</b>
+									<b>s</b>
 									
 								</dt>
-								<dd></dd>
+								<dd>string (example: "BetaJS.Strings.FooBar")</dd>
+							
+								<dt>
+									<b>base</b>
+									
+								</dt>
+								<dd>a global namespace base (optional, will autodetect the right one if not provided)</dd>
 							
 							</dl>
+						
 						
 						
 						
 						
 							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
+							<dt class="heading">Returns:</dt>
 							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
+								<dd>global object (example BetaJS.Strings.FooBar object)</dd>
 							
 							</dl>
-						
 						
 						
 						
 
 					<hr />
 				
-					<a name="_update"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".touch"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_update</b>(id, data, callbacks)
+					<span class="light">BetaJS.Scopes.</span><b>touch</b>(s, base)
 					
 					</div>
 					<div class="description">
-						Update data by id.
+						Takes an object address string and returns the object associated with it.
+ If the address does not exist, it will be created.
 						
 						
 					</div>
@@ -544,43 +529,27 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>id</b>
+									<b>s</b>
 									
 								</dt>
-								<dd>data id</dd>
+								<dd>string (example: "BetaJS.Strings.FooBar")</dd>
 							
 								<dt>
-									<b>data</b>
+									<b>base</b>
 									
 								</dt>
-								<dd>updated data</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
+								<dd>a global namespace base (optional, will autodetect the right one if not provided)</dd>
 							
 							</dl>
 						
 						
 						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
 						
 						
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>data from store</dd>
+								<dd>global object (example BetaJS.Strings.FooBar object)</dd>
 							
 							</dl>
 						

@@ -2,7 +2,7 @@ BetaJS.Objs = {
 	
 	count: function (obj) {
 		if (BetaJS.Types.is_array(obj))
-			return obj.length
+			return obj.length;
 		else {
 			var c = 0;
 			for (var key in obj)
@@ -17,7 +17,7 @@ BetaJS.Objs = {
 		if (BetaJS.Types.is_array(item))
 			return item.slice(0);
 		else if (BetaJS.Types.is_object(item))
-			return this.extend({}, item, depth-1)
+			return this.extend({}, item, depth-1);
 		else
 			return item;
 	},
@@ -38,13 +38,13 @@ BetaJS.Objs = {
 			if (opt == "primary" || opt == "secondary") {
 				if (key in primary || key in secondary) {
 					if (opt == "primary")
-						result[key] = key in primary ? primary[key] : secondary[key]
+						result[key] = key in primary ? primary[key] : secondary[key];
 					else
 						result[key] = key in secondary ? secondary[key] : primary[key];
 				}			
 			}
 			else if (BetaJS.Types.is_function(opt))
-				result[key] = opt(secondary[key], primary[key])
+				result[key] = opt(secondary[key], primary[key]);
 			else if (BetaJS.Types.is_object(opt))
 				result[key] = BetaJS.Objs.merge(secondary[key], primary[key], opt);
 		}
@@ -58,7 +58,7 @@ BetaJS.Objs = {
 		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
 		for (var key in keys) {
 			if (BetaJS.Types.is_object(primary[key]) && secondary[key])
-				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key])
+				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key]);
 			else
 				result[key] = key in primary ? primary[key] : secondary[key];
 		}
@@ -133,7 +133,7 @@ BetaJS.Objs = {
 	iter: function (obj, f, context) {
 		if (BetaJS.Types.is_array(obj))
 			for (var i = 0; i < obj.length; ++i) {
-				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i)
+				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
 				if (BetaJS.Types.is_defined(result) && !result)
 					return false;
 			}
@@ -156,7 +156,7 @@ BetaJS.Objs = {
 	
 	contains_key: function (obj, key) {
 		if (BetaJS.Types.is_array(obj))
-			return BetaJS.Types.is_defined(obj[key])
+			return BetaJS.Types.is_defined(obj[key]);
 		else
 			return key in obj;
 	},
@@ -165,7 +165,7 @@ BetaJS.Objs = {
 		if (BetaJS.Types.is_array(obj)) {
 			for (var i = 0; i < obj.length; ++i)
 				if (obj[i] === value)
-					return true
+					return true;
 		} else {
 			for (var key in obj)
 				if (obj[key] === value)

@@ -7,7 +7,7 @@ BetaJS.Net.Uri = {
 		var res = [];
 		BetaJS.Objs.iter(arr, function (value, key) {
 			if (BetaJS.Types.is_object(value))
-				res = res.concat(this.encodeUriParams(value, prefix + key + "_"))
+				res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
 			else
 				res.push(prefix + key + "=" + encodeURI(value));
 		}, this);

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -166,12 +166,23 @@ BetaJS.Types = {
 
 };
 
+/** @class */
 BetaJS.Strings = {
 	
+    /** Converts a string new lines to html <br /> tags
+     * 
+     * @param s string
+     * @return string with new lines replaced by <br /> 
+     */
 	nl2br: function (s) {
 		return (s + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1<br />$2');
 	},
 	
+    /** Converts special characters in a string to html entitiy symbols
+     * 
+     * @param s string
+     * @return converted string
+     */
 	htmlentities: function (s) {
 		return (s + "").
 			replace(/&/g, '&amp;').
@@ -198,6 +209,11 @@ BetaJS.Strings = {
 		return this.JS_ESCAPER_REGEX_CACHED;
 	},
 	
+    /** Converts string such that it can be used in javascript by escaping special symbols
+     * 
+     * @param s string
+     * @return escaped string
+     */
 	js_escape: function (s) {
 		var self = this;
 		return s.replace(this.JS_ESCAPER_REGEX(), function(match) {
@@ -205,40 +221,81 @@ BetaJS.Strings = {
 		});
 	},
 	
+    /** Determines whether a string starts with a sub string
+     * 
+     * @param s string in question
+     * @param needle sub string
+     * @return true if string in question starts with sub string
+     */
 	starts_with: function (s, needle) {
 		return s.substring(0, needle.length) == needle;
 	},
 	
+    /** Determines whether a string ends with a sub string
+     * 
+     * @param s string in question
+     * @param needle sub string
+     * @return true if string in question ends with sub string
+     */
 	ends_with: function(s, needle) {
     	return s.indexOf(needle, s.length - needle.length) !== -1;
 	},
 	
+    /** Removes sub string from a string if string starts with sub string
+     * 
+     * @param s string in question
+     * @param needle sub string
+     * @return string without sub string if it starts with sub string otherwise it returns the original string
+     */
 	strip_start: function (s, needle) {
 		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
 	},
 	
+    /** Returns the complete remaining part of a string after a the last occurrence of a sub string
+     * 
+     * @param s string in question
+     * @param needle sub string
+     * @return remaining part of the string in question after the last occurrence of the sub string
+     */
 	last_after: function (s, needle) {
 		return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
 	},
 	
 	EMAIL_ADDRESS_REGEX: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
 	
+    /** Determines whether a string is a syntactically valid email address
+     * 
+     * @param s string in question
+     * @return true if string looks like an email address
+     */
 	is_email_address: function (s) {
 		return this.EMAIL_ADDRESS_REGEX.test(s);
 	}
 
 };
 
+/** @class */
 BetaJS.Functions = {
 	
+    /** Takes a function and an instance and returns the method call as a function
+     * 
+     * @param func function
+     * @param instance instance
+     * @return method call 
+     */
 	as_method: function (func, instance) {
 		return function() {
 			return func.apply(instance, arguments);
 		};
 	},
 	
+    /** Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call. In other words a lazy function cache.
+     * 
+     * @param func function
+     * @return cached function 
+     */
 	once: function (func) {
-		var result;
+		var result = false;
 		var executed = false;
 		return function () {
 			if (executed)
@@ -247,13 +304,20 @@ BetaJS.Functions = {
 			result = func.apply(this, arguments);
 			func = null;
 			return result;
-		}
+		};
 	}
 
 };
 
+/** @class */
 BetaJS.Scopes = {
 	
+	/** Takes a string and returns the global object associated with it by name.
+     * 
+     * @param s string (example: "BetaJS")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example: BetaJS object)
+     */
 	base: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
@@ -274,6 +338,12 @@ BetaJS.Scopes = {
 		return null;
 	},
 	
+	/** Takes an object address string and returns the object associated with it.
+     * 
+     * @param s string (example: "BetaJS.Strings")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example BetaJS.Strings object)
+     */
 	resolve: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
@@ -284,6 +354,13 @@ BetaJS.Scopes = {
 		return object;
 	},
 	
+	/** Takes an object address string and returns the object associated with it.
+	 *  If the address does not exist, it will be created.
+     * 
+     * @param s string (example: "BetaJS.Strings.FooBar")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example BetaJS.Strings.FooBar object)
+     */
 	touch: function (s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
@@ -297,6 +374,14 @@ BetaJS.Scopes = {
 		return object;
 	},
 	
+	/** Takes an object address string and overwrites it by a given object.
+	 *  If the address does not exist, it will be created.
+     * 
+     * @param obj object (example: {test: "foobar"})
+     * @param s string (example: "BetaJS.Strings.FooBar")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example BetaJS.Strings.FooBar object)
+     */
 	set: function (obj, s, base) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
@@ -318,7 +403,7 @@ BetaJS.Objs = {
 	
 	count: function (obj) {
 		if (BetaJS.Types.is_array(obj))
-			return obj.length
+			return obj.length;
 		else {
 			var c = 0;
 			for (var key in obj)
@@ -333,7 +418,7 @@ BetaJS.Objs = {
 		if (BetaJS.Types.is_array(item))
 			return item.slice(0);
 		else if (BetaJS.Types.is_object(item))
-			return this.extend({}, item, depth-1)
+			return this.extend({}, item, depth-1);
 		else
 			return item;
 	},
@@ -354,13 +439,13 @@ BetaJS.Objs = {
 			if (opt == "primary" || opt == "secondary") {
 				if (key in primary || key in secondary) {
 					if (opt == "primary")
-						result[key] = key in primary ? primary[key] : secondary[key]
+						result[key] = key in primary ? primary[key] : secondary[key];
 					else
 						result[key] = key in secondary ? secondary[key] : primary[key];
 				}			
 			}
 			else if (BetaJS.Types.is_function(opt))
-				result[key] = opt(secondary[key], primary[key])
+				result[key] = opt(secondary[key], primary[key]);
 			else if (BetaJS.Types.is_object(opt))
 				result[key] = BetaJS.Objs.merge(secondary[key], primary[key], opt);
 		}
@@ -374,7 +459,7 @@ BetaJS.Objs = {
 		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
 		for (var key in keys) {
 			if (BetaJS.Types.is_object(primary[key]) && secondary[key])
-				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key])
+				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key]);
 			else
 				result[key] = key in primary ? primary[key] : secondary[key];
 		}
@@ -449,7 +534,7 @@ BetaJS.Objs = {
 	iter: function (obj, f, context) {
 		if (BetaJS.Types.is_array(obj))
 			for (var i = 0; i < obj.length; ++i) {
-				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i)
+				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
 				if (BetaJS.Types.is_defined(result) && !result)
 					return false;
 			}
@@ -472,7 +557,7 @@ BetaJS.Objs = {
 	
 	contains_key: function (obj, key) {
 		if (BetaJS.Types.is_array(obj))
-			return BetaJS.Types.is_defined(obj[key])
+			return BetaJS.Types.is_defined(obj[key]);
 		else
 			return key in obj;
 	},
@@ -481,7 +566,7 @@ BetaJS.Objs = {
 		if (BetaJS.Types.is_array(obj)) {
 			for (var i = 0; i < obj.length; ++i)
 				if (obj[i] === value)
-					return true
+					return true;
 		} else {
 			for (var key in obj)
 				if (obj[key] === value)
@@ -2383,7 +2468,7 @@ BetaJS.Net.Uri = {
 		var res = [];
 		BetaJS.Objs.iter(arr, function (value, key) {
 			if (BetaJS.Types.is_object(value))
-				res = res.concat(this.encodeUriParams(value, prefix + key + "_"))
+				res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
 			else
 				res.push(prefix + key + "=" + encodeURI(value));
 		}, this);
@@ -2416,7 +2501,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4186,7 +4271,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5376,6 +5461,16 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
 BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	constructor: function (mongo_sync, options) {
+		if (BetaJS.Types.is_string(options)) {
+			var parsed = BetaJS.Net.Uri.parse(options);
+			options = {
+				database: BetaJS.Strings.strip_start(parsed.path, "/"),
+				server: parsed.host,
+				port: parsed.port,
+				username: parsed.user,
+				password: parsed.password
+			};
+		}
 		this.__options = BetaJS.Objs.extend({
 			database: "database",
 			server: "localhost",

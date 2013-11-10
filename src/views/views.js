@@ -51,6 +51,11 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return [];
 	},
 	
+	_global_events: function () {
+		// [{"event selector": "function"}]
+		return [];
+	},
+
 	/** Returns all default css classes that should be used for this view. 
 	 * <p>They can be overwritten by the parent view or by options.
 	 * The keys are internal identifiers that the view uses to lookup the css classed that are to be used.
@@ -254,10 +259,15 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		this.__children = {};
 		this.__active = false;
 		this.$el = null;
-		var events = this._events();
+		var events = BetaJS.Types.is_function(this._events) ? this._events() : this._events;
 		if (!BetaJS.Types.is_array(events))
 			events = [events]; 
 		this.__events = events.concat(this.__events);
+
+		var global_events = BetaJS.Types.is_function(this._global_events) ? this._global_events() : this._global_events;
+		if (!BetaJS.Types.is_array(global_events))
+			global_events = [global_events]; 
+		this.__global_events = global_events;
 
 		var templates = BetaJS.Objs.extend(BetaJS.Types.is_function(this._templates) ? this._templates() : this._templates, options["templates"] || {});
 		if ("template" in options)
@@ -266,7 +276,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		for (var key in templates) {
 			if (templates[key] == null)
 				throw new BetaJS.Views.ViewException("Could not find template '" + key + "' in View '" + this.cls.classname + "'");
-			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html())
+			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html());
 		}
 
 		var dynamics = BetaJS.Objs.extend(BetaJS.Types.is_function(this._dynamics) ? this._dynamics() : this._dynamics, options["dynamics"] || {});
@@ -274,7 +284,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			dynamics["default"] = options["dynamic"];
 		this.__dynamics = {};
 		for (var key in dynamics)
-			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html())
+			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html());
 
 		this.setAll(options["properties"] || {});
 		if (this.__invalidate_on_change)
@@ -573,15 +583,30 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		        event = event + ".events" + self.cid();
 		        var method = BetaJS.Functions.as_method(func, self);
 		        if (selector === '')
-		        	self.$el.on(event, method)
+		        	self.$el.on(event, method);
 		        else
 		        	self.$el.on(event, selector, method);
+			});
+		});
+		BetaJS.Objs.iter(this.__global_events, function (obj) {
+			BetaJS.Objs.iter(obj, function (value, key) {
+				var func = BetaJS.Types.is_function(value) ? value : self[value];
+		        var match = key.match(BetaJS.Views.BIND_EVENT_SPLITTER);
+		        var event = match[1];
+		        var selector = match[2];
+		        event = event + ".events" + self.cid();
+		        var method = BetaJS.Functions.as_method(func, self);
+		        if (selector === '')
+		        	BetaJS.$(document).on(event, method);
+		        else
+		        	BetaJS.$(document).on(event, selector, method);
 			});
 		});
 	},
 	
 	__unbind: function () {
 		this.$el.off('.events' + this.cid());
+		BetaJS.$(document).off('.events' + this.cid());
 	},
 	
 	__render: function () {
