@@ -166,44 +166,103 @@ BetaJS.Browser.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 
 BetaJS.Browser.Dom = {
 	
-	parentElementBySelection: function () {
-	  if (window.getSelection) {
-	    var target = window.getSelection().getRangeAt(0).commonAncestorContainer;
-	    return target.nodeType===1 ? target : target.parentNode;
-	  } else if (document.selection)
-	  	return document.selection.createRange().parentElement();
-	  return null;
+	traverseNext: function (node, skip_children) {
+		if ("get" in node)
+			node = node.get(0);
+		if (node.firstChild && !skip_children)
+			return BetaJS.$(node.firstChild);
+		if (!node.parentNode)
+			return null;
+		if (node.nextSibling)
+			return BetaJS.$(node.nextSibling);
+		return this.traverseNext(node.parentNode, true);
 	},
 	
-	parentElement: function (current) {
-		return "parentNode" in current ? current.parentNode : current.parentElement();
-	},
-	
-	elementInScope: function (element, ancestor, including) {
-		including = BetaJS.Types.is_defined(including) ? including : true;
-		return element == ancestor ? including : (element == null ? false : this.elementInScope(this.parentElement(element), ancestor, including));
-	},
-	
-	parentElements: function (element, ancestor, including) {
-		var result = [];
-		var current = element;
-		while (current != null && (!ancestor || current != ancestor)) {
-			result.push(current);
-			current = this.parentElement(current);
+	selectNode : function(node, offset) {
+		var selection = null;
+		var range = null;			
+		if (window.getSelection) {
+			selection = window.getSelection();
+			selection.removeAllRanges();
+			range = document.createRange();
+		} else if (document.selection) {
+			selection = document.selection;
+			range = selection.createRange();
 		}
-		if (current == null && ancestor)
-			return [];
-		if (ancestor && including)
-			result.push(ancestor);
+		if (offset) {
+			range.setStart(node, offset);
+			range.setEnd(node, offset);
+			selection.addRange(range);
+		} else {
+			range.selectNode(node);
+			selection.addRange(range);
+		}
+	},
+
+	selectionStartNode : function() {
+		if (window.getSelection)
+			return BetaJS.$(window.getSelection().getRangeAt(0).startContainer);
+		else if (document.selection)
+			return BetaJS.$(document.selection.createRange().startContainer);
+		return null;
+	},
+	
+	selectedHtml : function() {
+		if (window.getSelection)
+			return window.getSelection().toString();
+		else if (document.selection)
+			return document.selection.createRange().htmlText;
+	},
+	
+	selectionAncestor : function() {
+		if (window.getSelection)
+			return BetaJS.$(window.getSelection().getRangeAt(0).commonAncestorContainer);
+		else if (document.selection)
+			return BetaJS.$(document.selection.createRange().parentElement());
+		return null;
+	},
+	
+	selectionOffset: function () {
+		if (window.getSelection)
+			return window.getSelection().getRangeAt(0).endOffset;
+		else if (document.selection)
+			return document.selection.createRange().endOffset;
+		return null;
+	},
+	
+	selectionStart : function() {
+		if (window.getSelection)
+			return BetaJS.$(window.getSelection().getRangeAt(0).startContainer);
+		else if (document.selection)
+			return BetaJS.$(document.selection.createRange().startContainer);
+		return null;
+	},
+
+	selectionEnd : function() {
+		if (window.getSelection)
+			return BetaJS.$(window.getSelection().getRangeAt(0).endContainer);
+		else if (document.selection)
+			return BetaJS.$(document.selection.createRange().endContainer);
+		return null;
+	},
+
+	selectionNodes: function () {
+		var result = [];
+		var start = this.selectionStart();
+		var end = this.selectionEnd();
+		result.push(start);
+		var current = start;
+		while (current.get(0) != end.get(0)) {
+			current = this.traverseNext(current);
+			result.push(current);
+		}
 		return result;
 	},
 	
-	hasParentElementsTag: function (tag, element, ancestor, including) {
-		var elements = this.parentElements(element, ancestor, including);
-		tag = tag.toLowerCase();
-		return BetaJS.Objs.exists(elements, function (parent) { return parent.tagName.toLowerCase() == tag; });
+	selectionLeaves: function () {
+		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length == 0; });
 	}
-
+		
 };
 
 BetaJS.Browser = BetaJS.Browser || {};
@@ -1341,6 +1400,11 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return [];
 	},
 	
+	_global_events: function () {
+		// [{"event selector": "function"}]
+		return [];
+	},
+
 	/** Returns all default css classes that should be used for this view. 
 	 * <p>They can be overwritten by the parent view or by options.
 	 * The keys are internal identifiers that the view uses to lookup the css classed that are to be used.
@@ -1544,10 +1608,15 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		this.__children = {};
 		this.__active = false;
 		this.$el = null;
-		var events = this._events();
+		var events = BetaJS.Types.is_function(this._events) ? this._events() : this._events;
 		if (!BetaJS.Types.is_array(events))
 			events = [events]; 
 		this.__events = events.concat(this.__events);
+
+		var global_events = BetaJS.Types.is_function(this._global_events) ? this._global_events() : this._global_events;
+		if (!BetaJS.Types.is_array(global_events))
+			global_events = [global_events]; 
+		this.__global_events = global_events;
 
 		var templates = BetaJS.Objs.extend(BetaJS.Types.is_function(this._templates) ? this._templates() : this._templates, options["templates"] || {});
 		if ("template" in options)
@@ -1556,7 +1625,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		for (var key in templates) {
 			if (templates[key] == null)
 				throw new BetaJS.Views.ViewException("Could not find template '" + key + "' in View '" + this.cls.classname + "'");
-			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html())
+			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html());
 		}
 
 		var dynamics = BetaJS.Objs.extend(BetaJS.Types.is_function(this._dynamics) ? this._dynamics() : this._dynamics, options["dynamics"] || {});
@@ -1564,7 +1633,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			dynamics["default"] = options["dynamic"];
 		this.__dynamics = {};
 		for (var key in dynamics)
-			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html())
+			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html());
 
 		this.setAll(options["properties"] || {});
 		if (this.__invalidate_on_change)
@@ -1863,15 +1932,30 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		        event = event + ".events" + self.cid();
 		        var method = BetaJS.Functions.as_method(func, self);
 		        if (selector === '')
-		        	self.$el.on(event, method)
+		        	self.$el.on(event, method);
 		        else
 		        	self.$el.on(event, selector, method);
+			});
+		});
+		BetaJS.Objs.iter(this.__global_events, function (obj) {
+			BetaJS.Objs.iter(obj, function (value, key) {
+				var func = BetaJS.Types.is_function(value) ? value : self[value];
+		        var match = key.match(BetaJS.Views.BIND_EVENT_SPLITTER);
+		        var event = match[1];
+		        var selector = match[2];
+		        event = event + ".events" + self.cid();
+		        var method = BetaJS.Functions.as_method(func, self);
+		        if (selector === '')
+		        	BetaJS.$(document).on(event, method);
+		        else
+		        	BetaJS.$(document).on(event, selector, method);
 			});
 		});
 	},
 	
 	__unbind: function () {
 		this.$el.off('.events' + this.cid());
+		BetaJS.$(document).off('.events' + this.cid());
 	},
 	
 	__render: function () {
@@ -2478,7 +2562,7 @@ BetaJS.Templates.Cached['list-container-view-item-template'] = '  <{%= container
 
 BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="switch-container" data-selector="switch-container-item"></div> ';
 
-BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
+BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.css_if("selected", "selected") %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} id="check-{%= supp.view_id %}" />  <label for="check-{%= supp.view_id %}">{%= label %}</label> ';
 
@@ -2701,7 +2785,8 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	_css: function () {
 		return {
 			"disabled": "",
-			"default": ""
+			"default": "",
+			"selected": ""
 		};
 	},
 	constructor: function(options) {
@@ -2710,6 +2795,9 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		this._setOptionProperty(options, "label", "");
 		this._setOptionProperty(options, "button_container_element", "button");
 		this._setOptionProperty(options, "disabled", false);
+		this._setOptionProperty(options, "selected", false);
+		this._setOption(options, "selectable", false);
+		this._setOption(options, "deselect_all", false);
 		if (options.hotkey) {
 			var hotkeys = {};
 			hotkeys[options.hotkey] = function () {
@@ -2724,8 +2812,37 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		}]);
 	},
 	click: function () {
-		if (!this.get("disabled"))
+		if (!this.get("disabled")) {
+			if (this.__selectable)
+				this.select();
 			this.trigger("click");
+		}
+	},
+	_bindParent: function (parent) {
+		parent.on("select", function () {
+			this.unselect();
+		}, this);
+	},
+	
+	_unbindParent: function (parent) {
+		parent.off("select", this);
+	},
+	
+	select: function () {
+		if (!this.__selectable)
+			return;
+		this.getParent().trigger("select", this);
+		this.set("selected", true);
+	},
+	
+	unselect: function () {
+		if (!this.__selectable)
+			return;
+		this.set("selected", false);
+	},
+	
+	isSelected: function () {
+		return this.get("selected");
 	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.CheckBoxView", {
@@ -3338,7 +3455,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
 	},
 	
 	__click: function () {
-		if (this.getParent().__click_select)
+		if (this.getParent() && this.getParent().__click_select)
 			this.select();
 	},
 	

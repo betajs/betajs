@@ -5,7 +5,8 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	_css: function () {
 		return {
 			"disabled": "",
-			"default": ""
+			"default": "",
+			"selected": ""
 		};
 	},
 	constructor: function(options) {
@@ -14,6 +15,9 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		this._setOptionProperty(options, "label", "");
 		this._setOptionProperty(options, "button_container_element", "button");
 		this._setOptionProperty(options, "disabled", false);
+		this._setOptionProperty(options, "selected", false);
+		this._setOption(options, "selectable", false);
+		this._setOption(options, "deselect_all", false);
 		if (options.hotkey) {
 			var hotkeys = {};
 			hotkeys[options.hotkey] = function () {
@@ -28,7 +32,36 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		}]);
 	},
 	click: function () {
-		if (!this.get("disabled"))
+		if (!this.get("disabled")) {
+			if (this.__selectable)
+				this.select();
 			this.trigger("click");
+		}
+	},
+	_bindParent: function (parent) {
+		parent.on("select", function () {
+			this.unselect();
+		}, this);
+	},
+	
+	_unbindParent: function (parent) {
+		parent.off("select", this);
+	},
+	
+	select: function () {
+		if (!this.__selectable)
+			return;
+		this.getParent().trigger("select", this);
+		this.set("selected", true);
+	},
+	
+	unselect: function () {
+		if (!this.__selectable)
+			return;
+		this.set("selected", false);
+	},
+	
+	isSelected: function () {
+		return this.get("selected");
 	}
 });

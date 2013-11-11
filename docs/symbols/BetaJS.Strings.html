@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - BetaJS.Browser.Router</title>
+		<title>JsDoc Reference - BetaJS.Strings</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -214,7 +214,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class BetaJS.Browser.Router
+				Class BetaJS.Strings
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -225,13 +225,13 @@ ul.inheritsList
 				
 				
 				
-					<br /><i>Defined in: </i> &lt;./src/browser/router.js&gt;.
+					<br /><i>Defined in: </i> &lt;./src/base/strings.js&gt;.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Browser.Router.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Strings.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -244,7 +244,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/BetaJS.Browser.Router.html#constructor">BetaJS.Browser.Router</a></b>()
+								<b><a href="../symbols/BetaJS.Strings.html#constructor">BetaJS.Strings</a></b>()
 							</div>
 							<div class="description"></div>
 						</td>
@@ -255,40 +255,12 @@ ul.inheritsList
 
 <!-- ============================== properties summary ===================== -->
 			
-				
-				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the fields documented in the class BetaJS.Browser.Router.">
-					<caption>Field Summary</caption>
-					<thead>
-						<tr>
-							<th scope="col">Field Attributes</th>
-							<th scope="col">Field Name and Description</th>
-						</tr>
-					</thead>
-					<tbody>
-					
-						<tr>
-							<td class="attributes">&nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont">
-								<b><a href="../symbols/BetaJS.Browser.Router.html#routes">routes</a></b>
-								</div>
-								<div class="description">Specifies all routes.</div>
-							</td>
-						</tr>
-					
-					</tbody>
-				</table>
-				
-				
-				
-			
 
 <!-- ============================== methods summary ======================== -->
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Browser.Router.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Strings.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -299,81 +271,74 @@ ul.inheritsList
 					<tbody>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#_invoke">_invoke</a></b>(object, params)
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.ends_with">ends_with</a></b>(s, needle)
 								</div>
-								<div class="description">Invokes a routing object with parameters.</div>
+								<div class="description">Determines whether a string ends with a sub string</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#constructor">constructor</a></b>(options)
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.htmlentities">htmlentities</a></b>(s)
 								</div>
-								<div class="description">Creates a new router with options
-<ul>
- <li>routes: adds user defined routes</li> 
- <li>actions: extends the object by user-defined actions</li>
-</ul></div>
+								<div class="description">Converts special characters in a string to html entitiy symbols</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#current">current</a></b>()
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.is_email_address">is_email_address</a></b>(s)
 								</div>
-								<div class="description">Returns the current route object.</div>
+								<div class="description">Determines whether a string is a syntactically valid email address</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#invoke">invoke</a></b>(object, params, route)
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.js_escape">js_escape</a></b>(s)
 								</div>
-								<div class="description">Invoke a routing object with parameters
-<p>
-  Invokes the protected method _invoke
-</p></div>
+								<div class="description">Converts string such that it can be used in javascript by escaping special symbols</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#navigate">navigate</a></b>(route)
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.last_after">last_after</a></b>(s, needle)
 								</div>
-								<div class="description">Navigate to a given route, invoking the matching action.</div>
+								<div class="description">Returns the complete remaining part of a string after a the last occurrence of a sub string</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#object">object</a></b>(path)
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.nl2br">nl2br</a></b>(s)
 								</div>
-								<div class="description">Looks up the routing object given a path descriptor</div>
+								<div class="description">Converts a string new lines to html <br /> tags</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#parse">parse</a></b>(route)
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.starts_with">starts_with</a></b>(s, needle)
 								</div>
-								<div class="description">Parse a given route and map it to the first applicable object that is valid</div>
+								<div class="description">Determines whether a string starts with a sub string</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Browser.Router.html#path">path</a></b>(path, parameters)
+								<div class="fixedFont">BetaJS.Strings.<b><a href="../symbols/BetaJS.Strings.html#.strip_start">strip_start</a></b>(s, needle)
 								</div>
-								<div class="description">Returns the route of a path description</div>
+								<div class="description">Removes sub string from a string if string starts with sub string</div>
 							</td>
 						</tr>
 					
@@ -394,7 +359,7 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>BetaJS.Browser.Router</b>()
+						<b>BetaJS.Strings</b>()
 				</div>
 				
 				<div class="description">
@@ -418,63 +383,6 @@ ul.inheritsList
 
 <!-- ============================== field details ========================== -->		
 			
-				<div class="sectionTitle">
-					Field Detail
-				</div>
-				
-					<a name="routes"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>routes</b>
-					
-					</div>
-					<div class="description">
-						Specifies all routes. Can either be an associative array, an array of associative arrays or a function returning one of those.
-
-<p>A route is a mapping from a regular expression to a route descriptor. A route descriptor is either a name of a callback function or a route descriptor associative array.</p>
-<p>The callback function should accept the parameters given by the capturing groups of the regular expression</p>
-The route descriptor object may contain the following options:
-<ul>
-  <li>
-    action: the callback function; either a string or a function (mandatory)
-  </li>
-  <li>
-    path: name of the route; can be used to look up route (optional)
-  </li>
-  <li>
-    applicable: array of strings or functions or string or function to determine whether the route is applicable; if it is not, it will be skipped (optional)
-  </li>
-  <li>
-    valid: array of strings or functions or string or function to determine whether an applicable route is valid; if it is not, the routing fails (optional)
-  </li>
-</ul>
-						
-						
-					</div>
-					
-					
-					
-					<pre class="code">return {
-	"users/(\d+)/post/(\d+)" : "users_post",
- "users/(\d+)/account": {
-	  action: "users_account",
-   path: "users_account_path",
-   applicable: "is_user",
-   valid: "is_admin"
- }
-}</pre>
-					
-					
-
-						
-						
-						
-						
-
-					
-				
-			
 
 <!-- ============================== method details ========================= -->		
 			
@@ -482,18 +390,15 @@ The route descriptor object may contain the following options:
 					Method Detail
 				</div>
 				
-					<a name="_invoke"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".ends_with"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_invoke</b>(object, params)
+					<span class="light">BetaJS.Strings.</span><b>ends_with</b>(s, needle)
 					
 					</div>
 					<div class="description">
-						Invokes a routing object with parameters.
-<p>
-  Can be overwritten and does the invoking.
-</p>
+						Determines whether a string ends with a sub string
 						
 						
 					</div>
@@ -505,209 +410,16 @@ The route descriptor object may contain the following options:
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>object</b>
+									<b>s</b>
 									
 								</dt>
-								<dd>the routing object</dd>
+								<dd>string in question</dd>
 							
 								<dt>
-									<b>params</b>
+									<b>needle</b>
 									
 								</dt>
-								<dd>(optional) the parameters that should be attached to the route</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="constructor"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>constructor</b>(options)
-					
-					</div>
-					<div class="description">
-						Creates a new router with options
-<ul>
- <li>routes: adds user defined routes</li> 
- <li>actions: extends the object by user-defined actions</li>
-</ul>
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>options</b>
-									
-								</dt>
-								<dd>options</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="current"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>current</b>()
-					
-					</div>
-					<div class="description">
-						Returns the current route object.
-<ul>
- <li>route: the route as string</li>
- <li>object: the routing object</li>
- <li>params: the params</li>
-</ul>
-						
-						
-					</div>
-					
-					
-					
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="invoke"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>invoke</b>(object, params, route)
-					
-					</div>
-					<div class="description">
-						Invoke a routing object with parameters
-<p>
-  Invokes the protected method _invoke
-</p>
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>object</b>
-									
-								</dt>
-								<dd>the routing object</dd>
-							
-								<dt>
-									<b>params</b>
-									
-								</dt>
-								<dd>(optional) the parameters that should be attached to the route</dd>
-							
-								<dt>
-									<b>route</b>
-									
-								</dt>
-								<dd>(optional) an associated route that should be saved</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="navigate"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>navigate</b>(route)
-					
-					</div>
-					<div class="description">
-						Navigate to a given route, invoking the matching action.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>route</b>
-									
-								</dt>
-								<dd>the route</dd>
-							
-							</dl>
-						
-						
-						
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="object"> </a>
-					<div class="fixedFont">
-					
-					
-					<b>object</b>(path)
-					
-					</div>
-					<div class="description">
-						Looks up the routing object given a path descriptor
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>path</b>
-									
-								</dt>
-								<dd>the path descriptor</dd>
+								<dd>sub string</dd>
 							
 							</dl>
 						
@@ -718,7 +430,7 @@ The route descriptor object may contain the following options:
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>the routing object</dd>
+								<dd>true if string in question ends with sub string</dd>
 							
 							</dl>
 						
@@ -727,15 +439,15 @@ The route descriptor object may contain the following options:
 
 					<hr />
 				
-					<a name="parse"> </a>
-					<div class="fixedFont">
+					<a name=".htmlentities"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>parse</b>(route)
+					<span class="light">BetaJS.Strings.</span><b>htmlentities</b>(s)
 					
 					</div>
 					<div class="description">
-						Parse a given route and map it to the first applicable object that is valid
+						Converts special characters in a string to html entitiy symbols
 						
 						
 					</div>
@@ -747,10 +459,10 @@ The route descriptor object may contain the following options:
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>route</b>
+									<b>s</b>
 									
 								</dt>
-								<dd>the route given as a strings</dd>
+								<dd>string</dd>
 							
 							</dl>
 						
@@ -761,7 +473,7 @@ The route descriptor object may contain the following options:
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>either null if nothing applicable and valid could be matched or an associative array with params and routing object as attributes.</dd>
+								<dd>converted string</dd>
 							
 							</dl>
 						
@@ -770,15 +482,15 @@ The route descriptor object may contain the following options:
 
 					<hr />
 				
-					<a name="path"> </a>
-					<div class="fixedFont">
+					<a name=".is_email_address"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>path</b>(path, parameters)
+					<span class="light">BetaJS.Strings.</span><b>is_email_address</b>(s)
 					
 					</div>
 					<div class="description">
-						Returns the route of a path description
+						Determines whether a string is a syntactically valid email address
 						
 						
 					</div>
@@ -790,22 +502,256 @@ The route descriptor object may contain the following options:
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>path</b>
+									<b>s</b>
 									
 								</dt>
-								<dd>the path descriptor</dd>
-							
-								<dt>
-									<b>parameters</b>
-									
-								</dt>
-								<dd>parameters that should be attached to the route (capturing groups)</dd>
+								<dd>string in question</dd>
 							
 							</dl>
 						
 						
 						
 						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>true if string looks like an email address</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".js_escape"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">BetaJS.Strings.</span><b>js_escape</b>(s)
+					
+					</div>
+					<div class="description">
+						Converts string such that it can be used in javascript by escaping special symbols
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<b>s</b>
+									
+								</dt>
+								<dd>string</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>escaped string</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".last_after"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">BetaJS.Strings.</span><b>last_after</b>(s, needle)
+					
+					</div>
+					<div class="description">
+						Returns the complete remaining part of a string after a the last occurrence of a sub string
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<b>s</b>
+									
+								</dt>
+								<dd>string in question</dd>
+							
+								<dt>
+									<b>needle</b>
+									
+								</dt>
+								<dd>sub string</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>remaining part of the string in question after the last occurrence of the sub string</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".nl2br"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">BetaJS.Strings.</span><b>nl2br</b>(s)
+					
+					</div>
+					<div class="description">
+						Converts a string new lines to html <br /> tags
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<b>s</b>
+									
+								</dt>
+								<dd>string</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>string with new lines replaced by <br /></dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".starts_with"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">BetaJS.Strings.</span><b>starts_with</b>(s, needle)
+					
+					</div>
+					<div class="description">
+						Determines whether a string starts with a sub string
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<b>s</b>
+									
+								</dt>
+								<dd>string in question</dd>
+							
+								<dt>
+									<b>needle</b>
+									
+								</dt>
+								<dd>sub string</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>true if string in question starts with sub string</dd>
+							
+							</dl>
+						
+						
+						
+
+					<hr />
+				
+					<a name=".strip_start"> </a>
+					<div class="fixedFont">&lt;static&gt; 
+					
+					
+					<span class="light">BetaJS.Strings.</span><b>strip_start</b>(s, needle)
+					
+					</div>
+					<div class="description">
+						Removes sub string from a string if string starts with sub string
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<b>s</b>
+									
+								</dt>
+								<dd>string in question</dd>
+							
+								<dt>
+									<b>needle</b>
+									
+								</dt>
+								<dd>sub string</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+							<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd>string without sub string if it starts with sub string otherwise it returns the original string</dd>
+							
+							</dl>
 						
 						
 						
@@ -824,7 +770,7 @@ The route descriptor object may contain the following options:
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sun Nov 10 2013 12:30:55 GMT-0500 (EST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Sun Nov 10 2013 12:30:56 GMT-0500 (EST)
 		</div>
 	</body>
 </html>

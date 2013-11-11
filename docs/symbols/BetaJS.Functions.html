@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - BetaJS.Stores.BaseStore</title>
+		<title>JsDoc Reference - BetaJS.Functions</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -214,7 +214,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class BetaJS.Stores.BaseStore
+				Class BetaJS.Functions
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -225,13 +225,13 @@ ul.inheritsList
 				
 				
 				
-					<br /><i>Defined in: </i> &lt;./src/data/stores/base_store.js&gt;.
+					<br /><i>Defined in: </i> &lt;./src/base/functions.js&gt;.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Stores.BaseStore.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Functions.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -244,7 +244,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/BetaJS.Stores.BaseStore.html#constructor">BetaJS.Stores.BaseStore</a></b>()
+								<b><a href="../symbols/BetaJS.Functions.html#constructor">BetaJS.Functions</a></b>()
 							</div>
 							<div class="description"></div>
 						</td>
@@ -260,7 +260,7 @@ ul.inheritsList
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Stores.BaseStore.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Functions.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -271,38 +271,20 @@ ul.inheritsList
 					<tbody>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_get">_get</a></b>(id, callbacks)
+								<div class="fixedFont">BetaJS.Functions.<b><a href="../symbols/BetaJS.Functions.html#.as_method">as_method</a></b>(func, instance)
 								</div>
-								<div class="description">Get data from store by id.</div>
+								<div class="description">Takes a function and an instance and returns the method call as a function</div>
 							</td>
 						</tr>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_insert">_insert</a></b>(data, callbacks)
+								<div class="fixedFont">BetaJS.Functions.<b><a href="../symbols/BetaJS.Functions.html#.once">once</a></b>(func)
 								</div>
-								<div class="description">Insert data to store.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_remove">_remove</a></b>(id, callbacks)
-								</div>
-								<div class="description">Remove data from store.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_update">_update</a></b>(id, data, callbacks)
-								</div>
-								<div class="description">Update data by id.</div>
+								<div class="description">Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call.</div>
 							</td>
 						</tr>
 					
@@ -323,7 +305,7 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>BetaJS.Stores.BaseStore</b>()
+						<b>BetaJS.Functions</b>()
 				</div>
 				
 				<div class="description">
@@ -354,15 +336,15 @@ ul.inheritsList
 					Method Detail
 				</div>
 				
-					<a name="_get"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".as_method"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_get</b>(id, callbacks)
+					<span class="light">BetaJS.Functions.</span><b>as_method</b>(func, instance)
 					
 					</div>
 					<div class="description">
-						Get data from store by id.
+						Takes a function and an instance and returns the method call as a function
 						
 						
 					</div>
@@ -374,37 +356,27 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>id</b>
+									<b>func</b>
 									
 								</dt>
-								<dd>data id</dd>
+								<dd>function</dd>
 							
 								<dt>
-									<b>callbacks</b>
+									<b>instance</b>
 									
 								</dt>
-								<dd></dd>
+								<dd>instance</dd>
 							
 							</dl>
 						
 						
 						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
 						
 						
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>data</dd>
+								<dd>method call</dd>
 							
 							</dl>
 						
@@ -413,15 +385,15 @@ ul.inheritsList
 
 					<hr />
 				
-					<a name="_insert"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".once"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_insert</b>(data, callbacks)
+					<span class="light">BetaJS.Functions.</span><b>once</b>(func)
 					
 					</div>
 					<div class="description">
-						Insert data to store. Return inserted data with id.
+						Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call. In other words a lazy function cache.
 						
 						
 					</div>
@@ -433,154 +405,21 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>data</b>
+									<b>func</b>
 									
 								</dt>
-								<dd>data to be inserted</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
+								<dd>function</dd>
 							
 							</dl>
 						
 						
 						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
 						
 						
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>data that has been inserted with id.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="_remove"> </a>
-					<div class="fixedFont">&lt;private&gt; 
-					
-					
-					<b>_remove</b>(id, callbacks)
-					
-					</div>
-					<div class="description">
-						Remove data from store. Return removed data.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>id</b>
-									
-								</dt>
-								<dd>data id</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
-							
-							</dl>
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="_update"> </a>
-					<div class="fixedFont">&lt;private&gt; 
-					
-					
-					<b>_update</b>(id, data, callbacks)
-					
-					</div>
-					<div class="description">
-						Update data by id.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>id</b>
-									
-								</dt>
-								<dd>data id</dd>
-							
-								<dt>
-									<b>data</b>
-									
-								</dt>
-								<dd>updated data</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
-							
-							</dl>
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd>data from store</dd>
+								<dd>cached function</dd>
 							
 							</dl>
 						

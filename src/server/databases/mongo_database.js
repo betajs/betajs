@@ -3,6 +3,16 @@
 BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	constructor: function (mongo_sync, options) {
+		if (BetaJS.Types.is_string(options)) {
+			var parsed = BetaJS.Net.Uri.parse(options);
+			options = {
+				database: BetaJS.Strings.strip_start(parsed.path, "/"),
+				server: parsed.host,
+				port: parsed.port,
+				username: parsed.user,
+				password: parsed.password
+			};
+		}
 		this.__options = BetaJS.Objs.extend({
 			database: "database",
 			server: "localhost",
