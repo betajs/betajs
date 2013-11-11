@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Button View</title>
+		<script src="../../../../demos/jquery-1.9.1.min.js"></script>
+		<script src="../../../../dist/beta.js"></script>
+		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
+		<style>
+			.explorer {
+				position: absolute;
+				top: 0px;
+				bottom: 0px;
+				left: 0px;
+				width: 200px;
+				height: 100%;
+				padding: 20px;
+			}
+			.content {
+				position: absolute; 
+				left: 200px;
+				right: 5px;
+			}
+			
+			.buttonexample {
+				padding: 30px;
+				background: grey;
+			}
+			pre {
+				padding: 10px;
+				background:#CCCCCC;
+			}
+			.codemirror {
+				height: 150px;
+				margin: 10px 0;
+				background:#CCCCCC;
+			}
+		</style>
+		<script>
+			$(document).ready(function () {
+				var button = new BetaJS.Views.ButtonView({
+					el: ".buttonexample",
+					label: "Example Button",
+				});
+				button.on("click", function () {
+					alert("Example Button Alert");
+				});
+				button.activate();
+			});
+		</script>
+	</head>
+	<body>
+		<div class="explorer">Explorer</div>
+		<div class="content">
+			<h1>BetaJS Button</h1>
+			<p>The BetaJS Button is a <a href='#' onClick="alert('Link to BetaJS Controls')">BetaJS Control</a> that can be inserted into any <a href='#' onClick="alert('Link to BetaJS Container')">BetaJS Container</a></p>
+			
+			<hr>
+			<h3>Button Specific Options:</h3>
+			<li><h4>Label:</h4></li>
+			<pre><code>label: "Example Button"</code></pre>
+			<li><h4>Clickevents:</h4></li>
+			<pre><code>button.on("click", function () {<br />  alert("Example Button Alert");<br />});</code></pre>
+			More Clickevents (Expander)<br />
+			Non Button Specific Options (Expander)
+			<hr>
+			<h3>Example Button:</h3>
+			<div class="buttonexample"></div>
+			<div class="codemirror">Codemirror/Betaedit</div>
+		</div>
+	</body>
+</html>

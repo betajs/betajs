@@ -1,0 +1,13 @@
+/*
+  betajs - v0.0.2 - 2013-11-12
+  Copyright (c) Oliver Friedmann & Victor Lingenthal
+  MIT Software License.
+*/
+button {
+  height: 40px;
+  margin: none;
+  padding: none;
+  border-width: 1px;
+  background: white;
+  border-style: solid;
+  border-color: grey; }

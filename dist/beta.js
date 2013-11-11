@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2416,7 +2416,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4186,7 +4186,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5289,7 +5289,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-11-04
+  betajs - v0.0.2 - 2013-11-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7772,6 +7772,8 @@ BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_elem
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} id="check-{%= supp.view_id %}" />  <label for="check-{%= supp.view_id %}">{%= label %}</label> ';
 
+BetaJS.Templates.Cached['dropdown-view-template'] = '   <{%= dropdown_container_element %} data-selector="dropdown-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.inner("label") %}>   </{%= dropdown_container_element %}>  ';
+
 BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" type="{%= input_type %}" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="{%= supp.css(\'label\') %}" {%= bind.inner("label") %}></{%= element %}> ';
@@ -8016,46 +8018,6 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 			this.trigger("click");
 	}
 });
-BetaJS.Views.View.extend("BetaJS.Views.InputView", {
-	_dynamics: {
-		"default": BetaJS.Templates.Cached["input-view-template"]
-	},
-	_events: function () {
-		return [{
-			"blur input": "__leaveEvent",
-			"keyup input": "__changeEvent",
-			"change input": "__changeEvent",
-			"input input": "__changeEvent",
-			"paste input": "__changeEvent"
-		}, {
-			"keyup input": "__keyupEvent"
-		}];
-	},
-	constructor: function(options) {
-		options = options || {};
-		this._inherited(BetaJS.Views.InputView, "constructor", options);
-		this._setOptionProperty(options, "value", "");
-		this._setOptionProperty(options, "placeholder", "");	
-		this._setOptionProperty(options, "input_type", "text");
-	},
-	__keyupEvent: function (e) {
-		var key = e.keyCode || e.which;
-        if (key == 13)
-			this.trigger("enter_key", this.get("value"));
-    },
-	__leaveEvent: function () {
-		this.trigger("leave");
-	},
-	__changeEvent: function () {
-		this.trigger("change", this.get("value"));
-	},
-	focus: function (select_all) {
-		this.$("input").focus();
-		this.$("input").focus();
-		if (select_all)
-			this.$("input").select();
-	}
-});
 BetaJS.Views.View.extend("BetaJS.Views.CheckBoxView", {
 	_templates: {
 		"default": BetaJS.Templates.Cached["check-box-view-template"]
@@ -8077,27 +8039,111 @@ BetaJS.Views.View.extend("BetaJS.Views.CheckBoxView", {
 		this.trigger("check", this.get("checked"));
 	}
 });
-BetaJS.Views.View.extend("BetaJS.Views.LabelView", {
-	_dynamics: {
-		"default": BetaJS.Templates.Cached["label-view-template"]
+BetaJS.Views.ListContainerView.extend("BetaJS.Views.DropdownView", {
+	
+	constructor : function(options) {
+		options = options || {};
+		options.alignment = "vertical";
+		this._setOption(options, "elements", ["1","2"]);
+		this._inherited(BetaJS.Views.DropdownView, "constructor", options);
 	},
-	_css: function () {
-		return {"label": "label-view-class"};
+	
+	_domain_defaults: function () {
+		return BetaJS.Objs.extend(this._inherited(BetaJS.Views.DropdownView, "_domain_defaults"), {
+			"LogoDropDownView": function (page) {
+				return {
+					type: "BetaJS.Views.ButtonView",
+					parent: "logo_dropdown_view.overlay_inner",
+					options: {
+						children_classes: "text-container"
+					}
+				};
+			}
+		});
 	},
-	_events: function () {
-		return [{
-			"click": "__clickEvent"	
-		}];
-	},
-	constructor: function(options) {
-		this._inherited(BetaJS.Views.LabelView, "constructor", options);
-		this._setOptionProperty(options, "label", "");
-		this._setOptionProperty(options, "element", "span");
-	},
-	__clickEvent: function () {
-		this.trigger("click");
+	
+	_domain: function () {
+		var test = this.__elements;
+		return {
+			
+			button: {
+				type: "ButtonView",
+				options: {
+					label: "Button",
+				},
+				events: {
+					"click": function () {
+						this.domain.ns.dropdown_view.toggle();
+					}
+				},
+			},
+ 			
+			dropdown_view: {
+				type: "OverlayView",
+				options: function (page) {
+					return {
+						anchor: "relative",
+						element: page.ns.logo_view,
+						overlay_inner: new BetaJS.Views.ListContainerView({
+							el_classes: "dropdown",
+							alignment: "vertical"
+						})
+					};
+				},
+			},
+			
+			dropdown_button: {
+				type: "ButtonView",
+				parent: "dropdown_view.overlay_inner",			
+				options: {
+					children_classes: "text-container",
+					label: "Test"
+				},
+				events: {
+					"click": function () {
+						for (var i=0;i<test.length;i++){
+							alert(test[i]);
+						}
+					}
+				},
+			},
+			
+			dropdown_button2: {
+				type: "ButtonView",
+				parent: "dropdown_view.overlay_inner",
+				after: ["dropdown_button"],			
+				options: {
+					children_classes: "text-container",
+					label: "Test2"
+				},
+				events: {
+					"click": function () {
+						alert("Test2");
+					}
+				},
+			},
+			
+			// for (var i=0;i<test.length;i++){
+				// dropdown_button[i]: {
+					// type: "ButtonView",
+					// parent: "dropdown_view.overlay_inner",			
+					// options: {
+						// children_classes: "text-container",
+						// label: "Test"
+					// },
+					// events: {
+						// "click": function () {						
+							// alert(test[i]);
+						// }
+					// },
+				// },
+			// },
+
+		};
 	}
+		
 });
+
 BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 
 	constructor: function(options) {
@@ -8151,6 +8197,67 @@ BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 	}
 
 });
+BetaJS.Views.View.extend("BetaJS.Views.InputView", {
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["input-view-template"]
+	},
+	_events: function () {
+		return [{
+			"blur input": "__leaveEvent",
+			"keyup input": "__changeEvent",
+			"change input": "__changeEvent",
+			"input input": "__changeEvent",
+			"paste input": "__changeEvent"
+		}, {
+			"keyup input": "__keyupEvent"
+		}];
+	},
+	constructor: function(options) {
+		options = options || {};
+		this._inherited(BetaJS.Views.InputView, "constructor", options);
+		this._setOptionProperty(options, "value", "");
+		this._setOptionProperty(options, "placeholder", "");	
+		this._setOptionProperty(options, "input_type", "text");
+	},
+	__keyupEvent: function (e) {
+		var key = e.keyCode || e.which;
+        if (key == 13)
+			this.trigger("enter_key", this.get("value"));
+    },
+	__leaveEvent: function () {
+		this.trigger("leave");
+	},
+	__changeEvent: function () {
+		this.trigger("change", this.get("value"));
+	},
+	focus: function (select_all) {
+		this.$("input").focus();
+		this.$("input").focus();
+		if (select_all)
+			this.$("input").select();
+	}
+});
+BetaJS.Views.View.extend("BetaJS.Views.LabelView", {
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["label-view-template"]
+	},
+	_css: function () {
+		return {"label": "label-view-class"};
+	},
+	_events: function () {
+		return [{
+			"click": "__clickEvent"	
+		}];
+	},
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.LabelView, "constructor", options);
+		this._setOptionProperty(options, "label", "");
+		this._setOptionProperty(options, "element", "span");
+	},
+	__clickEvent: function () {
+		this.trigger("click");
+	}
+});
 BetaJS.Views.View.extend("BetaJS.Views.LinkView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["link-view-template"]
@@ -8166,26 +8273,6 @@ BetaJS.Views.View.extend("BetaJS.Views.LinkView", {
 	},
 	__click: function () {
 		this.trigger("click");
-	}
-});
-BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
-	_dynamics: {
-		"default": BetaJS.Templates.Cached["text-area-template"]
-	},
-	constructor: function(options) {
-		this._inherited(BetaJS.Views.TextAreaView, "constructor", options);
-		this._setOptionProperty(options, "value", "");
-		this._setOptionProperty(options, "placeholder", "");
-		this._setOptionProperty(options, "horizontal_resize", false);
-		this._setOptionProperty(options, "vertical_resize", true);
-		this._setOptionProperty(options, "horizontal_fill", false);
-		this._setOptionProperty(options, "readonly", false);
-		this.on("change:readonly", function () {
-			if (this.get("readonly"))
-				this.$("textarea").attr("readonly", "readonly");
-			else
-				this.$("textarea").removeAttr("readonly");
-		}, this);
 	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
@@ -8217,6 +8304,26 @@ BetaJS.Views.View.extend("BetaJS.Views.ProgressView", {
 	
 });
 
+BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
+	_dynamics: {
+		"default": BetaJS.Templates.Cached["text-area-template"]
+	},
+	constructor: function(options) {
+		this._inherited(BetaJS.Views.TextAreaView, "constructor", options);
+		this._setOptionProperty(options, "value", "");
+		this._setOptionProperty(options, "placeholder", "");
+		this._setOptionProperty(options, "horizontal_resize", false);
+		this._setOptionProperty(options, "vertical_resize", true);
+		this._setOptionProperty(options, "horizontal_fill", false);
+		this._setOptionProperty(options, "readonly", false);
+		this.on("change:readonly", function () {
+			if (this.get("readonly"))
+				this.$("textarea").attr("readonly", "readonly");
+			else
+				this.$("textarea").removeAttr("readonly");
+		}, this);
+	}
+});
 BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_templates: function () {

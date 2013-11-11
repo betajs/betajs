@@ -10,9 +10,9 @@ module.exports = function(grunt) {
 							'src/views/containers/list_container_view/template.html',
 							'src/views/containers/switch_container_view/template.html',
 							 
-							'src/views/controls/button_view/icon_button_view/template.html',
 							'src/views/controls/button_view/template.html',
 							'src/views/controls/check_box_view/template.html',
+							'src/views/controls/dropdown_view/template.html',
 							'src/views/controls/input_view/template.html',
 							'src/views/controls/label_view/template.html',
 							'src/views/controls/link_view/template.html',
@@ -130,13 +130,14 @@ module.exports = function(grunt) {
 					'src/views/containers/switch_container_view/view.js', 
 					
 					'src/views/controls/button_view/view.js',
-					'src/views/controls/input_view/view.js',
 					'src/views/controls/check_box_view/view.js',
-					'src/views/controls/label_view/view.js',
+					'src/views/controls/dropdown_view/view.js',
 					'src/views/controls/input_label_view/view.js',
+					'src/views/controls/input_view/view.js',
+					'src/views/controls/label_view/view.js',
 					'src/views/controls/link_view/view.js',
-					'src/views/controls/textarea_view/view.js',
 					'src/views/controls/progress_view/view.js',
+					'src/views/controls/textarea_view/view.js',
 					
 					'src/views/lists/list_view/view.js',
 					'src/views/lists/item_list_view/view.js',
@@ -201,6 +202,13 @@ module.exports = function(grunt) {
 						'src/views/controls/progress_view/styles.css',
 			        ]
 		    	}
+		    },		
+		    dist_theme_minimal_scss: {
+		    	files: {
+			        'dist/beta-theme-minimal.scss': [
+			            'src/views/controls/button_view/theme-minimal.scss',
+			        ]
+		    	}
 		    }
 		},
 		uglify : {
@@ -224,7 +232,8 @@ module.exports = function(grunt) {
 		sass: {
 		    dist: {
 		    	files: {
-			        'dist/beta-ui.css': 'dist/beta-ui.scss'
+			        'dist/beta-ui.css': 'dist/beta-ui.scss',
+			        'dist/beta-theme-minimal.css': 'dist/beta-theme-minimal.scss'
 		    	}
 		    }
 		},
@@ -237,11 +246,12 @@ module.exports = function(grunt) {
 			},
 			dist : {
 				files : {
-					'dist/beta-ui.min.css' : [ 'dist/beta-ui.css' ]
+					'dist/beta-ui.min.css' : [ 'dist/beta-ui.css' ],
+					'dist/beta-theme-minimal.min.css' : [ 'dist/beta-theme-minimal.css' ]
 				}
 			}
 		},
-		clean: ["dist/beta-ui-templates.js", "dist/beta-ui.scss"]
+		clean: ["dist/beta-ui-templates.js", "dist/beta-ui.scss", "dist/beta-theme-minimal.scss"]
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-concat');
