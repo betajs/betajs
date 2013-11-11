@@ -17,7 +17,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
 	},
 	
 	__click: function () {
-		if (this.getParent().__click_select)
+		if (this.getParent() && this.getParent().__click_select)
 			this.select();
 	},
 	

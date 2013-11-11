@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-11-10
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-10
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-10
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2501,7 +2501,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-10
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4271,7 +4271,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-10
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5374,7 +5374,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-11-10
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8723,7 +8723,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
 	},
 	
 	__click: function () {
-		if (this.getParent().__click_select)
+		if (this.getParent() && this.getParent().__click_select)
 			this.select();
 	},
 	
