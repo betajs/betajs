@@ -228,9 +228,14 @@ module.exports = function(grunt) {
 			}
 		},
 		sass: {
-		    dist: {
+		    dist_ui: {
 		    	files: {
 			        'dist/beta-ui.css': 'dist/beta-ui.scss',
+			        'dist/beta-theme-minimal.css': 'dist/beta-theme-minimal.scss'
+		    	}
+		    },
+		    dist_themes: {
+		    	files: {
 			        'dist/beta-theme-minimal.css': 'dist/beta-theme-minimal.scss'
 		    	}
 		    }
@@ -242,9 +247,13 @@ module.exports = function(grunt) {
 						+ '  Copyright (c) Oliver Friedmann & Victor Lingenthal\n'
 						+ '  MIT Software License.\n' + '*/\n'
 			},
-			dist : {
+			dist_ui : {
 				files : {
 					'dist/beta-ui.min.css' : [ 'dist/beta-ui.css' ],
+				}					
+			},
+			dist_themes : {
+				files : {
 					'dist/beta-theme-minimal.min.css' : [ 'dist/beta-theme-minimal.css' ]
 				}
 			}
@@ -261,5 +270,6 @@ module.exports = function(grunt) {
 	
 
 	grunt.registerTask('default', ['betajs_templates', 'concat', 'uglify', 'sass', 'cssmin', 'clean']);
+	grunt.registerTask('theme', ['concat:dist_theme_minimal_scss', 'sass:dist_themes', 'cssmin:dist_themes', 'clean']);
 
 };
