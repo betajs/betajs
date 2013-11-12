@@ -12,7 +12,6 @@ module.exports = function(grunt) {
 							 
 							'src/views/controls/button_view/template.html',
 							'src/views/controls/check_box_view/template.html',
-							'src/views/controls/dropdown_view/template.html',
 							'src/views/controls/input_view/template.html',
 							'src/views/controls/label_view/template.html',
 							'src/views/controls/link_view/template.html',
@@ -131,7 +130,6 @@ module.exports = function(grunt) {
 					
 					'src/views/controls/button_view/view.js',
 					'src/views/controls/check_box_view/view.js',
-					'src/views/controls/dropdown_view/view.js',
 					'src/views/controls/input_label_view/view.js',
 					'src/views/controls/input_view/view.js',
 					'src/views/controls/label_view/view.js',

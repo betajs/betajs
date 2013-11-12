@@ -1,21 +1,21 @@
 /*!
-  betajs - v0.0.2 - 2013-11-12
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 "use strict";
 /*!
-  betajs - v0.0.2 - 2013-11-12
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-12
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-12
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2507,7 +2507,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-12
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4277,7 +4277,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-12
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5380,7 +5380,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-11-12
+  betajs - v0.0.2 - 2013-11-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7947,8 +7947,6 @@ BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_elem
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} id="check-{%= supp.view_id %}" />  <label for="check-{%= supp.view_id %}">{%= label %}</label> ';
 
-BetaJS.Templates.Cached['dropdown-view-template'] = '   <{%= dropdown_container_element %} data-selector="dropdown-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.inner("label") %}>   </{%= dropdown_container_element %}>  ';
-
 BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" type="{%= input_type %}" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="{%= supp.css(\'label\') %}" {%= bind.inner("label") %}></{%= element %}> ';
@@ -8247,111 +8245,6 @@ BetaJS.Views.View.extend("BetaJS.Views.CheckBoxView", {
 		this.trigger("check", this.get("checked"));
 	}
 });
-BetaJS.Views.ListContainerView.extend("BetaJS.Views.DropdownView", {
-	
-	constructor : function(options) {
-		options = options || {};
-		options.alignment = "vertical";
-		this._setOption(options, "elements", ["1","2"]);
-		this._inherited(BetaJS.Views.DropdownView, "constructor", options);
-	},
-	
-	_domain_defaults: function () {
-		return BetaJS.Objs.extend(this._inherited(BetaJS.Views.DropdownView, "_domain_defaults"), {
-			"LogoDropDownView": function (page) {
-				return {
-					type: "BetaJS.Views.ButtonView",
-					parent: "logo_dropdown_view.overlay_inner",
-					options: {
-						children_classes: "text-container"
-					}
-				};
-			}
-		});
-	},
-	
-	_domain: function () {
-		var test = this.__elements;
-		return {
-			
-			button: {
-				type: "ButtonView",
-				options: {
-					label: "Button",
-				},
-				events: {
-					"click": function () {
-						this.domain.ns.dropdown_view.toggle();
-					}
-				},
-			},
- 			
-			dropdown_view: {
-				type: "OverlayView",
-				options: function (page) {
-					return {
-						anchor: "relative",
-						element: page.ns.logo_view,
-						overlay_inner: new BetaJS.Views.ListContainerView({
-							el_classes: "dropdown",
-							alignment: "vertical"
-						})
-					};
-				},
-			},
-			
-			dropdown_button: {
-				type: "ButtonView",
-				parent: "dropdown_view.overlay_inner",			
-				options: {
-					children_classes: "text-container",
-					label: "Test"
-				},
-				events: {
-					"click": function () {
-						for (var i=0;i<test.length;i++){
-							alert(test[i]);
-						}
-					}
-				},
-			},
-			
-			dropdown_button2: {
-				type: "ButtonView",
-				parent: "dropdown_view.overlay_inner",
-				after: ["dropdown_button"],			
-				options: {
-					children_classes: "text-container",
-					label: "Test2"
-				},
-				events: {
-					"click": function () {
-						alert("Test2");
-					}
-				},
-			},
-			
-			// for (var i=0;i<test.length;i++){
-				// dropdown_button[i]: {
-					// type: "ButtonView",
-					// parent: "dropdown_view.overlay_inner",			
-					// options: {
-						// children_classes: "text-container",
-						// label: "Test"
-					// },
-					// events: {
-						// "click": function () {						
-							// alert(test[i]);
-						// }
-					// },
-				// },
-			// },
-
-		};
-	}
-		
-});
-
 BetaJS.Views.SwitchContainerView.extend("BetaJS.Views.InputLabelView", {
 
 	constructor: function(options) {
