@@ -1,10 +1,17 @@
 button {
   height: 40px;
-  margin: none;
-  padding: none;
+  min-width: 40px;
+  margin: 0;
+  padding: 0 4px;
   border-width: 1px;
   
-  background: white;
+  background: transparent;
+  color: inherit;
+  
   border-style: solid;
-  border-color: grey;
+  border-color: transparent;
+  outline: none;
+}
+button:hover {
+  color: black;
 }

@@ -1,13 +1,27 @@
 /*
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 button {
   height: 40px;
-  margin: none;
-  padding: none;
+  min-width: 40px;
+  margin: 0;
+  padding: 0 4px;
   border-width: 1px;
-  background: white;
+  background: transparent;
+  color: inherit;
   border-style: solid;
-  border-color: grey; }
+  border-color: transparent;
+  outline: none; }
+
+button:hover {
+  color: black; }
+
+[data-selector="list"] {
+  margin: 0;
+  padding: 0;
+  list-style-type: none; }
+
+.overlay-container-class {
+  background: inherit; }

@@ -27,18 +27,23 @@
 					sub_view: BetaJS.Views.ButtonView,
 					sub_view_options: function (item) {
 						return {
-							label: item.binding("text")
+							label: item.binding("text"),
+							events: {
+								"click": function () {
+									alert(item.binding("a"));
+								}
+							},
 						};
 					},
 					item_label: "text",
 					compare: function (x, y) {
 						return x.get("text").localeCompare(y.get("text"));
 					},
-					objects: [new BetaJS.Properties.Properties({"text": "A Example Z"}),
-					          new BetaJS.Properties.Properties({"text": "B Example Y"}),
-					          new BetaJS.Properties.Properties({"text": "C Example X"}),
-					          new BetaJS.Properties.Properties({"text": "D Example W"}),
-					          new BetaJS.Properties.Properties({"text": "E Example V"})]
+					objects: [new BetaJS.Properties.Properties({"text": "A Example Z","a":"A"}),
+					          new BetaJS.Properties.Properties({"text": "B Example Y","alert":"B"}),
+					          new BetaJS.Properties.Properties({"text": "C Example X","alert":"C"}),
+					          new BetaJS.Properties.Properties({"text": "D Example W","alert":"D"}),
+					          new BetaJS.Properties.Properties({"text": "E Example V","alert":"E"})]
 				});
 				var main = new BetaJS.Views.ListContainerView({
 					el: "body"

@@ -205,6 +205,8 @@ module.exports = function(grunt) {
 		    	files: {
 			        'dist/beta-theme-minimal.scss': [
 			            'src/views/controls/button_view/theme-minimal.scss',
+			            'src/views/lists/list_view/theme-minimal.scss',
+			            'src/views/overlays/overlay_view/theme-minimal.scss',
 			        ]
 		    	}
 		    }

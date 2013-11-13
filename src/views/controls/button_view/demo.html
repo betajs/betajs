@@ -6,6 +6,7 @@
 		<script src="../../../../demos/jquery-1.9.1.min.js"></script>
 		<script src="../../../../dist/beta.js"></script>
 		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
+		<link rel="stylesheet" href="../../../../dist/beta-theme-minimal.css" type="text/css" />
 		<style>
 			.explorer {
 				position: absolute;
@@ -26,6 +27,11 @@
 				padding: 30px;
 				background: grey;
 			}
+			.buttonexampleinner {
+				padding: 5px;
+				background: white;
+				color: grey;
+			}
 			pre {
 				padding: 10px;
 				background:#CCCCCC;
@@ -39,7 +45,7 @@
 		<script>
 			$(document).ready(function () {
 				var button = new BetaJS.Views.ButtonView({
-					el: ".buttonexample",
+					el: ".buttonexampleinner",
 					label: "Example Button",
 				});
 				button.on("click", function () {
@@ -65,7 +71,9 @@
 			Non Button Specific Options (Expander)
 			<hr>
 			<h3>Example Button:</h3>
-			<div class="buttonexample"></div>
+			<div class="buttonexample">
+				<div class="buttonexampleinner"></div>
+			</div>
 			<div class="codemirror">Codemirror/Betaedit</div>
 		</div>
 	</body>
