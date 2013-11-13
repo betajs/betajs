@@ -1,21 +1,21 @@
 /*!
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 "use strict";
 /*!
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2507,7 +2507,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4277,7 +4277,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5380,7 +5380,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-11-11
+  betajs - v0.0.2 - 2013-11-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5560,8 +5560,9 @@ BetaJS.Browser.Dom = {
 	},
 	
 	selectNode : function(node, offset) {
+		node = BetaJS.$(node).get(0);
 		var selection = null;
-		var range = null;			
+		var range = null;
 		if (window.getSelection) {
 			selection = window.getSelection();
 			selection.removeAllRanges();
@@ -5593,6 +5594,7 @@ BetaJS.Browser.Dom = {
 			return window.getSelection().toString();
 		else if (document.selection)
 			return document.selection.createRange().htmlText;
+		return "";
 	},
 	
 	selectionAncestor : function() {
@@ -5603,14 +5605,22 @@ BetaJS.Browser.Dom = {
 		return null;
 	},
 	
-	selectionOffset: function () {
+	selectionStartOffset: function () {
+		if (window.getSelection)
+			return window.getSelection().getRangeAt(0).startOffset;
+		else if (document.selection)
+			return document.selection.createRange().startOffset;
+		return null;
+	},
+	
+	selectionEndOffset: function () {
 		if (window.getSelection)
 			return window.getSelection().getRangeAt(0).endOffset;
 		else if (document.selection)
 			return document.selection.createRange().endOffset;
 		return null;
 	},
-	
+
 	selectionStart : function() {
 		if (window.getSelection)
 			return BetaJS.$(window.getSelection().getRangeAt(0).startContainer);
@@ -5625,6 +5635,16 @@ BetaJS.Browser.Dom = {
 		else if (document.selection)
 			return BetaJS.$(document.selection.createRange().endContainer);
 		return null;
+	},
+	
+	selectionNonEmpty: function () {
+		var start = this.selectionStart();
+		var end = this.selectionEnd();
+		return start && end && start.get(0) && end.get(0) && (start.get(0) != end.get(0) || this.selectionStartOffset() != this.selectionEndOffset());
+	},
+	
+	selectionContained: function (node) {
+		return node.has(this.selectionStart()).length > 0 && node.has(this.selectionEnd()).length > 0;
 	},
 
 	selectionNodes: function () {
@@ -5642,6 +5662,86 @@ BetaJS.Browser.Dom = {
 	
 	selectionLeaves: function () {
 		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length == 0; });
+	},
+	
+	contentSiblings: function (node) {
+		return node.parent().contents().filter(function () {
+			return this != node.get(0);
+		});
+	},
+	
+	remove_tag_from_parent_path: function (node, tag, context) {	
+		tag = tag.toLowerCase();
+		node = BetaJS.$(node);
+		var parents = node.parents(context ? context + " " + tag : tag);
+		for (var i = 0; i < parents.length; ++i) {
+			var parent = parents.get(i);
+			parent = BetaJS.$(parent);
+			while (node.get(0) != parent.get(0)) {
+				this.contentSiblings(node).wrap("<" + tag + "></" + tag + ">");
+				node = node.parent();
+			}
+			parent.contents().unwrap();
+		}
+	},
+	
+	selectionSplitOffsets: function () {
+		var startOffset = this.selectionStartOffset();
+		var endOffset = this.selectionEndOffset();
+		var start = this.selectionStart();
+		var end = this.selectionEnd();
+		var single = start.get(0) == end.get(0);
+		if (endOffset < end.get(0).wholeText.length) {
+			var endElem = end.get(0);
+			endElem.splitText(endOffset);
+			end = BetaJS.$(endElem);
+			if (single)
+				start = end;
+		}
+		if (startOffset > 0) {
+			start = BetaJS.$(start.get(0).splitText(startOffset));
+			if (single)
+				end = start;
+		}
+		this.selectRange(start, end);
+	},
+	
+	selectRange: function (start_node, end_node, start_offset, end_offset) {
+		start_node = BetaJS.$(start_node);
+		end_node = BetaJS.$(end_node);
+		var selection = null;
+		var range = null;
+		if (window.getSelection) {
+			selection = window.getSelection();
+			selection.removeAllRanges();
+			range = document.createRange();
+		} else if (document.selection) {
+			selection = document.selection;
+			range = selection.createRange();
+		}
+		range.setStart(start_node.get(0), start_offset || 0);
+		range.setEnd(end_node.get(0), end_offset || end_node.get(0).data.length);
+		selection.addRange(range);
+	},
+	
+	splitNode: function (node, start_offset, end_offset) {
+		node = BetaJS.$(node);
+		var start_offset = start_offset || 0;
+		var end_offset = end_offset || node.get(0).data.length;
+		if (end_offset < node.get(0).data.length) {
+			var elem = node.get(0);
+			elem.splitText(end_offset);
+			node = BetaJS.$(elem);
+		}
+		if (start_offset > 0) 
+			node = BetaJS.$(node.get(0).splitText(start_offset));
+		return node;
+	},
+	
+	elementHasAncestorTag: function (node, element, context) {
+		if (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase())
+			return;
+		return context ? node.parents(context + " " + element).length > 0 : node.parents(element).length > 0;
 	}
 		
 };
