@@ -3,7 +3,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	_add: function (object) {},
 	_remove: function (ident) {},
 	_get: function (ident) {},
-	_iterate: function (callback) {},
+	_iterate: function (callback, context) {},
 	
 	get_ident: function (object) {
 		var ident = null;
@@ -44,11 +44,10 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	clear: function () {
-		var self = this;
 		this._iterate(function (object, ident) {
-			self.remove_by_ident(ident);
+			this.remove_by_ident(ident);
 			return true;
-		});
+		}, this);
 	},
 	
 	remove_by_ident: function (ident) {
@@ -63,23 +62,22 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	remove_by_filter: function (filter) {
-		var self = this;
 		this._iterate(function (object, ident) {
 			if (filter(object))
-				self.remove_by_ident(ident);
+				this.remove_by_ident(ident);
 			return true;
-		});
+		}, this);
 	},
 	
 	get: function (ident) {
 		return this._get(ident);
 	},
 	
-	iterate: function (cb) {
+	iterate: function (cb, context) {
 		this._iterate(function (object, ident) {
-			var ret = cb(object, ident);
+			var ret = cb.apply(this, [object, ident]);
 			return BetaJS.Types.is_defined(ret) ? ret : true;
-		});
+		}, context);
 	}
 
 });
@@ -99,7 +97,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 			next: null
 		};
 		if (this.__first)
-			this.__last.prev.next = this.__last
+			this.__last.prev.next = this.__last;
 		else
 			this.__first = this.__last;
 		return this.__last;
@@ -121,12 +119,12 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 		return container.obj;
 	},
 	
-	_iterate: function (cb) {
+	_iterate: function (cb, context) {
 		var current = this.__first;
 		while (current != null) {
 			var prev = current;
 			current = current.next;
-			if (!cb(prev.obj, prev))
+			if (!cb.apply(context || this, [prev.obj, prev]))
 				return;
 		}
 	}
@@ -156,9 +154,9 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 		return this.__map[ident];
 	},
 	
-	_iterate: function (callback) {
+	_iterate: function (callback, context) {
 		for (var key in this.__map)
-			callback(this.__map[key], key);
+			callback.apply(context || this, [this.__map[key], key]);
 	},
 	
 	get_ident: function (object) {
@@ -254,10 +252,10 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 		return this.__items[ident];
 	},
 	
-	_iterate: function (callback) {
+	_iterate: function (callback, context) {
 		var items = BetaJS.Objs.clone(this.__items, 1);
 		for (var i = 0; i < items.length; ++i)
-			callback(items[i], this.get_ident(items[i]));
+			callback.apply(context || this, [items[i], this.get_ident(items[i])]);
 	},
 
 	__ident_changed: function (object, index) {

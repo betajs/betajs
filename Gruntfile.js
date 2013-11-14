@@ -138,7 +138,6 @@ module.exports = function(grunt) {
 					'src/views/controls/textarea_view/view.js',
 					
 					'src/views/lists/list_view/view.js',
-					'src/views/lists/item_list_view/view.js',
 
 					'src/views/overlays/overlay_view/view.js',
 					'src/views/overlays/fullscreen_overlay_view/view.js',

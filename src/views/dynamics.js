@@ -51,7 +51,6 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
 });
 
 BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
-	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.ListenMixin, {
 		
 	__bind: {

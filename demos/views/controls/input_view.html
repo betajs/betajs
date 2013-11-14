@@ -10,10 +10,11 @@
 			$(document).ready(function () {
 				var input = new BetaJS.Views.InputView({
 					el: "#input",
+					value: "test"
 				});
 				var label = new BetaJS.Views.LabelView({
 					el: "#label",
-					value: "bla"
+					label: "test"
 				});
 				input.on("change", function (value) {
 					document.title = "abc:" + value;

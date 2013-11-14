@@ -28,27 +28,15 @@
 							[y.get("checked"), y.get("text")]
 						);
 					},
-					objects: [
-						new BetaJS.Properties.Properties({
-							"text": "Send your mother flowers",
-							"checked": false
-						}),
-					    new BetaJS.Properties.Properties({
-					    	"text": "Make some coffee",
-					    	"checked": true
-					    })]
+					modules: [BetaJS.Views.Modules.ListViewAnimation.singleton()],
+					objects: [{
+						"text": "Send your mother flowers",
+						"checked": false
+					}, {
+				    	"text": "Make some coffee",
+				    	"checked": true
+					}]
 				});
-				list._addElement = function (element, is_new_item) {
-					if (is_new_item) {
-						element.css("display", "none");
-						element.fadeIn();
-					}
-				};
-				list._removeElement = function (element) {
-					element.fadeOut(function () {
-						element.remove();
-					});
-				};
 				var main = new BetaJS.Views.ListContainerView({
 					el: "body"
 				});

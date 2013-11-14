@@ -77,9 +77,9 @@ BetaJS.Properties.PropertiesMixin = {
 				var self = this;
 				BetaJS.Objs.iter(entry.dependencies, function (dep) {
 					if (this._isBinding(dep))
-						dep.bindee.off("change:" + dep.property, null, this.__properties[key])
+						dep.bindee.off("change:" + dep.property, null, this.__properties[key]);
 					else if (this._isTimer(dep))
-						entry.timers[dep].destroy
+						entry.timers[dep].destroy();
 					else
 						self.off("change:" + dep, null, this.__properties[key]);
 				}, this);

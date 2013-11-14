@@ -1,6 +1,4 @@
-BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor", attributes, options);
@@ -46,7 +44,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		if (!(key in scheme))
 			return;
 		if (options && options.no_change)
-			this._unsetChanged(key)
+			this._unsetChanged(key);
 		else
 			this.__saved = false;
 		if (options && options.silent)
@@ -95,4 +93,4 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		return this.__table;
 	}
 	
-}]);
+});

@@ -12,12 +12,4 @@ BetaJS.Ids = {
 		return object.__cid;
 	}
 	
-}
-
-BetaJS.Ids.ClientIdMixin = {
-	
-	cid: function () {
-		return BetaJS.Ids.objectId(this);
-	}
-	
-}
+};

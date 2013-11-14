@@ -305,6 +305,16 @@ BetaJS.Functions = {
 			func = null;
 			return result;
 		};
+	},
+	
+    /** Converts some other function's arguments to an array
+     * 
+     * @param func function arguments
+     * @param slice number of arguments to be omitted (default: 0)
+     * @return arguments as array 
+     */	
+	getArguments: function (args, slice) {
+		return Array.prototype.slice.call(args, slice || 0);
 	}
 
 };
@@ -424,8 +434,10 @@ BetaJS.Objs = {
 	},
 	
 	extend: function (target, source, depth) {
-		for (var key in source)
-			target[key] = this.clone(source[key], depth);
+		target = target || {};
+		if (source)
+			for (var key in source)
+				target[key] = this.clone(source[key], depth);
 		return target;
 	},
 	
@@ -484,12 +496,13 @@ BetaJS.Objs = {
 		if (BetaJS.Types.is_array(obj)) {
 			var result = [];
 			for (var i = 0; i < obj.length; ++i)
-				result.push(context ? f.apply(context, obj[i], i) : f(obj[i], i));
+				result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
 			return result;
 		} else {
 			var result = {};
 			for (var key in obj)
-				result[key] = context ? f.apply(context, obj[key], key) : f(obj[key], key);
+				result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+			return result;
 		}
 	},
 	
@@ -609,15 +622,7 @@ BetaJS.Ids = {
 		return object.__cid;
 	}
 	
-}
-
-BetaJS.Ids.ClientIdMixin = {
-	
-	cid: function () {
-		return BetaJS.Ids.objectId(this);
-	}
-	
-}
+};
 BetaJS.Class = function () {};
 
 BetaJS.Class.classname = "Class";
@@ -722,18 +727,18 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 BetaJS.Class.prototype.constructor = function () {
 	this._notify("construct");
-}
+};
 
 BetaJS.Class.prototype.as_method = function (s) {
 	return BetaJS.Functions.as_method(this[s], this);
-}
+};
 
 BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
 	this.__auto_destroy_list.push(obj);
 	return obj;
-}
+};
 
 BetaJS.Class.prototype._notify = function (name) {
 	if (!this.cls.__notifications)
@@ -743,9 +748,11 @@ BetaJS.Class.prototype._notify = function (name) {
 	if (table)
 		for (var i in table) {
 			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
+			if (!method)
+				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
 			method.apply(this, rest);
 		}
-}
+};
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
@@ -755,23 +762,27 @@ BetaJS.Class.prototype.destroy = function () {
 				this.__auto_destroy_list[i].destroy();
 	for (var key in this)
 		delete this[key];
-}
+};
 
 BetaJS.Class.prototype._inherited = function (cls, func) {
 	return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-}
+};
 
 BetaJS.Class._inherited = function (cls, func) {
 	return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-}
+};
 
 BetaJS.Class.prototype.instance_of = function (cls) {
 	return this.cls.ancestor_of(cls);
-}
+};
 
 BetaJS.Class.ancestor_of = function (cls) {
 	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
-}
+};
+
+BetaJS.Class.prototype.cid = function () {
+	return BetaJS.Ids.objectId(this);
+};
 
 
 
@@ -863,7 +874,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	_add: function (object) {},
 	_remove: function (ident) {},
 	_get: function (ident) {},
-	_iterate: function (callback) {},
+	_iterate: function (callback, context) {},
 	
 	get_ident: function (object) {
 		var ident = null;
@@ -904,11 +915,10 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	clear: function () {
-		var self = this;
 		this._iterate(function (object, ident) {
-			self.remove_by_ident(ident);
+			this.remove_by_ident(ident);
 			return true;
-		});
+		}, this);
 	},
 	
 	remove_by_ident: function (ident) {
@@ -923,23 +933,22 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	remove_by_filter: function (filter) {
-		var self = this;
 		this._iterate(function (object, ident) {
 			if (filter(object))
-				self.remove_by_ident(ident);
+				this.remove_by_ident(ident);
 			return true;
-		});
+		}, this);
 	},
 	
 	get: function (ident) {
 		return this._get(ident);
 	},
 	
-	iterate: function (cb) {
+	iterate: function (cb, context) {
 		this._iterate(function (object, ident) {
-			var ret = cb(object, ident);
+			var ret = cb.apply(this, [object, ident]);
 			return BetaJS.Types.is_defined(ret) ? ret : true;
-		});
+		}, context);
 	}
 
 });
@@ -959,7 +968,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 			next: null
 		};
 		if (this.__first)
-			this.__last.prev.next = this.__last
+			this.__last.prev.next = this.__last;
 		else
 			this.__first = this.__last;
 		return this.__last;
@@ -981,12 +990,12 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 		return container.obj;
 	},
 	
-	_iterate: function (cb) {
+	_iterate: function (cb, context) {
 		var current = this.__first;
 		while (current != null) {
 			var prev = current;
 			current = current.next;
-			if (!cb(prev.obj, prev))
+			if (!cb.apply(context || this, [prev.obj, prev]))
 				return;
 		}
 	}
@@ -1016,9 +1025,9 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 		return this.__map[ident];
 	},
 	
-	_iterate: function (callback) {
+	_iterate: function (callback, context) {
 		for (var key in this.__map)
-			callback(this.__map[key], key);
+			callback.apply(context || this, [this.__map[key], key]);
 	},
 	
 	get_ident: function (object) {
@@ -1114,10 +1123,10 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 		return this.__items[ident];
 	},
 	
-	_iterate: function (callback) {
+	_iterate: function (callback, context) {
 		var items = BetaJS.Objs.clone(this.__items, 1);
 		for (var i = 0; i < items.length; ++i)
-			callback(items[i], this.get_ident(items[i]));
+			callback.apply(context || this, [items[i], this.get_ident(items[i])]);
 	},
 
 	__ident_changed: function (object, index) {
@@ -1364,7 +1373,7 @@ BetaJS.Events.EventsMixin = {
 		if (object.max_delay)
 			object.max_delay.start();
 		if (!object.min_delay && !object.max_delay)
-			object.callback.apply(object.context || this, params)
+			object.callback.apply(object.context || this, params);
 		else
 			object.params = params;
 	},
@@ -1418,18 +1427,18 @@ BetaJS.Events.EventsMixin = {
     trigger: function(events) {
     	var self = this;
     	events = events.split(BetaJS.Events.EVENT_SPLITTER);
-    	var rest = Array.prototype.slice.call(arguments, 1);
+    	var rest = BetaJS.Functions.getArguments(arguments, 1);
 		var event;
 		if (!this.__events_mixin_events)
 			return;
     	while (event = events.shift()) {
-    		if (this.__events_mixin_events && this.__events_mixin_events[event])
+    		if (this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
     			});
 			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
 				this.__events_mixin_events["all"].iterate(function (object) {
-					self.__call_event_object(object, rest);
+					self.__call_event_object(object, [event].concat(rest));
 				});
 		}
     	return this;
@@ -1445,15 +1454,24 @@ BetaJS.Events.EventsMixin = {
         return this.on(name, once, context, options);
     },
     
-    delegateEvents: function (events, source) {
-    	if (!BetaJS.Types.is_array(events))
-    		events = [events];
-   		BetaJS.Objs.iter(events, function (event) {
-			source.on(event, function () {
-				var rest = Array.prototype.slice.call(arguments, 0);
-				this.trigger.apply(this, [event].concat(rest));
+    delegateEvents: function (events, source, prefix, params) {
+    	params = params || []; 
+    	prefix = prefix ? prefix + ":" : "";
+    	if (events == null) {
+    		source.on("all", function (event) {
+				var rest = BetaJS.Functions.getArguments(arguments, 1);
+				this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+    		}, this);
+    	} else {
+    		if (!BetaJS.Types.is_array(events))
+    			events = [events];
+	   		BetaJS.Objs.iter(events, function (event) {
+				source.on(event, function () {
+					var rest = BetaJS.Functions.getArguments(arguments);
+					this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+				}, this);
 			}, this);
-		}, this);
+		}
     }
 	
 };
@@ -1496,7 +1514,7 @@ BetaJS.Events.ListenMixin = {
 			}, this);
 	}
 	
-}
+};
 
 BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
 
@@ -1543,9 +1561,7 @@ BetaJS.Classes.AutoDestroyMixin = {
 };
 
 
-BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", {
 		
 	constructor: function () {
 		this._inherited(BetaJS.Classes.AutoDestroyObject, "constructor");
@@ -1574,7 +1590,7 @@ BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
 		}, this);
 	}
 	
-}]);
+});
 
 
 
@@ -1609,7 +1625,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		};
 		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
 		if (this.__first)
-			this.__last.next = container
+			this.__last.next = container;
 		else
 			this.__first = container;
 		this.__last = container;
@@ -1684,10 +1700,7 @@ BetaJS.Classes.ModuleMixin = {
 };
 
 
-BetaJS.Class.extend("BetaJS.Classes.Module", [
-
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Classes.Module", {
 		
 	constructor: function (options) {
 		this._inherited(BetaJS.Classes.Module, "constructor");
@@ -1735,7 +1748,7 @@ BetaJS.Class.extend("BetaJS.Classes.Module", [
 		return this._objects[BetaJS.Ids.objectId(object)].data;
 	}
 	
-}], {
+}, {
 	
 	__instance: null,
 	
@@ -1826,9 +1839,9 @@ BetaJS.Properties.PropertiesMixin = {
 				var self = this;
 				BetaJS.Objs.iter(entry.dependencies, function (dep) {
 					if (this._isBinding(dep))
-						dep.bindee.off("change:" + dep.property, null, this.__properties[key])
+						dep.bindee.off("change:" + dep.property, null, this.__properties[key]);
 					else if (this._isTimer(dep))
-						entry.timers[dep].destroy
+						entry.timers[dep].destroy();
 					else
 						self.off("change:" + dep, null, this.__properties[key]);
 				}, this);
@@ -1950,7 +1963,6 @@ BetaJS.Class.extend("BetaJS.Properties.Properties", [
 }]);
 
 BetaJS.Class.extend("BetaJS.Collections.Collection", [
-	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.EventsMixin, {
 		
 	constructor: function (options) {
@@ -1986,7 +1998,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		this.__data.iterate(function (object) {
 			if ("off" in object)
 				object.off(null, null, this);
-		});
+		}, this);
 		this.__data.destroy();
 		this.trigger("destroy");
 		this._inherited(BetaJS.Collections.Collection, "destroy");
@@ -2015,6 +2027,8 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	add: function (object) {
+		if (!BetaJS.Class.is_class_instance(object))
+			object = new BetaJS.Properties.Properties(object);
 		if (this.exists(object))
 			return null;
 		var ident = this.__data.add(object);
@@ -2060,15 +2074,14 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		return this.__data.get_ident(object);
 	},
 	
-	iterate: function (cb) {
-		this.__data.iterate(cb);
+	iterate: function (cb, context) {
+		this.__data.iterate(cb, context);
 	},
 	
 	clear: function () {
-		var self = this;
 		this.iterate(function (obj) {
-			self.remove(obj);
-		});
+			this.remove(obj);
+		}, this);
 	}
 		
 }]);
@@ -2085,11 +2098,10 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 		this._inherited(BetaJS.Collections.FilteredCollection, "constructor", options);
 		if ("filter" in options)
 			this.filter = options["filter"];
-		var self = this;
 		this.__parent.iterate(function (object) {
-			self.add(object);
+			this.add(object);
 			return true;
-		});
+		}, this);
 		this.__parent.on("add", this.add, this);
 		this.__parent.on("remove", this.remove, this);
 	},
@@ -2953,10 +2965,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	
 });
 
-BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
-
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", {
 	
 	constructor: function (engine, query) {
 		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
@@ -3005,7 +3014,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
 		this.__engine.register(this);
 	}
 	
-}]);
+});
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
@@ -4613,9 +4622,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 	},	
 
 });
-BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor", attributes, options);
@@ -4661,7 +4668,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		if (!(key in scheme))
 			return;
 		if (options && options.no_change)
-			this._unsetChanged(key)
+			this._unsetChanged(key);
 		else
 			this.__saved = false;
 		if (options && options.silent)
@@ -4710,7 +4717,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		return this.__table;
 	}
 	
-}]);
+});
 BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{

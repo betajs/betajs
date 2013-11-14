@@ -6,7 +6,6 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
 BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
-	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Properties.PropertiesMixin,
 	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
@@ -376,7 +375,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if (this.__parent && !this.__parent.isActive())
 			return null;
 		if (this.__parent)
-			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el)
+			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el);
 		else
 			this.$el = BetaJS.$(this.__el);
 		if (this.$el.size() == 0)
@@ -391,13 +390,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		for (var key in this.__attributes) {
 			var old_value = this.$el.attr(key);
 			if (BetaJS.Types.is_defined(old_value))
-				this.__old_attributes[key] = old_value
+				this.__old_attributes[key] = old_value;
 			else
 				this.__old_attributes[key] = null;
 			this.$el.attr(key, this.__attributes[key]);
 		}
 		this.__added_el_classes = [];
-		var new_el_classes = BetaJS.Objs.extend(this._el_classes(), this.__el_classes);
+		var new_el_classes = this._el_classes().concat(this.__el_classes);
 		for (var i = 0; i < new_el_classes.length; ++i)
 			if (!this.$el.hasClass(new_el_classes[i])) {
 				this.$el.addClass(new_el_classes[i]);
@@ -408,7 +407,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		for (var key in new_el_styles)  {
 			var old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
-				this.__old_el_styles[key] = old_value
+				this.__old_el_styles[key] = old_value;
 			else
 				this.__old_el_styles[key] = null;
 			this.$el.css(key, new_el_styles[key]);
@@ -500,7 +499,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	$data: function(selectors, elem) {
 		if (!elem)
-			elem = this.$el
+			elem = this.$el;
 		var s = "";
 		for (var key in selectors)
 			s += "[data-" + key + "='" + selectors[key] + "']";

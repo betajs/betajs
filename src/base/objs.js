@@ -23,8 +23,10 @@ BetaJS.Objs = {
 	},
 	
 	extend: function (target, source, depth) {
-		for (var key in source)
-			target[key] = this.clone(source[key], depth);
+		target = target || {};
+		if (source)
+			for (var key in source)
+				target[key] = this.clone(source[key], depth);
 		return target;
 	},
 	
@@ -83,12 +85,13 @@ BetaJS.Objs = {
 		if (BetaJS.Types.is_array(obj)) {
 			var result = [];
 			for (var i = 0; i < obj.length; ++i)
-				result.push(context ? f.apply(context, obj[i], i) : f(obj[i], i));
+				result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
 			return result;
 		} else {
 			var result = {};
 			for (var key in obj)
-				result[key] = context ? f.apply(context, obj[key], key) : f(obj[key], key);
+				result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+			return result;
 		}
 	},
 	

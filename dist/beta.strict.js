@@ -311,6 +311,16 @@ BetaJS.Functions = {
 			func = null;
 			return result;
 		};
+	},
+	
+    /** Converts some other function's arguments to an array
+     * 
+     * @param func function arguments
+     * @param slice number of arguments to be omitted (default: 0)
+     * @return arguments as array 
+     */	
+	getArguments: function (args, slice) {
+		return Array.prototype.slice.call(args, slice || 0);
 	}
 
 };
@@ -430,8 +440,10 @@ BetaJS.Objs = {
 	},
 	
 	extend: function (target, source, depth) {
-		for (var key in source)
-			target[key] = this.clone(source[key], depth);
+		target = target || {};
+		if (source)
+			for (var key in source)
+				target[key] = this.clone(source[key], depth);
 		return target;
 	},
 	
@@ -490,12 +502,13 @@ BetaJS.Objs = {
 		if (BetaJS.Types.is_array(obj)) {
 			var result = [];
 			for (var i = 0; i < obj.length; ++i)
-				result.push(context ? f.apply(context, obj[i], i) : f(obj[i], i));
+				result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
 			return result;
 		} else {
 			var result = {};
 			for (var key in obj)
-				result[key] = context ? f.apply(context, obj[key], key) : f(obj[key], key);
+				result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+			return result;
 		}
 	},
 	
@@ -615,15 +628,7 @@ BetaJS.Ids = {
 		return object.__cid;
 	}
 	
-}
-
-BetaJS.Ids.ClientIdMixin = {
-	
-	cid: function () {
-		return BetaJS.Ids.objectId(this);
-	}
-	
-}
+};
 BetaJS.Class = function () {};
 
 BetaJS.Class.classname = "Class";
@@ -728,18 +733,18 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 BetaJS.Class.prototype.constructor = function () {
 	this._notify("construct");
-}
+};
 
 BetaJS.Class.prototype.as_method = function (s) {
 	return BetaJS.Functions.as_method(this[s], this);
-}
+};
 
 BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
 	this.__auto_destroy_list.push(obj);
 	return obj;
-}
+};
 
 BetaJS.Class.prototype._notify = function (name) {
 	if (!this.cls.__notifications)
@@ -749,9 +754,11 @@ BetaJS.Class.prototype._notify = function (name) {
 	if (table)
 		for (var i in table) {
 			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
+			if (!method)
+				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
 			method.apply(this, rest);
 		}
-}
+};
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
@@ -761,23 +768,27 @@ BetaJS.Class.prototype.destroy = function () {
 				this.__auto_destroy_list[i].destroy();
 	for (var key in this)
 		delete this[key];
-}
+};
 
 BetaJS.Class.prototype._inherited = function (cls, func) {
 	return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-}
+};
 
 BetaJS.Class._inherited = function (cls, func) {
 	return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-}
+};
 
 BetaJS.Class.prototype.instance_of = function (cls) {
 	return this.cls.ancestor_of(cls);
-}
+};
 
 BetaJS.Class.ancestor_of = function (cls) {
 	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
-}
+};
+
+BetaJS.Class.prototype.cid = function () {
+	return BetaJS.Ids.objectId(this);
+};
 
 
 
@@ -869,7 +880,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	_add: function (object) {},
 	_remove: function (ident) {},
 	_get: function (ident) {},
-	_iterate: function (callback) {},
+	_iterate: function (callback, context) {},
 	
 	get_ident: function (object) {
 		var ident = null;
@@ -910,11 +921,10 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	clear: function () {
-		var self = this;
 		this._iterate(function (object, ident) {
-			self.remove_by_ident(ident);
+			this.remove_by_ident(ident);
 			return true;
-		});
+		}, this);
 	},
 	
 	remove_by_ident: function (ident) {
@@ -929,23 +939,22 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	remove_by_filter: function (filter) {
-		var self = this;
 		this._iterate(function (object, ident) {
 			if (filter(object))
-				self.remove_by_ident(ident);
+				this.remove_by_ident(ident);
 			return true;
-		});
+		}, this);
 	},
 	
 	get: function (ident) {
 		return this._get(ident);
 	},
 	
-	iterate: function (cb) {
+	iterate: function (cb, context) {
 		this._iterate(function (object, ident) {
-			var ret = cb(object, ident);
+			var ret = cb.apply(this, [object, ident]);
 			return BetaJS.Types.is_defined(ret) ? ret : true;
-		});
+		}, context);
 	}
 
 });
@@ -965,7 +974,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 			next: null
 		};
 		if (this.__first)
-			this.__last.prev.next = this.__last
+			this.__last.prev.next = this.__last;
 		else
 			this.__first = this.__last;
 		return this.__last;
@@ -987,12 +996,12 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 		return container.obj;
 	},
 	
-	_iterate: function (cb) {
+	_iterate: function (cb, context) {
 		var current = this.__first;
 		while (current != null) {
 			var prev = current;
 			current = current.next;
-			if (!cb(prev.obj, prev))
+			if (!cb.apply(context || this, [prev.obj, prev]))
 				return;
 		}
 	}
@@ -1022,9 +1031,9 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 		return this.__map[ident];
 	},
 	
-	_iterate: function (callback) {
+	_iterate: function (callback, context) {
 		for (var key in this.__map)
-			callback(this.__map[key], key);
+			callback.apply(context || this, [this.__map[key], key]);
 	},
 	
 	get_ident: function (object) {
@@ -1120,10 +1129,10 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 		return this.__items[ident];
 	},
 	
-	_iterate: function (callback) {
+	_iterate: function (callback, context) {
 		var items = BetaJS.Objs.clone(this.__items, 1);
 		for (var i = 0; i < items.length; ++i)
-			callback(items[i], this.get_ident(items[i]));
+			callback.apply(context || this, [items[i], this.get_ident(items[i])]);
 	},
 
 	__ident_changed: function (object, index) {
@@ -1370,7 +1379,7 @@ BetaJS.Events.EventsMixin = {
 		if (object.max_delay)
 			object.max_delay.start();
 		if (!object.min_delay && !object.max_delay)
-			object.callback.apply(object.context || this, params)
+			object.callback.apply(object.context || this, params);
 		else
 			object.params = params;
 	},
@@ -1424,18 +1433,18 @@ BetaJS.Events.EventsMixin = {
     trigger: function(events) {
     	var self = this;
     	events = events.split(BetaJS.Events.EVENT_SPLITTER);
-    	var rest = Array.prototype.slice.call(arguments, 1);
+    	var rest = BetaJS.Functions.getArguments(arguments, 1);
 		var event;
 		if (!this.__events_mixin_events)
 			return;
     	while (event = events.shift()) {
-    		if (this.__events_mixin_events && this.__events_mixin_events[event])
+    		if (this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
     			});
 			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
 				this.__events_mixin_events["all"].iterate(function (object) {
-					self.__call_event_object(object, rest);
+					self.__call_event_object(object, [event].concat(rest));
 				});
 		}
     	return this;
@@ -1451,15 +1460,24 @@ BetaJS.Events.EventsMixin = {
         return this.on(name, once, context, options);
     },
     
-    delegateEvents: function (events, source) {
-    	if (!BetaJS.Types.is_array(events))
-    		events = [events];
-   		BetaJS.Objs.iter(events, function (event) {
-			source.on(event, function () {
-				var rest = Array.prototype.slice.call(arguments, 0);
-				this.trigger.apply(this, [event].concat(rest));
+    delegateEvents: function (events, source, prefix, params) {
+    	params = params || []; 
+    	prefix = prefix ? prefix + ":" : "";
+    	if (events == null) {
+    		source.on("all", function (event) {
+				var rest = BetaJS.Functions.getArguments(arguments, 1);
+				this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+    		}, this);
+    	} else {
+    		if (!BetaJS.Types.is_array(events))
+    			events = [events];
+	   		BetaJS.Objs.iter(events, function (event) {
+				source.on(event, function () {
+					var rest = BetaJS.Functions.getArguments(arguments);
+					this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+				}, this);
 			}, this);
-		}, this);
+		}
     }
 	
 };
@@ -1502,7 +1520,7 @@ BetaJS.Events.ListenMixin = {
 			}, this);
 	}
 	
-}
+};
 
 BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
 
@@ -1549,9 +1567,7 @@ BetaJS.Classes.AutoDestroyMixin = {
 };
 
 
-BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", {
 		
 	constructor: function () {
 		this._inherited(BetaJS.Classes.AutoDestroyObject, "constructor");
@@ -1580,7 +1596,7 @@ BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
 		}, this);
 	}
 	
-}]);
+});
 
 
 
@@ -1615,7 +1631,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		};
 		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
 		if (this.__first)
-			this.__last.next = container
+			this.__last.next = container;
 		else
 			this.__first = container;
 		this.__last = container;
@@ -1690,10 +1706,7 @@ BetaJS.Classes.ModuleMixin = {
 };
 
 
-BetaJS.Class.extend("BetaJS.Classes.Module", [
-
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Classes.Module", {
 		
 	constructor: function (options) {
 		this._inherited(BetaJS.Classes.Module, "constructor");
@@ -1741,7 +1754,7 @@ BetaJS.Class.extend("BetaJS.Classes.Module", [
 		return this._objects[BetaJS.Ids.objectId(object)].data;
 	}
 	
-}], {
+}, {
 	
 	__instance: null,
 	
@@ -1832,9 +1845,9 @@ BetaJS.Properties.PropertiesMixin = {
 				var self = this;
 				BetaJS.Objs.iter(entry.dependencies, function (dep) {
 					if (this._isBinding(dep))
-						dep.bindee.off("change:" + dep.property, null, this.__properties[key])
+						dep.bindee.off("change:" + dep.property, null, this.__properties[key]);
 					else if (this._isTimer(dep))
-						entry.timers[dep].destroy
+						entry.timers[dep].destroy();
 					else
 						self.off("change:" + dep, null, this.__properties[key]);
 				}, this);
@@ -1956,7 +1969,6 @@ BetaJS.Class.extend("BetaJS.Properties.Properties", [
 }]);
 
 BetaJS.Class.extend("BetaJS.Collections.Collection", [
-	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.EventsMixin, {
 		
 	constructor: function (options) {
@@ -1992,7 +2004,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		this.__data.iterate(function (object) {
 			if ("off" in object)
 				object.off(null, null, this);
-		});
+		}, this);
 		this.__data.destroy();
 		this.trigger("destroy");
 		this._inherited(BetaJS.Collections.Collection, "destroy");
@@ -2021,6 +2033,8 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	add: function (object) {
+		if (!BetaJS.Class.is_class_instance(object))
+			object = new BetaJS.Properties.Properties(object);
 		if (this.exists(object))
 			return null;
 		var ident = this.__data.add(object);
@@ -2066,15 +2080,14 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		return this.__data.get_ident(object);
 	},
 	
-	iterate: function (cb) {
-		this.__data.iterate(cb);
+	iterate: function (cb, context) {
+		this.__data.iterate(cb, context);
 	},
 	
 	clear: function () {
-		var self = this;
 		this.iterate(function (obj) {
-			self.remove(obj);
-		});
+			this.remove(obj);
+		}, this);
 	}
 		
 }]);
@@ -2091,11 +2104,10 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 		this._inherited(BetaJS.Collections.FilteredCollection, "constructor", options);
 		if ("filter" in options)
 			this.filter = options["filter"];
-		var self = this;
 		this.__parent.iterate(function (object) {
-			self.add(object);
+			this.add(object);
 			return true;
-		});
+		}, this);
 		this.__parent.on("add", this.add, this);
 		this.__parent.on("remove", this.remove, this);
 	},
@@ -2959,10 +2971,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	
 });
 
-BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
-
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", {
 	
 	constructor: function (engine, query) {
 		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
@@ -3011,7 +3020,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
 		this.__engine.register(this);
 	}
 	
-}]);
+});
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
@@ -4619,9 +4628,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 	},	
 
 });
-BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	
 	constructor: function (attributes, options) {
 		this._inherited(BetaJS.Modelling.Model, "constructor", attributes, options);
@@ -4667,7 +4674,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		if (!(key in scheme))
 			return;
 		if (options && options.no_change)
-			this._unsetChanged(key)
+			this._unsetChanged(key);
 		else
 			this.__saved = false;
 		if (options && options.silent)
@@ -4716,7 +4723,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		return this.__table;
 	}
 	
-}]);
+});
 BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	{
@@ -6460,9 +6467,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouteBinder", {
 });
 
 
-BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", {
 	
 	constructor: function (router) {
 		this._inherited(BetaJS.Browser.HashRouteBinder, "constructor", router);
@@ -6486,12 +6491,10 @@ BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", [
 		window.location.hash = "#" + route;
 	}
 
-}]);
+});
 
 
-BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", {
 		
 	constructor: function (router) {
 		this._inherited(BetaJS.Browser.HistoryRouteBinder, "constructor", router);
@@ -6516,7 +6519,7 @@ BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", [
 		window.history.pushState({}, document.title, route);
 		this.__used = true;
 	}
-}], {
+}, {
 	supported: function () {
 		return window.history && window.history.pushState;
 	}
@@ -6836,7 +6839,6 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
 BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
     BetaJS.Events.EventsMixin,                                            
 	BetaJS.Events.ListenMixin,
-	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Properties.PropertiesMixin,
 	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
@@ -7206,7 +7208,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if (this.__parent && !this.__parent.isActive())
 			return null;
 		if (this.__parent)
-			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el)
+			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el);
 		else
 			this.$el = BetaJS.$(this.__el);
 		if (this.$el.size() == 0)
@@ -7221,13 +7223,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		for (var key in this.__attributes) {
 			var old_value = this.$el.attr(key);
 			if (BetaJS.Types.is_defined(old_value))
-				this.__old_attributes[key] = old_value
+				this.__old_attributes[key] = old_value;
 			else
 				this.__old_attributes[key] = null;
 			this.$el.attr(key, this.__attributes[key]);
 		}
 		this.__added_el_classes = [];
-		var new_el_classes = BetaJS.Objs.extend(this._el_classes(), this.__el_classes);
+		var new_el_classes = this._el_classes().concat(this.__el_classes);
 		for (var i = 0; i < new_el_classes.length; ++i)
 			if (!this.$el.hasClass(new_el_classes[i])) {
 				this.$el.addClass(new_el_classes[i]);
@@ -7238,7 +7240,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		for (var key in new_el_styles)  {
 			var old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
-				this.__old_el_styles[key] = old_value
+				this.__old_el_styles[key] = old_value;
 			else
 				this.__old_el_styles[key] = null;
 			this.$el.css(key, new_el_styles[key]);
@@ -7330,7 +7332,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	$data: function(selectors, elem) {
 		if (!elem)
-			elem = this.$el
+			elem = this.$el;
 		var s = "";
 		for (var key in selectors)
 			s += "[data-" + key + "='" + selectors[key] + "']";
@@ -7697,7 +7699,6 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplate", {
 });
 
 BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
-	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.ListenMixin, {
 		
 	__bind: {
@@ -8546,6 +8547,17 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		});
 	},
 	
+	_notifications: {
+		activate: "__activateItems",
+		deactivate: "__deactivateItems"
+	},
+	
+	_events: function () {
+		return [{
+			"click": "__click"
+		}];
+	},	
+	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.CustomListView, "constructor", options);
 		this._setOption(options, "list_container_element", "ul");
@@ -8553,6 +8565,9 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this._setOption(options, "list_container_classes", "");
 		this._setOption(options, "item_container_element", "li");
 		this._setOption(options, "item_container_classes", "");
+		this._setOption(options, "selectable", true);
+		this._setOption(options, "multi_select", false);
+		this._setOption(options, "click_select", false);
 		this.__itemData = {};
 		if ("collection" in options) {
 			this.__collection = options.collection;
@@ -8569,13 +8584,13 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			this.__destroy_collection = true;
 		}
 		this.__collection.on("add", function (item) {
-			this.__addItem(item, true);
+			this._addItem(item);
 		}, this);
 		this.__collection.on("remove", function (item) {
-			this.__removeItem(item);
+			this._removeItem(item);
 		}, this);
 		this.__collection.on("change", function (item) {
-			this.__changeItem(item);
+			this._changeItem(item);
 		}, this);
 		this.__collection.on("index", function (item, index) {
 			this.__updateItemIndex(item, index);
@@ -8586,16 +8601,32 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this.__collection.on("sorted", function () {
 			this.__sorted();
 		}, this);
+		this.__collection.iterate(function (item) {
+			this._registerItem(item);
+		}, this);
 	},
 	
 	destroy: function () {
-		for (var key in this.__itemData)
-			this._destroyItemData(this.__itemData[key]);
-		this.__itemData = null;
+		this.__collection.iterate(function (item) {
+			this._unregisterItem(item);
+		}, this);
 		this.__collection.off(null, null, this);
 		if (this.__destroy_collection)
 			this.__collection.destroy();
 		this._inherited(BetaJS.Views.CustomListView, "destroy");
+	},
+	
+	_itemBySubElement: function (element) {
+		var container = element.closest("[data-view-id='" + this.cid() + "']");
+		return container.length == 0 ? null : this.__collection.getById(container.attr("data-cid"));
+	},
+	
+	__click: function (e) {
+		if (this.__click_select && this.__selectable) {
+			var item = this._itemBySubElement(BetaJS.$(e.target));
+			if (item)
+				this.select(item);
+		}
 	},
 	
 	collection: function () {
@@ -8612,10 +8643,6 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_render: function () {
 		this.$selector_list = this._renderListContainer();
-		var self = this;
-		this.__collection.iterate(function (item) {
-			self.__addItem(item, false);
-		});
 	},
 	
 	_renderListContainer: function () {
@@ -8626,8 +8653,28 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		}));
 		return this.$data({"selector": "list"});
 	},
+	
+	invalidate: function () {
+		if (this.isActive())
+			this.__deactivateItems();
+		this._inherited(BetaJS.Views.CustomListView, "invalidate");
+		if (this.isActive())
+			this.__activateItems();
+	},
+	
+	__activateItems: function () {
+		this.__collection.iterate(function (item) {
+			this._activateItem(item);
+		}, this);
+	},
+	
+	__deactivateItems: function () {
+		this.__collection.iterate(function (item) {
+			this._deactivateItem(item);
+		}, this);
+	},
 
-	_findItemElement: function (item) {
+	itemElement: function (item) {
 		return this.$data({
 			"view-id": this.cid(),
 			"cid": BetaJS.Ids.objectId(item)
@@ -8641,88 +8688,19 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		}, this.$selector_list);
 	},
 
-	__changeItem: function (item) {
-		if (!this.isActive())
-			return;
-		this._changeItem(item);
-	},
-	
-	_newItemData: function (item) {
-		return {};
-	},
-	
-	_destroyItemData: function (data) {
-	},
-	
-	itemData: function (item) {
-		return this.__itemData[BetaJS.Ids.objectId(item)];
-	},
-
 	_changeItem: function (item) {},
 
-	__addItem: function (item, is_new_item) {
-		if (!this.isActive())
-			return;
-		var container = this.evaluateTemplate("item-container", {
-			item: item,
-			item_container_element: this.__item_container_element, 
-			item_container_attrs: this.__item_container_attrs,
-			item_container_classes: this.__item_container_classes			
-		});
-		var index = this.__collection.getIndex(item);
-		if (index == 0)
-			this.$selector_list.prepend(container)
-		else {
-			var before = this._findIndexElement(index - 1);
-			if (before.length > 0) 
-				before.after(container)
-			else {
-				var after = this._findIndexElement(index + 1);
-				if (after.length > 0)
-					after.before(container)
-				else
-					this.$selector_list.append(container);
-			}
-		}
-		var element = this._findItemElement(item);
-		if (this.__itemData[BetaJS.Ids.objectId(item)])
-			this._destroyItemData(this.__itemData[BetaJS.Ids.objectId(item)]);
-		this.__itemData[BetaJS.Ids.objectId(item)] = this._newItemData(item);
-		this._addItem(item, element, is_new_item);
-		this._addElement(element, is_new_item);
-	},
-	
-	_addElement: function (element, is_new_item) {},
-	
-	_addItem: function (item, element, is_new_item) {},
-	
-	__removeItem: function (item) {
-		if (!this.isActive())
-			return;
-		var element = this._findItemElement(item);
-		this._removeItem(item, element);
-		this._destroyItemData(this.__itemData[BetaJS.Ids.objectId(item)]);
-		delete this.__itemData[BetaJS.Ids.objectId(item)];
-		this._removeElement(element);
-	},
-	
-	_removeElement: function (element) {
-		element.remove();
-	},
-	
-	_removeItem: function (item, element) {},
-
 	__updateItemIndex: function (item, index) {
-		var element = this._findItemElement(item);
+		var element = this.itemElement(item);
 		element.attr("data-index", index);
 		this._updateItemIndex(item, element);
 	},
 
 	__reIndexItem: function (item) {
-		var element = this._findItemElement(item);
+		var element = this.itemElement(item);
 		var index = this.collection().getIndex(item);
 		if (index == 0)
-			this.$selector_list.prepend(element)
+			this.$selector_list.prepend(element);
 		else {
 			var before = this._findIndexElement(index - 1);
 			before.after(element);
@@ -8734,7 +8712,96 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	__sort: function () {
 		for (var index = this.collection().count() - 1; index >= 0; index--)
 			this.$selector_list.prepend(this._findIndexElement(index));
-	}
+	},
+	
+	itemData: function (item) {
+		return this.__itemData[item.cid()];
+	},
+
+	_registerItem: function (item) {
+		this.__itemData[item.cid()] = {
+			properties: new BetaJS.Properties.Properties({
+				selected: false,
+				new_element: false
+			})
+		};
+	},
+	
+	_unregisterItem: function (item) {
+		this.__itemData[item.cid()].properties.destroy();
+		delete this.__itemData[item.cid()];
+	},
+	
+	_activateItem: function (item) {
+		var container = this.evaluateTemplate("item-container", {
+			item: item,
+			item_container_element: this.__item_container_element, 
+			item_container_attrs: this.__item_container_attrs,
+			item_container_classes: this.__item_container_classes			
+		});
+		var index = this.__collection.getIndex(item);
+		if (index == 0)
+			this.$selector_list.prepend(container);
+		else {
+			var before = this._findIndexElement(index - 1);
+			if (before.length > 0) 
+				before.after(container);
+			else {
+				var after = this._findIndexElement(index + 1);
+				if (after.length > 0)
+					after.before(container);
+				else
+					this.$selector_list.append(container);
+			}
+		}
+		this.trigger("activate_item", item);
+	},
+	
+	_deactivateItem: function (item) {
+		this.itemData(item).new_element = false;
+		var element = this.itemElement(item);
+		element.remove();
+	},
+	
+	_addItem: function (item) {
+		this._registerItem(item);
+		if (this.isActive()) {
+			this.itemData(item).new_element = true;
+			this._activateItem(item);
+		}
+	},
+	
+	_removeItem: function (item) {
+		if (this.isActive())
+			this._deactivateItem(item);
+		this._unregisterItem(item);
+	},
+	
+	isSelected: function (item) {
+		return this.itemData(item).properties.get("selected");
+	},
+	
+	select: function (item) {
+		var data = this.itemData(item);
+		if (this.__selectable && !this.isSelected(item)) {
+			if (!this.__multi_select)
+				this.collection().iterate(function (object) {
+					this.unselect(object);
+				}, this);
+			data.properties.set("selected", true);
+			this.trigger("select", item);
+		}
+		return data;
+	},
+	
+	unselect: function (item) {
+		var data = this.itemData(item);
+		if (this.__selectable && this.isSelected(item)) {
+			data.properties.set("selected", false);
+			this.trigger("unselect", item);
+		}
+		return data;
+	}	
 	
 });
 
@@ -8749,28 +8816,31 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	},
 	
 	_changeItem: function (item) {
-		if (this.__render_item_on_change) {
-			var element = this._findItemElement(item);
-			this._renderItem(item, element, false);
-		}
+		this._inherited(BetaJS.Views.ListView, "_changeItem", item);
+		if (this.__render_item_on_change && this.isActive())
+			this._renderItem(item);
 	},
 	
-	_addItem: function (item, element, is_new_item) {
-		this._renderItem(item, element, is_new_item);
+	_activateItem: function (item) {
+		this._inherited(BetaJS.Views.ListView, "_activateItem", item);
+		this._renderItem(item);
 	},
 	
-	_renderItem: function (item, element, is_new_item) {
+	_renderItem: function (item) {
+		var element = this.itemElement(item);
+		var properties = this.itemData(item).properties;
 		if (this.templates("item") != null)
-			element.html(this.evaluateTemplate("item", {item: item}))
+			element.html(this.evaluateTemplate("item", {item: item, properties: properties}));
 		else if (this.dynamics("item") != null)
-			this.evaluateDynamics("item", element, {item: item}, {name: "item-" + BetaJS.Ids.objectId(item)})
+			this.evaluateDynamics("item", element, {item: item, properties: properties}, {name: "item-" + BetaJS.Ids.objectId(item)});
 		else
 			element.html(item.get(this.__item_label)); 
 	},
 	
-	_removeItem: function (item, element) {
+	_deactivateItem: function (item) {
 		if (this.dynamics("item") != null)
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
+		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
 	}
 	
 });
@@ -8778,149 +8848,87 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 
 BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	
+	_sub_view: BetaJS.Views.View,
+	
+	_sub_view_options: function (item) {
+		return {
+			item: item,
+			item_properties: this.itemData(item).properties
+		};
+	},
+	
+	_property_map: function (item) {},
+	
 	constructor: function(options) {
 		this._inherited(BetaJS.Views.SubViewListView, "constructor", options);
 		if ("create_view" in options)
-			this._create_view = options["create_view"];
-		this._setOption(options, "sub_view", BetaJS.Views.LabelView);
-		this._setOption(options, "item_label", "label");
-		var self = this;
-		this._setOption(options, "sub_view_options", function (item) {
-			return {
-				label: item.binding(self.__item_label)
-			};
-		});
+			this._create_view = options.create_view;
+		if ("sub_view" in options)
+			this._sub_view = options.sub_view;
+		if ("sub_view_options" in options)
+			this._sub_view_options_param = options.sub_view_options;
+		if ("property_map" in options)
+			this._property_map_param = options.property_map;
 	},
 	
 	_create_view: function (item, element) {
-		var options = this.__sub_view_options(item);
-		options.el = element;
-		return new this.__sub_view(options);
+		var properties = BetaJS.Objs.extend(
+			BetaJS.Types.is_function(this._property_map) ? this._property_map.apply(this, [item]) : this._property_map,
+			BetaJS.Types.is_function(this._property_map_param) ? this._property_map_param.apply(this, [item]) : this._property_map_param
+		);
+		var options = BetaJS.Objs.extend(
+			BetaJS.Types.is_function(this._sub_view_options) ? this._sub_view_options.apply(this, [item]) : this._sub_view_options,
+			BetaJS.Objs.extend(
+				BetaJS.Types.is_function(this._sub_view_options_param) ? this._sub_view_options_param.apply(this, [item]) : this._sub_view_options_param || {},
+				BetaJS.Objs.map(properties, item.get, item)
+			)
+		);
+		options.el = this.itemElement(item);
+		return new this._sub_view(options);
 	},
 	
-	_addItem: function (item, element, is_new_item) {
-		var view = this._create_view(item, element); 
+	_activateItem: function (item) {
+		this._inherited(BetaJS.Views.ListView, "_activateItem", item);
+		var view = this._create_view(item); 
+		this.delegateEvents(null, view, "item", [view, item]);
 		this.itemData(item).view = view;
 		this.addChild(view);
 	},
 	
-	_destroyItemData: function (data) {
-		this.removeChild(data.view);
-		data.view.destroy();
+	_deactivateItem: function (item) {
+		var view = this.itemData(item).view;
+		this.removeChild(view);
+		view.destroy();
+		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
 	}
 	
-});
-BetaJS.Views.View.extend("BetaJS.Views.ItemListItemView", {
-	
-	constructor: function(options) {
-		this._inherited(BetaJS.Views.ItemListItemView, "constructor", options);
-		this._setOptionProperty(options, "item", null);
-		this._setOptionProperty(options, "_selected", false);
-	},
-	
-	_events: function () {
-		return [{
-			"click": "__click"
-		}];
-	},
-	
-	isSelected: function () {
-		return this.get("_selected");
-	},
-	
-	__click: function () {
-		if (this.getParent() && this.getParent().__click_select)
-			this.select();
-	},
-	
-	select: function () {
-		this.getParent().select(this.get("item"));
-	},
-	
-	unselect: function () {
-		this.getParent().unselect(this.get("item"));
-	}
-
 });
 
-BetaJS.Views.CustomListView.extend("BetaJS.Views.ItemListView", {
-	
-	constructor: function(options) {
-		this._inherited(BetaJS.Views.ItemListView, "constructor", options);
-		this._setOption(options, "sub_view", BetaJS.Views.ItemListItemView);
-		if (!this._sub_view_options)
-			this._sub_view_options = {};
-		if (this._sub_view_options) {
-			if (!BetaJS.Types.is_function(this._sub_view_options)) {
-				var svo = this._sub_view_options;
-				this._sub_view_options = function (item) {
-					return svo;
-				};
+
+BetaJS.Classes.Module.extend("BetaJS.Views.Modules.ListViewAnimation", {
+
+	_register: function (object, data) {
+		object.on("activate_item", function (item) {
+			if (object.itemData(item).new_element) {
+				var element = object.itemElement(item);
+				element.css("display", "none");
+				element.fadeIn();
 			}
-		};
-		if (options.sub_view_options) {
-			if (!BetaJS.Types.is_function(options.sub_view_options)) {
-				var svo = options.sub_view_options;
-				options.sub_view_options = function (item) {
-					return svo;
-				};
-			}
-			this.__sub_view_options = options.sub_view_options;
-			var self = this;
-			if (this._sub_view_options)
-				this.__sub_view_options = function (item) {
-					return BetaJS.Objs.extend(self._sub_view_options(item), options.sub_view_options(item));
-				};
-		}
-		else
-			this.__sub_view_options = this._sub_view_options;
-		this._setOption(options, "selectable", true);
-		this._setOption(options, "multi_select", false);
-		this._setOption(options, "click_select", true);
-	},
+		}, this);
+	}
 	
-	_addItem: function (item, element, is_new_item) {
-		var view = new this.__sub_view(BetaJS.Objs.extend({
-			el: element,
-			item: item
-		}, this.__sub_view_options(item)));
-		this.itemData(item).view = view;
-		this.addChild(view);
-	},
+}, {
 	
-	_destroyItemData: function (data) {
-		this.removeChild(data.view);
-		data.view.destroy();
-	},
+	__singleton: null,
 	
-	isSelected: function (item) {
-		return this.itemData(item).view.get("_selected");
-	},
-	
-	select: function (item) {
-		if (!this.itemData(item))
-			return;
-		var self = this;
-		if (this.__selectable && !this.isSelected(item)) {
-			if (!this.__multi_select)
-				this.collection().iterate(function (object) {
-					self.unselect(object);
-				});
-			this.itemData(item).view.set("_selected", true);
-			this.trigger("select", item);
-		}
-		return this.itemData(item).view;
-	},
-	
-	unselect: function (item) {
-		if (this.__selectable && this.isSelected(item)) {
-			this.itemData(item).view.set("_selected", false);
-			this.trigger("unselect", item);
-		}
-		return this.itemData(item).view;
+	singleton: function () {
+		if (!this.__singleton)
+			this.__singleton = new this({auto_destroy: false});
+		return this.__singleton;
 	}
 	
 });
+
 BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 	
 	_templates: {

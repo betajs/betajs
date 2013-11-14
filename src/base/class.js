@@ -102,18 +102,18 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 BetaJS.Class.prototype.constructor = function () {
 	this._notify("construct");
-}
+};
 
 BetaJS.Class.prototype.as_method = function (s) {
 	return BetaJS.Functions.as_method(this[s], this);
-}
+};
 
 BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
 	this.__auto_destroy_list.push(obj);
 	return obj;
-}
+};
 
 BetaJS.Class.prototype._notify = function (name) {
 	if (!this.cls.__notifications)
@@ -123,9 +123,11 @@ BetaJS.Class.prototype._notify = function (name) {
 	if (table)
 		for (var i in table) {
 			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
+			if (!method)
+				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
 			method.apply(this, rest);
 		}
-}
+};
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
@@ -135,23 +137,27 @@ BetaJS.Class.prototype.destroy = function () {
 				this.__auto_destroy_list[i].destroy();
 	for (var key in this)
 		delete this[key];
-}
+};
 
 BetaJS.Class.prototype._inherited = function (cls, func) {
 	return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-}
+};
 
 BetaJS.Class._inherited = function (cls, func) {
 	return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-}
+};
 
 BetaJS.Class.prototype.instance_of = function (cls) {
 	return this.cls.ancestor_of(cls);
-}
+};
 
 BetaJS.Class.ancestor_of = function (cls) {
 	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
-}
+};
+
+BetaJS.Class.prototype.cid = function () {
+	return BetaJS.Ids.objectId(this);
+};
 
 
 

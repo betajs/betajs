@@ -313,9 +313,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouteBinder", {
 });
 
 
-BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", {
 	
 	constructor: function (router) {
 		this._inherited(BetaJS.Browser.HashRouteBinder, "constructor", router);
@@ -339,12 +337,10 @@ BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HashRouteBinder", [
 		window.location.hash = "#" + route;
 	}
 
-}]);
+});
 
 
-BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", {
 		
 	constructor: function (router) {
 		this._inherited(BetaJS.Browser.HistoryRouteBinder, "constructor", router);
@@ -369,7 +365,7 @@ BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.HistoryRouteBinder", [
 		window.history.pushState({}, document.title, route);
 		this.__used = true;
 	}
-}], {
+}, {
 	supported: function () {
 		return window.history && window.history.pushState;
 	}

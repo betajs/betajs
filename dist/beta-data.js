@@ -451,10 +451,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	
 });
 
-BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
-
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", {
 	
 	constructor: function (engine, query) {
 		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
@@ -503,7 +500,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", [
 		this.__engine.register(this);
 	}
 	
-}]);
+});
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 

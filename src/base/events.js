@@ -50,7 +50,7 @@ BetaJS.Events.EventsMixin = {
 		if (object.max_delay)
 			object.max_delay.start();
 		if (!object.min_delay && !object.max_delay)
-			object.callback.apply(object.context || this, params)
+			object.callback.apply(object.context || this, params);
 		else
 			object.params = params;
 	},
@@ -104,18 +104,18 @@ BetaJS.Events.EventsMixin = {
     trigger: function(events) {
     	var self = this;
     	events = events.split(BetaJS.Events.EVENT_SPLITTER);
-    	var rest = Array.prototype.slice.call(arguments, 1);
+    	var rest = BetaJS.Functions.getArguments(arguments, 1);
 		var event;
 		if (!this.__events_mixin_events)
 			return;
     	while (event = events.shift()) {
-    		if (this.__events_mixin_events && this.__events_mixin_events[event])
+    		if (this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
     			});
 			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
 				this.__events_mixin_events["all"].iterate(function (object) {
-					self.__call_event_object(object, rest);
+					self.__call_event_object(object, [event].concat(rest));
 				});
 		}
     	return this;
@@ -131,15 +131,24 @@ BetaJS.Events.EventsMixin = {
         return this.on(name, once, context, options);
     },
     
-    delegateEvents: function (events, source) {
-    	if (!BetaJS.Types.is_array(events))
-    		events = [events];
-   		BetaJS.Objs.iter(events, function (event) {
-			source.on(event, function () {
-				var rest = Array.prototype.slice.call(arguments, 0);
-				this.trigger.apply(this, [event].concat(rest));
+    delegateEvents: function (events, source, prefix, params) {
+    	params = params || []; 
+    	prefix = prefix ? prefix + ":" : "";
+    	if (events == null) {
+    		source.on("all", function (event) {
+				var rest = BetaJS.Functions.getArguments(arguments, 1);
+				this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+    		}, this);
+    	} else {
+    		if (!BetaJS.Types.is_array(events))
+    			events = [events];
+	   		BetaJS.Objs.iter(events, function (event) {
+				source.on(event, function () {
+					var rest = BetaJS.Functions.getArguments(arguments);
+					this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+				}, this);
 			}, this);
-		}, this);
+		}
     }
 	
 };
@@ -182,6 +191,6 @@ BetaJS.Events.ListenMixin = {
 			}, this);
 	}
 	
-}
+};
 
 BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);

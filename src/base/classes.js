@@ -41,9 +41,7 @@ BetaJS.Classes.AutoDestroyMixin = {
 };
 
 
-BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", {
 		
 	constructor: function () {
 		this._inherited(BetaJS.Classes.AutoDestroyObject, "constructor");
@@ -72,7 +70,7 @@ BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", [
 		}, this);
 	}
 	
-}]);
+});
 
 
 
@@ -107,7 +105,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		};
 		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
 		if (this.__first)
-			this.__last.next = container
+			this.__last.next = container;
 		else
 			this.__first = container;
 		this.__last = container;
@@ -182,10 +180,7 @@ BetaJS.Classes.ModuleMixin = {
 };
 
 
-BetaJS.Class.extend("BetaJS.Classes.Module", [
-
-	BetaJS.Ids.ClientIdMixin,
-	{
+BetaJS.Class.extend("BetaJS.Classes.Module", {
 		
 	constructor: function (options) {
 		this._inherited(BetaJS.Classes.Module, "constructor");
@@ -233,7 +228,7 @@ BetaJS.Class.extend("BetaJS.Classes.Module", [
 		return this._objects[BetaJS.Ids.objectId(object)].data;
 	}
 	
-}], {
+}, {
 	
 	__instance: null,
 	

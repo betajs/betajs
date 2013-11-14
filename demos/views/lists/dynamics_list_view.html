@@ -33,18 +33,18 @@
 					compare: function (x, y) {
 						return x.get("text").localeCompare(y.get("text"));
 					},
-					objects: [new BetaJS.Properties.Properties({"text": "A Example Z"}),
-					          new BetaJS.Properties.Properties({"text": "B Example Y"}),
-					          new BetaJS.Properties.Properties({"text": "C Example X"}),
-					          new BetaJS.Properties.Properties({"text": "D Example W"}),
-					          new BetaJS.Properties.Properties({"text": "E Example V"})]
+					objects: [{"text": "A Example Z"},
+					          {"text": "B Example Y"},
+					          {"text": "C Example X"},
+					          {"text": "D Example W"},
+					          {"text": "E Example V"}]
 				});
 				var main = new BetaJS.Views.ListContainerView({
 					el: "body"
 				});
 				main.addChildren([input, button, list, button_remove, button_reverse, button_reload]);
 				button.on("click", function () {
-					list.add(new BetaJS.Properties.Properties({"text": input.get("value")}));
+					list.add({"text": input.get("value")});
 					input.set("value", "");
 				});
 				button_remove.on("click", function () {

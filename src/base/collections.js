@@ -1,5 +1,4 @@
 BetaJS.Class.extend("BetaJS.Collections.Collection", [
-	BetaJS.Ids.ClientIdMixin,
 	BetaJS.Events.EventsMixin, {
 		
 	constructor: function (options) {
@@ -35,7 +34,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		this.__data.iterate(function (object) {
 			if ("off" in object)
 				object.off(null, null, this);
-		});
+		}, this);
 		this.__data.destroy();
 		this.trigger("destroy");
 		this._inherited(BetaJS.Collections.Collection, "destroy");
@@ -64,6 +63,8 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	add: function (object) {
+		if (!BetaJS.Class.is_class_instance(object))
+			object = new BetaJS.Properties.Properties(object);
 		if (this.exists(object))
 			return null;
 		var ident = this.__data.add(object);
@@ -109,15 +110,14 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		return this.__data.get_ident(object);
 	},
 	
-	iterate: function (cb) {
-		this.__data.iterate(cb);
+	iterate: function (cb, context) {
+		this.__data.iterate(cb, context);
 	},
 	
 	clear: function () {
-		var self = this;
 		this.iterate(function (obj) {
-			self.remove(obj);
-		});
+			this.remove(obj);
+		}, this);
 	}
 		
 }]);
@@ -134,11 +134,10 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 		this._inherited(BetaJS.Collections.FilteredCollection, "constructor", options);
 		if ("filter" in options)
 			this.filter = options["filter"];
-		var self = this;
 		this.__parent.iterate(function (object) {
-			self.add(object);
+			this.add(object);
 			return true;
-		});
+		}, this);
 		this.__parent.on("add", this.add, this);
 		this.__parent.on("remove", this.remove, this);
 	},

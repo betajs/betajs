@@ -29,6 +29,16 @@ BetaJS.Functions = {
 			func = null;
 			return result;
 		};
+	},
+	
+    /** Converts some other function's arguments to an array
+     * 
+     * @param func function arguments
+     * @param slice number of arguments to be omitted (default: 0)
+     * @return arguments as array 
+     */	
+	getArguments: function (args, slice) {
+		return Array.prototype.slice.call(args, slice || 0);
 	}
 
 };
