@@ -5,11 +5,6 @@
 		<title>BetaJS Template Views</title>
 		<script src="../jquery-1.9.1.min.js"></script>
 		<script src="../../dist/beta.js"></script>
-		<script type="text/template" id="main-view-template">
-			<div id='input'></div>
-			<div id='button'></div>
-			<div id='list'></div>
-		</script>		
 		<script type="text/template" id="button-view-template">
 			<button>{%= label %}</button>
 		</script>		
@@ -22,10 +17,9 @@
 		<script>
 			$(document).ready(function () {
 				var main = new BetaJS.Views.View({
-					el: "#main",
-					template: $("#main-view-template")
+					el: "body"
 				});
-				BetaJS.Views.View.extend("ButtonView", {
+				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
 					_templates: {
 						"default": $("#button-view-template")
 					},
@@ -42,7 +36,7 @@
 						this.trigger("click");
 					}
 				});
-				BetaJS.Views.View.extend("ListView", {
+				var ListView = BetaJS.Views.View.extend("ListView", {
 					_templates: {
 						"default": $("#list-view-template"),
 						"item": $("#list-view-item-template")
@@ -86,6 +80,8 @@
 		</script>
 	</head>
 	<body>
-		<div id="main"></div>
+		<div id='input'></div>
+		<div id='button'></div>
+		<div id='list'></div>
 	</body>
 </html>

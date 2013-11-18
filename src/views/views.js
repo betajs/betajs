@@ -10,6 +10,11 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
+		
+    /** Container html element of the view as jquery object
+     */
+	$el: null,
+	
     
     /** Returns all templates to be pre-loaded.
      * <p>It should return an associative array of templates. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.</p>

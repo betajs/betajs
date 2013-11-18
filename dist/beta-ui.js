@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-11-14
+  betajs - v0.0.2 - 2013-11-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -355,14 +355,8 @@ BetaJS.Browser.Dom = {
 		if (start_offset > 0) 
 			node = BetaJS.$(node.get(0).splitText(start_offset));
 		return node;
-	},
-	
-	elementHasAncestorTag: function (node, element, context) {
-		if (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase())
-			return;
-		return context ? node.parents(context + " " + element).length > 0 : node.parents(element).length > 0;
 	}
-		
+			
 };
 
 BetaJS.Browser = BetaJS.Browser || {};
@@ -1455,6 +1449,11 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
+		
+    /** Container html element of the view as jquery object
+     */
+	$el: null,
+	
     
     /** Returns all templates to be pre-loaded.
      * <p>It should return an associative array of templates. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.</p>

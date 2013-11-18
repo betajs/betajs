@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-11-14
+  betajs - v0.0.2 - 2013-11-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-14
+  betajs - v0.0.2 - 2013-11-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-14
+  betajs - v0.0.2 - 2013-11-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -270,7 +270,18 @@ BetaJS.Strings = {
      */
 	is_email_address: function (s) {
 		return this.EMAIL_ADDRESS_REGEX.test(s);
-	}
+	},
+	
+	STRIP_HTML_REGEX: /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
+		
+    /** Removes all html from data and returns plain text
+     * 
+     * @param html string containing html
+     * @return string containing the plain text part of it
+     */
+	strip_html: function (html) {
+    	return html.replace(this.STRIP_HTML_REGEX, '');
+    }
 
 };
 
@@ -2513,7 +2524,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-14
+  betajs - v0.0.2 - 2013-11-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4280,7 +4291,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-14
+  betajs - v0.0.2 - 2013-11-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

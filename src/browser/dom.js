@@ -189,12 +189,6 @@ BetaJS.Browser.Dom = {
 		if (start_offset > 0) 
 			node = BetaJS.$(node.get(0).splitText(start_offset));
 		return node;
-	},
-	
-	elementHasAncestorTag: function (node, element, context) {
-		if (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase())
-			return;
-		return context ? node.parents(context + " " + element).length > 0 : node.parents(element).length > 0;
 	}
-		
+			
 };

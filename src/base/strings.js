@@ -102,6 +102,17 @@ BetaJS.Strings = {
      */
 	is_email_address: function (s) {
 		return this.EMAIL_ADDRESS_REGEX.test(s);
-	}
+	},
+	
+	STRIP_HTML_REGEX: /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
+		
+    /** Removes all html from data and returns plain text
+     * 
+     * @param html string containing html
+     * @return string containing the plain text part of it
+     */
+	strip_html: function (html) {
+    	return html.replace(this.STRIP_HTML_REGEX, '');
+    }
 
 };

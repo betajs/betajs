@@ -109,7 +109,18 @@
 <span class='line'>102</span>      */</span><span class="WHIT">
 <span class='line'>103</span> </span><span class="WHIT">	</span><span class="NAME">is_email_address</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">s</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
 <span class='line'>104</span> </span><span class="WHIT">		</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">this.EMAIL_ADDRESS_REGEX.test</span><span class="PUNC">(</span><span class="NAME">s</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>105</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>106</span> 
-<span class='line'>107</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>108</span> </span></pre></body></html>
+<span class='line'>105</span> </span><span class="WHIT">	</span><span class="PUNC">}</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>106</span> </span><span class="WHIT">	
+<span class='line'>107</span> 	</span><span class="NAME">STRIP_HTML_REGEX</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="REGX">/&lt;\/?([a-z][a-z0-9]*)\b[^>]*>?/gi</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'>108</span> </span><span class="WHIT">		
+<span class='line'>109</span>     </span><span class="COMM">/** Removes all html from data and returns plain text
+<span class='line'>110</span>      * 
+<span class='line'>111</span>      * @param html string containing html
+<span class='line'>112</span>      * @return string containing the plain text part of it
+<span class='line'>113</span>      */</span><span class="WHIT">
+<span class='line'>114</span> </span><span class="WHIT">	</span><span class="NAME">strip_html</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">html</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>115</span> </span><span class="WHIT">    	</span><span class="KEYW">return</span><span class="WHIT"> </span><span class="NAME">html.replace</span><span class="PUNC">(</span><span class="NAME">this.STRIP_HTML_REGEX</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">''</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>116</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>117</span> 
+<span class='line'>118</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>119</span> </span></pre></body></html>
