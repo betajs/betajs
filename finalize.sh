@@ -19,4 +19,9 @@ if [ "$?" != "0" ]; then
 	echo JSLINT ERROR
 	exit 1
 fi
+./cssvalidate.sh
+if [ "$?" != "0" ]; then
+	echo CSSVALIDATE ERROR
+	exit 1
+fi
 echo No errors. Continue!
