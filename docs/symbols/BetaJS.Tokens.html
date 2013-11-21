@@ -5,7 +5,7 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
-		<title>JsDoc Reference - BetaJS.Stores.BaseStore</title>
+		<title>JsDoc Reference - BetaJS.Tokens</title>
 
 		<style type="text/css">
 			/* default.css */
@@ -218,7 +218,7 @@ ul.inheritsList
 <!-- ============================== class title ============================ -->
 			<h1 class="classTitle">
 				
-				Class BetaJS.Stores.BaseStore
+				Class BetaJS.Tokens
 			</h1>
 
 <!-- ============================== class summary ========================== -->			
@@ -229,13 +229,13 @@ ul.inheritsList
 				
 				
 				
-					<br /><i>Defined in: </i> <a href="../symbols/src/src_data_stores_base_store.js.html">base_store.js</a>.
+					<br /><i>Defined in: </i> <a href="../symbols/src/src_base_tokens.js.html">tokens.js</a>.
 				
 			</p>
 
 <!-- ============================== constructor summary ==================== -->			
 			
-			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Stores.BaseStore.">
+			<table class="summaryTable" cellspacing="0" summary="A summary of the constructor documented in the class BetaJS.Tokens.">
 				<caption>Class Summary</caption>
 				<thead>
 					<tr>
@@ -248,7 +248,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/BetaJS.Stores.BaseStore.html#constructor">BetaJS.Stores.BaseStore</a></b>()
+								<b><a href="../symbols/BetaJS.Tokens.html#constructor">BetaJS.Tokens</a></b>()
 							</div>
 							<div class="description"></div>
 						</td>
@@ -264,7 +264,7 @@ ul.inheritsList
 			
 				
 				
-				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Stores.BaseStore.">
+				<table class="summaryTable" cellspacing="0" summary="A summary of the methods documented in the class BetaJS.Tokens.">
 					<caption>Method Summary</caption>
 					<thead>
 						<tr>
@@ -275,38 +275,11 @@ ul.inheritsList
 					<tbody>
 					
 						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="attributes">&lt;static&gt; &nbsp;</td>
 							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_get">_get</a></b>(id, callbacks)
+								<div class="fixedFont">BetaJS.Tokens.<b><a href="../symbols/BetaJS.Tokens.html#.generate_token">generate_token</a></b>(length)
 								</div>
-								<div class="description">Get data from store by id.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_insert">_insert</a></b>(data, callbacks)
-								</div>
-								<div class="description">Insert data to store.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_remove">_remove</a></b>(id, callbacks)
-								</div>
-								<div class="description">Remove data from store.</div>
-							</td>
-						</tr>
-					
-						<tr>
-							<td class="attributes">&lt;private&gt; &nbsp;</td>
-							<td class="nameDescription">
-								<div class="fixedFont"><b><a href="../symbols/BetaJS.Stores.BaseStore.html#_update">_update</a></b>(id, data, callbacks)
-								</div>
-								<div class="description">Update data by id.</div>
+								<div class="description">Returns a new token</div>
 							</td>
 						</tr>
 					
@@ -327,7 +300,7 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>BetaJS.Stores.BaseStore</b>()
+						<b>BetaJS.Tokens</b>()
 				</div>
 				
 				<div class="description">
@@ -358,15 +331,15 @@ ul.inheritsList
 					Method Detail
 				</div>
 				
-					<a name="_get"> </a>
-					<div class="fixedFont">&lt;private&gt; 
+					<a name=".generate_token"> </a>
+					<div class="fixedFont">&lt;static&gt; 
 					
 					
-					<b>_get</b>(id, callbacks)
+					<span class="light">BetaJS.Tokens.</span><b>generate_token</b>(length)
 					
 					</div>
 					<div class="description">
-						Get data from store by id.
+						Returns a new token
 						
 						
 					</div>
@@ -378,213 +351,21 @@ ul.inheritsList
 							<dt class="heading">Parameters:</dt>
 							
 								<dt>
-									<b>id</b>
+									<b>length</b>
 									
 								</dt>
-								<dd>data id</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
+								<dd>optional length of token, default is 16</dd>
 							
 							</dl>
 						
 						
 						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
 						
 						
 							<dl class="detailList">
 							<dt class="heading">Returns:</dt>
 							
-								<dd>data</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="_insert"> </a>
-					<div class="fixedFont">&lt;private&gt; 
-					
-					
-					<b>_insert</b>(data, callbacks)
-					
-					</div>
-					<div class="description">
-						Insert data to store. Return inserted data with id.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>data</b>
-									
-								</dt>
-								<dd>data to be inserted</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
-							
-							</dl>
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd>data that has been inserted with id.</dd>
-							
-							</dl>
-						
-						
-						
-
-					<hr />
-				
-					<a name="_remove"> </a>
-					<div class="fixedFont">&lt;private&gt; 
-					
-					
-					<b>_remove</b>(id, callbacks)
-					
-					</div>
-					<div class="description">
-						Remove data from store. Return removed data.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>id</b>
-									
-								</dt>
-								<dd>data id</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
-							
-							</dl>
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
-						
-						
-						
-						
-
-					<hr />
-				
-					<a name="_update"> </a>
-					<div class="fixedFont">&lt;private&gt; 
-					
-					
-					<b>_update</b>(id, data, callbacks)
-					
-					</div>
-					<div class="description">
-						Update data by id.
-						
-						
-					</div>
-					
-					
-					
-						
-							<dl class="detailList">
-							<dt class="heading">Parameters:</dt>
-							
-								<dt>
-									<b>id</b>
-									
-								</dt>
-								<dd>data id</dd>
-							
-								<dt>
-									<b>data</b>
-									
-								</dt>
-								<dd>updated data</dd>
-							
-								<dt>
-									<b>callbacks</b>
-									
-								</dt>
-								<dd></dd>
-							
-							</dl>
-						
-						
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Throws:</dt>
-							
-								<dt>
-									 <b></b>
-								</dt>
-								<dd>if it fails</dd>
-							
-							</dl>
-						
-						
-							<dl class="detailList">
-							<dt class="heading">Returns:</dt>
-							
-								<dd>data from store</dd>
+								<dd>token</dd>
 							
 							</dl>
 						

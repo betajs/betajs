@@ -13,22 +13,22 @@ BetaJS.Net.HttpHeader = {
 	format: function (code, prepend_code) {
 		var ret = "";
 		if (code == this.HTTP_STATUS_OK)
-			ret = "OK"
+			ret = "OK";
 		else if (code == this.HTTP_STATUS_CREATED)
-			ret = "Created"
+			ret = "Created";
 		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
-			ret = "Payment Required"
+			ret = "Payment Required";
 		else if (code == this.HTTP_STATUS_FORBIDDEN)
-			ret = "Forbidden"
+			ret = "Forbidden";
 		else if (code == this.HTTP_STATUS_NOT_FOUND)
-			ret = "Not found"
+			ret = "Not found";
 		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
-			ret = "Precondition Failed"
+			ret = "Precondition Failed";
 		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-			ret = "Internal Server Error"
+			ret = "Internal Server Error";
 		else
 			ret = "Other Error";
 		return prepend_code ? (code + " " + ret) : ret;
 	}
 	
-}
+};

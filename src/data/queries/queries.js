@@ -14,7 +14,7 @@ BetaJS.Queries = {
 	
 	__increase_dependency: function (key, dep) {
 		if (key in dep)
-			dep[key]++
+			dep[key]++;
 		else
 			dep[key] = 1;
 		return dep;		
@@ -35,7 +35,7 @@ BetaJS.Queries = {
 	
 	__dependencies_pair: function (key, value, dep) {
 		if (key == "$or" || key == "$and")
-			return this.__dependencies_queries(value, dep)
+			return this.__dependencies_queries(value, dep);
 		else
 			return this.__increase_dependency(key, dep);
 	},
@@ -45,9 +45,10 @@ BetaJS.Queries = {
 	},
 		
 	__evaluate_query: function (query, object) {
-		for (var key in query)
+		for (var key in query) {
 			if (!this.__evaluate_pair(key, query[key], object))
 				return false;
+		}
 		return true;
 	},
 	
@@ -74,9 +75,9 @@ BetaJS.Queries = {
 				if (op == "$ltic")
 					result = result && object_value.toLowerCase() <= tar.toLowerCase();
 				if (op == "$sw")
-					result = result && object_value.indexOf(tar) == 0;
+					result = result && object_value.indexOf(tar) === 0;
 				if (op == "$swic")
-					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) == 0;
+					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) === 0;
 			}, this);
 			return result;
 		}
@@ -163,8 +164,8 @@ BetaJS.Queries = {
 	emulate: function (query, query_function, query_context) {
 		var raw = query_function.apply(query_context || this, {});
 		var iter = raw;
-		if (raw == null)
-			iter = BetaJS.Iterators.ArrayIterator([])
+		if (!raw)
+			iter = BetaJS.Iterators.ArrayIterator([]);
 		else if (BetaJS.Types.is_array(raw))
 			iter = BetaJS.Iterators.ArrayIterator(raw);		
 		return new BetaJS.Iterators.FilteredIterator(iter, function(row) {

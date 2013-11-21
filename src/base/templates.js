@@ -55,6 +55,8 @@ BetaJS.Templates = {
 				case BetaJS.Templates.TOKEN_ESC:
 					result += "'+\n((__t=(" + source[i].data + "))==null?'':BetaJS.Strings.htmlentities(__t))+\n'";
 					break;
+				default:
+					break;
 			}	
 		}
 		result += "';\n";
@@ -90,9 +92,31 @@ BetaJS.Templates.SYNTAX_REGEX = function () {
 			"$",
 		'g');
 	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
-}
+};
 
 BetaJS.Templates.TOKEN_STRING = 1;
 BetaJS.Templates.TOKEN_CODE = 2;
 BetaJS.Templates.TOKEN_EXPR = 3;
 BetaJS.Templates.TOKEN_ESC = 4;
+
+
+
+BetaJS.Class.extend("BetaJS.Templates.Template", {
+	
+	constructor: function (template_string) {
+		this._inherited(BetaJS.Templates.Template, "constructor");
+		this.__tokens = BetaJS.Templates.tokenize(template_string);
+		this.__compiled = BetaJS.Templates.compile(this.__tokens);
+	},
+	
+	evaluate: function (obj) {
+		return this.__compiled.apply(this, [obj]);
+	}
+	
+}, {
+	
+	bySelector: function (selector) {
+		return new this(BetaJS.$(selector).html());
+	}
+	
+});

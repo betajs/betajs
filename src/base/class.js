@@ -37,9 +37,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	// Add Class Statics
 	var class_statics_keys = {};
-	if (parent.__class_statics_keys)
+	if (parent.__class_statics_keys) {
 		for (var key in parent.__class_statics_keys) 
 			result[key] = BetaJS.Objs.clone(parent[key], 1);
+	}
 	BetaJS.Objs.iter(class_statics, function (stat) {
 		BetaJS.Objs.extend(result, stat);
 		BetaJS.Objs.extend(class_statics_keys, BetaJS.Objs.keys(stat, true));
@@ -120,21 +121,24 @@ BetaJS.Class.prototype._notify = function (name) {
 		return;
 	var rest = Array.prototype.slice.call(arguments, 1);
 	var table = this.cls.__notifications[name];
-	if (table)
+	if (table) {
 		for (var i in table) {
 			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
 			if (!method)
 				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
 			method.apply(this, rest);
 		}
+	}
 };
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
-	if (this.__auto_destroy_list)
-		for (var i = 0; i < this.__auto_destroy_list.length; ++i)
+	if (this.__auto_destroy_list) {
+		for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
 			if ("destroy" in this.__auto_destroy_list[i])
 				this.__auto_destroy_list[i].destroy();
+		}
+	}
 	for (var key in this)
 		delete this[key];
 };
@@ -166,6 +170,6 @@ BetaJS.Class.prototype.cls = BetaJS.Class;
 BetaJS.Class.__notifications = {};
 
 BetaJS.Class.is_class_instance = function (object) {
-	return object != null && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
+	return object && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
 };
 

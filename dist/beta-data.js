@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-11-18
+  betajs - v0.0.2 - 2013-11-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -19,7 +19,7 @@ BetaJS.Queries = {
 	
 	__increase_dependency: function (key, dep) {
 		if (key in dep)
-			dep[key]++
+			dep[key]++;
 		else
 			dep[key] = 1;
 		return dep;		
@@ -40,7 +40,7 @@ BetaJS.Queries = {
 	
 	__dependencies_pair: function (key, value, dep) {
 		if (key == "$or" || key == "$and")
-			return this.__dependencies_queries(value, dep)
+			return this.__dependencies_queries(value, dep);
 		else
 			return this.__increase_dependency(key, dep);
 	},
@@ -50,9 +50,10 @@ BetaJS.Queries = {
 	},
 		
 	__evaluate_query: function (query, object) {
-		for (var key in query)
+		for (var key in query) {
 			if (!this.__evaluate_pair(key, query[key], object))
 				return false;
+		}
 		return true;
 	},
 	
@@ -79,9 +80,9 @@ BetaJS.Queries = {
 				if (op == "$ltic")
 					result = result && object_value.toLowerCase() <= tar.toLowerCase();
 				if (op == "$sw")
-					result = result && object_value.indexOf(tar) == 0;
+					result = result && object_value.indexOf(tar) === 0;
 				if (op == "$swic")
-					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) == 0;
+					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) === 0;
 			}, this);
 			return result;
 		}
@@ -168,8 +169,8 @@ BetaJS.Queries = {
 	emulate: function (query, query_function, query_context) {
 		var raw = query_function.apply(query_context || this, {});
 		var iter = raw;
-		if (raw == null)
-			iter = BetaJS.Iterators.ArrayIterator([])
+		if (!raw)
+			iter = BetaJS.Iterators.ArrayIterator([]);
 		else if (BetaJS.Types.is_array(raw))
 			iter = BetaJS.Iterators.ArrayIterator(raw);		
 		return new BetaJS.Iterators.FilteredIterator(iter, function(row) {
@@ -218,8 +219,8 @@ BetaJS.Queries.Constrained = {
 			params.push(callbacks);
 		var success_call = function (raw) {
 			var iter = raw;
-			if (raw == null)
-				iter = new BetaJS.Iterators.ArrayIterator([])
+			if (raw === null)
+				iter = new BetaJS.Iterators.ArrayIterator([]);
 			else if (BetaJS.Types.is_array(raw))
 				iter = new BetaJS.Iterators.ArrayIterator(raw);		
 			if (!("query" in query_capabilities || BetaJS.Types.is_empty(query)))
@@ -238,19 +239,20 @@ BetaJS.Queries.Constrained = {
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (callbacks)
-			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}])
+			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}]);
 		else
 			try {
 				var raw = query_function.apply(query_context || this, [execute_query, execute_options]);
 				return success_call(raw);
 			} catch (e) {
 				exception_call(e);
-			}		
+			}
+		return true;	
 	}
 	
 	
@@ -279,18 +281,20 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	__execute_query: function (skip, limit, clear_before) {
 		skip = Math.max(skip, 0);
 		var q = {};
-		if (this.__query.sort != null && !BetaJS.Types.is_empty(this.__query.sort))
+		var objs = null;
+		var iter = null;
+		if (this.__query.sort !== null && !BetaJS.Types.is_empty(this.__query.sort))
 			q.sort = this.__query.sort;
 		if (clear_before) {
 			if (skip > 0)
 				q.skip = skip;
-			if (limit != null)
+			if (limit !== null)
 				q.limit = limit;
-			var iter = this.__query.func(this.__query.select, q);
-			var objs = iter.asArray();
+			iter = this.__query.func(this.__query.select, q);
+			objs = iter.asArray();
 			this.__query.skip = skip;
 			this.__query.limit = limit;
-			this.__query.count = limit == null || objs.length < limit ? skip + objs.length : null;
+			this.__query.count = limit === null || objs.length < limit ? skip + objs.length : null;
 			this.clear();
 			this.add_objects(objs);
 		} else if (skip < this.__query.skip) {
@@ -298,21 +302,21 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			if (skip > 0)
 				q.skip = skip;
 			q.limit = limit;
-			var iter = this.__query.func(this.__query.select, q);
-			var objs = iter.asArray();
+			iter = this.__query.func(this.__query.select, q);
+			objs = iter.asArray();
 			this.__query.skip = skip;
-			this.__query.limit = this.__query.limit == null ? null : this.__query.limit + objs.length;
+			this.__query.limit = this.__query.limit === null ? null : this.__query.limit + objs.length;
 			this.add_objects(objs);
 		} else if (skip >= this.__query.skip) {
-			if (this.__query.limit != null && (limit == null || skip + limit > this.__query.skip + this.__query.limit)) {
+			if (this.__query.limit !== null && (limit === null || skip + limit > this.__query.skip + this.__query.limit)) {
 				limit = (skip + limit) - (this.__query.skip + this.__query.limit);
 				skip = this.__query.skip + this.__query.limit;
 				if (skip > 0)
 					q.skip = skip;
-				if (limit != null)
+				if (limit !== null)
 					q.limit = limit;
-				var iter = this.__query.func(this.__query.select, q);
-				var objs = iter.asArray();
+				iter = this.__query.func(this.__query.select, q);
+				objs = iter.asArray();
 				this.__query.limit = this.__query.limit + objs.length;
 				if (limit > objs.length)
 					this.__query.count = skip + objs.length;
@@ -322,16 +326,16 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	increase_forwards: function (steps) {
-		steps = steps == null ? this.__query.forward_steps : steps;
-		if (steps == null || this.__query.limit == null)
+		steps = steps === null ? this.__query.forward_steps : steps;
+		if (steps === null || this.__query.limit === null)
 			return;
 		this.__execute_query(this.__query.skip + this.__query.limit, steps, false);
 	},
 	
 	increase_backwards: function (steps) {
-		steps = steps == null ? this.__query.backward_steps : steps;
-		if (steps != null && this.__query.skip > 0) {
-			var steps = Math.min(steps, this.__query.skip)
+		steps = steps === null ? this.__query.backward_steps : steps;
+		if (steps !== null && this.__query.skip > 0) {
+			steps = Math.min(steps, this.__query.skip);
 			this.__execute_query(this.__query.skip - steps, steps, false);
 		}
 	},
@@ -341,32 +345,32 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	paginate_index: function () {
-		return this.__query.range == null ? null : Math.floor(this.__query.skip / this.__query.range);
+		return this.__query.range === null ? null : Math.floor(this.__query.skip / this.__query.range);
 	},
 	
 	paginate_count: function () {
-		return this.__query.count == null || this.__query.range == null ? null : Math.ceil(this.__query.count / this.__query.range);
+		return this.__query.count === null || this.__query.range === null ? null : Math.ceil(this.__query.count / this.__query.range);
 	},
 	
 	next: function () {
 		var paginate_index = this.paginate_index();
-		if (paginate_index == null)
+		if (!paginate_index)
 			return;
 		var paginate_count = this.paginate_count();
-		if (paginate_count == null || paginate_index < this.paginate_count() - 1)
+		if (!paginate_count || paginate_index < this.paginate_count() - 1)
 			this.paginate(paginate_index + 1);
 	},
 	
 	prev: function () {
 		var paginate_index = this.paginate_index();
-		if (paginate_index == null)
+		if (!paginate_index)
 			return;
 		if (paginate_index > 0)
 			this.paginate(paginate_index - 1);
 	},
 	
 	isComplete: function () {
-		return this.__query.count != null;
+		return this.__query.count !== null;
 	}
 	
 });
@@ -608,12 +612,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._insert(data, {success: success_call, exception: exception_call})
+			this._insert(data, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._insert(data);
@@ -622,6 +626,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	insert_all: function (data) {
@@ -641,6 +646,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			}, this);
 			return result;
 		}
+		return null;
 	},
 
 	remove: function (id, callbacks) {
@@ -652,12 +658,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._remove(id, {success: success_call, exception: exception_call})
+			this._remove(id, {success: success_call, exception: exception_call});
 		else
 			try {
 				this._remove(id);
@@ -675,12 +681,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_read)
-			this._get(id, {success: success_call, exception: exception_call})
+			this._get(id, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._get(id);
@@ -689,6 +695,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	update: function (id, data, callbacks) {
@@ -700,12 +707,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._update(id, data, {success: success_call, exception: exception_call})
+			this._update(id, data, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._update(id, data);
@@ -714,6 +721,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	query: function (query, options, callbacks) {
@@ -722,8 +730,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			this._query_capabilities(),
 			this._query,
 			this,
-			callbacks
-		); 
+			callbacks); 
 	},
 	
 	_query_applies_to_id: function (query, id) {
@@ -752,7 +759,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
 	attach: function (ident, store) {
 		store.on("insert", function (row) {
 			this.trigger("insert", ident, store, row);
-			this.trigger("write", "insert", ident, store, row)
+			this.trigger("write", "insert", ident, store, row);
 		}, this);
 		store.on("remove", function (id) {
 			this.trigger("remove", ident, store, id);
@@ -863,7 +870,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 	_insert: function (data) {
 		var last_id = this._read_last_id();
 		var id = data[this._id_key];
-		if (last_id != null) {
+		if (last_id !== null) {
 			this._write_next_id(last_id, id);
 			this._write_prev_id(id, last_id);
 		} else
@@ -879,9 +886,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 			this._remove_item(id);
 			var next_id = this._read_next_id(id);
 			var prev_id = this._read_prev_id(id);
-			if (next_id != null) {
+			if (next_id !== null) {
 				this._remove_next_id(id);
-				if (prev_id != null) {
+				if (prev_id !== null) {
 					this._remove_prev_id(id);
 					this._write_next_id(prev_id, next_id);
 					this._write_prev_id(next_id, prev_id);
@@ -889,7 +896,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 					this._remove_prev_id(next_id);
 					this._write_first_id(next_id);
 				}
-			} else if (prev_id != null) {
+			} else if (prev_id !== null) {
 				this._remove_next_id(prev_id);
 				this._write_last_id(prev_id);
 			} else {
@@ -925,13 +932,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 		var store = this;
 		var fid = this._read_first_id();
 		BetaJS.Objs.extend(iter, {
-			__id: fid == null ? 1 : fid,
+			__id: fid === null ? 1 : fid,
 			__store: store,
 			__query: query,
 			
 			hasNext: function () {
 				var last_id = this.__store._read_last_id();
-				if (last_id == null)
+				if (last_id === null)
 					return false;
 				while (this.__id < last_id && !this.__store._read_item(this.__id))
 					this.__id++;
@@ -939,7 +946,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 					if (this.__store._query_applies_to_id(query, this.__id))
 						return true;
 					if (this.__id < last_id)
-						this.__id = this.__store._read_next_id(this.__id)
+						this.__id = this.__store._read_next_id(this.__id);
 					else
 						this.__id++;
 				}
@@ -950,7 +957,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 				if (this.hasNext()) {
 					var item = this.__store.get(this.__id);
 					if (this.__id == this.__store._read_last_id())
-						this.__id++
+						this.__id++;
 					else
 						this.__id = this.__store._read_next_id(this.__id);
 					return item;
@@ -971,7 +978,7 @@ BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	
 	__read_id: function (key) {
 		var raw = this._read_key(key);
-		return raw ? parseInt(raw) : null;
+		return raw ? parseInt(raw, 10) : null;
 	},
 	
 	_read_last_id: function () {
@@ -1136,19 +1143,19 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.insert(row, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
 				return first.insert(data, {
 					success: callbacks.success,
 					exception: function () {
 						second.insert(data, callbacks);
 					}
-				})
+				});
 			else
 				first.insert(data, callbacks);
 		} else {
 			if (strategy == "then")
-				return second.insert(first.insert(data))
+				return second.insert(first.insert(data));
 			else if (strategy == "or")
 				try {
 					return first.insert(data);
@@ -1158,6 +1165,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			else
 				return first.insert(data);
 		}
+		return true;
 	},
 
 	_update: function (id, data, callbacks) {
@@ -1175,19 +1183,19 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.update(id, row, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
 				return first.update(id, data, {
 					success: callbacks.success,
 					exception: function () {
 						second.update(id, data, callbacks);
 					}
-				})
+				});
 			else
 				first.update(id, data, callbacks);
 		} else {
 			if (strategy == "then")
-				return second.update(id, first.update(id, data))
+				return second.update(id, first.update(id, data));
 			else if (strategy == "or")
 				try {
 					return first.update(id, data);
@@ -1197,6 +1205,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			else
 				return first.update(id, data);
 		}
+		return true;
 	},
 
 	_remove: function (id, callbacks) {
@@ -1214,14 +1223,14 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.remove(id, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
-				return first.remove(id, {
+				first.remove(id, {
 					success: callbacks.success,
 					exception: function () {
 						second.remove(id, callbacks);
 					}
-				})
+				});
 			else
 				first.remove(id, callbacks);
 		} else {
@@ -1251,10 +1260,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone = this.__get_options.clone;
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__get_options.or_on_null;
+		var result = null;
 		if (strategy == "or")
 			try {
-				var result = first.get(id);
-				if (result == null && or_on_null)
+				result = first.get(id);
+				if (result === null && or_on_null)
 					throw new {};
 				if (clone_second) {
 					try {
@@ -1267,8 +1277,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				}
 				return result;
 			} catch (e) {
-				var result = second.get(id);
-				if (result != null && clone)
+				result = second.get(id);
+				if (result && clone)
 					first.insert(result);
 				return result;
 			}
@@ -1296,10 +1306,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone = this.__query_options.clone;
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__query_options.or_on_null;
+		var result = null;
 		if (strategy == "or")
 			try {
-				var result = first.query(query, options);
-				if (result == null && or_on_null)
+				result = first.query(query, options);
+				if (result === null && or_on_null)
 					throw {};
 				if (clone_second) {
 					try {
@@ -1310,7 +1321,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 					if (clone_second) {
 						result = result.asArray();
 						if ("cache_query" in second)
-							second.cache_query(query, options, result)
+							second.cache_query(query, options, result);
 						else
 							second.insert_all(result);
 						result = new BetaJS.Iterators.ArrayIterator(result);
@@ -1318,11 +1329,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				}
 				return result;
 			} catch (e) {
-				var result = second.query(query, options);
-				if (result != null && clone) {
+				result = second.query(query, options);
+				if (result && clone) {
 					result = result.asArray();
 					if ("cache_query" in first)
-						first.cache_query(query, options, result)
+						first.cache_query(query, options, result);
 					else
 						first.insert_all(result);
 					result = new BetaJS.Iterators.ArrayIterator(result);
@@ -1555,7 +1566,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	},
 	
 	_query: function (query, options) {
-		return this.__store.query(query, options)
+		return this.__store.query(query, options);
 	},
 	
 	_ensure_index: function (key) {
@@ -1642,7 +1653,6 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 			} else {
 				if (callbacks)
 					callbacks.success();
-				return true;
 			}
 		} else {
 			try {
@@ -1650,12 +1660,13 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 					if (item.revision_id >= revision_id)
 						return false;
 					this.__store.update(item.id, item.data);
+					return true;
 				}, this);
-			if (callbacks && callbacks.success)
-				callbacks.success();
+				if (callbacks && callbacks.success)
+					callbacks.success();
 			} catch (e) {
 				if (callbacks && callbacks.exception)
-					callbacks.exception(e)
+					callbacks.exception(e);
 				else
 					throw e;
 			}
@@ -1743,7 +1754,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 				exception: function (e) {
 					self.trigger("flush_error");
 					if (callbacks && callbacks.exception)
-						callbacks.exception(e)
+						callbacks.exception(e);
 					else
 						throw e;
 				},
@@ -1761,7 +1772,6 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 		BetaJS.Objs.iter(this.__stores, function (store) {
 			this.__changed = this.__changed || store.changed();
 		}, this);
-	}
-	
+	}	
 	
 }]);

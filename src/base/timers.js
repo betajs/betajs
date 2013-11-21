@@ -45,7 +45,7 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 		if (!this.__started)
 			return;
 		if (this.__once)
-			clearTimeout(this.__timer)
+			clearTimeout(this.__timer);
 		else
 			clearInterval(this.__timer);
 		this.__started = false;
@@ -58,7 +58,7 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 		if (this.__once)
 			this.__timer = setTimeout(function () {
 				self.fire();
-			}, this.__delay)
+			}, this.__delay);
 		else
 			this.__timer = setInterval(function () {
 				self.fire();

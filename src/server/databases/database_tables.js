@@ -39,7 +39,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
 	
 	findOne: function (query, options) {
 		var result = this._findOne(this._encode(query), options);
-		return result == null ? null : this._decode(result);
+		return !result ? null : this._decode(result);
 	},
 	
 	updateRow: function (query, row) {

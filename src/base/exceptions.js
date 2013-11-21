@@ -1,7 +1,7 @@
 BetaJS.Exceptions = {
 	
 	ensure: function (e) {
-		if (e != null && BetaJS.Types.is_object(e) && ("instance_of" in e) && (e.instance_of(BetaJS.Exceptions.Exception)))
+		if (e && BetaJS.Types.is_object(e) && ("instance_of" in e) && (e.instance_of(BetaJS.Exceptions.Exception)))
 			return e;
 		return new BetaJS.Exceptions.NativeException(e);
 	}
@@ -51,7 +51,7 @@ BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 }, {
 	
 	ensure: function (e) {
-		var e = BetaJS.Exceptions.ensure(e);
+		e = BetaJS.Exceptions.ensure(e);
 		e.assert(this);
 		return e;
 	}

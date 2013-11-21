@@ -6,7 +6,7 @@ BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	
 	__read_id: function (key) {
 		var raw = this._read_key(key);
-		return raw ? parseInt(raw) : null;
+		return raw ? parseInt(raw, 10) : null;
 	},
 	
 	_read_last_id: function () {

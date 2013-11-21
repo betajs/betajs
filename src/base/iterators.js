@@ -1,7 +1,7 @@
 BetaJS.Iterators = {
 	
 	ensure: function (mixed) {
-		if (mixed == null)
+		if (mixed === null)
 			return new BetaJS.Iterators.ArrayIterator([]);
 		if (mixed.instance_of(BetaJS.Iterators.Iterator))
 			return mixed;
@@ -36,7 +36,9 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 	},
 	
 	next: function () {
-		return this.__array[this.__i++];
+		var ret = this.__array[this.__i];
+		this.__i++;
+		return ret;
 	}
 	
 });
@@ -87,7 +89,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	
 	hasNext: function () {
 		this.__crawl();
-		return this.__next != null;
+		return this.__next !== null;
 	},
 	
 	next: function () {
@@ -98,8 +100,8 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	},
 	
 	__crawl: function () {
-		while (this.__next == null && this.__iterator.hasNext()) {
-			var item = this.__iterator.next();;
+		while (!this.__next && this.__iterator.hasNext()) {
+			var item = this.__iterator.next();
 			if (this.__filter_func(item))
 				this.__next = item;
 		}
@@ -170,7 +172,9 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
 	},
 	
 	next: function () {
-		return this.__array[this.__i++];
+		var ret = this.__array[this.__i];
+		this.__i++;
+		return ret;
 	}
 	
 });

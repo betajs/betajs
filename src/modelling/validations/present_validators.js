@@ -6,7 +6,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 	},
 
 	validate: function (value, context) {
-		return BetaJS.Types.is_null(value) || value == "" ? this.__error_string : null;
+		return BetaJS.Types.is_null(value) || value === "" ? this.__error_string : null;
 	}
 
 });

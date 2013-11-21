@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-11-18
+  betajs - v0.0.2 - 2013-11-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -18,25 +18,25 @@ BetaJS.Net.HttpHeader = {
 	format: function (code, prepend_code) {
 		var ret = "";
 		if (code == this.HTTP_STATUS_OK)
-			ret = "OK"
+			ret = "OK";
 		else if (code == this.HTTP_STATUS_CREATED)
-			ret = "Created"
+			ret = "Created";
 		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
-			ret = "Payment Required"
+			ret = "Payment Required";
 		else if (code == this.HTTP_STATUS_FORBIDDEN)
-			ret = "Forbidden"
+			ret = "Forbidden";
 		else if (code == this.HTTP_STATUS_NOT_FOUND)
-			ret = "Not found"
+			ret = "Not found";
 		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
-			ret = "Precondition Failed"
+			ret = "Precondition Failed";
 		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-			ret = "Internal Server Error"
+			ret = "Internal Server Error";
 		else
 			ret = "Other Error";
 		return prepend_code ? (code + " " + ret) : ret;
 	}
 	
-}
+};
 BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
 	
 	constructor: function (model, message) {
@@ -77,13 +77,14 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		this._properties_changed = {};
 		this.__errors = {};
 		this.__unvalidated = {};
-		for (var key in scheme)
+		for (var key in scheme) {
 			if ("def" in scheme[key]) 
 				this.set(key, scheme[key].def);
 			else if (scheme[key].auto_create)
-				this.set(key, scheme[key].auto_create(this))
+				this.set(key, scheme[key].auto_create(this));
 			else
 				this.set(key, null);
+		}
 		options = options || {};
 		this._properties_changed = {};
 		this.__errors = {};
@@ -168,9 +169,9 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				var value = this.get(attr);
 				BetaJS.Objs.iter(validate, function (validator) {
 					var result = validator.validate(value, this);
-					if (result != null)
+					if (result)
 						this.__errors[attr] = result;
-					return result == null;
+					return result === null;
 				}, this);
 			}
 			this.trigger("validate:" + attr, !(attr in this.__errors), this.__errors[attr]);
@@ -203,7 +204,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var scheme = this.cls.scheme();
 		var props = this.get_all_properties();
 		tags = tags || {};
-		for (var key in props) 
+		for (var key in props) {
 			if (key in scheme) {
 				var target = scheme[key]["tags"] || [];
 				var tarobj = {};
@@ -217,13 +218,14 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					rec[key] = props[key];
 			}
+		}
 		return rec;		
 	},
 	
 	setByTags: function (data, tags) {
 		var scheme = this.cls.scheme();
 		tags = tags || {};
-		for (var key in data) 
+		for (var key in data)  {
 			if (key in scheme) {
 				var target = scheme[key]["tags"] || [];
 				var tarobj = {};
@@ -237,12 +239,13 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
+		}
 	},
 	
 	validation_exception_conversion: function (e) {
 		var source = e;
 		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
-			source = e.source()
+			source = e.source();
 		else if (!("status_code" in source && "data" in source))
 			return e;
 		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
@@ -269,9 +272,10 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	filterPersistent: function (obj) {
 		var result = {};
 		var scheme = this.scheme();
-		for (var key in obj)
+		for (var key in obj) {
 			if (!BetaJS.Types.is_defined(scheme[key].persistent) || scheme[key].persistent)
 				result[key] = obj[key];
+		}
 		return result;
 	}
 	
@@ -305,7 +309,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 	__addAssoc: function (key, obj) {
 		this[key] = function () {
 			return obj.yield();
-		}
+		};
 	},
 	
 	_initializeAssociations: function () {
@@ -338,7 +342,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 			type: "id"
 		};
 		return s;
-	},	
+	}
 
 });
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
@@ -507,7 +511,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	},
 	
 	hasModel: function (model) {
-		return this.__models_by_cid.get(model) != null;
+		return this.__models_by_cid.get(model) !== null;
 	},
 
 	_model_remove: function (model, options) {
@@ -535,13 +539,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write())
-			this.__store.remove(model.id(), callback)
+			this.__store.remove(model.id(), callback);
 		else try {
 			this.__store.remove(model.id());
 			return callback.success();
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return false;
 	},
 
 	_model_save: function (model, options) {
@@ -577,9 +582,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 				if (!(model.cls.primary_key() in confirmed))
 					return callback.exception(new BetaJS.Modelling.ModelMissingIdException(model));
 				self.__models_by_id[confirmed[model.cls.primary_key()]] = model;
-				if (!self.__options.greedy_create)
+				if (!self.__options.greedy_create) {
 					for (var key in model.properties_by(false))
 						delete confirmed[key];
+				}
 				model.setAll(confirmed, {no_change: true, silent: true});
 				if (is_valid)
 					delete self.__models_changed[model.cid()];
@@ -604,13 +610,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write())
-			this.__store.insert(attrs, callback)
+			this.__store.insert(attrs, callback);
 		else try {
 			var confirmed = this.__store.insert(attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return true;
 	},
 
 
@@ -635,9 +642,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(attrs);
 		var callback = {
 			success : function (confirmed) {
-				if (!self.__options.greedy_update)
+				if (!self.__options.greedy_update) {
 					for (var key in model.properties_changed(false))
 						delete confirmed[key];
+				}
 				model.setAll(confirmed, {no_change: true, silent: true});
 				if (is_valid)
 					delete self.__models_changed[model.cid()];
@@ -660,13 +668,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write() && !BetaJS.Types.is_empty(attrs))
-			this.__store.update(model.id(), attrs, callback)
+			this.__store.update(model.id(), attrs, callback);
 		else try {
 			var confirmed = BetaJS.Types.is_empty(attrs) ? {} : this.__store.update(model.id(), attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return true;
 	},
 
 	_model_set_value: function (model, key, value, options) {
@@ -708,7 +717,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	
 	findById: function (id) {
 		if (this.__models_by_id[id])
-			return this.__models_by_id[id]
+			return this.__models_by_id[id];
 		else
 			return this.__materialize(this.__store.get(id));
 	},
@@ -758,9 +767,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		if (!("ensure_index" in this.__store))
 			return false;
 		var scheme = this.scheme();
-		for (var key in scheme)
+		for (var key in scheme) {
 			if (scheme[key].index)
 				this.__store.ensure_index(key);
+		}
 		return true;
 	}
 	
@@ -906,9 +916,9 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	_yield: function (id) {
 		var query = {};
 		if (id)
-			query[this._foreign_key] = id
+			query[this._foreign_key] = id;
 		else if (this._primary_key) 
-			query[this._foreign_key] = this._model.get(this._primary_key)
+			query[this._foreign_key] = this._model.get(this._primary_key);
 		else
 			query[this._foreign_key] = this._model.id();
 		var model = this._foreign_table.findBy(query);
@@ -982,9 +992,9 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 	_yield: function (id) {
 		var query = {};
 		if (id)
-			query[this._foreign_key] = id
+			query[this._foreign_key] = id;
 		else if (this._primary_key) 
-			query[this._foreign_key] = this._model.get(this._primary_key)
+			query[this._foreign_key] = this._model.get(this._primary_key);
 		else
 			query[this._foreign_key] = this._model.id();
 		var foreign_table = BetaJS.Scopes.resolve(this._model.get(this._foreign_table_key));
@@ -1020,7 +1030,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 	},
 
 	validate: function (value, context) {
-		return BetaJS.Types.is_null(value) || value == "" ? this.__error_string : null;
+		return BetaJS.Types.is_null(value) || value === "" ? this.__error_string : null;
 	}
 
 });
@@ -1044,20 +1054,20 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Length
 		this.__max_length = BetaJS.Types.is_defined(options.max_length) ? options.max_length : null;
 		this.__error_string = BetaJS.Types.is_defined(options.error_string) ? options.error_string : null;
 		if (!this.__error_string) {
-			if (this.__min_length != null)
-				if (this.__max_length != null)
-					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters"
+			if (this.__min_length !== null) {
+				if (this.__max_length !== null)
+					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters";
 				else
-					this.__error_string = "At least " + this.__min_length + " characters"
-			else if (this.__max_length != null)
+					this.__error_string = "At least " + this.__min_length + " characters";
+			} else if (this.__max_length !== null)
 				this.__error_string = "At most " + this.__max_length + " characters";
 		}
 	},
 
 	validate: function (value, context) {
-		if (this.__min_length != null && (!value || value.length < this.__min_length))
+		if (this.__min_length !== null && (!value || value.length < this.__min_length))
 			return this.__error_string;
-		if (this.__max_length != null && value.length > this.__max_length)
+		if (this.__max_length !== null && value.length > this.__max_length)
 			return this.__error_string;
 		return null;
 	}
@@ -1092,7 +1102,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 			return null;
 		for (var i = 0; i < this.__validator.length; ++i) {
 			var result = this.__validator[i].validate(value, context);
-			if (result != null)
+			if (result !== null)
 				return result;
 		}
 		return null;

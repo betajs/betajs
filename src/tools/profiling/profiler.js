@@ -128,8 +128,8 @@ BetaJS.Class.extend("BetaJS.Profiling.ProfilerHtmlViewer", {
     	var field = this.__profiler.get(cls);
     	var s = "<td>" + cls.classname + "</td><td>" + field.count + "</td><td>" + field.strict_count + "</td>";
     	var elem = this.__$tbody.find("[data-class='" + cls.classname + "']");
-    	if (elem.length == 0)
-    		this.__$tbody.append("<tr data-class='" + cls.classname + "'>" + s + "</tr>")
+    	if (elem.length === 0)
+    		this.__$tbody.append("<tr data-class='" + cls.classname + "'>" + s + "</tr>");
     	else
     		elem.html(s);
     }

@@ -56,7 +56,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 			if (!(opts['type'] && opts['type'] == 'ignore')) {
 				child.$el.css(pos_string, pos + 'px');
 				if (child.isVisible())
-					pos += parseInt(child.$el.css(size_string));
+					pos += parseInt(child.$el.css(size_string), 10);
 				if (opts['type'] && opts['type'] == 'dynamic')
 					return false;
 			}

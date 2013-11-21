@@ -64,7 +64,7 @@ BetaJS.Time = {
 	
 	format_ago: function (t) {
 		if (this.days_ago(t) > 1)
-			return this.format(t, {time: false})
+			return this.format(t, {time: false});
 		else
 			return this.format_period(Math.max(this.ago(t), 0)) + " ago";
 	},
@@ -91,20 +91,20 @@ BetaJS.Time = {
 		}, options || {});
 		var d = new Date(t);
 		if (options.locale) {
-			if (options.date)
+			if (options.date) {
 				if (options.time)
-					return d.toLocaleString()
+					return d.toLocaleString();
 				else
-					return d.toLocaleDateString()
-			else
+					return d.toLocaleDateString();
+			} else
 				return d.toLocaleTimeString();
 		} else {
-			if (options.date)
-				if (options.time)
-					return d.toString()
+			if (options.date) {
+				if (options.time) 
+					return d.toString();
 				else
-					return d.toDateString()
-			else
+					return d.toDateString();
+			} else
 				return d.toTimeString();
 		}
 	}

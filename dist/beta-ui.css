@@ -1,5 +1,5 @@
 /*
-  betajs - v0.0.2 - 2013-11-18
+  betajs - v0.0.2 - 2013-11-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -34,8 +34,7 @@
   right: 0px;
   bottom: 0px;
   z-index: 10000;
-  cursor: default;
-  pointer: default; }
+  cursor: default; }
 
 .fullscreen-overlay {
   background-color: black;

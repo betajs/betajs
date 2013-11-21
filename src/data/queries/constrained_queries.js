@@ -38,8 +38,8 @@ BetaJS.Queries.Constrained = {
 			params.push(callbacks);
 		var success_call = function (raw) {
 			var iter = raw;
-			if (raw == null)
-				iter = new BetaJS.Iterators.ArrayIterator([])
+			if (raw === null)
+				iter = new BetaJS.Iterators.ArrayIterator([]);
 			else if (BetaJS.Types.is_array(raw))
 				iter = new BetaJS.Iterators.ArrayIterator(raw);		
 			if (!("query" in query_capabilities || BetaJS.Types.is_empty(query)))
@@ -58,19 +58,20 @@ BetaJS.Queries.Constrained = {
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (callbacks)
-			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}])
+			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}]);
 		else
 			try {
 				var raw = query_function.apply(query_context || this, [execute_query, execute_options]);
 				return success_call(raw);
 			} catch (e) {
 				exception_call(e);
-			}		
+			}
+		return true;	
 	}
 	
 	

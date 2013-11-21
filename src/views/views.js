@@ -85,12 +85,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	css: function (ident) {
 		if (this.__css[ident])
 			return this.__css[ident];
+		var css = null;
 		if (this.__parent) {
-			var css = this.__parent.css(ident);
+			css = this.__parent.css(ident);
 			if (css && css != ident)
 				return css;
 		}
-		var css = this._css();
+		css = this._css();
 		if (css[ident])
 			return css[ident];
 		return ident;
@@ -102,7 +103,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_render: function () {
 		if (this.__html)
-			this.$el.html(this.__html)
+			this.$el.html(this.__html);
 		else if (this.__templates["default"])
 			this.$el.html(this.evaluateTemplate("default", {}));
 		else if (this.__dynamics["default"])
@@ -146,7 +147,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			attrs: function (obj) {
 				var s = "";
 				for (var key in obj)
-					s += (obj[key] == null ? key : (key + "='" + obj[key] + "'")) + " ";
+					s += (!obj[key] ? key : (key + "='" + obj[key] + "'")) + " ";
 				return s;
 			},
 			styles: function (obj) {
@@ -159,7 +160,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return "data-selector='" + name + "' ";
 			},
 			view_id: this.cid()
-		}
+		};
 	},
 	
 	/** Returns all arguments that are passed to every template by default.
@@ -202,7 +203,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 * @param prefix (optional) per default is "__"
 	 */
 	_setOption: function (options, key, value, prefix) {
-		var prefix = prefix ? prefix : "__";
+		prefix = prefix ? prefix : "__";
 		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
@@ -277,8 +278,9 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("template" in options)
 			templates["default"] = options["template"];
 		this.__templates = {};
-		for (var key in templates) {
-			if (templates[key] == null)
+		var key = null;
+		for (key in templates) {
+			if (!templates[key])
 				throw new BetaJS.Views.ViewException("Could not find template '" + key + "' in View '" + this.cls.classname + "'");
 			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html());
 		}
@@ -287,7 +289,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("dynamic" in options)
 			dynamics["default"] = options["dynamic"];
 		this.__dynamics = {};
-		for (var key in dynamics)
+		for (key in dynamics)
 			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html());
 
 		this.setAll(options["properties"] || {});
@@ -303,10 +305,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		this.ns = {};
 		var domain = this._domain();
 		var domain_defaults = this._domain_defaults();
-
+		var view_name = null;
 		if (!BetaJS.Types.is_empty(domain)) {
 			var viewlist = [];
-			for (var view_name in domain)
+			for (view_name in domain)
 				viewlist.push({
 					name: view_name,
 					data: domain[view_name]
@@ -322,33 +324,34 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return after;
 			});
 			for (var i = 0; i < viewlist.length; ++i) {
-				var view_name = viewlist[i].name;
+				view_name = viewlist[i].name;
 				var record = viewlist[i].data;
-				var options = record.options || {};
-				if (BetaJS.Types.is_function(options))
-					options = options.apply(this, [this]);
+				var record_options = record.options || {};
+				if (BetaJS.Types.is_function(record_options))
+					record_options = record_options.apply(this, [this]);
 				var default_options = domain_defaults[record.type] || {};
 				if (BetaJS.Types.is_function(default_options))
 					default_options = default_options.apply(this, [this]);
-				options = BetaJS.Objs.tree_merge(default_options, options);
+				record_options = BetaJS.Objs.tree_merge(default_options, record_options);
 				if (record.type in BetaJS.Views)
 					record.type = BetaJS.Views[record.type];
 				if (BetaJS.Types.is_string(record.type))
 					record.type = BetaJS.Scopes.resolve(record.type);
-				var view = new record.type(options);
+				var view = new record.type(record_options);
 				this.ns[view_name] = view;
 				var parent_options = record.parent_options || {};
 				var parent = this;
 				if (record.parent)
 					parent = BetaJS.Scopes.resolve(record.parent, this.ns);
 				if (record.method)
-					record.method(parent, view)
+					record.method(parent, view);
 				else
 					parent.addChild(view, parent_options);
 				view.domain = this;
-				for (var event in record.events || {})
+				var event = null;
+				for (event in record.events || {})
 					view.on(event, record.events[event], view);
-				for (var event in record.listeners || {})
+				for (event in record.listeners || {})
 					this.on(event, record.listeners[event], view);
 			}		
 		}
@@ -375,15 +378,15 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	activate: function () {
 		if (this.isActive())
 			return this;
-		if (this.__el == null) 
+		if (!this.__el) 
 			return null;
 		if (this.__parent && !this.__parent.isActive())
 			return null;
 		if (this.__parent)
-			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el);
+			this.$el = this.__el === "" ? this.__parent.$el : this.__parent.$(this.__el);
 		else
 			this.$el = BetaJS.$(this.__el);
-		if (this.$el.size() == 0)
+		if (this.$el.size() === 0)
 			this.$el = null;
 		if (!this.$el)
 			return null;
@@ -392,8 +395,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el = this.$el.find("[data-view-id='" + this.cid() + "']");
 		}
 		this.__old_attributes = {};
-		for (var key in this.__attributes) {
-			var old_value = this.$el.attr(key);
+		var key = null;
+		var old_value = null;
+		for (key in this.__attributes) {
+			old_value = this.$el.attr(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_attributes[key] = old_value;
 			else
@@ -402,15 +407,16 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		}
 		this.__added_el_classes = [];
 		var new_el_classes = this._el_classes().concat(this.__el_classes);
-		for (var i = 0; i < new_el_classes.length; ++i)
+		for (var i = 0; i < new_el_classes.length; ++i) {
 			if (!this.$el.hasClass(new_el_classes[i])) {
 				this.$el.addClass(new_el_classes[i]);
 				this.__added_el_classes.push(new_el_classes[i]);
 			}
+		}
 		this.__old_el_styles = {};
 		var new_el_styles = BetaJS.Objs.extend(this._el_styles(), this.__el_styles);
-		for (var key in new_el_styles)  {
-			var old_value = this.$el.css(key);
+		for (key in new_el_styles)  {
+			old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_el_styles[key] = old_value;
 			else
@@ -454,11 +460,12 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		}, this);
 		this.__unbind();
 		this.$el.html("");
-		for (var key in this.__old_attributes) 
+		var key = null;
+		for (key in this.__old_attributes) 
 			this.$el.attr(key, this.__old_attributes[key]);
 		for (var i = 0; i < this.__added_el_classes.length; ++i)
 			this.$el.removeClass(this.__added_el_classes[i]);
-		for (var key in this.__old_el_styles) 
+		for (key in this.__old_el_styles) 
 			this.$el.css(key, this.__old_el_styles[key]);
 		if (this.__append_to_el)
 			this.$el.remove();
@@ -618,9 +625,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			return;
 		this._render();
 		var q = this.$el.children();
-		if (!BetaJS.Types.is_empty(this.__children_styles))
+		if (!BetaJS.Types.is_empty(this.__children_styles)) {
 			for (var key in this.__children_styles)
 				q.css(key, this.__children_styles[key]);
+		}
 		BetaJS.Objs.iter(this.__children_classes, function (cls) {
 			q.addClass(cls);	
 		});

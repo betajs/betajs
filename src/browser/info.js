@@ -31,7 +31,7 @@ BetaJS.Browser.Info = {
 	},
 	
 	isiOS: function () {
-		if (this.__isiOS == null)
+		if (this.__isiOS === null)
 			this.__isiOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
 		return this.__isiOS;
 	},
@@ -41,31 +41,31 @@ BetaJS.Browser.Info = {
 	},
 	
 	isAndroid: function () {
-		if (this.__isAndroid == null)
+		if (this.__isAndroid === null)
 			this.__isAndroid = navigator.userAgent.toLowerCase().indexOf("android") != -1;
 		return this.__isAndroid;
 	},
 	
 	isWebOS: function () {
-		if (this.__isWebOS == null)
+		if (this.__isWebOS === null)
 			this.__isWebOS = navigator.userAgent.toLowerCase().indexOf("webos") != -1;
 		return this.__isWebOS;
 	},
 
 	isWindowsPhone: function () {
-		if (this.__isWindowsPhone == null)
+		if (this.__isWindowsPhone === null)
 			this.__isWindowsPhone = navigator.userAgent.toLowerCase().indexOf("windows phone") != -1;
 		return this.__isWindowsPhone;
 	},
 
 	isBlackberry: function () {
-		if (this.__isBlackberry == null)
+		if (this.__isBlackberry === null)
 			this.__isBlackberry = navigator.userAgent.toLowerCase().indexOf("blackberry") != -1;
 		return this.__isBlackberry;
 	},
 
 	iOSversion: function () {
-		if (this.__iOSversion == null && this.isiOS()) {
+		if (this.__iOSversion === null && this.isiOS()) {
 		    var v = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
 		    this.__iOSversion = {
 		    	major: parseInt(v[1], 10),
@@ -77,18 +77,18 @@ BetaJS.Browser.Info = {
 	},
 	
 	isMobile: function () {
-		if (this.__isMobile == null)
+		if (this.__isMobile === null)
 			this.__isMobile = this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
 		return this.__isMobile;
 	},
 	
 	isInternetExplorer: function () {
-		if (this.__isInternetExplorer == null)
+		if (this.__isInternetExplorer === null)
 			this.__isInternetExplorer = navigator.appName == 'Microsoft Internet Explorer';
 		return this.__isInternetExplorer;
 	}
 	
-}
+};
 
 
 /*
@@ -107,8 +107,8 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
             var mimeTypes = navigator.mimeTypes;
             if (mimeTypes && mimeTypes[type] && mimeTypes[type].enabledPlugin && mimeTypes[type].enabledPlugin.description)
                 this.__version = this.parseVersion(mimeTypes[type].enabledPlugin.description);
-        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript)
-            for (var i = 0; i < this.__activeXDetectRules.length; i++)
+        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript) {
+            for (var i = 0; i < this.__activeXDetectRules.length; i++) {
 		        try {
 		            var obj = new ActiveXObject(this.__activeXDetectRules[i].name);
 		            var version = this.__activeXDetectRules[i].version(obj);
@@ -117,6 +117,8 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
                     	break;
                     }
 		        } catch (err) { }
+		    }
+		}
 	},
 	
     parseVersion: function(str) {
@@ -148,7 +150,7 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
 	},
 	
 	installed: function () {
-		return this.__version != null;
+		return this.__version !== null;
 	},
 	
 	supported: function () {
@@ -172,9 +174,10 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
     		return false;
         var properties = [this.version().major, this.version().minor, this.version().revision];
         var len = Math.min(properties.length, arguments.length);
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; i++) {
             if (properties[i] != arguments[i]) 
             	return properties[i] > arguments[i];
+        }
         return true;
     },
 	

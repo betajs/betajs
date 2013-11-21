@@ -42,8 +42,9 @@ module.exports = function(grunt) {
 					'src/base/strings.js',
 					'src/base/functions.js',
 					'src/base/scopes.js', 
-					'src/base/objs.js',
 					'src/base/ids.js', 
+					'src/base/tokens.js',
+					'src/base/objs.js',
 					'src/base/class.js',
 					'src/base/exceptions.js',
 					'src/base/lists.js',
@@ -54,10 +55,10 @@ module.exports = function(grunt) {
 					'src/base/collections.js',
 					'src/base/comparators.js',
 					'src/base/sort.js',
-					'src/base/tokens.js',
 					'src/base/locales.js',
 					'src/base/time.js',
 					'src/base/timers.js',
+					'src/base/templates.js', 
 					'src/net/*.js',
 				]
 			},
@@ -111,8 +112,6 @@ module.exports = function(grunt) {
 				src : [
 					'src/browser/*.js',
 					'src/data/stores/remote_store.js',
-					'src/views/templates.js', 
-					'src/views/template.js', 
 					'src/views/views.js',
 					'src/views/dynamics.js',
 					'src/views/modules/centering.js',
@@ -180,13 +179,6 @@ module.exports = function(grunt) {
 					'src/server/stores/database_store.js',
 					'src/server/stores/mongo_database_store.js',
 					'src/server/stores/migrator.js'
-				]
-			},
-			dist_strict: {
-				dest: 'dist/beta.strict.js',
-				src: [
-					'src/base/strict.js',
-					'dist/beta.js'
 				]
 			},
 		    dist_ui_scss: {

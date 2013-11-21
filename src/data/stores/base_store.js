@@ -104,12 +104,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._insert(data, {success: success_call, exception: exception_call})
+			this._insert(data, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._insert(data);
@@ -118,6 +118,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	insert_all: function (data) {
@@ -137,6 +138,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			}, this);
 			return result;
 		}
+		return null;
 	},
 
 	remove: function (id, callbacks) {
@@ -148,12 +150,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._remove(id, {success: success_call, exception: exception_call})
+			this._remove(id, {success: success_call, exception: exception_call});
 		else
 			try {
 				this._remove(id);
@@ -171,12 +173,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_read)
-			this._get(id, {success: success_call, exception: exception_call})
+			this._get(id, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._get(id);
@@ -185,6 +187,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	update: function (id, data, callbacks) {
@@ -196,12 +199,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._update(id, data, {success: success_call, exception: exception_call})
+			this._update(id, data, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._update(id, data);
@@ -210,6 +213,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	query: function (query, options, callbacks) {
@@ -218,8 +222,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			this._query_capabilities(),
 			this._query,
 			this,
-			callbacks
-		); 
+			callbacks); 
 	},
 	
 	_query_applies_to_id: function (query, id) {

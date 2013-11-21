@@ -24,7 +24,7 @@ BetaJS.Stores.IndexedStore = BetaJS.Stores.BaseStore.extend("IndexedStore", {
 	_query: function (query, options) {
 		var initialized = false;
 		var ids = {};
-		for (var key in query) 
+		for (var key in query) {
 			if (key in this._indices) {
 				if (initialized) {
 					var new_ids = this._indices[key].get(query[key]);
@@ -36,6 +36,7 @@ BetaJS.Stores.IndexedStore = BetaJS.Stores.BaseStore.extend("IndexedStore", {
 				if (BetaJS.Types.is_empty(ids))
 					return {};
 			}
+		}
 		if (!initialized)
 			return this._store.query(query, options);
 		var self = this;
@@ -66,7 +67,7 @@ BetaJS.Stores.IndexedStore = BetaJS.Stores.BaseStore.extend("IndexedStore", {
 	
 	_update: function (id, data) {
 		return this._store.update(id, data);
-	},
+	}
 		
 });
 

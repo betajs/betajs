@@ -72,19 +72,19 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.insert(row, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
 				return first.insert(data, {
 					success: callbacks.success,
 					exception: function () {
 						second.insert(data, callbacks);
 					}
-				})
+				});
 			else
 				first.insert(data, callbacks);
 		} else {
 			if (strategy == "then")
-				return second.insert(first.insert(data))
+				return second.insert(first.insert(data));
 			else if (strategy == "or")
 				try {
 					return first.insert(data);
@@ -94,6 +94,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			else
 				return first.insert(data);
 		}
+		return true;
 	},
 
 	_update: function (id, data, callbacks) {
@@ -111,19 +112,19 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.update(id, row, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
 				return first.update(id, data, {
 					success: callbacks.success,
 					exception: function () {
 						second.update(id, data, callbacks);
 					}
-				})
+				});
 			else
 				first.update(id, data, callbacks);
 		} else {
 			if (strategy == "then")
-				return second.update(id, first.update(id, data))
+				return second.update(id, first.update(id, data));
 			else if (strategy == "or")
 				try {
 					return first.update(id, data);
@@ -133,6 +134,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			else
 				return first.update(id, data);
 		}
+		return true;
 	},
 
 	_remove: function (id, callbacks) {
@@ -150,14 +152,14 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.remove(id, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
-				return first.remove(id, {
+				first.remove(id, {
 					success: callbacks.success,
 					exception: function () {
 						second.remove(id, callbacks);
 					}
-				})
+				});
 			else
 				first.remove(id, callbacks);
 		} else {
@@ -187,10 +189,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone = this.__get_options.clone;
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__get_options.or_on_null;
+		var result = null;
 		if (strategy == "or")
 			try {
-				var result = first.get(id);
-				if (result == null && or_on_null)
+				result = first.get(id);
+				if (result === null && or_on_null)
 					throw new {};
 				if (clone_second) {
 					try {
@@ -203,8 +206,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				}
 				return result;
 			} catch (e) {
-				var result = second.get(id);
-				if (result != null && clone)
+				result = second.get(id);
+				if (result && clone)
 					first.insert(result);
 				return result;
 			}
@@ -232,10 +235,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone = this.__query_options.clone;
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__query_options.or_on_null;
+		var result = null;
 		if (strategy == "or")
 			try {
-				var result = first.query(query, options);
-				if (result == null && or_on_null)
+				result = first.query(query, options);
+				if (result === null && or_on_null)
 					throw {};
 				if (clone_second) {
 					try {
@@ -246,7 +250,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 					if (clone_second) {
 						result = result.asArray();
 						if ("cache_query" in second)
-							second.cache_query(query, options, result)
+							second.cache_query(query, options, result);
 						else
 							second.insert_all(result);
 						result = new BetaJS.Iterators.ArrayIterator(result);
@@ -254,11 +258,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				}
 				return result;
 			} catch (e) {
-				var result = second.query(query, options);
-				if (result != null && clone) {
+				result = second.query(query, options);
+				if (result && clone) {
 					result = result.asArray();
 					if ("cache_query" in first)
-						first.cache_query(query, options, result)
+						first.cache_query(query, options, result);
 					else
 						first.insert_all(result);
 					result = new BetaJS.Iterators.ArrayIterator(result);

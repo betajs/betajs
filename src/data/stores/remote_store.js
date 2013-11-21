@@ -56,12 +56,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
 			if (this._async_write) 
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_remove : function(id, callbacks) {
@@ -90,6 +91,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_get : function(id, callbacks) {
@@ -98,12 +100,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {uri: this.prepare_uri("get", data)};
 			if (this._async_read)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_update : function(id, data, callbacks) {
@@ -112,12 +115,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
 			if (this._async_write)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 	
 	_query : function(query, options, callbacks) {
@@ -126,9 +130,10 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 			if (this._async_read) {
 				var self = this;
 				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw)
+					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw);
 				});
 				this.__ajax.asyncCall(opts);
+				return true;
 			} else {
 				var raw = this.__ajax.syncCall(opts);
 				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;

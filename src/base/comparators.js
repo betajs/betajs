@@ -6,7 +6,7 @@ BetaJS.Comparators = {
 				var l = left[key] || null;
 				var r = right[key] || null;
 				var c = BetaJS.Comparators.byValue(l, r);
-				if (c != 0)
+				if (c !== 0)
 				return c * object[key];
 			}
 			return 0;
