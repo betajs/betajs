@@ -3957,7 +3957,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		if (strategy == "or")
 			try {
 				result = first.get(id);
-				if (result === null && or_on_null)
+				if (!result && or_on_null)
 					throw new {};
 				if (clone_second) {
 					try {
@@ -4003,7 +4003,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		if (strategy == "or")
 			try {
 				result = first.query(query, options);
-				if (result === null && or_on_null)
+				if (!result && or_on_null)
 					throw {};
 				if (clone_second) {
 					try {
