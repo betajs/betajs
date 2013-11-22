@@ -378,12 +378,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	activate: function () {
 		if (this.isActive())
 			return this;
-		if (!this.__el) 
-			return null;
 		if (this.__parent && !this.__parent.isActive())
 			return null;
 		if (this.__parent)
-			this.$el = this.__el === "" ? this.__parent.$el : this.__parent.$(this.__el);
+			this.$el = !this.__el ? this.__parent.$el : this.__parent.$(this.__el);
 		else
 			this.$el = BetaJS.$(this.__el);
 		if (this.$el.size() === 0)
