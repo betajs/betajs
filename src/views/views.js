@@ -196,7 +196,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, {args: args || {}}));
 	},
 
-	/** Sets private variable from an option array
+	/** Sets a private variable from an option array
 	 * @param options option associative array
 	 * @param key name of option
 	 * @param value default value of option if not given
@@ -207,6 +207,17 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
+	/** Sets a private typed variable from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 * @param type param type
+	 * @param prefix (optional) per default is "__"
+	 */
+	_setOptionTyped: function (options, key, value, type, prefix) {
+		this._setOption(options, key, this.cls._parseType(value, type), prefix);
+	},
+
 	/** Sets property variable (that will be passed to templates and dynamics by default) from an option array
 	 * @param options option associative array
 	 * @param key name of option
@@ -214,6 +225,16 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_setOptionProperty: function (options, key, value) {
 		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
+	},
+	
+	/** Sets typed property variable (that will be passed to templates and dynamics by default) from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 * @param type param type
+	 */
+	_setOptionPropertyTyped: function (options, key, value, typed) {
+		this._setOptionProperty(options, key, this.cls._parseType(value, type));
 	},
 	
 	/** Creates a new view with options
@@ -820,6 +841,21 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return this.$el.outerHeight();
 	}
 	
-}]);
+}], {
+	
+	_parseType: function (value, type) {
+		if (BetaJS.Types.is_defined(value) && BetaJS.Types.is_string(value)) {
+			value = value.replace(/\s+/g, '');
+			if (type == "int")
+				return parseInt(value, 10);
+			else if (type == "array")
+				return value.split(",");
+			else if (type == "bool")
+				return value === "" || BetaJS.Strings.parseBool(value);
+		}
+		return value;
+	}
+
+});
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;

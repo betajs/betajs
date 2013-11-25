@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2013-11-22
+  betajs - v0.0.2 - 2013-11-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-22
+  betajs - v0.0.2 - 2013-11-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -276,7 +276,31 @@ BetaJS.Strings = {
      */
 	strip_html: function (html) {
     	return html.replace(this.STRIP_HTML_REGEX, '');
-    }
+    },
+   
+    /** Trims all trailing and leading whitespace and removes block indentations
+     * 
+     * @param s string
+     * @return string with trimmed whitespaces and removed block indentation
+     */
+    nltrim: function(s) {
+		var a = s.replace(/\t/g, "  ").split("\n");
+		var len = null;
+		var i = 0;
+		for (i = 0; i < a.length; ++i) {
+			var j = 0;
+			while (j < a[i].length) {
+				if (a[i].charAt(j) != ' ')
+					break;
+				++j;
+			}
+			if (j < a[i].length)
+				len = len === null ? j : Math.min(j, len);	
+		}
+		for (i = 0; i < a.length; ++i)
+			a[i] = a[i].substring(len);
+		return a.join("\n").trim();
+	}
 
 };
 
@@ -2692,7 +2716,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-22
+  betajs - v0.0.2 - 2013-11-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4469,7 +4493,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-22
+  betajs - v0.0.2 - 2013-11-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

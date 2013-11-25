@@ -114,6 +114,7 @@ module.exports = function(grunt) {
 					'src/data/stores/remote_store.js',
 					'src/views/views.js',
 					'src/views/dynamics.js',
+					'src/views/active_dom.js',
 					'src/views/modules/centering.js',
 					'src/views/modules/bind_on_activate.js',
 					'src/views/modules/bind_on_visible.js',
