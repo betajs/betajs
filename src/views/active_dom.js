@@ -22,8 +22,8 @@ BetaJS.Views.ActiveDom = {
 	
 	__on_remove_element: function (event) {
 		var element = $(event.target);
-		if (element.attr("data-view-id") in BetaJS.Views.ActiveDom.__views)
-			BetaJS.Views.ActiveDom.__views[element.attr("data-view-id")].destroy();
+		if (element.attr("data-active-dom-id") in BetaJS.Views.ActiveDom.__views)
+			BetaJS.Views.ActiveDom.__views[element.attr("data-active-dom-id")].destroy();
 	},
 	
 	__attach: function (element, meta_attrs) {
@@ -33,7 +33,10 @@ BetaJS.Views.ActiveDom = {
 				var alias = BetaJS.Views.ActiveDom.__prefix_alias[i];
 				if (BetaJS.Strings.starts_with(key, alias + "-")) {
 					key = BetaJS.Strings.strip_start(key, alias + "-");
-					if (key in meta_attrs_scheme)
+					if (BetaJS.Strings.starts_with(key, "child-")) {
+						key = BetaJS.Strings.strip_start(key, "child-");
+						dom_child_attrs[key] = value;
+					} else if (key in meta_attrs_scheme)
 						meta_attrs[key] = value;
 					else
 						option_attrs[key] = value;
@@ -48,8 +51,9 @@ BetaJS.Views.ActiveDom = {
 			return BetaJS.Strings.nltrim(query.length > 0 ? query.html() : element.html());
 		};
 		var dom_attrs = {};
+		var dom_child_attrs = {};
 		var option_attrs = {};
-		var meta_attrs_scheme = {type: "View", "default": null};
+		var meta_attrs_scheme = {type: "View", "default": null, "name": null};
 		meta_attrs = BetaJS.Objs.extend(BetaJS.Objs.clone(meta_attrs_scheme, 1), meta_attrs || {});
 		var attrs = element.get(0).attributes;
 		for (var i = 0; i < attrs.length; ++i) 
@@ -67,16 +71,21 @@ BetaJS.Views.ActiveDom = {
 		if (BetaJS.Types.is_string(meta_attrs.type))
 			meta_attrs.type = BetaJS.Scopes.resolve(meta_attrs.type);
 		var view = new meta_attrs.type(option_attrs);
-		view.setEl("[data-view-id='" + view.cid() + "']");
-		element.replaceWith("<div data-view-id='" + view.cid() + "'></div>");
-		element = BetaJS.$("[data-view-id='" + view.cid() + "']");
-		for (var key in dom_attrs)
+		view.setEl("[data-active-dom-id='" + view.cid() + "']");
+		element.replaceWith("<div data-active-dom-id='" + view.cid() + "'></div>");
+		element = BetaJS.$("[data-active-dom-id='" + view.cid() + "']");
+		var key = null;
+		for (key in dom_attrs)
 			element.attr(key, dom_attrs[key]);
 		view.on("destroy", function () {
 			delete BetaJS.Views.ActiveDom.__views[view.cid()];
 		});
 		BetaJS.Views.ActiveDom.__views[view.cid()] = view;
 		view.activate();
+		for (key in dom_child_attrs)
+			element.children().attr(key, dom_child_attrs[key]);
+		if (meta_attrs["name"])
+			BetaJS.Scopes.set(view, meta_attrs["name"]);
 	},
 	
 	activate: function () {

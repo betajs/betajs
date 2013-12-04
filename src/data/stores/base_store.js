@@ -89,7 +89,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	},
 
 	insert: function (data, callbacks) {
-		if (this._create_ids && !(this._id_key in data)) {
+		if (this._create_ids && !(this._id_key in data && data[this._id_key])) {
 			if (this._async_write)
 				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
 			while (this.get(this._last_id))

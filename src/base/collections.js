@@ -92,9 +92,9 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (!this.exists(object))
 			return null;
 		this.trigger("remove", object);
+		var result = this.__data.remove(object);
 		if ("off" in object)
 			object.off(null, null, this);
-		var result = this.__data.remove(object);
 		return result;
 	},
 	

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -969,7 +969,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	exists: function (object) {
-		return this.get_ident(object) !== null;
+		return object && this.get_ident(object) !== null;
 	},
 	
 	_ident_changed: function (object, new_ident) {},
@@ -1153,7 +1153,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	_sorted: function () {},
 		
 	re_index: function (index) {
-		if (!("_compare" in this))
+		if (!this._compare)
 			return index;
 		var last = this.__items.length - 1;
 		var object = this.__items[index];
@@ -2151,9 +2151,9 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (!this.exists(object))
 			return null;
 		this.trigger("remove", object);
+		var result = this.__data.remove(object);
 		if ("off" in object)
 			object.off(null, null, this);
-		var result = this.__data.remove(object);
 		return result;
 	},
 	
@@ -2248,11 +2248,13 @@ BetaJS.Comparators = {
 	byObject: function (object) {
 		return function (left, right) {
 			for (key in object) {
-				var l = left[key] || null;
-				var r = right[key] || null;
-				var c = BetaJS.Comparators.byValue(l, r);
+				var c = 0;
+				if (BetaJS.Properties.Properties.is_class_instance(left) && BetaJS.Properties.Properties.is_class_instance(right))
+					c = BetaJS.Comparators.byValue(left.get(key) || null, right.get(key) || null);
+				else
+					c = BetaJS.Comparators.byValue(left[key] || null, right[key] || null);
 				if (c !== 0)
-				return c * object[key];
+					return c * object[key];
 			}
 			return 0;
 		};
@@ -2721,7 +2723,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3319,7 +3321,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	},
 
 	insert: function (data, callbacks) {
-		if (this._create_ids && !(this._id_key in data)) {
+		if (this._create_ids && !(this._id_key in data && data[this._id_key])) {
 			if (this._async_write)
 				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
 			while (this.get(this._last_id))
@@ -4498,7 +4500,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4847,6 +4849,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	
 	constructor: function (attributes, options) {
+		options = options || {};
 		this._inherited(BetaJS.Modelling.Model, "constructor", attributes, options);
 		this.__saved = "saved" in options ? options["saved"] : false;
 		this.__new = "new" in options ? options["new"] : true;
@@ -5609,7 +5612,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7797,6 +7800,8 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return value.split(",");
 			else if (type == "bool")
 				return value === "" || BetaJS.Strings.parseBool(value);
+			else if (type == "object" || type == "function")
+				return BetaJS.Scopes.resolve(value);
 		}
 		return value;
 	}
@@ -8044,8 +8049,8 @@ BetaJS.Views.ActiveDom = {
 	
 	__on_remove_element: function (event) {
 		var element = $(event.target);
-		if (element.attr("data-view-id") in BetaJS.Views.ActiveDom.__views)
-			BetaJS.Views.ActiveDom.__views[element.attr("data-view-id")].destroy();
+		if (element.attr("data-active-dom-id") in BetaJS.Views.ActiveDom.__views)
+			BetaJS.Views.ActiveDom.__views[element.attr("data-active-dom-id")].destroy();
 	},
 	
 	__attach: function (element, meta_attrs) {
@@ -8055,7 +8060,10 @@ BetaJS.Views.ActiveDom = {
 				var alias = BetaJS.Views.ActiveDom.__prefix_alias[i];
 				if (BetaJS.Strings.starts_with(key, alias + "-")) {
 					key = BetaJS.Strings.strip_start(key, alias + "-");
-					if (key in meta_attrs_scheme)
+					if (BetaJS.Strings.starts_with(key, "child-")) {
+						key = BetaJS.Strings.strip_start(key, "child-");
+						dom_child_attrs[key] = value;
+					} else if (key in meta_attrs_scheme)
 						meta_attrs[key] = value;
 					else
 						option_attrs[key] = value;
@@ -8070,8 +8078,9 @@ BetaJS.Views.ActiveDom = {
 			return BetaJS.Strings.nltrim(query.length > 0 ? query.html() : element.html());
 		};
 		var dom_attrs = {};
+		var dom_child_attrs = {};
 		var option_attrs = {};
-		var meta_attrs_scheme = {type: "View", "default": null};
+		var meta_attrs_scheme = {type: "View", "default": null, "name": null};
 		meta_attrs = BetaJS.Objs.extend(BetaJS.Objs.clone(meta_attrs_scheme, 1), meta_attrs || {});
 		var attrs = element.get(0).attributes;
 		for (var i = 0; i < attrs.length; ++i) 
@@ -8089,16 +8098,21 @@ BetaJS.Views.ActiveDom = {
 		if (BetaJS.Types.is_string(meta_attrs.type))
 			meta_attrs.type = BetaJS.Scopes.resolve(meta_attrs.type);
 		var view = new meta_attrs.type(option_attrs);
-		view.setEl("[data-view-id='" + view.cid() + "']");
-		element.replaceWith("<div data-view-id='" + view.cid() + "'></div>");
-		element = BetaJS.$("[data-view-id='" + view.cid() + "']");
-		for (var key in dom_attrs)
+		view.setEl("[data-active-dom-id='" + view.cid() + "']");
+		element.replaceWith("<div data-active-dom-id='" + view.cid() + "'></div>");
+		element = BetaJS.$("[data-active-dom-id='" + view.cid() + "']");
+		var key = null;
+		for (key in dom_attrs)
 			element.attr(key, dom_attrs[key]);
 		view.on("destroy", function () {
 			delete BetaJS.Views.ActiveDom.__views[view.cid()];
 		});
 		BetaJS.Views.ActiveDom.__views[view.cid()] = view;
 		view.activate();
+		for (key in dom_child_attrs)
+			element.children().attr(key, dom_child_attrs[key]);
+		if (meta_attrs["name"])
+			BetaJS.Scopes.set(view, meta_attrs["name"]);
 	},
 	
 	activate: function () {
@@ -8852,6 +8866,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", false);
 		this.__itemData = {};
+		if ("table" in options) {
+			var table = this.cls._parseType(options.table, "object");
+			this.active_query = new BetaJS.Queries.ActiveQuery(table.active_query_engine(), {});
+			options.collection = this.active_query.collection();
+			options.destroy_collection = true;
+		}
+		if ("compare" in options)
+			options.compare = this.cls._parseType(options.compare, "function");
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = "destroy_collection" in options ? options.destroy_collection : false;
@@ -8882,7 +8904,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			this.__reIndexItem(item);
 		}, this);
 		this.__collection.on("sorted", function () {
-			this.__sorted();
+			this.__sort();
 		}, this);
 		this.__collection.iterate(function (item) {
 			this._registerItem(item);
@@ -9011,6 +9033,8 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	},
 	
 	_unregisterItem: function (item) {
+		if (!this.__itemData[item.cid()])
+			return;
 		this.__itemData[item.cid()].properties.destroy();
 		delete this.__itemData[item.cid()];
 	},
@@ -9093,6 +9117,11 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
+		options = options || {};
+		if ("item_template" in options)
+			options.templates = {item: options.item_template};
+		if ("item_dynamic" in options)
+			options.dynamics = {item: options.item_dynamic};
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
 		this._setOption(options, "item_label", "label");
 		this._setOption(options, "render_item_on_change", BetaJS.Types.is_defined(this.dynamics("item")));
@@ -9147,7 +9176,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		if ("create_view" in options)
 			this._create_view = options.create_view;
 		if ("sub_view" in options)
-			this._sub_view = options.sub_view;
+			this._sub_view = this.cls._parseType(options.sub_view, "object");
 		if ("sub_view_options" in options)
 			this._sub_view_options_param = options.sub_view_options;
 		if ("property_map" in options)
@@ -9168,7 +9197,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	},
 	
 	_activateItem: function (item) {
-		this._inherited(BetaJS.Views.ListView, "_activateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_activateItem", item);
 		var view = this._create_view(item); 
 		this.delegateEvents(null, view, "item", [view, item]);
 		this.itemData(item).view = view;
@@ -9179,7 +9208,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		var view = this.itemData(item).view;
 		this.removeChild(view);
 		view.destroy();
-		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_deactivateItem", item);
 	}
 	
 });

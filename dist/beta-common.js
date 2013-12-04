@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -964,7 +964,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	exists: function (object) {
-		return this.get_ident(object) !== null;
+		return object && this.get_ident(object) !== null;
 	},
 	
 	_ident_changed: function (object, new_ident) {},
@@ -1148,7 +1148,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	_sorted: function () {},
 		
 	re_index: function (index) {
-		if (!("_compare" in this))
+		if (!this._compare)
 			return index;
 		var last = this.__items.length - 1;
 		var object = this.__items[index];
@@ -2146,9 +2146,9 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (!this.exists(object))
 			return null;
 		this.trigger("remove", object);
+		var result = this.__data.remove(object);
 		if ("off" in object)
 			object.off(null, null, this);
-		var result = this.__data.remove(object);
 		return result;
 	},
 	
@@ -2243,11 +2243,13 @@ BetaJS.Comparators = {
 	byObject: function (object) {
 		return function (left, right) {
 			for (key in object) {
-				var l = left[key] || null;
-				var r = right[key] || null;
-				var c = BetaJS.Comparators.byValue(l, r);
+				var c = 0;
+				if (BetaJS.Properties.Properties.is_class_instance(left) && BetaJS.Properties.Properties.is_class_instance(right))
+					c = BetaJS.Comparators.byValue(left.get(key) || null, right.get(key) || null);
+				else
+					c = BetaJS.Comparators.byValue(left[key] || null, right[key] || null);
 				if (c !== 0)
-				return c * object[key];
+					return c * object[key];
 			}
 			return 0;
 		};
@@ -2716,7 +2718,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3314,7 +3316,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	},
 
 	insert: function (data, callbacks) {
-		if (this._create_ids && !(this._id_key in data)) {
+		if (this._create_ids && !(this._id_key in data && data[this._id_key])) {
 			if (this._async_write)
 				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
 			while (this.get(this._last_id))
@@ -4493,7 +4495,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4842,6 +4844,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	
 	constructor: function (attributes, options) {
+		options = options || {};
 		this._inherited(BetaJS.Modelling.Model, "constructor", attributes, options);
 		this.__saved = "saved" in options ? options["saved"] : false;
 		this.__new = "new" in options ? options["new"] : true;

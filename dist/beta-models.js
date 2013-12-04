@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-11-25
+  betajs - v0.0.2 - 2013-12-04
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -348,6 +348,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	
 	constructor: function (attributes, options) {
+		options = options || {};
 		this._inherited(BetaJS.Modelling.Model, "constructor", attributes, options);
 		this.__saved = "saved" in options ? options["saved"] : false;
 		this.__new = "new" in options ? options["new"] : true;

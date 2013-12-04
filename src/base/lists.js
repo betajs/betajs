@@ -18,7 +18,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	exists: function (object) {
-		return this.get_ident(object) !== null;
+		return object && this.get_ident(object) !== null;
 	},
 	
 	_ident_changed: function (object, new_ident) {},
@@ -202,7 +202,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	_sorted: function () {},
 		
 	re_index: function (index) {
-		if (!("_compare" in this))
+		if (!this._compare)
 			return index;
 		var last = this.__items.length - 1;
 		var object = this.__items[index];

@@ -41,6 +41,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", false);
 		this.__itemData = {};
+		if ("table" in options) {
+			var table = this.cls._parseType(options.table, "object");
+			this.active_query = new BetaJS.Queries.ActiveQuery(table.active_query_engine(), {});
+			options.collection = this.active_query.collection();
+			options.destroy_collection = true;
+		}
+		if ("compare" in options)
+			options.compare = this.cls._parseType(options.compare, "function");
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = "destroy_collection" in options ? options.destroy_collection : false;
@@ -71,7 +79,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			this.__reIndexItem(item);
 		}, this);
 		this.__collection.on("sorted", function () {
-			this.__sorted();
+			this.__sort();
 		}, this);
 		this.__collection.iterate(function (item) {
 			this._registerItem(item);
@@ -200,6 +208,8 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	},
 	
 	_unregisterItem: function (item) {
+		if (!this.__itemData[item.cid()])
+			return;
 		this.__itemData[item.cid()].properties.destroy();
 		delete this.__itemData[item.cid()];
 	},
@@ -282,6 +292,11 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
+		options = options || {};
+		if ("item_template" in options)
+			options.templates = {item: options.item_template};
+		if ("item_dynamic" in options)
+			options.dynamics = {item: options.item_dynamic};
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
 		this._setOption(options, "item_label", "label");
 		this._setOption(options, "render_item_on_change", BetaJS.Types.is_defined(this.dynamics("item")));
@@ -336,7 +351,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		if ("create_view" in options)
 			this._create_view = options.create_view;
 		if ("sub_view" in options)
-			this._sub_view = options.sub_view;
+			this._sub_view = this.cls._parseType(options.sub_view, "object");
 		if ("sub_view_options" in options)
 			this._sub_view_options_param = options.sub_view_options;
 		if ("property_map" in options)
@@ -357,7 +372,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	},
 	
 	_activateItem: function (item) {
-		this._inherited(BetaJS.Views.ListView, "_activateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_activateItem", item);
 		var view = this._create_view(item); 
 		this.delegateEvents(null, view, "item", [view, item]);
 		this.itemData(item).view = view;
@@ -368,7 +383,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		var view = this.itemData(item).view;
 		this.removeChild(view);
 		view.destroy();
-		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_deactivateItem", item);
 	}
 	
 });

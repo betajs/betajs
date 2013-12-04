@@ -852,6 +852,8 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return value.split(",");
 			else if (type == "bool")
 				return value === "" || BetaJS.Strings.parseBool(value);
+			else if (type == "object" || type == "function")
+				return BetaJS.Scopes.resolve(value);
 		}
 		return value;
 	}
