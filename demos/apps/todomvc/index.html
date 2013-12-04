@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-framework="betajs">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>beta.js - TodoMVC</title>
+		<link rel="stylesheet" href="todomvc-common/base.css">
+		<script src="../../jquery-1.9.1.min.js"></script>
+		<script src="../../../dist/beta.js"></script>
+		<link rel="stylesheet" href="../../../dist/beta-ui.css" type="text/css" />
+		<script>
+			BetaJS.Views.ActiveDom.activate();
+			App = {};			
+		</script>
+		<script>
+			BetaJS.Modelling.Model.extend("App.Todo", {
+				constructor: function (attributes, options) {
+					options = options || {};
+					options.table = App.TodoTable;
+					this._inherited(App.Todo, "constructor", attributes, options);
+				}	
+			}, {
+				_initializeScheme: function () {
+					var scheme = this._inherited(App.Todo, "_initializeScheme");
+					scheme["title"] = {
+						type: "string"
+					};
+					scheme["isCompleted"] = {
+						type: "boolean",
+						def: false
+					};
+					return scheme;
+				}		
+			});
+			
+			App.TodoStore = new BetaJS.Stores.LocalStore({prefix: "bjstodo"});
+			App.TodoTable = new BetaJS.Modelling.Table(App.TodoStore, "App.Todo", {auto_update_attr: true});			
+		</script>
+		<script type="text/template" id="item-template">
+			<input type="checkbox" class="toggle" {%= item.get("isCompleted") ? "checked" : "" %} />
+			<label>{%= item.get("title") %}</label>
+			<button class="destroy"></button>
+		</script>
+		<script>
+			BetaJS.Views.View.extend("App.TodoView", {
+				_templates: {
+					"default": $("#item-template").html()
+				},
+				constructor: function (options) {
+					this._inherited(App.TodoView, "constructor", options);
+					this._setOptionProperty(options, "item");
+					this.get("item").on("change", this.invalidate, this);
+				},
+				_events: {
+					"click .toggle": function () { this.get("item").set("isCompleted", !this.get("item").get("isCompleted")); },
+					"click .destroy": function () { this.get("item").remove(); }
+				},
+				_render: function () {
+					this._inherited(App.TodoView, "_render");
+					if (this.get("item").get("isCompleted"))
+						this.$el.addClass("completed");
+					else
+						this.$el.removeClass("completed");
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<section id="todoapp">
+			<header id="header">
+				<h1>todos</h1>
+				<bjsview bjs-type="InputView"
+				         bjs-child-id="new-todo"
+				         bjs-placeholder="What needs to be done?"
+				         bjs-name="App.new_todo_view">					
+				</bjsview>
+			</header>
+			<section id="main">
+				<bjsview bjs-type="SubViewListView"
+				         bjs-child-id="todo-list"
+				         bjs-table="App.TodoTable"
+				         bjs-name="App.todo_list_view"
+				         bjs-sub_view="App.TodoView"
+				         bjs-compare="App.compare_todos">
+				</bjsview>
+			</section>
+			<footer id="footer">
+				<ul id="filters">
+					<li>
+						<a href="javascript:App.filter_todos({})">All</a>
+					</li>
+					<li>
+						<a href="javascript:App.filter_todos({isCompleted: false})">Active</a>
+					</li>
+					<li>
+						<a href="javascript:App.filter_todos({isCompleted: true})">Completed</a>
+					</li>
+				</ul>
+			</footer>
+		</section>
+		<script>
+			App.compare_todos = BetaJS.Comparators.byObject({ isCompleted: 1, id: -1 });
+			App.filter_todos = function (query) {
+				App.todo_list_view.active_query.change_query(query);
+			};
+			$(document).ready(function () {
+				App.new_todo_view.on("enter_key", function () {
+					var todo = new App.Todo({title: App.new_todo_view.get("value")});
+					todo.save();
+					App.new_todo_view.set("value", "");
+				});
+			});
+		</script>
+	</body>
+</html>
