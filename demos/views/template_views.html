@@ -7,8 +7,8 @@
 		<script src="../../dist/beta.js"></script>
 		<script type="text/template" id="main-view-template">
 			<div id='input'></div>
-			<div id='button'></div>
 			<div id='list'></div>
+			<div id='button'></div>
 		</script>		
 		<script type="text/template" id="button-view-template">
 			<button>{%= label %}</button>
@@ -25,7 +25,7 @@
 					el: "#main",
 					template: $("#main-view-template")
 				});
-				BetaJS.Views.View.extend("ButtonView", {
+				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
 					_templates: {
 						"default": $("#button-view-template")
 					},
@@ -42,7 +42,7 @@
 						this.trigger("click");
 					}
 				});
-				BetaJS.Views.View.extend("ListView", {
+				var ListView = BetaJS.Views.View.extend("ListView", {
 					_templates: {
 						"default": $("#list-view-template"),
 						"item": $("#list-view-item-template")

@@ -32,14 +32,14 @@
 					compare: function (x, y) {
 						return x.get("text").localeCompare(y.get("text"));
 					},
-					objects: [{"text": "A Example Z","alert":"A"},
-					          {"text": "B Example Y","alert":"B"},
-					          {"text": "C Example X","alert":"C"},
-					          {"text": "D Example W","alert":"D"},
-					          {"text": "E Example V","alert":"E"}]
+					objects: [{"text": "A Example Z","exec": function () {alert("a");}},
+					          {"text": "B Example Y","exec": function () {document.location = "http://www.google.com";}},
+					          {"text": "C Example X","exec": function () {alert("c");}},
+					          {"text": "D Example W","exec": function () {alert("d");}},
+					          {"text": "E Example V","exec": function () {alert("e");}}]
 				});
 				list.on("item:click", function (view, item) {
-					alert(item.get("alert"));
+					item.get("exec")();
 				});
 				var main = new BetaJS.Views.ListContainerView({
 					el: "body"
