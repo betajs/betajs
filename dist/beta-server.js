@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-12-04
+  betajs - v0.0.2 - 2013-12-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-12-04
+  betajs - v0.0.2 - 2013-12-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-12-04
+  betajs - v0.0.2 - 2013-12-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -695,6 +695,16 @@ BetaJS.Objs = {
 			return success;
 		}, context);
 		return success;
+	},
+	
+	objectify: function (arr, f, context) {
+		var result = {};
+		var is_function = BetaJS.Types.is_function(f);
+		if (BetaJS.Types.is_undefined(f))
+			f = true;
+		for (var i = 0; i < arr.length; ++i)
+			result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
+		return result;
 	}
 
 };
@@ -2723,7 +2733,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-12-04
+  betajs - v0.0.2 - 2013-12-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4500,7 +4510,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-12-04
+  betajs - v0.0.2 - 2013-12-05
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

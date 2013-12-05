@@ -206,6 +206,16 @@ BetaJS.Objs = {
 			return success;
 		}, context);
 		return success;
+	},
+	
+	objectify: function (arr, f, context) {
+		var result = {};
+		var is_function = BetaJS.Types.is_function(f);
+		if (BetaJS.Types.is_undefined(f))
+			f = true;
+		for (var i = 0; i < arr.length; ++i)
+			result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
+		return result;
 	}
 
 };

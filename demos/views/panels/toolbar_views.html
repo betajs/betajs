@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="../../jquery-1.9.1.min.js"></script>
+		<script src="../../../dist/beta.js"></script>
+		<script>
+			BetaJS.Views.ActiveDom.activate();
+		</script>
+	</head>
+	<body>
+		<script>
+			var view = new BetaJS.Views.ToolBarView({
+				el: "body",
+				items: [{
+					label: "A",
+					item_ident: "left"	
+				}, {
+					label: "B",
+					item_ident: "right"
+				}]
+			});
+			view.activate();
+			view.on("item:click", function (view, options) {
+				alert(view.get("label") + ":" + options.item_ident);
+			});
+			view.on("item-left:click", function (view, options) {
+				alert("left");
+			});
+		</script>
+	</body>
+</html>
