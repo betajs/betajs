@@ -8431,6 +8431,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
 		this._setOption(options, "alignment", "horizontal");
 		this._setOption(options, "positioning", "float"); // float, computed, none
+		this._setOption(options, "clear_float", false);
 		this._setOption(options, "container_element", "div");
 		this.on("show", function () {
 			if (this.__positioning == "computed")
@@ -8443,7 +8444,10 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	},
 	
 	_render: function () {
-		this.$el.html("");
+		if (this.__clear_float)
+			this.$el.html("<div data-selector='clearboth' style='clear:both'></div>");
+		else
+			this.$el.html("");
 		BetaJS.Objs.iter(this.children(), function (child) {
 			this.__addChildContainer(child);
 		}, this);
@@ -8451,8 +8455,13 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	
 	__addChildContainer: function (child) {
 		var options = this.childOptions(child);
-		if (this.isActive())
-			this.$el.append(this.evaluateTemplate("item", {cid: child.cid(), container_element: this.__container_element}));
+		if (this.isActive()) {
+			var rendered = this.evaluateTemplate("item", {cid: child.cid(), container_element: this.__container_element});
+			if (this.__clear_float)
+				this.$("[data-selector='clearboth']").before(rendered);
+			else
+				this.$el.append(rendered);
+		}
 		child.setEl("[data-view-id='" + child.cid() + "']");
 		if (this.isHorizontal() && !("float" in options) && this.__positioning == "float")
 			options["float"] = "left";
@@ -9463,9 +9472,20 @@ BetaJS.Views.FormControlView.extend("BetaJS.Views.FormCheckBoxView", {
 
 BetaJS.Views.ListContainerView.extend("BetaJS.Views.ToolBarView", {
 	
+	_css: function () {
+		return {
+			"divider": "divider",
+			"group": "group"
+		};
+	},
+
 	constructor: function (options) {
+		options = BetaJS.Objs.extend({
+			clear_float: true
+		}, options || {});
 		this._inherited(BetaJS.Views.ToolBarView, "constructor", options);
-		options = options || {};
+		this.__group_by_ident = {};
+		this.__item_by_ident = {};
 		if (options.groups) {
 			BetaJS.Objs.iter(options.groups, function (group) {
 				this.addGroup(group);
@@ -9483,8 +9503,31 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.ToolBarView", {
 	]),
 
 	addGroup: function (options) {
-		// TODO: Divider
-		// TODO
+		var parent_options = {
+			group_type: "container"
+		};
+		var group_options = {};
+		BetaJS.Objs.iter(options || {}, function (value, key) {
+			if (key in this.__group_parent_options)
+				parent_options[key] = value;
+			else
+				group_options[key] = value;
+		}, this);
+		var view = null;
+		if (parent_options.group_type == "container") {
+			group_options.el_classes = this.css("group");
+			view = this.addChild(new BetaJS.Views.ListContainerView(group_options), parent_options);
+			if (parent_options.group_ident) {
+				if (parent_options.group_ident in this.__group_by_ident)
+					throw ("Group identifier already registered: " + parent_options.group_ident);
+				this.__group_by_ident[parent_options.group_ident] = view;
+			}
+			return view;			
+		} else if (parent_options.group_type == "divider") {
+			group_options.el_classes = this.css("divider");
+			view = this.addChild(new BetaJS.Views.View(group_options), parent_options);
+		} else throw ("Unknown group type: " + parent_options.group_type);
+		return view;			
 	},
 	
 	__item_parent_options: BetaJS.Objs.objectify([
@@ -9506,10 +9549,23 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.ToolBarView", {
 			parent_options.item_type = BetaJS.Views[parent_options.item_type];
 		if (BetaJS.Types.is_string(parent_options.item_type))
 			parent_options.item_type = BetaJS.Scopes.resolve(parent_options.item_type);
-		var view = this.addChild(new parent_options.item_type(options), parent_options);
+		var parent = this;
+		if (parent_options.item_group) {
+			if (parent_options.item_group in this.__group_by_ident)
+				parent = this.__group_by_ident[parent_options.item_group];
+			else
+				throw ("Unknown group identifier: " + parent_options.item_group);
+		}
+		var view = parent.addChild(new parent_options.item_type(item_options), parent_options);
 		this.delegateEvents(null, view, "item", [view, parent_options]);
 		if (parent_options.item_ident)
 			this.delegateEvents(null, view, "item-" + parent_options.item_ident, [view, parent_options]);
+		if (parent_options.item_ident) {
+			if (parent_options.item_ident in this.__item_by_ident)
+				throw ("Item identifier already registered: " + parent_options.item_ident);
+			this.__item_by_ident[parent_options.item_ident] = view;
+		}
+		return view;
 	}
 		
 });

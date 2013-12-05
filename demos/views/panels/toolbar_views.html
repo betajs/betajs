@@ -4,20 +4,51 @@
 		<meta charset="utf-8">
 		<script src="../../jquery-1.9.1.min.js"></script>
 		<script src="../../../dist/beta.js"></script>
+		<link rel="stylesheet" href="../../../dist/beta-ui.css" />
 		<script>
 			BetaJS.Views.ActiveDom.activate();
 		</script>
+		<style>
+			.divider {
+				background-color: black;
+				min-width: 1px;
+				max-width: 1px;
+				width: 1px;
+				margin-left: 2px;
+				margin-right: 2px;
+			}
+			.group {
+				padding: 2px 2px 2px 2px;
+				margin-left: 1px;
+				margin-right: 1px;
+				border-left: 1px solid black;
+				border-right: 1px solid black;
+			}
+			.toolbar {
+				background-color: gray;
+				padding: 1px 1px 1px 1px;
+			}
+		</style>
 	</head>
 	<body>
+		<div id="toolbar"></div>
 		<script>
 			var view = new BetaJS.Views.ToolBarView({
-				el: "body",
+				el: "#toolbar",
+				el_classes: "toolbar",
 				items: [{
 					label: "A",
-					item_ident: "left"	
+					item_ident: "left",
+					item_group: "second"
 				}, {
 					label: "B",
-					item_ident: "right"
+					item_ident: "right",
+					item_group: "first"
+				}],
+				groups: [{
+					group_ident: "first"
+				}, {
+					group_ident: "second"
 				}]
 			});
 			view.activate();
