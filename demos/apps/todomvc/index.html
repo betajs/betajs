@@ -13,6 +13,7 @@
 			App = {};			
 		</script>
 		<script>
+		//This serves as the model on the client side?
 			BetaJS.Modelling.Model.extend("App.Todo", {
 				constructor: function (attributes, options) {
 					options = options || {};
@@ -33,6 +34,7 @@
 				}		
 			});
 			
+			// What do the Stores do? - What does the Table do
 			App.TodoStore = new BetaJS.Stores.LocalStore({prefix: "bjstodo"});
 			App.TodoTable = new BetaJS.Modelling.Table(App.TodoStore, "App.Todo", {auto_update_attr: true});			
 		</script>
@@ -99,6 +101,7 @@
 			</footer>
 		</section>
 		<script>
+		// What does the Comparator do?
 			App.compare_todos = BetaJS.Comparators.byObject({ isCompleted: 1, id: -1 });
 			App.filter_todos = function (query) {
 				App.todo_list_view.active_query.change_query(query);
@@ -113,3 +116,22 @@
 		</script>
 	</body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
