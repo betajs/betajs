@@ -11,7 +11,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 			return null;
 		for (var i = 0; i < this.__validator.length; ++i) {
 			var result = this.__validator[i].validate(value, context);
-			if (result != null)
+			if (result !== null)
 				return result;
 		}
 		return null;

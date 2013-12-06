@@ -4,7 +4,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
 	attach: function (ident, store) {
 		store.on("insert", function (row) {
 			this.trigger("insert", ident, store, row);
-			this.trigger("write", "insert", ident, store, row)
+			this.trigger("write", "insert", ident, store, row);
 		}, this);
 		store.on("remove", function (id) {
 			this.trigger("remove", ident, store, id);

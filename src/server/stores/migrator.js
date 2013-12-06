@@ -8,7 +8,7 @@ BetaJS.Class.extend("BetaJS.Stores.Migrator", {
 	},
 	
 	version: function (offset) {
-		if (this.__version == null)
+		if (!this.__version)
 			this.__version = this._getVersion();
 		return this.__version;
 	},
@@ -38,11 +38,12 @@ BetaJS.Class.extend("BetaJS.Stores.Migrator", {
 	},
 	
 	_indexByVersion: function (version) {
-		for (var i = 0; i < this.__migrations.length; ++i)
+		for (var i = 0; i < this.__migrations.length; ++i) {
 			if (version == this.__migrations[i].version)
-				return i
+				return i;
 			else if (version < this.__migrations[i].version)
 				return i-1;
+		}
 		return this.__migrations.length;				
 	},
 	

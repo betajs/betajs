@@ -107,20 +107,20 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	__update_element: function (element) {
 		var value = this.__get_variable(element.variable);
 		if (element.type == "inner")
-			element.$el.html(value)
+			element.$el.html(value);
 		else if (element.type == "value") {
 			if (element.$el.val() != value)
 				element.$el.val(value);
 		} else if (element.type == "attribute")
-			element.$el.attr(element.attribute, value)
+			element.$el.attr(element.attribute, value);
 		else if (element.type == "css") {
 			if (!element.positive)
 				value = !value;
 			if (value)
-				element.$el.addClass(this.__parent.view().css(element.css))
+				element.$el.addClass(this.__parent.view().css(element.css));
 			else
 				element.$el.removeClass(this.__parent.view().css(element.css));
-		};
+		}
 	},
 	
 	__prepare_element: function (element) {

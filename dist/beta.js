@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-11-15
+  betajs - v0.0.2 - 2013-12-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-15
+  betajs - v0.0.2 - 2013-12-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-11-15
+  betajs - v0.0.2 - 2013-12-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -56,7 +56,7 @@ BetaJS.Types = {
      * @return true if x is null
      */
 	is_null: function (x) {
-		return x == null;
+		return x === null;
 	},
 	
     /** Returns whether argument is undefined or null
@@ -86,7 +86,7 @@ BetaJS.Types = {
 		if (this.is_none(x)) 
 			return true;
 		if (this.is_array(x))
-			return x.length == 0;
+			return x.length === 0;
 		if (this.is_object(x)) {
 			for (var key in x)
 				return false;
@@ -139,9 +139,9 @@ BetaJS.Types = {
 			var len_x = x.length;
 			var len_y = y.length;
 			var len = Math.min(len_x, len_y);
-			for (var i=0; i < len; ++i) {
+			for (var i = 0; i < len; ++i) {
 				var c = this.compare(x[i], y[i]);
-				if (c != 0)
+				if (c !== 0)
 					return c;
 			}
 			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
@@ -270,6 +270,41 @@ BetaJS.Strings = {
      */
 	is_email_address: function (s) {
 		return this.EMAIL_ADDRESS_REGEX.test(s);
+	},
+	
+	STRIP_HTML_REGEX: /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
+		
+    /** Removes all html from data and returns plain text
+     * 
+     * @param html string containing html
+     * @return string containing the plain text part of it
+     */
+	strip_html: function (html) {
+    	return html.replace(this.STRIP_HTML_REGEX, '');
+    },
+   
+    /** Trims all trailing and leading whitespace and removes block indentations
+     * 
+     * @param s string
+     * @return string with trimmed whitespaces and removed block indentation
+     */
+    nltrim: function(s) {
+		var a = s.replace(/\t/g, "  ").split("\n");
+		var len = null;
+		var i = 0;
+		for (i = 0; i < a.length; ++i) {
+			var j = 0;
+			while (j < a[i].length) {
+				if (a[i].charAt(j) != ' ')
+					break;
+				++j;
+			}
+			if (j < a[i].length)
+				len = len === null ? j : Math.min(j, len);	
+		}
+		for (i = 0; i < a.length; ++i)
+			a[i] = a[i].substring(len);
+		return a.join("\n").trim();
 	}
 
 };
@@ -409,6 +444,49 @@ BetaJS.Scopes = {
 	
 };
 
+/** @class */
+BetaJS.Ids = {
+	
+	__uniqueId: 0,
+	
+    /** Returns a unique identifier
+     * 
+     * @param prefix a prefix string for the identifier (optional)
+     * @return unique identifier
+     */
+	uniqueId: function (prefix) {
+		return (prefix || "") + (this.__uniqueId++);
+	},
+	
+    /** Returns the object's unique identifier
+     * 
+     * @param object the object
+     * @return object's unique identifier
+     */
+	objectId: function (object) {
+		if (!object.__cid)
+			object.__cid = this.uniqueId("cid_");
+		return object.__cid;
+	}
+	
+};
+/** @class */
+BetaJS.Tokens = {
+	
+    /** Returns a new token
+     * 
+     * @param length optional length of token, default is 16
+     * @return token
+     */
+	generate_token: function (length) {
+		length = length || 16;
+		var s = "";
+		while (s.length < length)
+			s += Math.random().toString(36).substr(2); 
+		return s.substr(0, length);
+	}
+	
+};
 BetaJS.Objs = {
 	
 	count: function (obj) {
@@ -417,7 +495,7 @@ BetaJS.Objs = {
 		else {
 			var c = 0;
 			for (var key in obj)
-				++c;
+				c++;
 			return c;
 		}
 	},
@@ -435,9 +513,10 @@ BetaJS.Objs = {
 	
 	extend: function (target, source, depth) {
 		target = target || {};
-		if (source)
+		if (source) {
 			for (var key in source)
 				target[key] = this.clone(source[key], depth);
+		}
 		return target;
 	},
 	
@@ -479,27 +558,30 @@ BetaJS.Objs = {
 	},
 
 	keys: function(obj, mapped) {
+		var result = null;
+		var key = null;
 		if (BetaJS.Types.is_undefined(mapped)) {
-			var result = [];
-			for (var key in obj)
+			result = [];
+			for (key in obj)
 				result.push(key);
 			return result;
 		} else {
-			var result = {};
-			for (var key in obj)
+			result = {};
+			for (key in obj)
 				result[key] = mapped;
 			return result;
 		}
 	},
 	
 	map: function (obj, f, context) {
+		var result = null;
 		if (BetaJS.Types.is_array(obj)) {
-			var result = [];
+			result = [];
 			for (var i = 0; i < obj.length; ++i)
 				result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
 			return result;
 		} else {
-			var result = {};
+			result = {};
 			for (var key in obj)
 				result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
 			return result;
@@ -514,15 +596,16 @@ BetaJS.Objs = {
 	},
 	
 	filter: function (obj, f, context) {
+		var ret = null;
 		if (BetaJS.Types.is_array(obj)) {
-			var ret = [];
+			ret = [];
 			for (var i = 0; i < obj.length; ++i) {
 				if (context ? f.apply(context, [obj[i], i]) : f(obj[i], i))
 					ret.push(obj[i]);
 			}
 			return ret;
 		} else {
-			var ret = {};
+			ret = {};
 			for (var key in obj) {
 				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
 					ret[key] = obj[key];
@@ -532,39 +615,45 @@ BetaJS.Objs = {
 	},
 	
 	equals: function (obj1, obj2, depth) {
+		var key = null;
 		if (depth && depth > 0) {
-			for (var key in obj1)
+			for (key in obj1) {
 				if (!key in obj2 || !this.equals(obj1[key], obj2[key], depth-1))
 					return false;
-			for (var key in obj2)
+			}
+			for (key in obj2) {
 				if (!key in obj1)
 					return false;
+			}
 			return true;
 		} else
 			return obj1 == obj2;
 	},
 	
 	iter: function (obj, f, context) {
-		if (BetaJS.Types.is_array(obj))
+		var result = null;
+		if (BetaJS.Types.is_array(obj)) {
 			for (var i = 0; i < obj.length; ++i) {
-				var result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
+				result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
 				if (BetaJS.Types.is_defined(result) && !result)
 					return false;
 			}
-		else
+		} else {
 			for (var key in obj) {
-				var result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+				result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
 				if (BetaJS.Types.is_defined(result) && !result)
 					return false;
 			}
+		}
 		return true;
 	},
 	
 	intersect: function (a, b) {
 		var c = {};
-		for (var key in a)
+		for (var key in a) {
 			if (key in b)
 				c[key] = a[key];
+		}
 		return c;
 	},
 	
@@ -577,13 +666,15 @@ BetaJS.Objs = {
 	
 	contains_value: function (obj, value) {
 		if (BetaJS.Types.is_array(obj)) {
-			for (var i = 0; i < obj.length; ++i)
+			for (var i = 0; i < obj.length; ++i) {
 				if (obj[i] === value)
 					return true;
+			}
 		} else {
-			for (var key in obj)
+			for (var key in obj) {
 				if (obj[key] === value)
 					return true;
+			}
 		}
 		return false;
 	},
@@ -608,21 +699,6 @@ BetaJS.Objs = {
 
 };
 
-BetaJS.Ids = {
-	
-	__uniqueId: 0,
-	
-	uniqueId: function (prefix) {
-		return (prefix || "") + (this.__uniqueId++);
-	},
-	
-	objectId: function (object) {
-		if (!object.__cid)
-			object.__cid = this.uniqueId("cid_");
-		return object.__cid;
-	}
-	
-};
 BetaJS.Class = function () {};
 
 BetaJS.Class.classname = "Class";
@@ -662,9 +738,10 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	
 	// Add Class Statics
 	var class_statics_keys = {};
-	if (parent.__class_statics_keys)
+	if (parent.__class_statics_keys) {
 		for (var key in parent.__class_statics_keys) 
 			result[key] = BetaJS.Objs.clone(parent[key], 1);
+	}
 	BetaJS.Objs.iter(class_statics, function (stat) {
 		BetaJS.Objs.extend(result, stat);
 		BetaJS.Objs.extend(class_statics_keys, BetaJS.Objs.keys(stat, true));
@@ -745,21 +822,24 @@ BetaJS.Class.prototype._notify = function (name) {
 		return;
 	var rest = Array.prototype.slice.call(arguments, 1);
 	var table = this.cls.__notifications[name];
-	if (table)
+	if (table) {
 		for (var i in table) {
 			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
 			if (!method)
 				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
 			method.apply(this, rest);
 		}
+	}
 };
 
 BetaJS.Class.prototype.destroy = function () {
 	this._notify("destroy");
-	if (this.__auto_destroy_list)
-		for (var i = 0; i < this.__auto_destroy_list.length; ++i)
+	if (this.__auto_destroy_list) {
+		for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
 			if ("destroy" in this.__auto_destroy_list[i])
 				this.__auto_destroy_list[i].destroy();
+		}
+	}
 	for (var key in this)
 		delete this[key];
 };
@@ -791,14 +871,14 @@ BetaJS.Class.prototype.cls = BetaJS.Class;
 BetaJS.Class.__notifications = {};
 
 BetaJS.Class.is_class_instance = function (object) {
-	return object != null && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
+	return object && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
 };
 
 
 BetaJS.Exceptions = {
 	
 	ensure: function (e) {
-		if (e != null && BetaJS.Types.is_object(e) && ("instance_of" in e) && (e.instance_of(BetaJS.Exceptions.Exception)))
+		if (e && BetaJS.Types.is_object(e) && ("instance_of" in e) && (e.instance_of(BetaJS.Exceptions.Exception)))
 			return e;
 		return new BetaJS.Exceptions.NativeException(e);
 	}
@@ -848,7 +928,7 @@ BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 }, {
 	
 	ensure: function (e) {
-		var e = BetaJS.Exceptions.ensure(e);
+		e = BetaJS.Exceptions.ensure(e);
 		e.assert(this);
 		return e;
 	}
@@ -889,7 +969,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	exists: function (object) {
-		return this.get_ident(object) != null;
+		return object && this.get_ident(object) !== null;
 	},
 	
 	_ident_changed: function (object, new_ident) {},
@@ -992,7 +1072,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 	
 	_iterate: function (cb, context) {
 		var current = this.__first;
-		while (current != null) {
+		while (current) {
 			var prev = current;
 			current = current.next;
 			if (!cb.apply(context || this, [prev.obj, prev]))
@@ -1073,7 +1153,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	_sorted: function () {},
 		
 	re_index: function (index) {
-		if (!("_compare" in this))
+		if (!this._compare)
 			return index;
 		var last = this.__items.length - 1;
 		var object = this.__items[index];
@@ -1084,13 +1164,14 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 			this.__items[i + 1] = object;
 			++i;
 		}
-		if (i == index)
+		if (i == index) {
 			while (i > 0 && this._compare(this.__items[i], this.__items[i - 1]) < 0) {
 				this.__items[i] = this.__items[i - 1];
 				this.__ident_changed(this.__items[i], i);
 				this.__items[i - 1] = object;
 				--i;
 			}
+		}
 		if (i != index) {
 			this.__ident_changed(object, i);
 			this._re_indexed(object);
@@ -1147,7 +1228,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 BetaJS.Iterators = {
 	
 	ensure: function (mixed) {
-		if (mixed == null)
+		if (mixed === null)
 			return new BetaJS.Iterators.ArrayIterator([]);
 		if (mixed.instance_of(BetaJS.Iterators.Iterator))
 			return mixed;
@@ -1182,7 +1263,9 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 	},
 	
 	next: function () {
-		return this.__array[this.__i++];
+		var ret = this.__array[this.__i];
+		this.__i++;
+		return ret;
 	}
 	
 });
@@ -1233,7 +1316,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	
 	hasNext: function () {
 		this.__crawl();
-		return this.__next != null;
+		return this.__next !== null;
 	},
 	
 	next: function () {
@@ -1244,8 +1327,8 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
 	},
 	
 	__crawl: function () {
-		while (this.__next == null && this.__iterator.hasNext()) {
-			var item = this.__iterator.next();;
+		while (!this.__next && this.__iterator.hasNext()) {
+			var item = this.__iterator.next();
 			if (this.__filter_func(item))
 				this.__next = item;
 		}
@@ -1316,7 +1399,9 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
 	},
 	
 	next: function () {
-		return this.__array[this.__i++];
+		var ret = this.__array[this.__i];
+		this.__i++;
+		return ret;
 	}
 	
 });
@@ -1382,7 +1467,10 @@ BetaJS.Events.EventsMixin = {
 		this.__events_mixin_events = this.__events_mixin_events || {};
 		events = events.split(BetaJS.Events.EVENT_SPLITTER);
 		var event;
-		while (event = events.shift()) {
+		while (true) {
+			event = events.shift();
+			if (!event)
+				break;
 			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
 			this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
 		}
@@ -1394,7 +1482,10 @@ BetaJS.Events.EventsMixin = {
 		if (events) {
 			events = events.split(BetaJS.Events.EVENT_SPLITTER);
 			var event;
-			while (event = events.shift())
+			while (true) {
+				event = events.shift();
+				if (!event)
+					break;
 				if (this.__events_mixin_events[event]) {
 					this.__events_mixin_events[event].remove_by_filter(function (object) {
 						var result = (!callback || object.callback == callback) && (!context || object.context == context);
@@ -1402,11 +1493,12 @@ BetaJS.Events.EventsMixin = {
 							this.__destroy_event_object(object);
 						return result;
 					});
-					if (this.__events_mixin_events[event].count() == 0) {
+					if (this.__events_mixin_events[event].count() === 0) {
 						this.__events_mixin_events[event].destroy();
 						delete this.__events_mixin_events[event];
 					}
 				}
+			}
 		} else {
 			for (event in this.__events_mixin_events) {
 				this.__events_mixin_events[event].remove_by_filter(function (object) {
@@ -1415,7 +1507,7 @@ BetaJS.Events.EventsMixin = {
 						this.__destroy_event_object(object);
 					return result;
 				});
-				if (this.__events_mixin_events[event].count() == 0) {
+				if (this.__events_mixin_events[event].count() === 0) {
 					this.__events_mixin_events[event].destroy();
 					delete this.__events_mixin_events[event];
 				}
@@ -1430,8 +1522,11 @@ BetaJS.Events.EventsMixin = {
     	var rest = BetaJS.Functions.getArguments(arguments, 1);
 		var event;
 		if (!this.__events_mixin_events)
-			return;
-    	while (event = events.shift()) {
+			return this;
+		while (true) {
+			event = events.shift();
+			if (!event)
+				break;
     		if (this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
@@ -1457,7 +1552,7 @@ BetaJS.Events.EventsMixin = {
     delegateEvents: function (events, source, prefix, params) {
     	params = params || []; 
     	prefix = prefix ? prefix + ":" : "";
-    	if (events == null) {
+    	if (events === null) {
     		source.on("all", function (event) {
 				var rest = BetaJS.Functions.getArguments(arguments, 1);
 				this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
@@ -1616,7 +1711,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 	add: function (object) {
 		if (this.get(object))
 			return;
-		if (this.__size != null && this.__count >= this.__size && this.__first)
+		if (this.__size !== null && this.__count >= this.__size && this.__first)
 			this.remove(this.__first.object);
 		var container = {
 			object: object,
@@ -1847,7 +1942,7 @@ BetaJS.Properties.PropertiesMixin = {
 				}, this);
 			}
 			delete this.__properties[key];
-		};
+		}
 	},
 	
 	_set_changed: function (key, old_value, options) {
@@ -1861,7 +1956,7 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	_parseTimer: function (dep) {
-		return parseInt(BetaJS.Strings.strip_start("timer:"));
+		return parseInt(BetaJS.Strings.strip_start("timer:"), 10);
 	},
 	
 	set: function (key, value, options) {
@@ -2032,7 +2127,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (this.exists(object))
 			return null;
 		var ident = this.__data.add(object);
-		if (ident != null) {
+		if (ident !== null) {
 			this.trigger("add", object);
 			if ("on" in object)
 				object.on("change", function (key, value) {
@@ -2056,9 +2151,9 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (!this.exists(object))
 			return null;
 		this.trigger("remove", object);
+		var result = this.__data.remove(object);
 		if ("off" in object)
 			object.off(null, null, this);
-		var result = this.__data.remove(object);
 		return result;
 	},
 	
@@ -2141,7 +2236,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 		if (!this.exists(object))
 			return null;
 		var result = this.__selfRemove(object);
-		if (result == null)
+		if (!result)
 			return null;
 		return this.__parent.remove(object);
 	}
@@ -2153,11 +2248,13 @@ BetaJS.Comparators = {
 	byObject: function (object) {
 		return function (left, right) {
 			for (key in object) {
-				var l = left[key] || null;
-				var r = right[key] || null;
-				var c = BetaJS.Comparators.byValue(l, r);
-				if (c != 0)
-				return c * object[key];
+				var c = 0;
+				if (BetaJS.Properties.Properties.is_class_instance(left) && BetaJS.Properties.Properties.is_class_instance(right))
+					c = BetaJS.Comparators.byValue(left.get(key) || null, right.get(key) || null);
+				else
+					c = BetaJS.Comparators.byValue(left[key] || null, right[key] || null);
+				if (c !== 0)
+					return c * object[key];
 			}
 			return 0;
 		};
@@ -2185,7 +2282,8 @@ BetaJS.Sort = {
 		var data = [];
 		var identifier_to_index = {};
 		var todo = {};
-		for (var i = 0; i < n; ++i) {
+		var i = null;
+		for (i = 0; i < n; ++i) {
 			todo[i] = true;
 			var ident = identifierf(items[i], i);
 			identifier_to_index[ident] = i;
@@ -2194,7 +2292,7 @@ BetaJS.Sort = {
 				after: {}
 			});		
 		}
-		for (var i = 0; i < n; ++i) {
+		for (i = 0; i < n; ++i) {
 			BetaJS.Objs.iter(beforef(items[i], i) || [], function (before) {
 				var before_index = identifier_to_index[before];
 				if (BetaJS.Types.is_defined(before_index)) {
@@ -2211,30 +2309,21 @@ BetaJS.Sort = {
 			});
 		}
 		var result = [];
-		while (!BetaJS.Types.is_empty(todo))
-			for (var i in todo)
+		while (!BetaJS.Types.is_empty(todo)) {
+			for (i in todo) {
 				if (BetaJS.Types.is_empty(data[i].after)) {
 					delete todo[i];
 					result.push(items[i]);
-					for (var before in data[i].before)
-						delete data[before].after[i];
+					for (bef in data[i].before)
+						delete data[bef].after[i];
 				}
+			}
+		}
 		return result;
 	}
 	
 };
 
-BetaJS.Tokens = {
-	
-	generate_token: function (length) {
-		length = length || 16;
-		var s = "";
-		while (s.length < length)
-			s += Math.random().toString(36).substr(2); 
-		return s.substr(0, length);
-	}
-	
-}
 BetaJS.Locales = {
 	
 	__data: {},
@@ -2316,7 +2405,7 @@ BetaJS.Time = {
 	
 	format_ago: function (t) {
 		if (this.days_ago(t) > 1)
-			return this.format(t, {time: false})
+			return this.format(t, {time: false});
 		else
 			return this.format_period(Math.max(this.ago(t), 0)) + " ago";
 	},
@@ -2343,20 +2432,20 @@ BetaJS.Time = {
 		}, options || {});
 		var d = new Date(t);
 		if (options.locale) {
-			if (options.date)
+			if (options.date) {
 				if (options.time)
-					return d.toLocaleString()
+					return d.toLocaleString();
 				else
-					return d.toLocaleDateString()
-			else
+					return d.toLocaleDateString();
+			} else
 				return d.toLocaleTimeString();
 		} else {
-			if (options.date)
-				if (options.time)
-					return d.toString()
+			if (options.date) {
+				if (options.time) 
+					return d.toString();
 				else
-					return d.toDateString()
-			else
+					return d.toDateString();
+			} else
 				return d.toTimeString();
 		}
 	}
@@ -2410,7 +2499,7 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 		if (!this.__started)
 			return;
 		if (this.__once)
-			clearTimeout(this.__timer)
+			clearTimeout(this.__timer);
 		else
 			clearInterval(this.__timer);
 		this.__started = false;
@@ -2423,7 +2512,7 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 		if (this.__once)
 			this.__timer = setTimeout(function () {
 				self.fire();
-			}, this.__delay)
+			}, this.__delay);
 		else
 			this.__timer = setInterval(function () {
 				self.fire();
@@ -2434,6 +2523,128 @@ BetaJS.Class.extend("BetaJS.Timers.Timer", {
 	restart: function () {
 		this.stop();
 		this.start();
+	}
+	
+});
+/*
+ * Inspired by Underscore's Templating Engine
+ * (which itself is inspired by John Resig's implementation)
+ */
+
+BetaJS.Templates = {
+	
+	tokenize: function (s) {
+		// Already tokenized?
+		if (BetaJS.Types.is_array(s))
+			return s;
+		var tokens = [];
+		var index = 0;
+		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, code, offset) {
+			if (index < offset) 
+				tokens.push({
+					type: BetaJS.Templates.TOKEN_STRING,
+					data: BetaJS.Strings.js_escape(s.slice(index, offset))
+				});
+			if (code)
+				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
+			if (expr)
+				tokens.push({type: BetaJS.Templates.TOKEN_EXPR, data: expr});
+			if (esc)
+				tokens.push({type: BetaJS.Templates.TOKEN_ESC, data: esc});
+		    index = offset + match.length;
+		    return match;
+		});
+		return tokens;
+	},
+	
+	/*
+	 * options
+	 *  - start_index: token start index
+	 *  - end_index: token end index
+	 */
+	compile: function(source, options) {
+		if (BetaJS.Types.is_string(source))
+			source = this.tokenize(source);
+		options = options || {};
+		var start_index = options.start_index || 0;
+		var end_index = options.end_index || source.length;
+		var result = "__p+='";
+		for (var i = start_index; i < end_index; ++i) {
+			switch (source[i].type) {
+				case BetaJS.Templates.TOKEN_STRING:
+					result += source[i].data;
+					break;
+				case BetaJS.Templates.TOKEN_CODE:
+					result += "';\n" + source[i].data + "\n__p+='";
+					break;
+				case BetaJS.Templates.TOKEN_EXPR:
+					result += "'+\n((__t=(" + source[i].data + "))==null?'':__t)+\n'";
+					break;
+				case BetaJS.Templates.TOKEN_ESC:
+					result += "'+\n((__t=(" + source[i].data + "))==null?'':BetaJS.Strings.htmlentities(__t))+\n'";
+					break;
+				default:
+					break;
+			}	
+		}
+		result += "';\n";
+		result = 'with(obj||{}){\n' + result + '}\n';
+		result = "var __t,__p='',__j=Array.prototype.join," +
+		  "echo=function(){__p+=__j.call(arguments,'');};\n" +
+		  result + "return __p;\n";
+		var func = new Function('obj', result);
+		var func_call = function(data) {
+			return func.call(this, data);
+		};
+		func_call.source = 'function(obj){\n' + result + '}';
+		return func_call;
+	}
+		
+};
+
+BetaJS.Templates.SYNTAX = {
+	OPEN: "{%",
+	CLOSE: "%}",
+	MODIFIER_CODE: "",
+	MODIFIER_EXPR: "=",
+	MODIFIER_ESC: "-"
+};
+
+BetaJS.Templates.SYNTAX_REGEX = function () {
+	var syntax = BetaJS.Templates.SYNTAX;
+	if (!BetaJS.Templates.SYNTAX_REGEX_CACHED)
+		BetaJS.Templates.SYNTAX_REGEX_CACHED = new RegExp(
+			syntax.OPEN + syntax.MODIFIER_EXPR + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
+			syntax.OPEN + syntax.MODIFIER_ESC + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
+			syntax.OPEN + syntax.MODIFIER_CODE + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
+			"$",
+		'g');
+	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
+};
+
+BetaJS.Templates.TOKEN_STRING = 1;
+BetaJS.Templates.TOKEN_CODE = 2;
+BetaJS.Templates.TOKEN_EXPR = 3;
+BetaJS.Templates.TOKEN_ESC = 4;
+
+
+
+BetaJS.Class.extend("BetaJS.Templates.Template", {
+	
+	constructor: function (template_string) {
+		this._inherited(BetaJS.Templates.Template, "constructor");
+		this.__tokens = BetaJS.Templates.tokenize(template_string);
+		this.__compiled = BetaJS.Templates.compile(this.__tokens);
+	},
+	
+	evaluate: function (obj) {
+		return this.__compiled.apply(this, [obj]);
+	}
+	
+}, {
+	
+	bySelector: function (selector) {
+		return new this(BetaJS.$(selector).html());
 	}
 	
 });
@@ -2452,25 +2663,25 @@ BetaJS.Net.HttpHeader = {
 	format: function (code, prepend_code) {
 		var ret = "";
 		if (code == this.HTTP_STATUS_OK)
-			ret = "OK"
+			ret = "OK";
 		else if (code == this.HTTP_STATUS_CREATED)
-			ret = "Created"
+			ret = "Created";
 		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
-			ret = "Payment Required"
+			ret = "Payment Required";
 		else if (code == this.HTTP_STATUS_FORBIDDEN)
-			ret = "Forbidden"
+			ret = "Forbidden";
 		else if (code == this.HTTP_STATUS_NOT_FOUND)
-			ret = "Not found"
+			ret = "Not found";
 		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
-			ret = "Precondition Failed"
+			ret = "Precondition Failed";
 		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-			ret = "Internal Server Error"
+			ret = "Internal Server Error";
 		else
 			ret = "Other Error";
 		return prepend_code ? (code + " " + ret) : ret;
 	}
 	
-}
+};
 BetaJS.Net = BetaJS.Net || {};
 
 BetaJS.Net.Uri = {
@@ -2494,9 +2705,8 @@ BetaJS.Net.Uri = {
 	parse: function (str, strict) {
 		var parser = strict ? this.__parse_strict_regex : this.__parse_loose_regex;
 		var m = parser.exec(str);
-		var uri = {},
-		i = 14;
-		while (i--)
+		var uri = {};
+		for (var i = 0; i < this.__parse_key.length; ++i)
 			uri[this.__parse_key[i]] = m[i] || "";
 		uri.queryKey = {};
 		uri[this.__parse_key[12]].replace(this.__parse_key_parser, function ($0, $1, $2) {
@@ -2513,7 +2723,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-11-15
+  betajs - v0.0.2 - 2013-12-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2533,7 +2743,7 @@ BetaJS.Queries = {
 	
 	__increase_dependency: function (key, dep) {
 		if (key in dep)
-			dep[key]++
+			dep[key]++;
 		else
 			dep[key] = 1;
 		return dep;		
@@ -2554,7 +2764,7 @@ BetaJS.Queries = {
 	
 	__dependencies_pair: function (key, value, dep) {
 		if (key == "$or" || key == "$and")
-			return this.__dependencies_queries(value, dep)
+			return this.__dependencies_queries(value, dep);
 		else
 			return this.__increase_dependency(key, dep);
 	},
@@ -2564,9 +2774,10 @@ BetaJS.Queries = {
 	},
 		
 	__evaluate_query: function (query, object) {
-		for (var key in query)
+		for (var key in query) {
 			if (!this.__evaluate_pair(key, query[key], object))
 				return false;
+		}
 		return true;
 	},
 	
@@ -2593,9 +2804,9 @@ BetaJS.Queries = {
 				if (op == "$ltic")
 					result = result && object_value.toLowerCase() <= tar.toLowerCase();
 				if (op == "$sw")
-					result = result && object_value.indexOf(tar) == 0;
+					result = result && object_value.indexOf(tar) === 0;
 				if (op == "$swic")
-					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) == 0;
+					result = result && object_value.toLowerCase().indexOf(tar.toLowerCase()) === 0;
 			}, this);
 			return result;
 		}
@@ -2682,8 +2893,8 @@ BetaJS.Queries = {
 	emulate: function (query, query_function, query_context) {
 		var raw = query_function.apply(query_context || this, {});
 		var iter = raw;
-		if (raw == null)
-			iter = BetaJS.Iterators.ArrayIterator([])
+		if (!raw)
+			iter = BetaJS.Iterators.ArrayIterator([]);
 		else if (BetaJS.Types.is_array(raw))
 			iter = BetaJS.Iterators.ArrayIterator(raw);		
 		return new BetaJS.Iterators.FilteredIterator(iter, function(row) {
@@ -2732,8 +2943,8 @@ BetaJS.Queries.Constrained = {
 			params.push(callbacks);
 		var success_call = function (raw) {
 			var iter = raw;
-			if (raw == null)
-				iter = new BetaJS.Iterators.ArrayIterator([])
+			if (raw === null)
+				iter = new BetaJS.Iterators.ArrayIterator([]);
 			else if (BetaJS.Types.is_array(raw))
 				iter = new BetaJS.Iterators.ArrayIterator(raw);		
 			if (!("query" in query_capabilities || BetaJS.Types.is_empty(query)))
@@ -2752,19 +2963,20 @@ BetaJS.Queries.Constrained = {
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (callbacks)
-			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}])
+			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}]);
 		else
 			try {
 				var raw = query_function.apply(query_context || this, [execute_query, execute_options]);
 				return success_call(raw);
 			} catch (e) {
 				exception_call(e);
-			}		
+			}
+		return true;	
 	}
 	
 	
@@ -2793,18 +3005,20 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	__execute_query: function (skip, limit, clear_before) {
 		skip = Math.max(skip, 0);
 		var q = {};
-		if (this.__query.sort != null && !BetaJS.Types.is_empty(this.__query.sort))
+		var objs = null;
+		var iter = null;
+		if (this.__query.sort !== null && !BetaJS.Types.is_empty(this.__query.sort))
 			q.sort = this.__query.sort;
 		if (clear_before) {
 			if (skip > 0)
 				q.skip = skip;
-			if (limit != null)
+			if (limit !== null)
 				q.limit = limit;
-			var iter = this.__query.func(this.__query.select, q);
-			var objs = iter.asArray();
+			iter = this.__query.func(this.__query.select, q);
+			objs = iter.asArray();
 			this.__query.skip = skip;
 			this.__query.limit = limit;
-			this.__query.count = limit == null || objs.length < limit ? skip + objs.length : null;
+			this.__query.count = limit === null || objs.length < limit ? skip + objs.length : null;
 			this.clear();
 			this.add_objects(objs);
 		} else if (skip < this.__query.skip) {
@@ -2812,21 +3026,21 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			if (skip > 0)
 				q.skip = skip;
 			q.limit = limit;
-			var iter = this.__query.func(this.__query.select, q);
-			var objs = iter.asArray();
+			iter = this.__query.func(this.__query.select, q);
+			objs = iter.asArray();
 			this.__query.skip = skip;
-			this.__query.limit = this.__query.limit == null ? null : this.__query.limit + objs.length;
+			this.__query.limit = this.__query.limit === null ? null : this.__query.limit + objs.length;
 			this.add_objects(objs);
 		} else if (skip >= this.__query.skip) {
-			if (this.__query.limit != null && (limit == null || skip + limit > this.__query.skip + this.__query.limit)) {
+			if (this.__query.limit !== null && (limit === null || skip + limit > this.__query.skip + this.__query.limit)) {
 				limit = (skip + limit) - (this.__query.skip + this.__query.limit);
 				skip = this.__query.skip + this.__query.limit;
 				if (skip > 0)
 					q.skip = skip;
-				if (limit != null)
+				if (limit !== null)
 					q.limit = limit;
-				var iter = this.__query.func(this.__query.select, q);
-				var objs = iter.asArray();
+				iter = this.__query.func(this.__query.select, q);
+				objs = iter.asArray();
 				this.__query.limit = this.__query.limit + objs.length;
 				if (limit > objs.length)
 					this.__query.count = skip + objs.length;
@@ -2836,16 +3050,16 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	increase_forwards: function (steps) {
-		steps = steps == null ? this.__query.forward_steps : steps;
-		if (steps == null || this.__query.limit == null)
+		steps = steps === null ? this.__query.forward_steps : steps;
+		if (steps === null || this.__query.limit === null)
 			return;
 		this.__execute_query(this.__query.skip + this.__query.limit, steps, false);
 	},
 	
 	increase_backwards: function (steps) {
-		steps = steps == null ? this.__query.backward_steps : steps;
-		if (steps != null && this.__query.skip > 0) {
-			var steps = Math.min(steps, this.__query.skip)
+		steps = steps === null ? this.__query.backward_steps : steps;
+		if (steps !== null && this.__query.skip > 0) {
+			steps = Math.min(steps, this.__query.skip);
 			this.__execute_query(this.__query.skip - steps, steps, false);
 		}
 	},
@@ -2855,32 +3069,32 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	paginate_index: function () {
-		return this.__query.range == null ? null : Math.floor(this.__query.skip / this.__query.range);
+		return this.__query.range === null ? null : Math.floor(this.__query.skip / this.__query.range);
 	},
 	
 	paginate_count: function () {
-		return this.__query.count == null || this.__query.range == null ? null : Math.ceil(this.__query.count / this.__query.range);
+		return this.__query.count === null || this.__query.range === null ? null : Math.ceil(this.__query.count / this.__query.range);
 	},
 	
 	next: function () {
 		var paginate_index = this.paginate_index();
-		if (paginate_index == null)
+		if (!paginate_index)
 			return;
 		var paginate_count = this.paginate_count();
-		if (paginate_count == null || paginate_index < this.paginate_count() - 1)
+		if (!paginate_count || paginate_index < this.paginate_count() - 1)
 			this.paginate(paginate_index + 1);
 	},
 	
 	prev: function () {
 		var paginate_index = this.paginate_index();
-		if (paginate_index == null)
+		if (!paginate_index)
 			return;
 		if (paginate_index > 0)
 			this.paginate(paginate_index - 1);
 	},
 	
 	isComplete: function () {
-		return this.__query.count != null;
+		return this.__query.count !== null;
 	}
 	
 });
@@ -3107,7 +3321,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	},
 
 	insert: function (data, callbacks) {
-		if (this._create_ids && !(this._id_key in data)) {
+		if (this._create_ids && !(this._id_key in data && data[this._id_key])) {
 			if (this._async_write)
 				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
 			while (this.get(this._last_id))
@@ -3122,12 +3336,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._insert(data, {success: success_call, exception: exception_call})
+			this._insert(data, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._insert(data);
@@ -3136,6 +3350,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	insert_all: function (data) {
@@ -3155,6 +3370,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			}, this);
 			return result;
 		}
+		return null;
 	},
 
 	remove: function (id, callbacks) {
@@ -3166,12 +3382,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._remove(id, {success: success_call, exception: exception_call})
+			this._remove(id, {success: success_call, exception: exception_call});
 		else
 			try {
 				this._remove(id);
@@ -3189,12 +3405,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_read)
-			this._get(id, {success: success_call, exception: exception_call})
+			this._get(id, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._get(id);
@@ -3203,6 +3419,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	update: function (id, data, callbacks) {
@@ -3214,12 +3431,12 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e)
+				callbacks.exception(e);
 			else
 				throw e;
 		};
 		if (this._async_write)
-			this._update(id, data, {success: success_call, exception: exception_call})
+			this._update(id, data, {success: success_call, exception: exception_call});
 		else
 			try {
 				var row = this._update(id, data);
@@ -3228,6 +3445,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			} catch (e) {
 				exception_call(e);
 			}
+		return null;
 	},
 	
 	query: function (query, options, callbacks) {
@@ -3236,8 +3454,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 			this._query_capabilities(),
 			this._query,
 			this,
-			callbacks
-		); 
+			callbacks); 
 	},
 	
 	_query_applies_to_id: function (query, id) {
@@ -3266,7 +3483,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
 	attach: function (ident, store) {
 		store.on("insert", function (row) {
 			this.trigger("insert", ident, store, row);
-			this.trigger("write", "insert", ident, store, row)
+			this.trigger("write", "insert", ident, store, row);
 		}, this);
 		store.on("remove", function (id) {
 			this.trigger("remove", ident, store, id);
@@ -3377,7 +3594,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 	_insert: function (data) {
 		var last_id = this._read_last_id();
 		var id = data[this._id_key];
-		if (last_id != null) {
+		if (last_id !== null) {
 			this._write_next_id(last_id, id);
 			this._write_prev_id(id, last_id);
 		} else
@@ -3393,9 +3610,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 			this._remove_item(id);
 			var next_id = this._read_next_id(id);
 			var prev_id = this._read_prev_id(id);
-			if (next_id != null) {
+			if (next_id !== null) {
 				this._remove_next_id(id);
-				if (prev_id != null) {
+				if (prev_id !== null) {
 					this._remove_prev_id(id);
 					this._write_next_id(prev_id, next_id);
 					this._write_prev_id(next_id, prev_id);
@@ -3403,7 +3620,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 					this._remove_prev_id(next_id);
 					this._write_first_id(next_id);
 				}
-			} else if (prev_id != null) {
+			} else if (prev_id !== null) {
 				this._remove_next_id(prev_id);
 				this._write_last_id(prev_id);
 			} else {
@@ -3439,13 +3656,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 		var store = this;
 		var fid = this._read_first_id();
 		BetaJS.Objs.extend(iter, {
-			__id: fid == null ? 1 : fid,
+			__id: fid === null ? 1 : fid,
 			__store: store,
 			__query: query,
 			
 			hasNext: function () {
 				var last_id = this.__store._read_last_id();
-				if (last_id == null)
+				if (last_id === null)
 					return false;
 				while (this.__id < last_id && !this.__store._read_item(this.__id))
 					this.__id++;
@@ -3453,7 +3670,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 					if (this.__store._query_applies_to_id(query, this.__id))
 						return true;
 					if (this.__id < last_id)
-						this.__id = this.__store._read_next_id(this.__id)
+						this.__id = this.__store._read_next_id(this.__id);
 					else
 						this.__id++;
 				}
@@ -3464,7 +3681,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 				if (this.hasNext()) {
 					var item = this.__store.get(this.__id);
 					if (this.__id == this.__store._read_last_id())
-						this.__id++
+						this.__id++;
 					else
 						this.__id = this.__store._read_next_id(this.__id);
 					return item;
@@ -3485,7 +3702,7 @@ BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	
 	__read_id: function (key) {
 		var raw = this._read_key(key);
-		return raw ? parseInt(raw) : null;
+		return raw ? parseInt(raw, 10) : null;
 	},
 	
 	_read_last_id: function () {
@@ -3650,19 +3867,19 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.insert(row, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
 				return first.insert(data, {
 					success: callbacks.success,
 					exception: function () {
 						second.insert(data, callbacks);
 					}
-				})
+				});
 			else
 				first.insert(data, callbacks);
 		} else {
 			if (strategy == "then")
-				return second.insert(first.insert(data))
+				return second.insert(first.insert(data));
 			else if (strategy == "or")
 				try {
 					return first.insert(data);
@@ -3672,6 +3889,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			else
 				return first.insert(data);
 		}
+		return true;
 	},
 
 	_update: function (id, data, callbacks) {
@@ -3689,19 +3907,19 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.update(id, row, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
 				return first.update(id, data, {
 					success: callbacks.success,
 					exception: function () {
 						second.update(id, data, callbacks);
 					}
-				})
+				});
 			else
 				first.update(id, data, callbacks);
 		} else {
 			if (strategy == "then")
-				return second.update(id, first.update(id, data))
+				return second.update(id, first.update(id, data));
 			else if (strategy == "or")
 				try {
 					return first.update(id, data);
@@ -3711,6 +3929,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			else
 				return first.update(id, data);
 		}
+		return true;
 	},
 
 	_remove: function (id, callbacks) {
@@ -3728,14 +3947,14 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						second.remove(id, callbacks);
 					},
 					exception: callbacks.exception
-				})
+				});
 			else if (strategy == "or")
-				return first.remove(id, {
+				first.remove(id, {
 					success: callbacks.success,
 					exception: function () {
 						second.remove(id, callbacks);
 					}
-				})
+				});
 			else
 				first.remove(id, callbacks);
 		} else {
@@ -3765,10 +3984,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone = this.__get_options.clone;
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__get_options.or_on_null;
+		var result = null;
 		if (strategy == "or")
 			try {
-				var result = first.get(id);
-				if (result == null && or_on_null)
+				result = first.get(id);
+				if (!result && or_on_null)
 					throw new {};
 				if (clone_second) {
 					try {
@@ -3781,8 +4001,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				}
 				return result;
 			} catch (e) {
-				var result = second.get(id);
-				if (result != null && clone)
+				result = second.get(id);
+				if (result && clone)
 					first.insert(result);
 				return result;
 			}
@@ -3810,10 +4030,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone = this.__query_options.clone;
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__query_options.or_on_null;
+		var result = null;
 		if (strategy == "or")
 			try {
-				var result = first.query(query, options);
-				if (result == null && or_on_null)
+				result = first.query(query, options);
+				if (!result && or_on_null)
 					throw {};
 				if (clone_second) {
 					try {
@@ -3824,7 +4045,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 					if (clone_second) {
 						result = result.asArray();
 						if ("cache_query" in second)
-							second.cache_query(query, options, result)
+							second.cache_query(query, options, result);
 						else
 							second.insert_all(result);
 						result = new BetaJS.Iterators.ArrayIterator(result);
@@ -3832,11 +4053,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				}
 				return result;
 			} catch (e) {
-				var result = second.query(query, options);
-				if (result != null && clone) {
+				result = second.query(query, options);
+				if (result && clone) {
 					result = result.asArray();
 					if ("cache_query" in first)
-						first.cache_query(query, options, result)
+						first.cache_query(query, options, result);
 					else
 						first.insert_all(result);
 					result = new BetaJS.Iterators.ArrayIterator(result);
@@ -4069,7 +4290,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	},
 	
 	_query: function (query, options) {
-		return this.__store.query(query, options)
+		return this.__store.query(query, options);
 	},
 	
 	_ensure_index: function (key) {
@@ -4156,7 +4377,6 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 			} else {
 				if (callbacks)
 					callbacks.success();
-				return true;
 			}
 		} else {
 			try {
@@ -4164,12 +4384,13 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 					if (item.revision_id >= revision_id)
 						return false;
 					this.__store.update(item.id, item.data);
+					return true;
 				}, this);
-			if (callbacks && callbacks.success)
-				callbacks.success();
+				if (callbacks && callbacks.success)
+					callbacks.success();
 			} catch (e) {
 				if (callbacks && callbacks.exception)
-					callbacks.exception(e)
+					callbacks.exception(e);
 				else
 					throw e;
 			}
@@ -4257,7 +4478,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 				exception: function (e) {
 					self.trigger("flush_error");
 					if (callbacks && callbacks.exception)
-						callbacks.exception(e)
+						callbacks.exception(e);
 					else
 						throw e;
 				},
@@ -4275,12 +4496,11 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 		BetaJS.Objs.iter(this.__stores, function (store) {
 			this.__changed = this.__changed || store.changed();
 		}, this);
-	}
-	
+	}	
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-11-15
+  betajs - v0.0.2 - 2013-12-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4299,25 +4519,25 @@ BetaJS.Net.HttpHeader = {
 	format: function (code, prepend_code) {
 		var ret = "";
 		if (code == this.HTTP_STATUS_OK)
-			ret = "OK"
+			ret = "OK";
 		else if (code == this.HTTP_STATUS_CREATED)
-			ret = "Created"
+			ret = "Created";
 		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
-			ret = "Payment Required"
+			ret = "Payment Required";
 		else if (code == this.HTTP_STATUS_FORBIDDEN)
-			ret = "Forbidden"
+			ret = "Forbidden";
 		else if (code == this.HTTP_STATUS_NOT_FOUND)
-			ret = "Not found"
+			ret = "Not found";
 		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
-			ret = "Precondition Failed"
+			ret = "Precondition Failed";
 		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-			ret = "Internal Server Error"
+			ret = "Internal Server Error";
 		else
 			ret = "Other Error";
 		return prepend_code ? (code + " " + ret) : ret;
 	}
 	
-}
+};
 BetaJS.Exceptions.Exception.extend("BetaJS.Modelling.ModelException", {
 	
 	constructor: function (model, message) {
@@ -4358,13 +4578,14 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		this._properties_changed = {};
 		this.__errors = {};
 		this.__unvalidated = {};
-		for (var key in scheme)
+		for (var key in scheme) {
 			if ("def" in scheme[key]) 
 				this.set(key, scheme[key].def);
 			else if (scheme[key].auto_create)
-				this.set(key, scheme[key].auto_create(this))
+				this.set(key, scheme[key].auto_create(this));
 			else
 				this.set(key, null);
+		}
 		options = options || {};
 		this._properties_changed = {};
 		this.__errors = {};
@@ -4449,9 +4670,9 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				var value = this.get(attr);
 				BetaJS.Objs.iter(validate, function (validator) {
 					var result = validator.validate(value, this);
-					if (result != null)
+					if (result)
 						this.__errors[attr] = result;
-					return result == null;
+					return result === null;
 				}, this);
 			}
 			this.trigger("validate:" + attr, !(attr in this.__errors), this.__errors[attr]);
@@ -4484,7 +4705,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var scheme = this.cls.scheme();
 		var props = this.get_all_properties();
 		tags = tags || {};
-		for (var key in props) 
+		for (var key in props) {
 			if (key in scheme) {
 				var target = scheme[key]["tags"] || [];
 				var tarobj = {};
@@ -4498,13 +4719,14 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					rec[key] = props[key];
 			}
+		}
 		return rec;		
 	},
 	
 	setByTags: function (data, tags) {
 		var scheme = this.cls.scheme();
 		tags = tags || {};
-		for (var key in data) 
+		for (var key in data)  {
 			if (key in scheme) {
 				var target = scheme[key]["tags"] || [];
 				var tarobj = {};
@@ -4518,12 +4740,13 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
+		}
 	},
 	
 	validation_exception_conversion: function (e) {
 		var source = e;
 		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
-			source = e.source()
+			source = e.source();
 		else if (!("status_code" in source && "data" in source))
 			return e;
 		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
@@ -4550,9 +4773,10 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	filterPersistent: function (obj) {
 		var result = {};
 		var scheme = this.scheme();
-		for (var key in obj)
+		for (var key in obj) {
 			if (!BetaJS.Types.is_defined(scheme[key].persistent) || scheme[key].persistent)
 				result[key] = obj[key];
+		}
 		return result;
 	}
 	
@@ -4586,7 +4810,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 	__addAssoc: function (key, obj) {
 		this[key] = function () {
 			return obj.yield();
-		}
+		};
 	},
 	
 	_initializeAssociations: function () {
@@ -4619,12 +4843,13 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 			type: "id"
 		};
 		return s;
-	},	
+	}
 
 });
 BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	
 	constructor: function (attributes, options) {
+		options = options || {};
 		this._inherited(BetaJS.Modelling.Model, "constructor", attributes, options);
 		this.__saved = "saved" in options ? options["saved"] : false;
 		this.__new = "new" in options ? options["new"] : true;
@@ -4788,7 +5013,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	},
 	
 	hasModel: function (model) {
-		return this.__models_by_cid.get(model) != null;
+		return this.__models_by_cid.get(model) !== null;
 	},
 
 	_model_remove: function (model, options) {
@@ -4816,13 +5041,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write())
-			this.__store.remove(model.id(), callback)
+			this.__store.remove(model.id(), callback);
 		else try {
 			this.__store.remove(model.id());
 			return callback.success();
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return false;
 	},
 
 	_model_save: function (model, options) {
@@ -4858,9 +5084,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 				if (!(model.cls.primary_key() in confirmed))
 					return callback.exception(new BetaJS.Modelling.ModelMissingIdException(model));
 				self.__models_by_id[confirmed[model.cls.primary_key()]] = model;
-				if (!self.__options.greedy_create)
+				if (!self.__options.greedy_create) {
 					for (var key in model.properties_by(false))
 						delete confirmed[key];
+				}
 				model.setAll(confirmed, {no_change: true, silent: true});
 				if (is_valid)
 					delete self.__models_changed[model.cid()];
@@ -4885,13 +5112,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write())
-			this.__store.insert(attrs, callback)
+			this.__store.insert(attrs, callback);
 		else try {
 			var confirmed = this.__store.insert(attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return true;
 	},
 
 
@@ -4916,9 +5144,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(attrs);
 		var callback = {
 			success : function (confirmed) {
-				if (!self.__options.greedy_update)
+				if (!self.__options.greedy_update) {
 					for (var key in model.properties_changed(false))
 						delete confirmed[key];
+				}
 				model.setAll(confirmed, {no_change: true, silent: true});
 				if (is_valid)
 					delete self.__models_changed[model.cid()];
@@ -4941,13 +5170,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write() && !BetaJS.Types.is_empty(attrs))
-			this.__store.update(model.id(), attrs, callback)
+			this.__store.update(model.id(), attrs, callback);
 		else try {
 			var confirmed = BetaJS.Types.is_empty(attrs) ? {} : this.__store.update(model.id(), attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return true;
 	},
 
 	_model_set_value: function (model, key, value, options) {
@@ -4989,7 +5219,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	
 	findById: function (id) {
 		if (this.__models_by_id[id])
-			return this.__models_by_id[id]
+			return this.__models_by_id[id];
 		else
 			return this.__materialize(this.__store.get(id));
 	},
@@ -5039,9 +5269,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		if (!("ensure_index" in this.__store))
 			return false;
 		var scheme = this.scheme();
-		for (var key in scheme)
+		for (var key in scheme) {
 			if (scheme[key].index)
 				this.__store.ensure_index(key);
+		}
 		return true;
 	}
 	
@@ -5187,9 +5418,9 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 	_yield: function (id) {
 		var query = {};
 		if (id)
-			query[this._foreign_key] = id
+			query[this._foreign_key] = id;
 		else if (this._primary_key) 
-			query[this._foreign_key] = this._model.get(this._primary_key)
+			query[this._foreign_key] = this._model.get(this._primary_key);
 		else
 			query[this._foreign_key] = this._model.id();
 		var model = this._foreign_table.findBy(query);
@@ -5263,9 +5494,9 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 	_yield: function (id) {
 		var query = {};
 		if (id)
-			query[this._foreign_key] = id
+			query[this._foreign_key] = id;
 		else if (this._primary_key) 
-			query[this._foreign_key] = this._model.get(this._primary_key)
+			query[this._foreign_key] = this._model.get(this._primary_key);
 		else
 			query[this._foreign_key] = this._model.id();
 		var foreign_table = BetaJS.Scopes.resolve(this._model.get(this._foreign_table_key));
@@ -5301,7 +5532,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Presen
 	},
 
 	validate: function (value, context) {
-		return BetaJS.Types.is_null(value) || value == "" ? this.__error_string : null;
+		return BetaJS.Types.is_null(value) || value === "" ? this.__error_string : null;
 	}
 
 });
@@ -5325,20 +5556,20 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Length
 		this.__max_length = BetaJS.Types.is_defined(options.max_length) ? options.max_length : null;
 		this.__error_string = BetaJS.Types.is_defined(options.error_string) ? options.error_string : null;
 		if (!this.__error_string) {
-			if (this.__min_length != null)
-				if (this.__max_length != null)
-					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters"
+			if (this.__min_length !== null) {
+				if (this.__max_length !== null)
+					this.__error_string = "Between " + this.__min_length + " and " + this.__max_length + " characters";
 				else
-					this.__error_string = "At least " + this.__min_length + " characters"
-			else if (this.__max_length != null)
+					this.__error_string = "At least " + this.__min_length + " characters";
+			} else if (this.__max_length !== null)
 				this.__error_string = "At most " + this.__max_length + " characters";
 		}
 	},
 
 	validate: function (value, context) {
-		if (this.__min_length != null && (!value || value.length < this.__min_length))
+		if (this.__min_length !== null && (!value || value.length < this.__min_length))
 			return this.__error_string;
-		if (this.__max_length != null && value.length > this.__max_length)
+		if (this.__max_length !== null && value.length > this.__max_length)
 			return this.__error_string;
 		return null;
 	}
@@ -5373,7 +5604,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 			return null;
 		for (var i = 0; i < this.__validator.length; ++i) {
 			var result = this.__validator[i].validate(value, context);
-			if (result != null)
+			if (result !== null)
 				return result;
 		}
 		return null;
@@ -5381,7 +5612,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-11-15
+  betajs - v0.0.2 - 2013-12-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5426,10 +5657,11 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 			e = BetaJS.Exceptions.ensure(e);
 			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
+				failure_callback(e.status_code(), e.status_text(), e.data());
 			else
 				throw e;
 		}
+		return false;
 	},
 	
 	asyncCall: function (options) {
@@ -5451,7 +5683,7 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 				},
 				"failure": function (status_code, status_text, data) {
 					if (failure_callback)
-						failure_callback(status_code, status_text, data)
+						failure_callback(status_code, status_text, data);
 					else
 						throw new BetaJS.Browser.AjaxException(status_code, status_text, data);
 					if (complete_callback)
@@ -5463,10 +5695,11 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 			e = BetaJS.Exceptions.ensure(e);
 			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
+				failure_callback(e.status_code(), e.status_text(), e.data());
 			else
 				throw e;
 		}
+		return false;
 	},
 	
 	call: function (options) {
@@ -5662,7 +5895,7 @@ BetaJS.Browser.Dom = {
 	},
 	
 	selectionLeaves: function () {
-		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length == 0; });
+		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length === 0; });
 	},
 	
 	contentSiblings: function (node) {
@@ -5727,8 +5960,8 @@ BetaJS.Browser.Dom = {
 	
 	splitNode: function (node, start_offset, end_offset) {
 		node = BetaJS.$(node);
-		var start_offset = start_offset || 0;
-		var end_offset = end_offset || node.get(0).data.length;
+		start_offset = start_offset || 0;
+		end_offset = end_offset || node.get(0).data.length;
 		if (end_offset < node.get(0).data.length) {
 			var elem = node.get(0);
 			elem.splitText(end_offset);
@@ -5737,14 +5970,8 @@ BetaJS.Browser.Dom = {
 		if (start_offset > 0) 
 			node = BetaJS.$(node.get(0).splitText(start_offset));
 		return node;
-	},
-	
-	elementHasAncestorTag: function (node, element, context) {
-		if (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase())
-			return;
-		return context ? node.parents(context + " " + element).length > 0 : node.parents(element).length > 0;
 	}
-		
+			
 };
 
 BetaJS.Browser = BetaJS.Browser || {};
@@ -5941,7 +6168,7 @@ BetaJS.Browser.Info = {
 	},
 	
 	isiOS: function () {
-		if (this.__isiOS == null)
+		if (this.__isiOS === null)
 			this.__isiOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
 		return this.__isiOS;
 	},
@@ -5951,31 +6178,31 @@ BetaJS.Browser.Info = {
 	},
 	
 	isAndroid: function () {
-		if (this.__isAndroid == null)
+		if (this.__isAndroid === null)
 			this.__isAndroid = navigator.userAgent.toLowerCase().indexOf("android") != -1;
 		return this.__isAndroid;
 	},
 	
 	isWebOS: function () {
-		if (this.__isWebOS == null)
+		if (this.__isWebOS === null)
 			this.__isWebOS = navigator.userAgent.toLowerCase().indexOf("webos") != -1;
 		return this.__isWebOS;
 	},
 
 	isWindowsPhone: function () {
-		if (this.__isWindowsPhone == null)
+		if (this.__isWindowsPhone === null)
 			this.__isWindowsPhone = navigator.userAgent.toLowerCase().indexOf("windows phone") != -1;
 		return this.__isWindowsPhone;
 	},
 
 	isBlackberry: function () {
-		if (this.__isBlackberry == null)
+		if (this.__isBlackberry === null)
 			this.__isBlackberry = navigator.userAgent.toLowerCase().indexOf("blackberry") != -1;
 		return this.__isBlackberry;
 	},
 
 	iOSversion: function () {
-		if (this.__iOSversion == null && this.isiOS()) {
+		if (this.__iOSversion === null && this.isiOS()) {
 		    var v = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
 		    this.__iOSversion = {
 		    	major: parseInt(v[1], 10),
@@ -5987,18 +6214,18 @@ BetaJS.Browser.Info = {
 	},
 	
 	isMobile: function () {
-		if (this.__isMobile == null)
+		if (this.__isMobile === null)
 			this.__isMobile = this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
 		return this.__isMobile;
 	},
 	
 	isInternetExplorer: function () {
-		if (this.__isInternetExplorer == null)
+		if (this.__isInternetExplorer === null)
 			this.__isInternetExplorer = navigator.appName == 'Microsoft Internet Explorer';
 		return this.__isInternetExplorer;
 	}
 	
-}
+};
 
 
 /*
@@ -6017,8 +6244,8 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
             var mimeTypes = navigator.mimeTypes;
             if (mimeTypes && mimeTypes[type] && mimeTypes[type].enabledPlugin && mimeTypes[type].enabledPlugin.description)
                 this.__version = this.parseVersion(mimeTypes[type].enabledPlugin.description);
-        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript)
-            for (var i = 0; i < this.__activeXDetectRules.length; i++)
+        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript) {
+            for (var i = 0; i < this.__activeXDetectRules.length; i++) {
 		        try {
 		            var obj = new ActiveXObject(this.__activeXDetectRules[i].name);
 		            var version = this.__activeXDetectRules[i].version(obj);
@@ -6027,6 +6254,8 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
                     	break;
                     }
 		        } catch (err) { }
+		    }
+		}
 	},
 	
     parseVersion: function(str) {
@@ -6058,7 +6287,7 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
 	},
 	
 	installed: function () {
-		return this.__version != null;
+		return this.__version !== null;
 	},
 	
 	supported: function () {
@@ -6082,9 +6311,10 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
     		return false;
         var properties = [this.version().major, this.version().minor, this.version().revision];
         var len = Math.min(properties.length, arguments.length);
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; i++) {
             if (properties[i] != arguments[i]) 
             	return properties[i] > arguments[i];
+        }
         return true;
     },
 	
@@ -6145,7 +6375,7 @@ BetaJS.Browser.Loader = {
 		head.appendChild(script);
 	}
 
-}
+};
 BetaJS.Browser = BetaJS.Browser || {}; 
 
 /** @class */
@@ -6201,7 +6431,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 			routes = [routes];
 		if ("routes" in options) {
 			if (BetaJS.Types.is_array(options["routes"]))
-				routes = routes.concat(options["routes"])
+				routes = routes.concat(options["routes"]);
 			else
 				routes.push(options["routes"]);
 		}
@@ -6215,11 +6445,11 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 				obj.key = key;
 				obj.route = new RegExp("^" + key + "$");
 				if (!("applicable" in obj))
-					obj.applicable = []
+					obj.applicable = [];
 				else if (!BetaJS.Types.is_array(obj.applicable))
 					obj.applicable = [obj.applicable];
 				if (!("valid" in obj))
-					obj.valid = []
+					obj.valid = [];
 				else if (!BetaJS.Types.is_array(obj.valid))
 					obj.valid = [obj.valid];
 				if (!("path" in obj))
@@ -6247,26 +6477,26 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 		for (var i = 0; i < this.__routes.length; ++i) {
 			var obj = this.__routes[i];
 			var result = obj.route.exec(route);
-			if (result != null) {
+			if (result !== null) {
 				result.shift(1);
 				var applicable = true;
 				BetaJS.Objs.iter(obj.applicable, function (s) {
 					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					applicable = applicable && f.apply(this, result)
+					applicable = applicable && f.apply(this, result);
 				}, this);
 				if (!applicable)
 					continue;
-				var valid = true
+				var valid = true;
 				BetaJS.Objs.iter(obj.valid, function (s) {
 					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					valid = valid && f.apply(this, result)
+					valid = valid && f.apply(this, result);
 				}, this);
 				if (!valid)
 					return null;
 				return {
 					object: obj,
 					params: result
-				}
+				};
 			}
 		}
 		return null;
@@ -6288,8 +6518,12 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 		var key = this.object(path).key;
 		var args = Array.prototype.slice.apply(arguments, [1]);
 		var regex = /\(.*?\)/;
-		while (arg = args.shift())
+		while (true) {
+			var arg = args.shift();
+			if (!arg)
+				break;
 			key = key.replace(regex, arg);
+		}
 		return key;
 	},
 	
@@ -6299,7 +6533,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 	navigate: function (route) {
 		this.trigger("navigate", route);
 		var result = this.parse(route);
-		if (result == null) {
+		if (result === null) {
 			this.trigger("navigate-fail", route);
 			return false;
 		}
@@ -6339,7 +6573,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 	},
 	
 	__leave: function () {
-		if (this.__current != null) {
+		if (this.__current !== null) {
 			this.trigger("leave", this.__current);
 			this.__current.destroy();
 			this.__current = null;
@@ -6414,7 +6648,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouterHistory", [
 	
 	back: function (index) {
 		if (this.count() < 2)
-			return;
+			return null;
 		index = index || 0;
 		while (index >= 0 && this.count() > 1) {
 			this.__history.pop();
@@ -6455,7 +6689,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouteBinder", {
 		this.__router.navigate(route);
 	},
 	
-	_getExternalRoute: function () { return "" },
+	_getExternalRoute: function () { return ""; },
 	_setExternalRoute: function (route) { }
 	
 });
@@ -6587,12 +6821,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
 			if (this._async_write) 
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_remove : function(id, callbacks) {
@@ -6621,6 +6856,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_get : function(id, callbacks) {
@@ -6629,12 +6865,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {uri: this.prepare_uri("get", data)};
 			if (this._async_read)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_update : function(id, data, callbacks) {
@@ -6643,12 +6880,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
 			if (this._async_write)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 	
 	_query : function(query, options, callbacks) {
@@ -6657,9 +6895,10 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 			if (this._async_read) {
 				var self = this;
 				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw)
+					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw);
 				});
 				this.__ajax.asyncCall(opts);
+				return true;
 			} else {
 				var raw = this.__ajax.syncCall(opts);
 				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;
@@ -6707,124 +6946,6 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 	}
 
 });
-/*
- * Inspired by Underscore's Templating Engine
- * (which itself is inspired by John Resig's implementation)
- */
-
-BetaJS.Templates = {
-	
-	tokenize: function (s) {
-		// Already tokenized?
-		if (BetaJS.Types.is_array(s))
-			return s;
-		var tokens = [];
-		var index = 0;
-		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, code, offset) {
-			if (index < offset) 
-				tokens.push({
-					type: BetaJS.Templates.TOKEN_STRING,
-					data: BetaJS.Strings.js_escape(s.slice(index, offset))
-				});
-			if (code)
-				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
-			if (expr)
-				tokens.push({type: BetaJS.Templates.TOKEN_EXPR, data: expr});
-			if (esc)
-				tokens.push({type: BetaJS.Templates.TOKEN_ESC, data: esc});
-		    index = offset + match.length;
-		    return match;
-		});
-		return tokens;
-	},
-	
-	/*
-	 * options
-	 *  - start_index: token start index
-	 *  - end_index: token end index
-	 */
-	compile: function(source, options) {
-		if (BetaJS.Types.is_string(source))
-			source = this.tokenize(source);
-		options = options || {};
-		var start_index = options.start_index || 0;
-		var end_index = options.end_index || source.length;
-		var result = "__p+='";
-		for (var i = start_index; i < end_index; ++i) {
-			switch (source[i].type) {
-				case BetaJS.Templates.TOKEN_STRING:
-					result += source[i].data;
-					break;
-				case BetaJS.Templates.TOKEN_CODE:
-					result += "';\n" + source[i].data + "\n__p+='";
-					break;
-				case BetaJS.Templates.TOKEN_EXPR:
-					result += "'+\n((__t=(" + source[i].data + "))==null?'':__t)+\n'";
-					break;
-				case BetaJS.Templates.TOKEN_ESC:
-					result += "'+\n((__t=(" + source[i].data + "))==null?'':BetaJS.Strings.htmlentities(__t))+\n'";
-					break;
-			}	
-		}
-		result += "';\n";
-		result = 'with(obj||{}){\n' + result + '}\n';
-		result = "var __t,__p='',__j=Array.prototype.join," +
-		  "echo=function(){__p+=__j.call(arguments,'');};\n" +
-		  result + "return __p;\n";
-		var func = new Function('obj', result);
-		var func_call = function(data) {
-			return func.call(this, data);
-		};
-		func_call.source = 'function(obj){\n' + result + '}';
-		return func_call;
-	}
-		
-};
-
-BetaJS.Templates.SYNTAX = {
-	OPEN: "{%",
-	CLOSE: "%}",
-	MODIFIER_CODE: "",
-	MODIFIER_EXPR: "=",
-	MODIFIER_ESC: "-"
-};
-
-BetaJS.Templates.SYNTAX_REGEX = function () {
-	var syntax = BetaJS.Templates.SYNTAX;
-	if (!BetaJS.Templates.SYNTAX_REGEX_CACHED)
-		BetaJS.Templates.SYNTAX_REGEX_CACHED = new RegExp(
-			syntax.OPEN + syntax.MODIFIER_EXPR + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_ESC + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_CODE + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			"$",
-		'g');
-	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
-}
-
-BetaJS.Templates.TOKEN_STRING = 1;
-BetaJS.Templates.TOKEN_CODE = 2;
-BetaJS.Templates.TOKEN_EXPR = 3;
-BetaJS.Templates.TOKEN_ESC = 4;
-
-BetaJS.Class.extend("BetaJS.Templates.Template", {
-	
-	constructor: function (template_string) {
-		this._inherited(BetaJS.Templates.Template, "constructor");
-		this.__tokens = BetaJS.Templates.tokenize(template_string);
-		this.__compiled = BetaJS.Templates.compile(this.__tokens);
-	},
-	
-	evaluate: function (obj) {
-		return this.__compiled.apply(this, [obj]);
-	}
-	
-}, {
-	
-	bySelector: function (selector) {
-		return new this(BetaJS.$(selector).html());
-	}
-	
-});
 BetaJS.$ = jQuery || null;
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
@@ -6837,6 +6958,11 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
+		
+    /** Container html element of the view as jquery object
+     */
+	$el: null,
+	
     
     /** Returns all templates to be pre-loaded.
      * <p>It should return an associative array of templates. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.</p>
@@ -6907,12 +7033,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	css: function (ident) {
 		if (this.__css[ident])
 			return this.__css[ident];
+		var css = null;
 		if (this.__parent) {
-			var css = this.__parent.css(ident);
+			css = this.__parent.css(ident);
 			if (css && css != ident)
 				return css;
 		}
-		var css = this._css();
+		css = this._css();
 		if (css[ident])
 			return css[ident];
 		return ident;
@@ -6924,7 +7051,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_render: function () {
 		if (this.__html)
-			this.$el.html(this.__html)
+			this.$el.html(this.__html);
 		else if (this.__templates["default"])
 			this.$el.html(this.evaluateTemplate("default", {}));
 		else if (this.__dynamics["default"])
@@ -6968,7 +7095,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			attrs: function (obj) {
 				var s = "";
 				for (var key in obj)
-					s += (obj[key] == null ? key : (key + "='" + obj[key] + "'")) + " ";
+					s += (!obj[key] ? key : (key + "='" + obj[key] + "'")) + " ";
 				return s;
 			},
 			styles: function (obj) {
@@ -6981,7 +7108,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return "data-selector='" + name + "' ";
 			},
 			view_id: this.cid()
-		}
+		};
 	},
 	
 	/** Returns all arguments that are passed to every template by default.
@@ -7017,17 +7144,28 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, {args: args || {}}));
 	},
 
-	/** Sets private variable from an option array
+	/** Sets a private variable from an option array
 	 * @param options option associative array
 	 * @param key name of option
 	 * @param value default value of option if not given
 	 * @param prefix (optional) per default is "__"
 	 */
 	_setOption: function (options, key, value, prefix) {
-		var prefix = prefix ? prefix : "__";
+		prefix = prefix ? prefix : "__";
 		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
+	/** Sets a private typed variable from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 * @param type param type
+	 * @param prefix (optional) per default is "__"
+	 */
+	_setOptionTyped: function (options, key, value, type, prefix) {
+		this._setOption(options, key, this.cls._parseType(value, type), prefix);
+	},
+
 	/** Sets property variable (that will be passed to templates and dynamics by default) from an option array
 	 * @param options option associative array
 	 * @param key name of option
@@ -7035,6 +7173,16 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_setOptionProperty: function (options, key, value) {
 		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
+	},
+	
+	/** Sets typed property variable (that will be passed to templates and dynamics by default) from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 * @param type param type
+	 */
+	_setOptionPropertyTyped: function (options, key, value, typed) {
+		this._setOptionProperty(options, key, this.cls._parseType(value, type));
 	},
 	
 	/** Creates a new view with options
@@ -7099,8 +7247,9 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("template" in options)
 			templates["default"] = options["template"];
 		this.__templates = {};
-		for (var key in templates) {
-			if (templates[key] == null)
+		var key = null;
+		for (key in templates) {
+			if (!templates[key])
 				throw new BetaJS.Views.ViewException("Could not find template '" + key + "' in View '" + this.cls.classname + "'");
 			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html());
 		}
@@ -7109,7 +7258,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("dynamic" in options)
 			dynamics["default"] = options["dynamic"];
 		this.__dynamics = {};
-		for (var key in dynamics)
+		for (key in dynamics)
 			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html());
 
 		this.setAll(options["properties"] || {});
@@ -7125,10 +7274,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		this.ns = {};
 		var domain = this._domain();
 		var domain_defaults = this._domain_defaults();
-
+		var view_name = null;
 		if (!BetaJS.Types.is_empty(domain)) {
 			var viewlist = [];
-			for (var view_name in domain)
+			for (view_name in domain)
 				viewlist.push({
 					name: view_name,
 					data: domain[view_name]
@@ -7144,33 +7293,34 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return after;
 			});
 			for (var i = 0; i < viewlist.length; ++i) {
-				var view_name = viewlist[i].name;
+				view_name = viewlist[i].name;
 				var record = viewlist[i].data;
-				var options = record.options || {};
-				if (BetaJS.Types.is_function(options))
-					options = options.apply(this, [this]);
+				var record_options = record.options || {};
+				if (BetaJS.Types.is_function(record_options))
+					record_options = record_options.apply(this, [this]);
 				var default_options = domain_defaults[record.type] || {};
 				if (BetaJS.Types.is_function(default_options))
 					default_options = default_options.apply(this, [this]);
-				options = BetaJS.Objs.tree_merge(default_options, options);
+				record_options = BetaJS.Objs.tree_merge(default_options, record_options);
 				if (record.type in BetaJS.Views)
 					record.type = BetaJS.Views[record.type];
 				if (BetaJS.Types.is_string(record.type))
 					record.type = BetaJS.Scopes.resolve(record.type);
-				var view = new record.type(options);
+				var view = new record.type(record_options);
 				this.ns[view_name] = view;
 				var parent_options = record.parent_options || {};
 				var parent = this;
 				if (record.parent)
 					parent = BetaJS.Scopes.resolve(record.parent, this.ns);
 				if (record.method)
-					record.method(parent, view)
+					record.method(parent, view);
 				else
 					parent.addChild(view, parent_options);
 				view.domain = this;
-				for (var event in record.events || {})
+				var event = null;
+				for (event in record.events || {})
 					view.on(event, record.events[event], view);
-				for (var event in record.listeners || {})
+				for (event in record.listeners || {})
 					this.on(event, record.listeners[event], view);
 			}		
 		}
@@ -7197,15 +7347,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	activate: function () {
 		if (this.isActive())
 			return this;
-		if (this.__el == null) 
-			return null;
 		if (this.__parent && !this.__parent.isActive())
 			return null;
 		if (this.__parent)
-			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el);
+			this.$el = !this.__el ? this.__parent.$el : this.__parent.$(this.__el);
 		else
 			this.$el = BetaJS.$(this.__el);
-		if (this.$el.size() == 0)
+		if (this.$el.size() === 0)
 			this.$el = null;
 		if (!this.$el)
 			return null;
@@ -7214,8 +7362,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el = this.$el.find("[data-view-id='" + this.cid() + "']");
 		}
 		this.__old_attributes = {};
-		for (var key in this.__attributes) {
-			var old_value = this.$el.attr(key);
+		var key = null;
+		var old_value = null;
+		for (key in this.__attributes) {
+			old_value = this.$el.attr(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_attributes[key] = old_value;
 			else
@@ -7224,15 +7374,16 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		}
 		this.__added_el_classes = [];
 		var new_el_classes = this._el_classes().concat(this.__el_classes);
-		for (var i = 0; i < new_el_classes.length; ++i)
+		for (var i = 0; i < new_el_classes.length; ++i) {
 			if (!this.$el.hasClass(new_el_classes[i])) {
 				this.$el.addClass(new_el_classes[i]);
 				this.__added_el_classes.push(new_el_classes[i]);
 			}
+		}
 		this.__old_el_styles = {};
 		var new_el_styles = BetaJS.Objs.extend(this._el_styles(), this.__el_styles);
-		for (var key in new_el_styles)  {
-			var old_value = this.$el.css(key);
+		for (key in new_el_styles)  {
+			old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_el_styles[key] = old_value;
 			else
@@ -7276,11 +7427,12 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		}, this);
 		this.__unbind();
 		this.$el.html("");
-		for (var key in this.__old_attributes) 
+		var key = null;
+		for (key in this.__old_attributes) 
 			this.$el.attr(key, this.__old_attributes[key]);
 		for (var i = 0; i < this.__added_el_classes.length; ++i)
 			this.$el.removeClass(this.__added_el_classes[i]);
-		for (var key in this.__old_el_styles) 
+		for (key in this.__old_el_styles) 
 			this.$el.css(key, this.__old_el_styles[key]);
 		if (this.__append_to_el)
 			this.$el.remove();
@@ -7440,9 +7592,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			return;
 		this._render();
 		var q = this.$el.children();
-		if (!BetaJS.Types.is_empty(this.__children_styles))
+		if (!BetaJS.Types.is_empty(this.__children_styles)) {
 			for (var key in this.__children_styles)
 				q.css(key, this.__children_styles[key]);
+		}
 		BetaJS.Objs.iter(this.__children_classes, function (cls) {
 			q.addClass(cls);	
 		});
@@ -7636,7 +7789,24 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return this.$el.outerHeight();
 	}
 	
-}]);
+}], {
+	
+	_parseType: function (value, type) {
+		if (BetaJS.Types.is_defined(value) && BetaJS.Types.is_string(value)) {
+			value = value.replace(/\s+/g, '');
+			if (type == "int")
+				return parseInt(value, 10);
+			else if (type == "array")
+				return value.split(",");
+			else if (type == "bool")
+				return value === "" || BetaJS.Strings.parseBool(value);
+			else if (type == "object" || type == "function")
+				return BetaJS.Scopes.resolve(value);
+		}
+		return value;
+	}
+
+});
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
@@ -7749,20 +7919,20 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	__update_element: function (element) {
 		var value = this.__get_variable(element.variable);
 		if (element.type == "inner")
-			element.$el.html(value)
+			element.$el.html(value);
 		else if (element.type == "value") {
 			if (element.$el.val() != value)
 				element.$el.val(value);
 		} else if (element.type == "attribute")
-			element.$el.attr(element.attribute, value)
+			element.$el.attr(element.attribute, value);
 		else if (element.type == "css") {
 			if (!element.positive)
 				value = !value;
 			if (value)
-				element.$el.addClass(this.__parent.view().css(element.css))
+				element.$el.addClass(this.__parent.view().css(element.css));
 			else
 				element.$el.removeClass(this.__parent.view().css(element.css));
-		};
+		}
 	},
 	
 	__prepare_element: function (element) {
@@ -7855,6 +8025,139 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	
 }]);
 
+BetaJS.Views.ActiveDom = {
+	
+	__prefix_alias: ["bjs", "betajs"],
+	
+	__view_alias: {},
+	
+	__views: {},
+	
+	__active: false,
+	
+	__on_add_element: function (event) {
+		var element = $(event.target);
+		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+			if (element.attr(alias + "view"))
+				BetaJS.Views.ActiveDom.__attach(element);
+		});
+		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__view_alias, function (data, alias) {
+			if (element.attr(alias))
+				BetaJS.Views.ActiveDom.__attach(element, data);
+		});
+	},
+	
+	__on_remove_element: function (event) {
+		var element = $(event.target);
+		if (element.attr("data-active-dom-id") in BetaJS.Views.ActiveDom.__views)
+			BetaJS.Views.ActiveDom.__views[element.attr("data-active-dom-id")].destroy();
+	},
+	
+	__attach: function (element, meta_attrs) {
+		var process = function (key, value) {
+			var i = 0;
+			while (i < BetaJS.Views.ActiveDom.__prefix_alias.length) {
+				var alias = BetaJS.Views.ActiveDom.__prefix_alias[i];
+				if (BetaJS.Strings.starts_with(key, alias + "-")) {
+					key = BetaJS.Strings.strip_start(key, alias + "-");
+					if (BetaJS.Strings.starts_with(key, "child-")) {
+						key = BetaJS.Strings.strip_start(key, "child-");
+						dom_child_attrs[key] = value;
+					} else if (key in meta_attrs_scheme)
+						meta_attrs[key] = value;
+					else
+						option_attrs[key] = value;
+					return;
+				} else
+				++i;
+			}
+			dom_attrs[key] = value;			
+		};
+		var element_data = function (element) {
+			var query = element.find("script[type='text/param']");
+			return BetaJS.Strings.nltrim(query.length > 0 ? query.html() : element.html());
+		};
+		var dom_attrs = {};
+		var dom_child_attrs = {};
+		var option_attrs = {};
+		var meta_attrs_scheme = {type: "View", "default": null, "name": null};
+		meta_attrs = BetaJS.Objs.extend(BetaJS.Objs.clone(meta_attrs_scheme, 1), meta_attrs || {});
+		var attrs = element.get(0).attributes;
+		for (var i = 0; i < attrs.length; ++i) 
+			process(attrs.item(i).nodeName, attrs.item(i).nodeValue);
+		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+			element.children(alias + "param").each(function () {
+				var child = BetaJS.$(this);
+				process(alias + "-" + child.attr(alias + "-key"), element_data(child));
+			});
+		});
+		if (meta_attrs["default"])
+			option_attrs[meta_attrs["default"]] = element_data(element);
+		if (meta_attrs.type in BetaJS.Views)
+			meta_attrs.type = BetaJS.Views[meta_attrs.type];
+		if (BetaJS.Types.is_string(meta_attrs.type))
+			meta_attrs.type = BetaJS.Scopes.resolve(meta_attrs.type);
+		var view = new meta_attrs.type(option_attrs);
+		view.setEl("[data-active-dom-id='" + view.cid() + "']");
+		element.replaceWith("<div data-active-dom-id='" + view.cid() + "'></div>");
+		element = BetaJS.$("[data-active-dom-id='" + view.cid() + "']");
+		var key = null;
+		for (key in dom_attrs)
+			element.attr(key, dom_attrs[key]);
+		view.on("destroy", function () {
+			delete BetaJS.Views.ActiveDom.__views[view.cid()];
+		});
+		BetaJS.Views.ActiveDom.__views[view.cid()] = view;
+		view.activate();
+		for (key in dom_child_attrs)
+			element.children().attr(key, dom_child_attrs[key]);
+		if (meta_attrs["name"])
+			BetaJS.Scopes.set(view, meta_attrs["name"]);
+	},
+	
+	activate: function () {
+		BetaJS.$(document).ready(function () {
+			if (BetaJS.Views.ActiveDom.__active)
+				return;
+			document.addEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+			document.addEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+				BetaJS.$(alias + "view").each(function () {
+					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this));
+				});
+			});
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__view_alias, function (data, alias) {
+				BetaJS.$(alias).each(function () {
+					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this), data);
+				});
+			});
+			BetaJS.Views.ActiveDom.__active = true;
+		});
+	},
+	
+	deactivate: function () {
+		BetaJS.$(document).ready(function () {
+			if (!BetaJS.Views.ActiveDom.__active)
+				return;
+			document.removeEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+			document.removeEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__views, function (view) {
+				view.destroy();
+			});
+			BetaJS.Views.ActiveDom.__active = false;
+		});
+	},
+	
+	registerPrefixAlias: function (alias) {
+		this.__prefix_alias.push(alias);
+	},
+	
+	registerViewAlias: function (alias, type, def) {
+		this.__view_alias[alias] = { type: type };
+		this.__view_alias[alias]["default"] = def;
+	}
+	
+};
 BetaJS.Classes.Module.extend("BetaJS.Views.Modules.Centering", {
 	
 	constructor: function (options) {
@@ -7953,7 +8256,7 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.BindOnVisible", {
 		data.bound = false;
 		object.on("visibility", function (visible) {
 			if (visible)
-				this.__bind(object)
+				this.__bind(object);
 			else
 				this.__unbind(object);
 		}, this);
@@ -8160,7 +8463,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 			if (!(opts['type'] && opts['type'] == 'ignore')) {
 				child.$el.css(pos_string, pos + 'px');
 				if (child.isVisible())
-					pos += parseInt(child.$el.css(size_string));
+					pos += parseInt(child.$el.css(size_string), 10);
 				if (opts['type'] && opts['type'] == 'dynamic')
 					return false;
 			}
@@ -8563,6 +8866,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", false);
 		this.__itemData = {};
+		if ("table" in options) {
+			var table = this.cls._parseType(options.table, "object");
+			this.active_query = new BetaJS.Queries.ActiveQuery(table.active_query_engine(), {});
+			options.collection = this.active_query.collection();
+			options.destroy_collection = true;
+		}
+		if ("compare" in options)
+			options.compare = this.cls._parseType(options.compare, "function");
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = "destroy_collection" in options ? options.destroy_collection : false;
@@ -8593,7 +8904,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			this.__reIndexItem(item);
 		}, this);
 		this.__collection.on("sorted", function () {
-			this.__sorted();
+			this.__sort();
 		}, this);
 		this.__collection.iterate(function (item) {
 			this._registerItem(item);
@@ -8612,7 +8923,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_itemBySubElement: function (element) {
 		var container = element.closest("[data-view-id='" + this.cid() + "']");
-		return container.length == 0 ? null : this.__collection.getById(container.attr("data-cid"));
+		return container.length === 0 ? null : this.__collection.getById(container.attr("data-cid"));
 	},
 	
 	__click: function (e) {
@@ -8693,7 +9004,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	__reIndexItem: function (item) {
 		var element = this.itemElement(item);
 		var index = this.collection().getIndex(item);
-		if (index == 0)
+		if (index === 0)
 			this.$selector_list.prepend(element);
 		else {
 			var before = this._findIndexElement(index - 1);
@@ -8722,6 +9033,8 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	},
 	
 	_unregisterItem: function (item) {
+		if (!this.__itemData[item.cid()])
+			return;
 		this.__itemData[item.cid()].properties.destroy();
 		delete this.__itemData[item.cid()];
 	},
@@ -8734,7 +9047,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			item_container_classes: this.__item_container_classes			
 		});
 		var index = this.__collection.getIndex(item);
-		if (index == 0)
+		if (index === 0)
 			this.$selector_list.prepend(container);
 		else {
 			var before = this._findIndexElement(index - 1);
@@ -8804,9 +9117,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
+		options = options || {};
+		if ("item_template" in options)
+			options.templates = {item: options.item_template};
+		if ("item_dynamic" in options)
+			options.dynamics = {item: options.item_dynamic};
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
 		this._setOption(options, "item_label", "label");
-		this._setOption(options, "render_item_on_change", this.dynamics("item") == null);
+		this._setOption(options, "render_item_on_change", BetaJS.Types.is_defined(this.dynamics("item")));
 	},
 	
 	_changeItem: function (item) {
@@ -8823,16 +9141,16 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	_renderItem: function (item) {
 		var element = this.itemElement(item);
 		var properties = this.itemData(item).properties;
-		if (this.templates("item") != null)
+		if (this.templates("item"))
 			element.html(this.evaluateTemplate("item", {item: item, properties: properties}));
-		else if (this.dynamics("item") != null)
+		else if (this.dynamics("item"))
 			this.evaluateDynamics("item", element, {item: item, properties: properties}, {name: "item-" + BetaJS.Ids.objectId(item)});
 		else
 			element.html(item.get(this.__item_label)); 
 	},
 	
 	_deactivateItem: function (item) {
-		if (this.dynamics("item") != null)
+		if (this.dynamics("item"))
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
 		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
 	}
@@ -8858,7 +9176,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		if ("create_view" in options)
 			this._create_view = options.create_view;
 		if ("sub_view" in options)
-			this._sub_view = options.sub_view;
+			this._sub_view = this.cls._parseType(options.sub_view, "object");
 		if ("sub_view_options" in options)
 			this._sub_view_options_param = options.sub_view_options;
 		if ("property_map" in options)
@@ -8868,21 +9186,18 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	_create_view: function (item, element) {
 		var properties = BetaJS.Objs.extend(
 			BetaJS.Types.is_function(this._property_map) ? this._property_map.apply(this, [item]) : this._property_map,
-			BetaJS.Types.is_function(this._property_map_param) ? this._property_map_param.apply(this, [item]) : this._property_map_param
-		);
+			BetaJS.Types.is_function(this._property_map_param) ? this._property_map_param.apply(this, [item]) : this._property_map_param);
 		var options = BetaJS.Objs.extend(
 			BetaJS.Types.is_function(this._sub_view_options) ? this._sub_view_options.apply(this, [item]) : this._sub_view_options,
 			BetaJS.Objs.extend(
 				BetaJS.Types.is_function(this._sub_view_options_param) ? this._sub_view_options_param.apply(this, [item]) : this._sub_view_options_param || {},
-				BetaJS.Objs.map(properties, item.get, item)
-			)
-		);
+				BetaJS.Objs.map(properties, item.get, item)));
 		options.el = this.itemElement(item);
 		return new this._sub_view(options);
 	},
 	
 	_activateItem: function (item) {
-		this._inherited(BetaJS.Views.ListView, "_activateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_activateItem", item);
 		var view = this._create_view(item); 
 		this.delegateEvents(null, view, "item", [view, item]);
 		this.itemData(item).view = view;
@@ -8893,7 +9208,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		var view = this.itemData(item).view;
 		this.removeChild(view);
 		view.destroy();
-		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_deactivateItem", item);
 	}
 	
 });
@@ -8983,12 +9298,12 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		var top = this.__overlay_top;
 		
 		if (this.__overlay_align_vertical == "bottom")
-			top -= height
+			top -= height;
 		else if (this.__overlay_align_vertical == "center")
 			top -= Math.round(height/2);
 
 		if (this.__overlay_align_horizontal == "right")
-			left -= width
+			left -= width;
 		else if (this.__overlay_align_horizontal == "center")
 			left -= Math.round(width/2);
 			
@@ -8996,7 +9311,7 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		if (this.__anchor == "element" && this.__element) {
 			element = this.__element;
 			if (BetaJS.Types.is_string(element))
-				element = BetaJS.$(element)
+				element = BetaJS.$(element);
 			else if (BetaJS.Class.is_class_instance(element))
 				element = element.$el;
 		}
@@ -9006,11 +9321,11 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 			left += element.offset().left - $(window).scrollLeft();
 			top += element.offset().top - $(window).scrollTop();
 			if (this.__element_align_vertical == "bottom")
-				top += element_height
+				top += element_height;
 			else if (this.__element_align_vertical == "center")
 				top += Math.round(element_height/2);
 			if (this.__element_align_horizontal == "right")
-				left += element_width
+				left += element_width;
 			else if (this.__element_align_horizontal == "center")
 				left += Math.round(element_width/2);
 		}
@@ -9075,7 +9390,7 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	__unfocus: function () {
 		if (this.__destroy_on_unfocus)
-			this.destroy()
+			this.destroy();
 		else if (this.__hide_on_unfocus)
 			this.hide();
 	}

@@ -21,9 +21,8 @@ BetaJS.Net.Uri = {
 	parse: function (str, strict) {
 		var parser = strict ? this.__parse_strict_regex : this.__parse_loose_regex;
 		var m = parser.exec(str);
-		var uri = {},
-		i = 14;
-		while (i--)
+		var uri = {};
+		for (var i = 0; i < this.__parse_key.length; ++i)
 			uri[this.__parse_key[i]] = m[i] || "";
 		uri.queryKey = {};
 		uri[this.__parse_key[12]].replace(this.__parse_key_parser, function ($0, $1, $2) {

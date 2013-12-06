@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-11-15
+  betajs - v0.0.2 - 2013-12-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -44,10 +44,11 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 			e = BetaJS.Exceptions.ensure(e);
 			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
+				failure_callback(e.status_code(), e.status_text(), e.data());
 			else
 				throw e;
 		}
+		return false;
 	},
 	
 	asyncCall: function (options) {
@@ -69,7 +70,7 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 				},
 				"failure": function (status_code, status_text, data) {
 					if (failure_callback)
-						failure_callback(status_code, status_text, data)
+						failure_callback(status_code, status_text, data);
 					else
 						throw new BetaJS.Browser.AjaxException(status_code, status_text, data);
 					if (complete_callback)
@@ -81,10 +82,11 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 			e = BetaJS.Exceptions.ensure(e);
 			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
+				failure_callback(e.status_code(), e.status_text(), e.data());
 			else
 				throw e;
 		}
+		return false;
 	},
 	
 	call: function (options) {
@@ -280,7 +282,7 @@ BetaJS.Browser.Dom = {
 	},
 	
 	selectionLeaves: function () {
-		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length == 0; });
+		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length === 0; });
 	},
 	
 	contentSiblings: function (node) {
@@ -345,8 +347,8 @@ BetaJS.Browser.Dom = {
 	
 	splitNode: function (node, start_offset, end_offset) {
 		node = BetaJS.$(node);
-		var start_offset = start_offset || 0;
-		var end_offset = end_offset || node.get(0).data.length;
+		start_offset = start_offset || 0;
+		end_offset = end_offset || node.get(0).data.length;
 		if (end_offset < node.get(0).data.length) {
 			var elem = node.get(0);
 			elem.splitText(end_offset);
@@ -355,14 +357,8 @@ BetaJS.Browser.Dom = {
 		if (start_offset > 0) 
 			node = BetaJS.$(node.get(0).splitText(start_offset));
 		return node;
-	},
-	
-	elementHasAncestorTag: function (node, element, context) {
-		if (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase())
-			return;
-		return context ? node.parents(context + " " + element).length > 0 : node.parents(element).length > 0;
 	}
-		
+			
 };
 
 BetaJS.Browser = BetaJS.Browser || {};
@@ -559,7 +555,7 @@ BetaJS.Browser.Info = {
 	},
 	
 	isiOS: function () {
-		if (this.__isiOS == null)
+		if (this.__isiOS === null)
 			this.__isiOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
 		return this.__isiOS;
 	},
@@ -569,31 +565,31 @@ BetaJS.Browser.Info = {
 	},
 	
 	isAndroid: function () {
-		if (this.__isAndroid == null)
+		if (this.__isAndroid === null)
 			this.__isAndroid = navigator.userAgent.toLowerCase().indexOf("android") != -1;
 		return this.__isAndroid;
 	},
 	
 	isWebOS: function () {
-		if (this.__isWebOS == null)
+		if (this.__isWebOS === null)
 			this.__isWebOS = navigator.userAgent.toLowerCase().indexOf("webos") != -1;
 		return this.__isWebOS;
 	},
 
 	isWindowsPhone: function () {
-		if (this.__isWindowsPhone == null)
+		if (this.__isWindowsPhone === null)
 			this.__isWindowsPhone = navigator.userAgent.toLowerCase().indexOf("windows phone") != -1;
 		return this.__isWindowsPhone;
 	},
 
 	isBlackberry: function () {
-		if (this.__isBlackberry == null)
+		if (this.__isBlackberry === null)
 			this.__isBlackberry = navigator.userAgent.toLowerCase().indexOf("blackberry") != -1;
 		return this.__isBlackberry;
 	},
 
 	iOSversion: function () {
-		if (this.__iOSversion == null && this.isiOS()) {
+		if (this.__iOSversion === null && this.isiOS()) {
 		    var v = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
 		    this.__iOSversion = {
 		    	major: parseInt(v[1], 10),
@@ -605,18 +601,18 @@ BetaJS.Browser.Info = {
 	},
 	
 	isMobile: function () {
-		if (this.__isMobile == null)
+		if (this.__isMobile === null)
 			this.__isMobile = this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
 		return this.__isMobile;
 	},
 	
 	isInternetExplorer: function () {
-		if (this.__isInternetExplorer == null)
+		if (this.__isInternetExplorer === null)
 			this.__isInternetExplorer = navigator.appName == 'Microsoft Internet Explorer';
 		return this.__isInternetExplorer;
 	}
 	
-}
+};
 
 
 /*
@@ -635,8 +631,8 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
             var mimeTypes = navigator.mimeTypes;
             if (mimeTypes && mimeTypes[type] && mimeTypes[type].enabledPlugin && mimeTypes[type].enabledPlugin.description)
                 this.__version = this.parseVersion(mimeTypes[type].enabledPlugin.description);
-        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript)
-            for (var i = 0; i < this.__activeXDetectRules.length; i++)
+        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript) {
+            for (var i = 0; i < this.__activeXDetectRules.length; i++) {
 		        try {
 		            var obj = new ActiveXObject(this.__activeXDetectRules[i].name);
 		            var version = this.__activeXDetectRules[i].version(obj);
@@ -645,6 +641,8 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
                     	break;
                     }
 		        } catch (err) { }
+		    }
+		}
 	},
 	
     parseVersion: function(str) {
@@ -676,7 +674,7 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
 	},
 	
 	installed: function () {
-		return this.__version != null;
+		return this.__version !== null;
 	},
 	
 	supported: function () {
@@ -700,9 +698,10 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
     		return false;
         var properties = [this.version().major, this.version().minor, this.version().revision];
         var len = Math.min(properties.length, arguments.length);
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; i++) {
             if (properties[i] != arguments[i]) 
             	return properties[i] > arguments[i];
+        }
         return true;
     },
 	
@@ -763,7 +762,7 @@ BetaJS.Browser.Loader = {
 		head.appendChild(script);
 	}
 
-}
+};
 BetaJS.Browser = BetaJS.Browser || {}; 
 
 /** @class */
@@ -819,7 +818,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 			routes = [routes];
 		if ("routes" in options) {
 			if (BetaJS.Types.is_array(options["routes"]))
-				routes = routes.concat(options["routes"])
+				routes = routes.concat(options["routes"]);
 			else
 				routes.push(options["routes"]);
 		}
@@ -833,11 +832,11 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 				obj.key = key;
 				obj.route = new RegExp("^" + key + "$");
 				if (!("applicable" in obj))
-					obj.applicable = []
+					obj.applicable = [];
 				else if (!BetaJS.Types.is_array(obj.applicable))
 					obj.applicable = [obj.applicable];
 				if (!("valid" in obj))
-					obj.valid = []
+					obj.valid = [];
 				else if (!BetaJS.Types.is_array(obj.valid))
 					obj.valid = [obj.valid];
 				if (!("path" in obj))
@@ -865,26 +864,26 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 		for (var i = 0; i < this.__routes.length; ++i) {
 			var obj = this.__routes[i];
 			var result = obj.route.exec(route);
-			if (result != null) {
+			if (result !== null) {
 				result.shift(1);
 				var applicable = true;
 				BetaJS.Objs.iter(obj.applicable, function (s) {
 					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					applicable = applicable && f.apply(this, result)
+					applicable = applicable && f.apply(this, result);
 				}, this);
 				if (!applicable)
 					continue;
-				var valid = true
+				var valid = true;
 				BetaJS.Objs.iter(obj.valid, function (s) {
 					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					valid = valid && f.apply(this, result)
+					valid = valid && f.apply(this, result);
 				}, this);
 				if (!valid)
 					return null;
 				return {
 					object: obj,
 					params: result
-				}
+				};
 			}
 		}
 		return null;
@@ -906,8 +905,12 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 		var key = this.object(path).key;
 		var args = Array.prototype.slice.apply(arguments, [1]);
 		var regex = /\(.*?\)/;
-		while (arg = args.shift())
+		while (true) {
+			var arg = args.shift();
+			if (!arg)
+				break;
 			key = key.replace(regex, arg);
+		}
 		return key;
 	},
 	
@@ -917,7 +920,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 	navigate: function (route) {
 		this.trigger("navigate", route);
 		var result = this.parse(route);
-		if (result == null) {
+		if (result === null) {
 			this.trigger("navigate-fail", route);
 			return false;
 		}
@@ -957,7 +960,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 	},
 	
 	__leave: function () {
-		if (this.__current != null) {
+		if (this.__current !== null) {
 			this.trigger("leave", this.__current);
 			this.__current.destroy();
 			this.__current = null;
@@ -1032,7 +1035,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouterHistory", [
 	
 	back: function (index) {
 		if (this.count() < 2)
-			return;
+			return null;
 		index = index || 0;
 		while (index >= 0 && this.count() > 1) {
 			this.__history.pop();
@@ -1073,7 +1076,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouteBinder", {
 		this.__router.navigate(route);
 	},
 	
-	_getExternalRoute: function () { return "" },
+	_getExternalRoute: function () { return ""; },
 	_setExternalRoute: function (route) { }
 	
 });
@@ -1205,12 +1208,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
 			if (this._async_write) 
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_remove : function(id, callbacks) {
@@ -1239,6 +1243,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_get : function(id, callbacks) {
@@ -1247,12 +1252,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {uri: this.prepare_uri("get", data)};
 			if (this._async_read)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 
 	_update : function(id, data, callbacks) {
@@ -1261,12 +1267,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		try {
 			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
 			if (this._async_write)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success))
+				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
 			else
 				return this.__ajax.syncCall(opts);
 		} catch (e) {
 			throw new BetaJS.Stores.RemoteStoreException(e); 			
 		}
+		return true;
 	},
 	
 	_query : function(query, options, callbacks) {
@@ -1275,9 +1282,10 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 			if (this._async_read) {
 				var self = this;
 				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw)
+					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw);
 				});
 				this.__ajax.asyncCall(opts);
+				return true;
 			} else {
 				var raw = this.__ajax.syncCall(opts);
 				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;
@@ -1325,124 +1333,6 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 	}
 
 });
-/*
- * Inspired by Underscore's Templating Engine
- * (which itself is inspired by John Resig's implementation)
- */
-
-BetaJS.Templates = {
-	
-	tokenize: function (s) {
-		// Already tokenized?
-		if (BetaJS.Types.is_array(s))
-			return s;
-		var tokens = [];
-		var index = 0;
-		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, code, offset) {
-			if (index < offset) 
-				tokens.push({
-					type: BetaJS.Templates.TOKEN_STRING,
-					data: BetaJS.Strings.js_escape(s.slice(index, offset))
-				});
-			if (code)
-				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
-			if (expr)
-				tokens.push({type: BetaJS.Templates.TOKEN_EXPR, data: expr});
-			if (esc)
-				tokens.push({type: BetaJS.Templates.TOKEN_ESC, data: esc});
-		    index = offset + match.length;
-		    return match;
-		});
-		return tokens;
-	},
-	
-	/*
-	 * options
-	 *  - start_index: token start index
-	 *  - end_index: token end index
-	 */
-	compile: function(source, options) {
-		if (BetaJS.Types.is_string(source))
-			source = this.tokenize(source);
-		options = options || {};
-		var start_index = options.start_index || 0;
-		var end_index = options.end_index || source.length;
-		var result = "__p+='";
-		for (var i = start_index; i < end_index; ++i) {
-			switch (source[i].type) {
-				case BetaJS.Templates.TOKEN_STRING:
-					result += source[i].data;
-					break;
-				case BetaJS.Templates.TOKEN_CODE:
-					result += "';\n" + source[i].data + "\n__p+='";
-					break;
-				case BetaJS.Templates.TOKEN_EXPR:
-					result += "'+\n((__t=(" + source[i].data + "))==null?'':__t)+\n'";
-					break;
-				case BetaJS.Templates.TOKEN_ESC:
-					result += "'+\n((__t=(" + source[i].data + "))==null?'':BetaJS.Strings.htmlentities(__t))+\n'";
-					break;
-			}	
-		}
-		result += "';\n";
-		result = 'with(obj||{}){\n' + result + '}\n';
-		result = "var __t,__p='',__j=Array.prototype.join," +
-		  "echo=function(){__p+=__j.call(arguments,'');};\n" +
-		  result + "return __p;\n";
-		var func = new Function('obj', result);
-		var func_call = function(data) {
-			return func.call(this, data);
-		};
-		func_call.source = 'function(obj){\n' + result + '}';
-		return func_call;
-	}
-		
-};
-
-BetaJS.Templates.SYNTAX = {
-	OPEN: "{%",
-	CLOSE: "%}",
-	MODIFIER_CODE: "",
-	MODIFIER_EXPR: "=",
-	MODIFIER_ESC: "-"
-};
-
-BetaJS.Templates.SYNTAX_REGEX = function () {
-	var syntax = BetaJS.Templates.SYNTAX;
-	if (!BetaJS.Templates.SYNTAX_REGEX_CACHED)
-		BetaJS.Templates.SYNTAX_REGEX_CACHED = new RegExp(
-			syntax.OPEN + syntax.MODIFIER_EXPR + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_ESC + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_CODE + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			"$",
-		'g');
-	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
-}
-
-BetaJS.Templates.TOKEN_STRING = 1;
-BetaJS.Templates.TOKEN_CODE = 2;
-BetaJS.Templates.TOKEN_EXPR = 3;
-BetaJS.Templates.TOKEN_ESC = 4;
-
-BetaJS.Class.extend("BetaJS.Templates.Template", {
-	
-	constructor: function (template_string) {
-		this._inherited(BetaJS.Templates.Template, "constructor");
-		this.__tokens = BetaJS.Templates.tokenize(template_string);
-		this.__compiled = BetaJS.Templates.compile(this.__tokens);
-	},
-	
-	evaluate: function (obj) {
-		return this.__compiled.apply(this, [obj]);
-	}
-	
-}, {
-	
-	bySelector: function (selector) {
-		return new this(BetaJS.$(selector).html());
-	}
-	
-});
 BetaJS.$ = jQuery || null;
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
@@ -1455,6 +1345,11 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	BetaJS.Classes.ModuleMixin,
 	/** @lends BetaJS.Views.View.prototype */
 	{
+		
+    /** Container html element of the view as jquery object
+     */
+	$el: null,
+	
     
     /** Returns all templates to be pre-loaded.
      * <p>It should return an associative array of templates. The keys are user-defined identifiers, the values are either the template strings or a jquery object containing the template.</p>
@@ -1525,12 +1420,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	css: function (ident) {
 		if (this.__css[ident])
 			return this.__css[ident];
+		var css = null;
 		if (this.__parent) {
-			var css = this.__parent.css(ident);
+			css = this.__parent.css(ident);
 			if (css && css != ident)
 				return css;
 		}
-		var css = this._css();
+		css = this._css();
 		if (css[ident])
 			return css[ident];
 		return ident;
@@ -1542,7 +1438,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_render: function () {
 		if (this.__html)
-			this.$el.html(this.__html)
+			this.$el.html(this.__html);
 		else if (this.__templates["default"])
 			this.$el.html(this.evaluateTemplate("default", {}));
 		else if (this.__dynamics["default"])
@@ -1586,7 +1482,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			attrs: function (obj) {
 				var s = "";
 				for (var key in obj)
-					s += (obj[key] == null ? key : (key + "='" + obj[key] + "'")) + " ";
+					s += (!obj[key] ? key : (key + "='" + obj[key] + "'")) + " ";
 				return s;
 			},
 			styles: function (obj) {
@@ -1599,7 +1495,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return "data-selector='" + name + "' ";
 			},
 			view_id: this.cid()
-		}
+		};
 	},
 	
 	/** Returns all arguments that are passed to every template by default.
@@ -1635,17 +1531,28 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return this.__dynamics[key].renderInstance(element, BetaJS.Objs.extend(options || {}, {args: args || {}}));
 	},
 
-	/** Sets private variable from an option array
+	/** Sets a private variable from an option array
 	 * @param options option associative array
 	 * @param key name of option
 	 * @param value default value of option if not given
 	 * @param prefix (optional) per default is "__"
 	 */
 	_setOption: function (options, key, value, prefix) {
-		var prefix = prefix ? prefix : "__";
+		prefix = prefix ? prefix : "__";
 		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
+	/** Sets a private typed variable from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 * @param type param type
+	 * @param prefix (optional) per default is "__"
+	 */
+	_setOptionTyped: function (options, key, value, type, prefix) {
+		this._setOption(options, key, this.cls._parseType(value, type), prefix);
+	},
+
 	/** Sets property variable (that will be passed to templates and dynamics by default) from an option array
 	 * @param options option associative array
 	 * @param key name of option
@@ -1653,6 +1560,16 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_setOptionProperty: function (options, key, value) {
 		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
+	},
+	
+	/** Sets typed property variable (that will be passed to templates and dynamics by default) from an option array
+	 * @param options option associative array
+	 * @param key name of option
+	 * @param value default value of option if not given
+	 * @param type param type
+	 */
+	_setOptionPropertyTyped: function (options, key, value, typed) {
+		this._setOptionProperty(options, key, this.cls._parseType(value, type));
 	},
 	
 	/** Creates a new view with options
@@ -1717,8 +1634,9 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("template" in options)
 			templates["default"] = options["template"];
 		this.__templates = {};
-		for (var key in templates) {
-			if (templates[key] == null)
+		var key = null;
+		for (key in templates) {
+			if (!templates[key])
 				throw new BetaJS.Views.ViewException("Could not find template '" + key + "' in View '" + this.cls.classname + "'");
 			this.__templates[key] = new BetaJS.Templates.Template(BetaJS.Types.is_string(templates[key]) ? templates[key] : templates[key].html());
 		}
@@ -1727,7 +1645,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		if ("dynamic" in options)
 			dynamics["default"] = options["dynamic"];
 		this.__dynamics = {};
-		for (var key in dynamics)
+		for (key in dynamics)
 			this.__dynamics[key] = new BetaJS.Views.DynamicTemplate(this, BetaJS.Types.is_string(dynamics[key]) ? dynamics[key] : dynamics[key].html());
 
 		this.setAll(options["properties"] || {});
@@ -1743,10 +1661,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		this.ns = {};
 		var domain = this._domain();
 		var domain_defaults = this._domain_defaults();
-
+		var view_name = null;
 		if (!BetaJS.Types.is_empty(domain)) {
 			var viewlist = [];
-			for (var view_name in domain)
+			for (view_name in domain)
 				viewlist.push({
 					name: view_name,
 					data: domain[view_name]
@@ -1762,33 +1680,34 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 				return after;
 			});
 			for (var i = 0; i < viewlist.length; ++i) {
-				var view_name = viewlist[i].name;
+				view_name = viewlist[i].name;
 				var record = viewlist[i].data;
-				var options = record.options || {};
-				if (BetaJS.Types.is_function(options))
-					options = options.apply(this, [this]);
+				var record_options = record.options || {};
+				if (BetaJS.Types.is_function(record_options))
+					record_options = record_options.apply(this, [this]);
 				var default_options = domain_defaults[record.type] || {};
 				if (BetaJS.Types.is_function(default_options))
 					default_options = default_options.apply(this, [this]);
-				options = BetaJS.Objs.tree_merge(default_options, options);
+				record_options = BetaJS.Objs.tree_merge(default_options, record_options);
 				if (record.type in BetaJS.Views)
 					record.type = BetaJS.Views[record.type];
 				if (BetaJS.Types.is_string(record.type))
 					record.type = BetaJS.Scopes.resolve(record.type);
-				var view = new record.type(options);
+				var view = new record.type(record_options);
 				this.ns[view_name] = view;
 				var parent_options = record.parent_options || {};
 				var parent = this;
 				if (record.parent)
 					parent = BetaJS.Scopes.resolve(record.parent, this.ns);
 				if (record.method)
-					record.method(parent, view)
+					record.method(parent, view);
 				else
 					parent.addChild(view, parent_options);
 				view.domain = this;
-				for (var event in record.events || {})
+				var event = null;
+				for (event in record.events || {})
 					view.on(event, record.events[event], view);
-				for (var event in record.listeners || {})
+				for (event in record.listeners || {})
 					this.on(event, record.listeners[event], view);
 			}		
 		}
@@ -1815,15 +1734,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	activate: function () {
 		if (this.isActive())
 			return this;
-		if (this.__el == null) 
-			return null;
 		if (this.__parent && !this.__parent.isActive())
 			return null;
 		if (this.__parent)
-			this.$el = this.__el == "" ? this.__parent.$el : this.__parent.$(this.__el);
+			this.$el = !this.__el ? this.__parent.$el : this.__parent.$(this.__el);
 		else
 			this.$el = BetaJS.$(this.__el);
-		if (this.$el.size() == 0)
+		if (this.$el.size() === 0)
 			this.$el = null;
 		if (!this.$el)
 			return null;
@@ -1832,8 +1749,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el = this.$el.find("[data-view-id='" + this.cid() + "']");
 		}
 		this.__old_attributes = {};
-		for (var key in this.__attributes) {
-			var old_value = this.$el.attr(key);
+		var key = null;
+		var old_value = null;
+		for (key in this.__attributes) {
+			old_value = this.$el.attr(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_attributes[key] = old_value;
 			else
@@ -1842,15 +1761,16 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		}
 		this.__added_el_classes = [];
 		var new_el_classes = this._el_classes().concat(this.__el_classes);
-		for (var i = 0; i < new_el_classes.length; ++i)
+		for (var i = 0; i < new_el_classes.length; ++i) {
 			if (!this.$el.hasClass(new_el_classes[i])) {
 				this.$el.addClass(new_el_classes[i]);
 				this.__added_el_classes.push(new_el_classes[i]);
 			}
+		}
 		this.__old_el_styles = {};
 		var new_el_styles = BetaJS.Objs.extend(this._el_styles(), this.__el_styles);
-		for (var key in new_el_styles)  {
-			var old_value = this.$el.css(key);
+		for (key in new_el_styles)  {
+			old_value = this.$el.css(key);
 			if (BetaJS.Types.is_defined(old_value))
 				this.__old_el_styles[key] = old_value;
 			else
@@ -1894,11 +1814,12 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		}, this);
 		this.__unbind();
 		this.$el.html("");
-		for (var key in this.__old_attributes) 
+		var key = null;
+		for (key in this.__old_attributes) 
 			this.$el.attr(key, this.__old_attributes[key]);
 		for (var i = 0; i < this.__added_el_classes.length; ++i)
 			this.$el.removeClass(this.__added_el_classes[i]);
-		for (var key in this.__old_el_styles) 
+		for (key in this.__old_el_styles) 
 			this.$el.css(key, this.__old_el_styles[key]);
 		if (this.__append_to_el)
 			this.$el.remove();
@@ -2058,9 +1979,10 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			return;
 		this._render();
 		var q = this.$el.children();
-		if (!BetaJS.Types.is_empty(this.__children_styles))
+		if (!BetaJS.Types.is_empty(this.__children_styles)) {
 			for (var key in this.__children_styles)
 				q.css(key, this.__children_styles[key]);
+		}
 		BetaJS.Objs.iter(this.__children_classes, function (cls) {
 			q.addClass(cls);	
 		});
@@ -2254,7 +2176,24 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		return this.$el.outerHeight();
 	}
 	
-}]);
+}], {
+	
+	_parseType: function (value, type) {
+		if (BetaJS.Types.is_defined(value) && BetaJS.Types.is_string(value)) {
+			value = value.replace(/\s+/g, '');
+			if (type == "int")
+				return parseInt(value, 10);
+			else if (type == "array")
+				return value.split(",");
+			else if (type == "bool")
+				return value === "" || BetaJS.Strings.parseBool(value);
+			else if (type == "object" || type == "function")
+				return BetaJS.Scopes.resolve(value);
+		}
+		return value;
+	}
+
+});
 
 BetaJS.Views.BIND_EVENT_SPLITTER = /^(\S+)\s*(.*)$/;
 
@@ -2367,20 +2306,20 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	__update_element: function (element) {
 		var value = this.__get_variable(element.variable);
 		if (element.type == "inner")
-			element.$el.html(value)
+			element.$el.html(value);
 		else if (element.type == "value") {
 			if (element.$el.val() != value)
 				element.$el.val(value);
 		} else if (element.type == "attribute")
-			element.$el.attr(element.attribute, value)
+			element.$el.attr(element.attribute, value);
 		else if (element.type == "css") {
 			if (!element.positive)
 				value = !value;
 			if (value)
-				element.$el.addClass(this.__parent.view().css(element.css))
+				element.$el.addClass(this.__parent.view().css(element.css));
 			else
 				element.$el.removeClass(this.__parent.view().css(element.css));
-		};
+		}
 	},
 	
 	__prepare_element: function (element) {
@@ -2473,6 +2412,139 @@ BetaJS.Class.extend("BetaJS.Views.DynamicTemplateInstance", [
 	
 }]);
 
+BetaJS.Views.ActiveDom = {
+	
+	__prefix_alias: ["bjs", "betajs"],
+	
+	__view_alias: {},
+	
+	__views: {},
+	
+	__active: false,
+	
+	__on_add_element: function (event) {
+		var element = $(event.target);
+		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+			if (element.attr(alias + "view"))
+				BetaJS.Views.ActiveDom.__attach(element);
+		});
+		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__view_alias, function (data, alias) {
+			if (element.attr(alias))
+				BetaJS.Views.ActiveDom.__attach(element, data);
+		});
+	},
+	
+	__on_remove_element: function (event) {
+		var element = $(event.target);
+		if (element.attr("data-active-dom-id") in BetaJS.Views.ActiveDom.__views)
+			BetaJS.Views.ActiveDom.__views[element.attr("data-active-dom-id")].destroy();
+	},
+	
+	__attach: function (element, meta_attrs) {
+		var process = function (key, value) {
+			var i = 0;
+			while (i < BetaJS.Views.ActiveDom.__prefix_alias.length) {
+				var alias = BetaJS.Views.ActiveDom.__prefix_alias[i];
+				if (BetaJS.Strings.starts_with(key, alias + "-")) {
+					key = BetaJS.Strings.strip_start(key, alias + "-");
+					if (BetaJS.Strings.starts_with(key, "child-")) {
+						key = BetaJS.Strings.strip_start(key, "child-");
+						dom_child_attrs[key] = value;
+					} else if (key in meta_attrs_scheme)
+						meta_attrs[key] = value;
+					else
+						option_attrs[key] = value;
+					return;
+				} else
+				++i;
+			}
+			dom_attrs[key] = value;			
+		};
+		var element_data = function (element) {
+			var query = element.find("script[type='text/param']");
+			return BetaJS.Strings.nltrim(query.length > 0 ? query.html() : element.html());
+		};
+		var dom_attrs = {};
+		var dom_child_attrs = {};
+		var option_attrs = {};
+		var meta_attrs_scheme = {type: "View", "default": null, "name": null};
+		meta_attrs = BetaJS.Objs.extend(BetaJS.Objs.clone(meta_attrs_scheme, 1), meta_attrs || {});
+		var attrs = element.get(0).attributes;
+		for (var i = 0; i < attrs.length; ++i) 
+			process(attrs.item(i).nodeName, attrs.item(i).nodeValue);
+		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+			element.children(alias + "param").each(function () {
+				var child = BetaJS.$(this);
+				process(alias + "-" + child.attr(alias + "-key"), element_data(child));
+			});
+		});
+		if (meta_attrs["default"])
+			option_attrs[meta_attrs["default"]] = element_data(element);
+		if (meta_attrs.type in BetaJS.Views)
+			meta_attrs.type = BetaJS.Views[meta_attrs.type];
+		if (BetaJS.Types.is_string(meta_attrs.type))
+			meta_attrs.type = BetaJS.Scopes.resolve(meta_attrs.type);
+		var view = new meta_attrs.type(option_attrs);
+		view.setEl("[data-active-dom-id='" + view.cid() + "']");
+		element.replaceWith("<div data-active-dom-id='" + view.cid() + "'></div>");
+		element = BetaJS.$("[data-active-dom-id='" + view.cid() + "']");
+		var key = null;
+		for (key in dom_attrs)
+			element.attr(key, dom_attrs[key]);
+		view.on("destroy", function () {
+			delete BetaJS.Views.ActiveDom.__views[view.cid()];
+		});
+		BetaJS.Views.ActiveDom.__views[view.cid()] = view;
+		view.activate();
+		for (key in dom_child_attrs)
+			element.children().attr(key, dom_child_attrs[key]);
+		if (meta_attrs["name"])
+			BetaJS.Scopes.set(view, meta_attrs["name"]);
+	},
+	
+	activate: function () {
+		BetaJS.$(document).ready(function () {
+			if (BetaJS.Views.ActiveDom.__active)
+				return;
+			document.addEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+			document.addEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+				BetaJS.$(alias + "view").each(function () {
+					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this));
+				});
+			});
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__view_alias, function (data, alias) {
+				BetaJS.$(alias).each(function () {
+					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this), data);
+				});
+			});
+			BetaJS.Views.ActiveDom.__active = true;
+		});
+	},
+	
+	deactivate: function () {
+		BetaJS.$(document).ready(function () {
+			if (!BetaJS.Views.ActiveDom.__active)
+				return;
+			document.removeEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+			document.removeEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__views, function (view) {
+				view.destroy();
+			});
+			BetaJS.Views.ActiveDom.__active = false;
+		});
+	},
+	
+	registerPrefixAlias: function (alias) {
+		this.__prefix_alias.push(alias);
+	},
+	
+	registerViewAlias: function (alias, type, def) {
+		this.__view_alias[alias] = { type: type };
+		this.__view_alias[alias]["default"] = def;
+	}
+	
+};
 BetaJS.Classes.Module.extend("BetaJS.Views.Modules.Centering", {
 	
 	constructor: function (options) {
@@ -2571,7 +2643,7 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.BindOnVisible", {
 		data.bound = false;
 		object.on("visibility", function (visible) {
 			if (visible)
-				this.__bind(object)
+				this.__bind(object);
 			else
 				this.__unbind(object);
 		}, this);
@@ -2778,7 +2850,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 			if (!(opts['type'] && opts['type'] == 'ignore')) {
 				child.$el.css(pos_string, pos + 'px');
 				if (child.isVisible())
-					pos += parseInt(child.$el.css(size_string));
+					pos += parseInt(child.$el.css(size_string), 10);
 				if (opts['type'] && opts['type'] == 'dynamic')
 					return false;
 			}
@@ -3181,6 +3253,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", false);
 		this.__itemData = {};
+		if ("table" in options) {
+			var table = this.cls._parseType(options.table, "object");
+			this.active_query = new BetaJS.Queries.ActiveQuery(table.active_query_engine(), {});
+			options.collection = this.active_query.collection();
+			options.destroy_collection = true;
+		}
+		if ("compare" in options)
+			options.compare = this.cls._parseType(options.compare, "function");
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = "destroy_collection" in options ? options.destroy_collection : false;
@@ -3211,7 +3291,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			this.__reIndexItem(item);
 		}, this);
 		this.__collection.on("sorted", function () {
-			this.__sorted();
+			this.__sort();
 		}, this);
 		this.__collection.iterate(function (item) {
 			this._registerItem(item);
@@ -3230,7 +3310,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_itemBySubElement: function (element) {
 		var container = element.closest("[data-view-id='" + this.cid() + "']");
-		return container.length == 0 ? null : this.__collection.getById(container.attr("data-cid"));
+		return container.length === 0 ? null : this.__collection.getById(container.attr("data-cid"));
 	},
 	
 	__click: function (e) {
@@ -3311,7 +3391,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	__reIndexItem: function (item) {
 		var element = this.itemElement(item);
 		var index = this.collection().getIndex(item);
-		if (index == 0)
+		if (index === 0)
 			this.$selector_list.prepend(element);
 		else {
 			var before = this._findIndexElement(index - 1);
@@ -3340,6 +3420,8 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	},
 	
 	_unregisterItem: function (item) {
+		if (!this.__itemData[item.cid()])
+			return;
 		this.__itemData[item.cid()].properties.destroy();
 		delete this.__itemData[item.cid()];
 	},
@@ -3352,7 +3434,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			item_container_classes: this.__item_container_classes			
 		});
 		var index = this.__collection.getIndex(item);
-		if (index == 0)
+		if (index === 0)
 			this.$selector_list.prepend(container);
 		else {
 			var before = this._findIndexElement(index - 1);
@@ -3422,9 +3504,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
+		options = options || {};
+		if ("item_template" in options)
+			options.templates = {item: options.item_template};
+		if ("item_dynamic" in options)
+			options.dynamics = {item: options.item_dynamic};
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
 		this._setOption(options, "item_label", "label");
-		this._setOption(options, "render_item_on_change", this.dynamics("item") == null);
+		this._setOption(options, "render_item_on_change", BetaJS.Types.is_defined(this.dynamics("item")));
 	},
 	
 	_changeItem: function (item) {
@@ -3441,16 +3528,16 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	_renderItem: function (item) {
 		var element = this.itemElement(item);
 		var properties = this.itemData(item).properties;
-		if (this.templates("item") != null)
+		if (this.templates("item"))
 			element.html(this.evaluateTemplate("item", {item: item, properties: properties}));
-		else if (this.dynamics("item") != null)
+		else if (this.dynamics("item"))
 			this.evaluateDynamics("item", element, {item: item, properties: properties}, {name: "item-" + BetaJS.Ids.objectId(item)});
 		else
 			element.html(item.get(this.__item_label)); 
 	},
 	
 	_deactivateItem: function (item) {
-		if (this.dynamics("item") != null)
+		if (this.dynamics("item"))
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
 		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
 	}
@@ -3476,7 +3563,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		if ("create_view" in options)
 			this._create_view = options.create_view;
 		if ("sub_view" in options)
-			this._sub_view = options.sub_view;
+			this._sub_view = this.cls._parseType(options.sub_view, "object");
 		if ("sub_view_options" in options)
 			this._sub_view_options_param = options.sub_view_options;
 		if ("property_map" in options)
@@ -3486,21 +3573,18 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	_create_view: function (item, element) {
 		var properties = BetaJS.Objs.extend(
 			BetaJS.Types.is_function(this._property_map) ? this._property_map.apply(this, [item]) : this._property_map,
-			BetaJS.Types.is_function(this._property_map_param) ? this._property_map_param.apply(this, [item]) : this._property_map_param
-		);
+			BetaJS.Types.is_function(this._property_map_param) ? this._property_map_param.apply(this, [item]) : this._property_map_param);
 		var options = BetaJS.Objs.extend(
 			BetaJS.Types.is_function(this._sub_view_options) ? this._sub_view_options.apply(this, [item]) : this._sub_view_options,
 			BetaJS.Objs.extend(
 				BetaJS.Types.is_function(this._sub_view_options_param) ? this._sub_view_options_param.apply(this, [item]) : this._sub_view_options_param || {},
-				BetaJS.Objs.map(properties, item.get, item)
-			)
-		);
+				BetaJS.Objs.map(properties, item.get, item)));
 		options.el = this.itemElement(item);
 		return new this._sub_view(options);
 	},
 	
 	_activateItem: function (item) {
-		this._inherited(BetaJS.Views.ListView, "_activateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_activateItem", item);
 		var view = this._create_view(item); 
 		this.delegateEvents(null, view, "item", [view, item]);
 		this.itemData(item).view = view;
@@ -3511,7 +3595,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		var view = this.itemData(item).view;
 		this.removeChild(view);
 		view.destroy();
-		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_deactivateItem", item);
 	}
 	
 });
@@ -3601,12 +3685,12 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		var top = this.__overlay_top;
 		
 		if (this.__overlay_align_vertical == "bottom")
-			top -= height
+			top -= height;
 		else if (this.__overlay_align_vertical == "center")
 			top -= Math.round(height/2);
 
 		if (this.__overlay_align_horizontal == "right")
-			left -= width
+			left -= width;
 		else if (this.__overlay_align_horizontal == "center")
 			left -= Math.round(width/2);
 			
@@ -3614,7 +3698,7 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		if (this.__anchor == "element" && this.__element) {
 			element = this.__element;
 			if (BetaJS.Types.is_string(element))
-				element = BetaJS.$(element)
+				element = BetaJS.$(element);
 			else if (BetaJS.Class.is_class_instance(element))
 				element = element.$el;
 		}
@@ -3624,11 +3708,11 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 			left += element.offset().left - $(window).scrollLeft();
 			top += element.offset().top - $(window).scrollTop();
 			if (this.__element_align_vertical == "bottom")
-				top += element_height
+				top += element_height;
 			else if (this.__element_align_vertical == "center")
 				top += Math.round(element_height/2);
 			if (this.__element_align_horizontal == "right")
-				left += element_width
+				left += element_width;
 			else if (this.__element_align_horizontal == "center")
 				left += Math.round(element_width/2);
 		}
@@ -3693,7 +3777,7 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	__unfocus: function () {
 		if (this.__destroy_on_unfocus)
-			this.destroy()
+			this.destroy();
 		else if (this.__hide_on_unfocus)
 			this.hide();
 	}

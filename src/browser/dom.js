@@ -114,7 +114,7 @@ BetaJS.Browser.Dom = {
 	},
 	
 	selectionLeaves: function () {
-		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length == 0; });
+		return BetaJS.Objs.filter(this.selectionNodes(), function (node) { return node.children().length === 0; });
 	},
 	
 	contentSiblings: function (node) {
@@ -179,8 +179,8 @@ BetaJS.Browser.Dom = {
 	
 	splitNode: function (node, start_offset, end_offset) {
 		node = BetaJS.$(node);
-		var start_offset = start_offset || 0;
-		var end_offset = end_offset || node.get(0).data.length;
+		start_offset = start_offset || 0;
+		end_offset = end_offset || node.get(0).data.length;
 		if (end_offset < node.get(0).data.length) {
 			var elem = node.get(0);
 			elem.splitText(end_offset);
@@ -189,12 +189,6 @@ BetaJS.Browser.Dom = {
 		if (start_offset > 0) 
 			node = BetaJS.$(node.get(0).splitText(start_offset));
 		return node;
-	},
-	
-	elementHasAncestorTag: function (node, element, context) {
-		if (BetaJS.Types.is_defined(node.get(0).tagName) && node.get(0).tagName.toLowerCase() == element.toLowerCase())
-			return;
-		return context ? node.parents(context + " " + element).length > 0 : node.parents(element).length > 0;
 	}
-		
+			
 };

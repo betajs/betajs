@@ -68,7 +68,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	},
 	
 	hasModel: function (model) {
-		return this.__models_by_cid.get(model) != null;
+		return this.__models_by_cid.get(model) !== null;
 	},
 
 	_model_remove: function (model, options) {
@@ -96,13 +96,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write())
-			this.__store.remove(model.id(), callback)
+			this.__store.remove(model.id(), callback);
 		else try {
 			this.__store.remove(model.id());
 			return callback.success();
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return false;
 	},
 
 	_model_save: function (model, options) {
@@ -138,9 +139,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 				if (!(model.cls.primary_key() in confirmed))
 					return callback.exception(new BetaJS.Modelling.ModelMissingIdException(model));
 				self.__models_by_id[confirmed[model.cls.primary_key()]] = model;
-				if (!self.__options.greedy_create)
+				if (!self.__options.greedy_create) {
 					for (var key in model.properties_by(false))
 						delete confirmed[key];
+				}
 				model.setAll(confirmed, {no_change: true, silent: true});
 				if (is_valid)
 					delete self.__models_changed[model.cid()];
@@ -165,13 +167,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write())
-			this.__store.insert(attrs, callback)
+			this.__store.insert(attrs, callback);
 		else try {
 			var confirmed = this.__store.insert(attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return true;
 	},
 
 
@@ -196,9 +199,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(attrs);
 		var callback = {
 			success : function (confirmed) {
-				if (!self.__options.greedy_update)
+				if (!self.__options.greedy_update) {
 					for (var key in model.properties_changed(false))
 						delete confirmed[key];
+				}
 				model.setAll(confirmed, {no_change: true, silent: true});
 				if (is_valid)
 					delete self.__models_changed[model.cid()];
@@ -221,13 +225,14 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			}
 		};
 		if (this.async_write() && !BetaJS.Types.is_empty(attrs))
-			this.__store.update(model.id(), attrs, callback)
+			this.__store.update(model.id(), attrs, callback);
 		else try {
 			var confirmed = BetaJS.Types.is_empty(attrs) ? {} : this.__store.update(model.id(), attrs);
 			return callback.success(confirmed);		
 		} catch (e) {
 			return callback.exception(e);
 		}
+		return true;
 	},
 
 	_model_set_value: function (model, key, value, options) {
@@ -269,7 +274,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	
 	findById: function (id) {
 		if (this.__models_by_id[id])
-			return this.__models_by_id[id]
+			return this.__models_by_id[id];
 		else
 			return this.__materialize(this.__store.get(id));
 	},
@@ -319,9 +324,10 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		if (!("ensure_index" in this.__store))
 			return false;
 		var scheme = this.scheme();
-		for (var key in scheme)
+		for (var key in scheme) {
 			if (scheme[key].index)
 				this.__store.ensure_index(key);
+		}
 		return true;
 	}
 	

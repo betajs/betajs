@@ -34,7 +34,7 @@ BetaJS.Types = {
      * @return true if x is null
      */
 	is_null: function (x) {
-		return x == null;
+		return x === null;
 	},
 	
     /** Returns whether argument is undefined or null
@@ -64,7 +64,7 @@ BetaJS.Types = {
 		if (this.is_none(x)) 
 			return true;
 		if (this.is_array(x))
-			return x.length == 0;
+			return x.length === 0;
 		if (this.is_object(x)) {
 			for (var key in x)
 				return false;
@@ -117,9 +117,9 @@ BetaJS.Types = {
 			var len_x = x.length;
 			var len_y = y.length;
 			var len = Math.min(len_x, len_y);
-			for (var i=0; i < len; ++i) {
+			for (var i = 0; i < len; ++i) {
 				var c = this.compare(x[i], y[i]);
-				if (c != 0)
+				if (c !== 0)
 					return c;
 			}
 			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);

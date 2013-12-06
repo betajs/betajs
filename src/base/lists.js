@@ -18,7 +18,7 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	},
 	
 	exists: function (object) {
-		return this.get_ident(object) != null;
+		return object && this.get_ident(object) !== null;
 	},
 	
 	_ident_changed: function (object, new_ident) {},
@@ -121,7 +121,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 	
 	_iterate: function (cb, context) {
 		var current = this.__first;
-		while (current != null) {
+		while (current) {
 			var prev = current;
 			current = current.next;
 			if (!cb.apply(context || this, [prev.obj, prev]))
@@ -202,7 +202,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	_sorted: function () {},
 		
 	re_index: function (index) {
-		if (!("_compare" in this))
+		if (!this._compare)
 			return index;
 		var last = this.__items.length - 1;
 		var object = this.__items[index];
@@ -213,13 +213,14 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 			this.__items[i + 1] = object;
 			++i;
 		}
-		if (i == index)
+		if (i == index) {
 			while (i > 0 && this._compare(this.__items[i], this.__items[i - 1]) < 0) {
 				this.__items[i] = this.__items[i - 1];
 				this.__ident_changed(this.__items[i], i);
 				this.__items[i - 1] = object;
 				--i;
 			}
+		}
 		if (i != index) {
 			this.__ident_changed(object, i);
 			this._re_indexed(object);

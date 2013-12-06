@@ -54,7 +54,7 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	__unfocus: function () {
 		if (this.__destroy_on_unfocus)
-			this.destroy()
+			this.destroy();
 		else if (this.__hide_on_unfocus)
 			this.hide();
 	}

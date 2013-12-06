@@ -195,11 +195,15 @@ ul.inheritsList
 	
 	<li><a href="../symbols/BetaJS.Functions.html">BetaJS.Functions</a></li>
 	
+	<li><a href="../symbols/BetaJS.Ids.html">BetaJS.Ids</a></li>
+	
 	<li><a href="../symbols/BetaJS.Scopes.html">BetaJS.Scopes</a></li>
 	
 	<li><a href="../symbols/BetaJS.Stores.BaseStore.html">BetaJS.Stores.BaseStore</a></li>
 	
 	<li><a href="../symbols/BetaJS.Strings.html">BetaJS.Strings</a></li>
+	
+	<li><a href="../symbols/BetaJS.Tokens.html">BetaJS.Tokens</a></li>
 	
 	<li><a href="../symbols/BetaJS.Types.html">BetaJS.Types</a></li>
 	
@@ -254,6 +258,34 @@ ul.inheritsList
 			
 
 <!-- ============================== properties summary ===================== -->
+			
+				
+				
+				<table class="summaryTable" cellspacing="0" summary="A summary of the fields documented in the class BetaJS.Views.View.">
+					<caption>Field Summary</caption>
+					<thead>
+						<tr>
+							<th scope="col">Field Attributes</th>
+							<th scope="col">Field Name and Description</th>
+						</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont">
+								<b><a href="../symbols/BetaJS.Views.View.html#$el">$el</a></b>
+								</div>
+								<div class="description">Container html element of the view as jquery object</div>
+							</td>
+						</tr>
+					
+					</tbody>
+				</table>
+				
+				
+				
 			
 
 <!-- ============================== methods summary ======================== -->
@@ -347,7 +379,7 @@ ul.inheritsList
 							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_setOption">_setOption</a></b>(options, key, value, prefix)
 								</div>
-								<div class="description">Sets private variable from an option array</div>
+								<div class="description">Sets a private variable from an option array</div>
 							</td>
 						</tr>
 					
@@ -357,6 +389,24 @@ ul.inheritsList
 								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_setOptionProperty">_setOptionProperty</a></b>(options, key, value)
 								</div>
 								<div class="description">Sets property variable (that will be passed to templates and dynamics by default) from an option array</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_setOptionPropertyTyped">_setOptionPropertyTyped</a></b>(options, key, value, type)
+								</div>
+								<div class="description">Sets typed property variable (that will be passed to templates and dynamics by default) from an option array</div>
+							</td>
+						</tr>
+					
+						<tr>
+							<td class="attributes">&lt;private&gt; &nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/BetaJS.Views.View.html#_setOptionTyped">_setOptionTyped</a></b>(options, key, value, type, prefix)
+								</div>
+								<div class="description">Sets a private typed variable from an option array</div>
 							</td>
 						</tr>
 					
@@ -689,6 +739,33 @@ ul.inheritsList
 
 <!-- ============================== field details ========================== -->		
 			
+				<div class="sectionTitle">
+					Field Detail
+				</div>
+				
+					<a name="$el"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>$el</b>
+					
+					</div>
+					<div class="description">
+						Container html element of the view as jquery object
+						
+						
+					</div>
+					
+					
+
+						
+						
+						
+						
+
+					
+				
+			
 
 <!-- ============================== method details ========================= -->		
 			
@@ -997,7 +1074,7 @@ ul.inheritsList
 					
 					</div>
 					<div class="description">
-						Sets private variable from an option array
+						Sets a private variable from an option array
 						
 						
 					</div>
@@ -1079,6 +1156,120 @@ ul.inheritsList
 									
 								</dt>
 								<dd>default value of option if not given</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="_setOptionPropertyTyped"> </a>
+					<div class="fixedFont">&lt;private&gt; 
+					
+					
+					<b>_setOptionPropertyTyped</b>(options, key, value, type)
+					
+					</div>
+					<div class="description">
+						Sets typed property variable (that will be passed to templates and dynamics by default) from an option array
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<b>options</b>
+									
+								</dt>
+								<dd>option associative array</dd>
+							
+								<dt>
+									<b>key</b>
+									
+								</dt>
+								<dd>name of option</dd>
+							
+								<dt>
+									<b>value</b>
+									
+								</dt>
+								<dd>default value of option if not given</dd>
+							
+								<dt>
+									<b>type</b>
+									
+								</dt>
+								<dd>param type</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
+				
+					<a name="_setOptionTyped"> </a>
+					<div class="fixedFont">&lt;private&gt; 
+					
+					
+					<b>_setOptionTyped</b>(options, key, value, type, prefix)
+					
+					</div>
+					<div class="description">
+						Sets a private typed variable from an option array
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<b>options</b>
+									
+								</dt>
+								<dd>option associative array</dd>
+							
+								<dt>
+									<b>key</b>
+									
+								</dt>
+								<dd>name of option</dd>
+							
+								<dt>
+									<b>value</b>
+									
+								</dt>
+								<dd>default value of option if not given</dd>
+							
+								<dt>
+									<b>type</b>
+									
+								</dt>
+								<dd>param type</dd>
+							
+								<dt>
+									<b>prefix</b>
+									
+								</dt>
+								<dd>(optional) per default is "__"</dd>
 							
 							</dl>
 						
@@ -2211,7 +2402,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Nov 14 2013 15:58:42 GMT-0500 (EST)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Wed Dec 04 2013 11:36:44 GMT-0500 (EST)
 		</div>
 	</body>
 </html>

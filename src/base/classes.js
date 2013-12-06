@@ -96,7 +96,7 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 	add: function (object) {
 		if (this.get(object))
 			return;
-		if (this.__size != null && this.__count >= this.__size && this.__first)
+		if (this.__size !== null && this.__count >= this.__size && this.__first)
 			this.remove(this.__first.object);
 		var container = {
 			object: object,

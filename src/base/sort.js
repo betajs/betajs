@@ -8,7 +8,8 @@ BetaJS.Sort = {
 		var data = [];
 		var identifier_to_index = {};
 		var todo = {};
-		for (var i = 0; i < n; ++i) {
+		var i = null;
+		for (i = 0; i < n; ++i) {
 			todo[i] = true;
 			var ident = identifierf(items[i], i);
 			identifier_to_index[ident] = i;
@@ -17,7 +18,7 @@ BetaJS.Sort = {
 				after: {}
 			});		
 		}
-		for (var i = 0; i < n; ++i) {
+		for (i = 0; i < n; ++i) {
 			BetaJS.Objs.iter(beforef(items[i], i) || [], function (before) {
 				var before_index = identifier_to_index[before];
 				if (BetaJS.Types.is_defined(before_index)) {
@@ -34,14 +35,16 @@ BetaJS.Sort = {
 			});
 		}
 		var result = [];
-		while (!BetaJS.Types.is_empty(todo))
-			for (var i in todo)
+		while (!BetaJS.Types.is_empty(todo)) {
+			for (i in todo) {
 				if (BetaJS.Types.is_empty(data[i].after)) {
 					delete todo[i];
 					result.push(items[i]);
-					for (var before in data[i].before)
-						delete data[before].after[i];
+					for (bef in data[i].before)
+						delete data[bef].after[i];
 				}
+			}
+		}
 		return result;
 	}
 	

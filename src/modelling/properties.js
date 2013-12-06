@@ -6,13 +6,14 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		this._properties_changed = {};
 		this.__errors = {};
 		this.__unvalidated = {};
-		for (var key in scheme)
+		for (var key in scheme) {
 			if ("def" in scheme[key]) 
 				this.set(key, scheme[key].def);
 			else if (scheme[key].auto_create)
-				this.set(key, scheme[key].auto_create(this))
+				this.set(key, scheme[key].auto_create(this));
 			else
 				this.set(key, null);
+		}
 		options = options || {};
 		this._properties_changed = {};
 		this.__errors = {};
@@ -97,9 +98,9 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				var value = this.get(attr);
 				BetaJS.Objs.iter(validate, function (validator) {
 					var result = validator.validate(value, this);
-					if (result != null)
+					if (result)
 						this.__errors[attr] = result;
-					return result == null;
+					return result === null;
 				}, this);
 			}
 			this.trigger("validate:" + attr, !(attr in this.__errors), this.__errors[attr]);
@@ -132,7 +133,7 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 		var scheme = this.cls.scheme();
 		var props = this.get_all_properties();
 		tags = tags || {};
-		for (var key in props) 
+		for (var key in props) {
 			if (key in scheme) {
 				var target = scheme[key]["tags"] || [];
 				var tarobj = {};
@@ -146,13 +147,14 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					rec[key] = props[key];
 			}
+		}
 		return rec;		
 	},
 	
 	setByTags: function (data, tags) {
 		var scheme = this.cls.scheme();
 		tags = tags || {};
-		for (var key in data) 
+		for (var key in data)  {
 			if (key in scheme) {
 				var target = scheme[key]["tags"] || [];
 				var tarobj = {};
@@ -166,12 +168,13 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 				if (success)
 					this.set(key, data[key]);
 			}
+		}
 	},
 	
 	validation_exception_conversion: function (e) {
 		var source = e;
 		if (e.instance_of(BetaJS.Stores.RemoteStoreException))
-			source = e.source()
+			source = e.source();
 		else if (!("status_code" in source && "data" in source))
 			return e;
 		if (source.status_code() == BetaJS.Net.HttpHeader.HTTP_STATUS_PRECONDITION_FAILED && source.data()) {
@@ -198,9 +201,10 @@ BetaJS.Properties.Properties.extend("BetaJS.Modelling.SchemedProperties", {
 	filterPersistent: function (obj) {
 		var result = {};
 		var scheme = this.scheme();
-		for (var key in obj)
+		for (var key in obj) {
 			if (!BetaJS.Types.is_defined(scheme[key].persistent) || scheme[key].persistent)
 				result[key] = obj[key];
+		}
 		return result;
 	}
 	
@@ -234,7 +238,7 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 	__addAssoc: function (key, obj) {
 		this[key] = function () {
 			return obj.yield();
-		}
+		};
 	},
 	
 	_initializeAssociations: function () {
@@ -267,6 +271,6 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 			type: "id"
 		};
 		return s;
-	},	
+	}
 
 });

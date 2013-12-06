@@ -10,10 +10,10 @@ BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 		for (var key in types) {
 			if (types[key] == "id") {
 				encoding[key] = function (value) {
-					return value ? new ObjectId(value) : null
+					return value ? new ObjectId(value) : null;
 				};
 				decoding[key] = function (value) {
-					return value ? value + "" : null
+					return value ? value + "" : null;
 				};
 			}
 		}

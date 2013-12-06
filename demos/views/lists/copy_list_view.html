@@ -32,7 +32,9 @@
 				});
 				var list = new BetaJS.Views.SubViewListView({
 					sub_view: BetaJS.Views.ButtonView,
-					item_label: "text",
+					sub_view_options: function (item) {
+						return { label: item.binding("text") };
+					},
 					collection: collection
 				});
 				var list2 = new BetaJS.Views.SubViewListView({

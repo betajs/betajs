@@ -39,10 +39,11 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 			e = BetaJS.Exceptions.ensure(e);
 			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
+				failure_callback(e.status_code(), e.status_text(), e.data());
 			else
 				throw e;
 		}
+		return false;
 	},
 	
 	asyncCall: function (options) {
@@ -64,7 +65,7 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 				},
 				"failure": function (status_code, status_text, data) {
 					if (failure_callback)
-						failure_callback(status_code, status_text, data)
+						failure_callback(status_code, status_text, data);
 					else
 						throw new BetaJS.Browser.AjaxException(status_code, status_text, data);
 					if (complete_callback)
@@ -76,10 +77,11 @@ BetaJS.Class.extend("BetaJS.Browser.AbstractAjax", {
 			e = BetaJS.Exceptions.ensure(e);
 			e.assert(BetaJS.Browser.AjaxException);
 			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data())
+				failure_callback(e.status_code(), e.status_text(), e.data());
 			else
 				throw e;
 		}
+		return false;
 	},
 	
 	call: function (options) {

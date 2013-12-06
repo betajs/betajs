@@ -4,7 +4,7 @@ BetaJS.Classes.Module.extend("BetaJS.Views.Modules.BindOnVisible", {
 		data.bound = false;
 		object.on("visibility", function (visible) {
 			if (visible)
-				this.__bind(object)
+				this.__bind(object);
 			else
 				this.__unbind(object);
 		}, this);

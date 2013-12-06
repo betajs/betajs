@@ -85,7 +85,7 @@ BetaJS.Properties.PropertiesMixin = {
 				}, this);
 			}
 			delete this.__properties[key];
-		};
+		}
 	},
 	
 	_set_changed: function (key, old_value, options) {
@@ -99,7 +99,7 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	_parseTimer: function (dep) {
-		return parseInt(BetaJS.Strings.strip_start("timer:"));
+		return parseInt(BetaJS.Strings.strip_start("timer:"), 10);
 	},
 	
 	set: function (key, value, options) {

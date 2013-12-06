@@ -58,12 +58,12 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		var top = this.__overlay_top;
 		
 		if (this.__overlay_align_vertical == "bottom")
-			top -= height
+			top -= height;
 		else if (this.__overlay_align_vertical == "center")
 			top -= Math.round(height/2);
 
 		if (this.__overlay_align_horizontal == "right")
-			left -= width
+			left -= width;
 		else if (this.__overlay_align_horizontal == "center")
 			left -= Math.round(width/2);
 			
@@ -71,7 +71,7 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		if (this.__anchor == "element" && this.__element) {
 			element = this.__element;
 			if (BetaJS.Types.is_string(element))
-				element = BetaJS.$(element)
+				element = BetaJS.$(element);
 			else if (BetaJS.Class.is_class_instance(element))
 				element = element.$el;
 		}
@@ -81,11 +81,11 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 			left += element.offset().left - $(window).scrollLeft();
 			top += element.offset().top - $(window).scrollTop();
 			if (this.__element_align_vertical == "bottom")
-				top += element_height
+				top += element_height;
 			else if (this.__element_align_vertical == "center")
 				top += Math.round(element_height/2);
 			if (this.__element_align_horizontal == "right")
-				left += element_width
+				left += element_width;
 			else if (this.__element_align_horizontal == "center")
 				left += Math.round(element_width/2);
 		}

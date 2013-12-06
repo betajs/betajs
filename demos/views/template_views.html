@@ -4,12 +4,7 @@
 		<meta charset="utf-8">
 		<title>BetaJS Template Views</title>
 		<script src="../jquery-1.9.1.min.js"></script>
-		<script src="../../dist/beta.js"></script>
-		<script type="text/template" id="main-view-template">
-			<div id='input'></div>
-			<div id='list'></div>
-			<div id='button'></div>
-		</script>		
+		<script src="../../dist/beta.js"></script>	
 		<script type="text/template" id="button-view-template">
 			<button>{%= label %}</button>
 		</script>		
@@ -22,8 +17,7 @@
 		<script>
 			$(document).ready(function () {
 				var main = new BetaJS.Views.View({
-					el: "#main",
-					template: $("#main-view-template")
+					el: "body"
 				});
 				var ButtonView = BetaJS.Views.View.extend("ButtonView", {
 					_templates: {
@@ -86,6 +80,8 @@
 		</script>
 	</head>
 	<body>
-		<div id="main"></div>
+		<div id='input'></div>
+		<div id='button'></div>
+		<div id='list'></div>
 	</body>
 </html>

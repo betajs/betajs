@@ -102,6 +102,41 @@ BetaJS.Strings = {
      */
 	is_email_address: function (s) {
 		return this.EMAIL_ADDRESS_REGEX.test(s);
+	},
+	
+	STRIP_HTML_REGEX: /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
+		
+    /** Removes all html from data and returns plain text
+     * 
+     * @param html string containing html
+     * @return string containing the plain text part of it
+     */
+	strip_html: function (html) {
+    	return html.replace(this.STRIP_HTML_REGEX, '');
+    },
+   
+    /** Trims all trailing and leading whitespace and removes block indentations
+     * 
+     * @param s string
+     * @return string with trimmed whitespaces and removed block indentation
+     */
+    nltrim: function(s) {
+		var a = s.replace(/\t/g, "  ").split("\n");
+		var len = null;
+		var i = 0;
+		for (i = 0; i < a.length; ++i) {
+			var j = 0;
+			while (j < a[i].length) {
+				if (a[i].charAt(j) != ' ')
+					break;
+				++j;
+			}
+			if (j < a[i].length)
+				len = len === null ? j : Math.min(j, len);	
+		}
+		for (i = 0; i < a.length; ++i)
+			a[i] = a[i].substring(len);
+		return a.join("\n").trim();
 	}
 
 };

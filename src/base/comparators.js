@@ -3,11 +3,13 @@ BetaJS.Comparators = {
 	byObject: function (object) {
 		return function (left, right) {
 			for (key in object) {
-				var l = left[key] || null;
-				var r = right[key] || null;
-				var c = BetaJS.Comparators.byValue(l, r);
-				if (c != 0)
-				return c * object[key];
+				var c = 0;
+				if (BetaJS.Properties.Properties.is_class_instance(left) && BetaJS.Properties.Properties.is_class_instance(right))
+					c = BetaJS.Comparators.byValue(left.get(key) || null, right.get(key) || null);
+				else
+					c = BetaJS.Comparators.byValue(left[key] || null, right[key] || null);
+				if (c !== 0)
+					return c * object[key];
 			}
 			return 0;
 		};

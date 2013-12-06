@@ -25,7 +25,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 	_insert: function (data) {
 		var last_id = this._read_last_id();
 		var id = data[this._id_key];
-		if (last_id != null) {
+		if (last_id !== null) {
 			this._write_next_id(last_id, id);
 			this._write_prev_id(id, last_id);
 		} else
@@ -41,9 +41,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 			this._remove_item(id);
 			var next_id = this._read_next_id(id);
 			var prev_id = this._read_prev_id(id);
-			if (next_id != null) {
+			if (next_id !== null) {
 				this._remove_next_id(id);
-				if (prev_id != null) {
+				if (prev_id !== null) {
 					this._remove_prev_id(id);
 					this._write_next_id(prev_id, next_id);
 					this._write_prev_id(next_id, prev_id);
@@ -51,7 +51,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 					this._remove_prev_id(next_id);
 					this._write_first_id(next_id);
 				}
-			} else if (prev_id != null) {
+			} else if (prev_id !== null) {
 				this._remove_next_id(prev_id);
 				this._write_last_id(prev_id);
 			} else {
@@ -87,13 +87,13 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 		var store = this;
 		var fid = this._read_first_id();
 		BetaJS.Objs.extend(iter, {
-			__id: fid == null ? 1 : fid,
+			__id: fid === null ? 1 : fid,
 			__store: store,
 			__query: query,
 			
 			hasNext: function () {
 				var last_id = this.__store._read_last_id();
-				if (last_id == null)
+				if (last_id === null)
 					return false;
 				while (this.__id < last_id && !this.__store._read_item(this.__id))
 					this.__id++;
@@ -101,7 +101,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 					if (this.__store._query_applies_to_id(query, this.__id))
 						return true;
 					if (this.__id < last_id)
-						this.__id = this.__store._read_next_id(this.__id)
+						this.__id = this.__store._read_next_id(this.__id);
 					else
 						this.__id++;
 				}
@@ -112,7 +112,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 				if (this.hasNext()) {
 					var item = this.__store.get(this.__id);
 					if (this.__id == this.__store._read_last_id())
-						this.__id++
+						this.__id++;
 					else
 						this.__id = this.__store._read_next_id(this.__id);
 					return item;

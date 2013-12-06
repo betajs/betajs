@@ -20,4 +20,4 @@ BetaJS.Browser.Loader = {
 		head.appendChild(script);
 	}
 
-}
+};

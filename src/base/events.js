@@ -59,7 +59,10 @@ BetaJS.Events.EventsMixin = {
 		this.__events_mixin_events = this.__events_mixin_events || {};
 		events = events.split(BetaJS.Events.EVENT_SPLITTER);
 		var event;
-		while (event = events.shift()) {
+		while (true) {
+			event = events.shift();
+			if (!event)
+				break;
 			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
 			this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
 		}
@@ -71,7 +74,10 @@ BetaJS.Events.EventsMixin = {
 		if (events) {
 			events = events.split(BetaJS.Events.EVENT_SPLITTER);
 			var event;
-			while (event = events.shift())
+			while (true) {
+				event = events.shift();
+				if (!event)
+					break;
 				if (this.__events_mixin_events[event]) {
 					this.__events_mixin_events[event].remove_by_filter(function (object) {
 						var result = (!callback || object.callback == callback) && (!context || object.context == context);
@@ -79,11 +85,12 @@ BetaJS.Events.EventsMixin = {
 							this.__destroy_event_object(object);
 						return result;
 					});
-					if (this.__events_mixin_events[event].count() == 0) {
+					if (this.__events_mixin_events[event].count() === 0) {
 						this.__events_mixin_events[event].destroy();
 						delete this.__events_mixin_events[event];
 					}
 				}
+			}
 		} else {
 			for (event in this.__events_mixin_events) {
 				this.__events_mixin_events[event].remove_by_filter(function (object) {
@@ -92,7 +99,7 @@ BetaJS.Events.EventsMixin = {
 						this.__destroy_event_object(object);
 					return result;
 				});
-				if (this.__events_mixin_events[event].count() == 0) {
+				if (this.__events_mixin_events[event].count() === 0) {
 					this.__events_mixin_events[event].destroy();
 					delete this.__events_mixin_events[event];
 				}
@@ -107,8 +114,11 @@ BetaJS.Events.EventsMixin = {
     	var rest = BetaJS.Functions.getArguments(arguments, 1);
 		var event;
 		if (!this.__events_mixin_events)
-			return;
-    	while (event = events.shift()) {
+			return this;
+		while (true) {
+			event = events.shift();
+			if (!event)
+				break;
     		if (this.__events_mixin_events[event])
     			this.__events_mixin_events[event].iterate(function (object) {
     				self.__call_event_object(object, rest);
@@ -134,7 +144,7 @@ BetaJS.Events.EventsMixin = {
     delegateEvents: function (events, source, prefix, params) {
     	params = params || []; 
     	prefix = prefix ? prefix + ":" : "";
-    	if (events == null) {
+    	if (events === null) {
     		source.on("all", function (event) {
 				var rest = BetaJS.Functions.getArguments(arguments, 1);
 				this.trigger.apply(this, [prefix + event].concat(params).concat(rest));

@@ -41,6 +41,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this._setOption(options, "multi_select", false);
 		this._setOption(options, "click_select", false);
 		this.__itemData = {};
+		if ("table" in options) {
+			var table = this.cls._parseType(options.table, "object");
+			this.active_query = new BetaJS.Queries.ActiveQuery(table.active_query_engine(), {});
+			options.collection = this.active_query.collection();
+			options.destroy_collection = true;
+		}
+		if ("compare" in options)
+			options.compare = this.cls._parseType(options.compare, "function");
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = "destroy_collection" in options ? options.destroy_collection : false;
@@ -71,7 +79,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			this.__reIndexItem(item);
 		}, this);
 		this.__collection.on("sorted", function () {
-			this.__sorted();
+			this.__sort();
 		}, this);
 		this.__collection.iterate(function (item) {
 			this._registerItem(item);
@@ -90,7 +98,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	
 	_itemBySubElement: function (element) {
 		var container = element.closest("[data-view-id='" + this.cid() + "']");
-		return container.length == 0 ? null : this.__collection.getById(container.attr("data-cid"));
+		return container.length === 0 ? null : this.__collection.getById(container.attr("data-cid"));
 	},
 	
 	__click: function (e) {
@@ -171,7 +179,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	__reIndexItem: function (item) {
 		var element = this.itemElement(item);
 		var index = this.collection().getIndex(item);
-		if (index == 0)
+		if (index === 0)
 			this.$selector_list.prepend(element);
 		else {
 			var before = this._findIndexElement(index - 1);
@@ -200,6 +208,8 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 	},
 	
 	_unregisterItem: function (item) {
+		if (!this.__itemData[item.cid()])
+			return;
 		this.__itemData[item.cid()].properties.destroy();
 		delete this.__itemData[item.cid()];
 	},
@@ -212,7 +222,7 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 			item_container_classes: this.__item_container_classes			
 		});
 		var index = this.__collection.getIndex(item);
-		if (index == 0)
+		if (index === 0)
 			this.$selector_list.prepend(container);
 		else {
 			var before = this._findIndexElement(index - 1);
@@ -282,9 +292,14 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	
 	constructor: function(options) {
+		options = options || {};
+		if ("item_template" in options)
+			options.templates = {item: options.item_template};
+		if ("item_dynamic" in options)
+			options.dynamics = {item: options.item_dynamic};
 		this._inherited(BetaJS.Views.ListView, "constructor", options);
 		this._setOption(options, "item_label", "label");
-		this._setOption(options, "render_item_on_change", this.dynamics("item") == null);
+		this._setOption(options, "render_item_on_change", BetaJS.Types.is_defined(this.dynamics("item")));
 	},
 	
 	_changeItem: function (item) {
@@ -301,16 +316,16 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.ListView", {
 	_renderItem: function (item) {
 		var element = this.itemElement(item);
 		var properties = this.itemData(item).properties;
-		if (this.templates("item") != null)
+		if (this.templates("item"))
 			element.html(this.evaluateTemplate("item", {item: item, properties: properties}));
-		else if (this.dynamics("item") != null)
+		else if (this.dynamics("item"))
 			this.evaluateDynamics("item", element, {item: item, properties: properties}, {name: "item-" + BetaJS.Ids.objectId(item)});
 		else
 			element.html(item.get(this.__item_label)); 
 	},
 	
 	_deactivateItem: function (item) {
-		if (this.dynamics("item") != null)
+		if (this.dynamics("item"))
 			this.dynamics("item").removeInstanceByName("item-" + BetaJS.Ids.objectId(item));
 		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
 	}
@@ -336,7 +351,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		if ("create_view" in options)
 			this._create_view = options.create_view;
 		if ("sub_view" in options)
-			this._sub_view = options.sub_view;
+			this._sub_view = this.cls._parseType(options.sub_view, "object");
 		if ("sub_view_options" in options)
 			this._sub_view_options_param = options.sub_view_options;
 		if ("property_map" in options)
@@ -346,21 +361,18 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 	_create_view: function (item, element) {
 		var properties = BetaJS.Objs.extend(
 			BetaJS.Types.is_function(this._property_map) ? this._property_map.apply(this, [item]) : this._property_map,
-			BetaJS.Types.is_function(this._property_map_param) ? this._property_map_param.apply(this, [item]) : this._property_map_param
-		);
+			BetaJS.Types.is_function(this._property_map_param) ? this._property_map_param.apply(this, [item]) : this._property_map_param);
 		var options = BetaJS.Objs.extend(
 			BetaJS.Types.is_function(this._sub_view_options) ? this._sub_view_options.apply(this, [item]) : this._sub_view_options,
 			BetaJS.Objs.extend(
 				BetaJS.Types.is_function(this._sub_view_options_param) ? this._sub_view_options_param.apply(this, [item]) : this._sub_view_options_param || {},
-				BetaJS.Objs.map(properties, item.get, item)
-			)
-		);
+				BetaJS.Objs.map(properties, item.get, item)));
 		options.el = this.itemElement(item);
 		return new this._sub_view(options);
 	},
 	
 	_activateItem: function (item) {
-		this._inherited(BetaJS.Views.ListView, "_activateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_activateItem", item);
 		var view = this._create_view(item); 
 		this.delegateEvents(null, view, "item", [view, item]);
 		this.itemData(item).view = view;
@@ -371,7 +383,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		var view = this.itemData(item).view;
 		this.removeChild(view);
 		view.destroy();
-		this._inherited(BetaJS.Views.ListView, "_deactivateItem", item);
+		this._inherited(BetaJS.Views.SubViewListView, "_deactivateItem", item);
 	}
 	
 });

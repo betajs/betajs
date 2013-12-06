@@ -53,7 +53,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 			routes = [routes];
 		if ("routes" in options) {
 			if (BetaJS.Types.is_array(options["routes"]))
-				routes = routes.concat(options["routes"])
+				routes = routes.concat(options["routes"]);
 			else
 				routes.push(options["routes"]);
 		}
@@ -67,11 +67,11 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 				obj.key = key;
 				obj.route = new RegExp("^" + key + "$");
 				if (!("applicable" in obj))
-					obj.applicable = []
+					obj.applicable = [];
 				else if (!BetaJS.Types.is_array(obj.applicable))
 					obj.applicable = [obj.applicable];
 				if (!("valid" in obj))
-					obj.valid = []
+					obj.valid = [];
 				else if (!BetaJS.Types.is_array(obj.valid))
 					obj.valid = [obj.valid];
 				if (!("path" in obj))
@@ -99,26 +99,26 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 		for (var i = 0; i < this.__routes.length; ++i) {
 			var obj = this.__routes[i];
 			var result = obj.route.exec(route);
-			if (result != null) {
+			if (result !== null) {
 				result.shift(1);
 				var applicable = true;
 				BetaJS.Objs.iter(obj.applicable, function (s) {
 					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					applicable = applicable && f.apply(this, result)
+					applicable = applicable && f.apply(this, result);
 				}, this);
 				if (!applicable)
 					continue;
-				var valid = true
+				var valid = true;
 				BetaJS.Objs.iter(obj.valid, function (s) {
 					var f = BetaJS.Types.is_string(s) ? this[s] : s;
-					valid = valid && f.apply(this, result)
+					valid = valid && f.apply(this, result);
 				}, this);
 				if (!valid)
 					return null;
 				return {
 					object: obj,
 					params: result
-				}
+				};
 			}
 		}
 		return null;
@@ -140,8 +140,12 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 		var key = this.object(path).key;
 		var args = Array.prototype.slice.apply(arguments, [1]);
 		var regex = /\(.*?\)/;
-		while (arg = args.shift())
+		while (true) {
+			var arg = args.shift();
+			if (!arg)
+				break;
 			key = key.replace(regex, arg);
+		}
 		return key;
 	},
 	
@@ -151,7 +155,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 	navigate: function (route) {
 		this.trigger("navigate", route);
 		var result = this.parse(route);
-		if (result == null) {
+		if (result === null) {
 			this.trigger("navigate-fail", route);
 			return false;
 		}
@@ -191,7 +195,7 @@ BetaJS.Browser.Router = BetaJS.Class.extend("BetaJS.Browser.Router", [
 	},
 	
 	__leave: function () {
-		if (this.__current != null) {
+		if (this.__current !== null) {
 			this.trigger("leave", this.__current);
 			this.__current.destroy();
 			this.__current = null;
@@ -266,7 +270,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouterHistory", [
 	
 	back: function (index) {
 		if (this.count() < 2)
-			return;
+			return null;
 		index = index || 0;
 		while (index >= 0 && this.count() > 1) {
 			this.__history.pop();
@@ -307,7 +311,7 @@ BetaJS.Class.extend("BetaJS.Browser.RouteBinder", {
 		this.__router.navigate(route);
 	},
 	
-	_getExternalRoute: function () { return "" },
+	_getExternalRoute: function () { return ""; },
 	_setExternalRoute: function (route) { }
 	
 });

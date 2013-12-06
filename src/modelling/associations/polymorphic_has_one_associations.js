@@ -11,9 +11,9 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 	_yield: function (id) {
 		var query = {};
 		if (id)
-			query[this._foreign_key] = id
+			query[this._foreign_key] = id;
 		else if (this._primary_key) 
-			query[this._foreign_key] = this._model.get(this._primary_key)
+			query[this._foreign_key] = this._model.get(this._primary_key);
 		else
 			query[this._foreign_key] = this._model.id();
 		var foreign_table = BetaJS.Scopes.resolve(this._model.get(this._foreign_table_key));

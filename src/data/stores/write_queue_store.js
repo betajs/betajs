@@ -77,7 +77,6 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 			} else {
 				if (callbacks)
 					callbacks.success();
-				return true;
 			}
 		} else {
 			try {
@@ -85,12 +84,13 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 					if (item.revision_id >= revision_id)
 						return false;
 					this.__store.update(item.id, item.data);
+					return true;
 				}, this);
-			if (callbacks && callbacks.success)
-				callbacks.success();
+				if (callbacks && callbacks.success)
+					callbacks.success();
 			} catch (e) {
 				if (callbacks && callbacks.exception)
-					callbacks.exception(e)
+					callbacks.exception(e);
 				else
 					throw e;
 			}
@@ -178,7 +178,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 				exception: function (e) {
 					self.trigger("flush_error");
 					if (callbacks && callbacks.exception)
-						callbacks.exception(e)
+						callbacks.exception(e);
 					else
 						throw e;
 				},
@@ -196,7 +196,6 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 		BetaJS.Objs.iter(this.__stores, function (store) {
 			this.__changed = this.__changed || store.changed();
 		}, this);
-	}
-	
+	}	
 	
 }]);

@@ -68,7 +68,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (this.exists(object))
 			return null;
 		var ident = this.__data.add(object);
-		if (ident != null) {
+		if (ident !== null) {
 			this.trigger("add", object);
 			if ("on" in object)
 				object.on("change", function (key, value) {
@@ -92,9 +92,9 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (!this.exists(object))
 			return null;
 		this.trigger("remove", object);
+		var result = this.__data.remove(object);
 		if ("off" in object)
 			object.off(null, null, this);
-		var result = this.__data.remove(object);
 		return result;
 	},
 	
@@ -177,7 +177,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
 		if (!this.exists(object))
 			return null;
 		var result = this.__selfRemove(object);
-		if (result == null)
+		if (!result)
 			return null;
 		return this.__parent.remove(object);
 	}
