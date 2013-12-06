@@ -14,6 +14,7 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 		this._inherited(BetaJS.Views.ListContainerView, "constructor", options);
 		this._setOption(options, "alignment", "horizontal");
 		this._setOption(options, "positioning", "float"); // float, computed, none
+		this._setOption(options, "clear_float", false);
 		this._setOption(options, "container_element", "div");
 		this.on("show", function () {
 			if (this.__positioning == "computed")
@@ -26,7 +27,10 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	},
 	
 	_render: function () {
-		this.$el.html("");
+		if (this.__clear_float)
+			this.$el.html("<div data-selector='clearboth' style='clear:both'></div>");
+		else
+			this.$el.html("");
 		BetaJS.Objs.iter(this.children(), function (child) {
 			this.__addChildContainer(child);
 		}, this);
@@ -34,8 +38,13 @@ BetaJS.Views.View.extend("BetaJS.Views.ListContainerView", {
 	
 	__addChildContainer: function (child) {
 		var options = this.childOptions(child);
-		if (this.isActive())
-			this.$el.append(this.evaluateTemplate("item", {cid: child.cid(), container_element: this.__container_element}));
+		if (this.isActive()) {
+			var rendered = this.evaluateTemplate("item", {cid: child.cid(), container_element: this.__container_element});
+			if (this.__clear_float)
+				this.$("[data-selector='clearboth']").before(rendered);
+			else
+				this.$el.append(rendered);
+		}
 		child.setEl("[data-view-id='" + child.cid() + "']");
 		if (this.isHorizontal() && !("float" in options) && this.__positioning == "float")
 			options["float"] = "left";

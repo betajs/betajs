@@ -10,6 +10,7 @@
     "grunt-contrib-cssmin": "",
     "grunt-contrib-uglify": "",
     "grunt-contrib-clean": "",
-    "grunt-betajs-templates": "git://github.com/betajs/grunt-betajs-templates.git"
+    "grunt-betajs-templates": "git://github.com/betajs/grunt-betajs-templates.git",
+    "grunt-newer": ""
   }
 }

@@ -145,6 +145,8 @@ module.exports = function(grunt) {
 					'src/views/form_views/form_control_view/view.js',
 					'src/views/form_views/form_input_view/view.js',
 					'src/views/form_views/form_check_box_view/view.js',
+
+					'src/views/panels/tool_bar_view/view.js',
 				]
 			},
 			dist_beta_common : {
@@ -255,6 +257,7 @@ module.exports = function(grunt) {
 		clean: ["dist/beta-ui-templates.js", "dist/beta-ui.scss", "dist/beta-theme-minimal.scss"]
 	});
 
+	grunt.loadNpmTasks('grunt-newer');
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-sass');	
@@ -263,7 +266,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-betajs-templates');	
 	
 
-	grunt.registerTask('default', ['betajs_templates', 'concat', 'uglify', 'sass', 'cssmin', 'clean']);
-	grunt.registerTask('theme', ['concat:dist_theme_minimal_scss', 'sass:dist_themes', 'cssmin:dist_themes', 'clean']);
+	grunt.registerTask('default', ['newer:betajs_templates', 'newer:concat', 'newer:uglify', 'newer:sass', 'newer:cssmin']);
+	grunt.registerTask('theme', ['newer:concat:dist_theme_minimal_scss', 'newer:sass:dist_themes', 'newer:cssmin:dist_themes']);
 
 };
