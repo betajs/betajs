@@ -39,18 +39,20 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		}
 	},
 	_bindParent: function (parent) {
-		parent.on("select", function () {
+		parent.on("deselect", function () {
 			this.unselect();
 		}, this);
 	},
 	
 	_unbindParent: function (parent) {
-		parent.off("select", this);
+		parent.off("deselect", this);
 	},
 	
 	select: function () {
 		if (!this.__selectable)
 			return;
+		if (this.__deselect_all)
+			this.getParent().trigger("deselect");
 		this.getParent().trigger("select", this);
 		this.set("selected", true);
 	},

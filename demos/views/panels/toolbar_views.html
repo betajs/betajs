@@ -28,6 +28,9 @@
 				background-color: gray;
 				padding: 1px 1px 1px 1px;
 			}
+			.selected {
+				background-color: blue;
+			}
 		</style>
 	</head>
 	<body>
@@ -37,26 +40,41 @@
 				el: "#toolbar",
 				el_classes: "toolbar",
 				items: [{
-					label: "A",
-					item_ident: "left",
-					item_group: "second"
+					label: "B1G1",
+					item_ident: "b1",
+					item_group: "g1"
 				}, {
-					label: "B",
-					item_ident: "right",
-					item_group: "first"
+					label: "B2G1",
+					item_ident: "b2",
+					item_group: "g1"
+				}, {
+					label: "B3G2",
+					item_ident: "b3",
+					item_group: "g2"
+				}, {
+					label: "B4G2",
+					item_ident: "b4",
+					item_group: "g2"
 				}],
 				groups: [{
-					group_ident: "first"
+					group_ident: "g1",
+					group_options: {
+						selectable: true,
+						deselect_all: true,
+						css: {
+							selected: "selected"
+						}
+					}
 				}, {
-					group_ident: "second"
+					group_ident: "g2"
 				}]
 			});
 			view.activate();
 			view.on("item:click", function (view, options) {
 				alert(view.get("label") + ":" + options.item_ident);
 			});
-			view.on("item-left:click", function (view, options) {
-				alert("left");
+			view.on("item-b1:click", function (view, options) {
+				alert("its b1");
 			});
 		</script>
 	</body>

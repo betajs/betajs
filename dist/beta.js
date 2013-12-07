@@ -8615,18 +8615,20 @@ BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 		}
 	},
 	_bindParent: function (parent) {
-		parent.on("select", function () {
+		parent.on("deselect", function () {
 			this.unselect();
 		}, this);
 	},
 	
 	_unbindParent: function (parent) {
-		parent.off("select", this);
+		parent.off("deselect", this);
 	},
 	
 	select: function () {
 		if (!this.__selectable)
 			return;
+		if (this.__deselect_all)
+			this.getParent().trigger("deselect");
 		this.getParent().trigger("select", this);
 		this.set("selected", true);
 	},
@@ -9499,7 +9501,7 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.ToolBarView", {
 	},
 	
 	__group_parent_options: BetaJS.Objs.objectify([
-		"group_ident", "group_type"
+		"group_ident", "group_type", "group_options"
 	]),
 
 	addGroup: function (options) {
@@ -9551,9 +9553,11 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.ToolBarView", {
 			parent_options.item_type = BetaJS.Scopes.resolve(parent_options.item_type);
 		var parent = this;
 		if (parent_options.item_group) {
-			if (parent_options.item_group in this.__group_by_ident)
+			if (parent_options.item_group in this.__group_by_ident) {
 				parent = this.__group_by_ident[parent_options.item_group];
-			else
+				var group_options = this.childOptions(parent);
+				item_options = BetaJS.Objs.extend(group_options.group_options || {}, item_options);
+			} else
 				throw ("Unknown group identifier: " + parent_options.item_group);
 		}
 		var view = parent.addChild(new parent_options.item_type(item_options), parent_options);
