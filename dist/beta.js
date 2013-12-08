@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5746,7 +5746,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8045,15 +8045,36 @@ BetaJS.Views.ActiveDom = {
 	__active: false,
 	
 	__on_add_element: function (event) {
-		var element = $(event.target);
-		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
-			if (element.attr(alias + "view"))
-				BetaJS.Views.ActiveDom.__attach(element);
-		});
-		BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__view_alias, function (data, alias) {
-			if (element.attr(alias))
-				BetaJS.Views.ActiveDom.__attach(element, data);
-		});
+		var element = BetaJS.$(event.target);
+		if (!element)
+			return;
+		var done = false;
+		if (element.prop("tagName")) {
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+				if (element.prop("tagName").toLowerCase() == alias + "view") {
+					BetaJS.Views.ActiveDom.__attach(element);
+					done = true;
+				}
+			});
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__view_alias, function (data, alias) {
+				if (element.prop("tagName").toLowerCase() == alias) {
+					BetaJS.Views.ActiveDom.__attach(element, data);
+					done = true;
+				}
+			});
+		}
+		if (!done) {
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
+				element.find(alias + "view").each(function () {
+					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this));
+				});
+			});
+			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__view_alias, function (data, alias) {
+				element.find(alias).each(function () {
+					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this), data);
+				});
+			});
+		}
 	},
 	
 	__on_remove_element: function (event) {
