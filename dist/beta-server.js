@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5758,10 +5758,28 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Server.Net.HttpAjax", {
 			host: parsed.host,
 			port: parsed.port,
 			path: parsed.path
-		};
-		this.cls.http().request(opts, function (result) {
-			options.success(result);
+		};		
+		var request = this.cls.http().request(opts, function (result) {
+			var data = "";
+			result.on("data", function (chunk) {
+				data += chunk;
+			}).on("end", function () {
+				if (result.statusCode >= 200 && result.statusCode < 300) {
+					if (options) {
+						if (options.success)
+							options.success(data);
+						else
+							callbacks(data);
+					}
+				} else {
+					if (options.failure)
+						options.failure(data);
+				}
+			});
 		});
+		if (options.data)
+			request.write(this.cls.querystring().stringify(options.data));
+		request.end();
 	}
 
 }, {
@@ -5772,8 +5790,16 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Server.Net.HttpAjax", {
 		if (!this.__http)
 			this.__http = require("http");
 		return this.__http;
-	}	
+	},	
 	
+	__querystring: null,
+	
+	querystring: function () {
+		if (!this.__querystring)
+			this.__querystring = require("querystring");
+		return this.__querystring;
+	}	
+
 });
 
 BetaJS.Class.extend("BetaJS.Databases.Database", {
