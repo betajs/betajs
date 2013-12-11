@@ -843,7 +843,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	
 }], {
 	
-	_parseType: function (value, type) {
+	parseType: function (value, type) {
 		if (BetaJS.Types.is_defined(value) && BetaJS.Types.is_string(value)) {
 			value = value.replace(/\s+/g, '');
 			if (type == "int")

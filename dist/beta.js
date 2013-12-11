@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-08
+  betajs - v0.0.2 - 2013-12-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5746,7 +5746,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-12-08
+  betajs - v0.0.2 - 2013-12-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7800,7 +7800,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	
 }], {
 	
-	_parseType: function (value, type) {
+	parseType: function (value, type) {
 		if (BetaJS.Types.is_defined(value) && BetaJS.Types.is_string(value)) {
 			value = value.replace(/\s+/g, '');
 			if (type == "int")
@@ -8908,13 +8908,13 @@ BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {
 		this._setOption(options, "click_select", false);
 		this.__itemData = {};
 		if ("table" in options) {
-			var table = this.cls._parseType(options.table, "object");
+			var table = this.cls.parseType(options.table, "object");
 			this.active_query = new BetaJS.Queries.ActiveQuery(table.active_query_engine(), {});
 			options.collection = this.active_query.collection();
 			options.destroy_collection = true;
 		}
 		if ("compare" in options)
-			options.compare = this.cls._parseType(options.compare, "function");
+			options.compare = this.cls.parseType(options.compare, "function");
 		if ("collection" in options) {
 			this.__collection = options.collection;
 			this.__destroy_collection = "destroy_collection" in options ? options.destroy_collection : false;
@@ -9217,7 +9217,7 @@ BetaJS.Views.CustomListView.extend("BetaJS.Views.SubViewListView", {
 		if ("create_view" in options)
 			this._create_view = options.create_view;
 		if ("sub_view" in options)
-			this._sub_view = this.cls._parseType(options.sub_view, "object");
+			this._sub_view = this.cls.parseType(options.sub_view, "object");
 		if ("sub_view_options" in options)
 			this._sub_view_options_param = options.sub_view_options;
 		if ("property_map" in options)
