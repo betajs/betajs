@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-11
+  betajs - v0.0.2 - 2013-12-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5759,6 +5759,19 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Server.Net.HttpAjax", {
 			port: parsed.port,
 			path: parsed.path
 		};		
+		var post_data = null;
+		if (options.data) {
+			if (opts.method == "GET") {
+				opts.path = opts.path + "?" + this.cls.querystring().stringify(options.data);
+			} else {
+				post_data = this.cls.querystring().stringify(options.data);
+				if (post_data.length > 0)
+					opts.headers = {
+			          'Content-Type': 'application/x-www-form-urlencoded',
+			          'Content-Length': post_data.length
+				    };
+			}			
+		}
 		var request = this.cls.http().request(opts, function (result) {
 			var data = "";
 			result.on("data", function (chunk) {
@@ -5777,8 +5790,8 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Server.Net.HttpAjax", {
 				}
 			});
 		});
-		if (options.data)
-			request.write(this.cls.querystring().stringify(options.data));
+		if (post_data && post_data.length > 0)
+			request.write(post_data);
 		request.end();
 	}
 
