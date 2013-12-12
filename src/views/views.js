@@ -204,7 +204,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_setOption: function (options, key, value, prefix) {
 		prefix = prefix ? prefix : "__";
-		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
+		this[prefix + key] = (options && key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
 	/** Sets a private typed variable from an option array
@@ -224,7 +224,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 * @param value default value of option if not given
 	 */
 	_setOptionProperty: function (options, key, value) {
-		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
+		this.set(key, (options && key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
 	/** Sets typed property variable (that will be passed to templates and dynamics by default) from an option array

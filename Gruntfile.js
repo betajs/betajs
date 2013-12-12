@@ -123,10 +123,7 @@ module.exports = function(grunt) {
 					 
 					'dist/beta-ui-templates.js',
 					
-					'src/views/containers/holygrail_view/view.js',
-					'src/views/containers/list_container_view/view.js', 
-					'src/views/containers/single_container_view/view.js', 
-					'src/views/containers/switch_container_view/view.js', 
+					'src/views/containers/*/view.js',
 					
 					'src/views/controls/button_view/view.js',
 					'src/views/controls/check_box_view/view.js',

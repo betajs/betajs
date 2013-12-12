@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="../../jquery-1.9.1.min.js"></script>
+		<script src="../../../dist/beta.js"></script>
+		<link rel="stylesheet" href="../../../dist/beta-ui.css" />
+		<style>
+			.divider {
+				background-color: black;
+				min-width: 1px;
+				max-width: 1px;
+				width: 1px;
+				margin-left: 2px;
+				margin-right: 2px;
+			}
+			.group {
+				padding: 2px 2px 2px 2px;
+				margin-left: 1px;
+				margin-right: 1px;
+				border-left: 1px solid black;
+				border-right: 1px solid black;
+			}
+			.toolbar {
+				background-color: gray;
+				padding: 1px 1px 1px 1px;
+			}
+			.selected {
+				background-color: blue;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="tabbedview"></div>
+		<button onclick="view.select('right')">Test</button>
+		<script>
+			var view = new BetaJS.Views.TabbedView({
+				el: "#tabbedview",
+				el_styles: {
+					"background-color": "blue"
+				},
+				tabs: [{
+					label: "Left",
+					item_ident: "left",
+					view: new BetaJS.Views.InputView({})
+				}, {
+					label: "Right",
+					item_ident: "right",
+					view: new BetaJS.Views.TextAreaView(),
+					selected: true
+				}
+				]
+			});
+			view.activate();
+		</script>
+	</body>
+</html>

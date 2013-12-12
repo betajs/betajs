@@ -96,6 +96,10 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.ToolBarView", {
 			this.__item_by_ident[parent_options.item_ident] = view;
 		}
 		return view;
+	},
+	
+	itemByIdent: function (ident) {
+		return this.__item_by_ident[ident];
 	}
 		
 });

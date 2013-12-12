@@ -14,7 +14,6 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		}];
 	},
 	constructor: function(options) {
-		options = options || {};
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	

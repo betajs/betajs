@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-10
+  betajs - v0.0.2 - 2013-12-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5746,7 +5746,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-12-10
+  betajs - v0.0.2 - 2013-12-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7161,7 +7161,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	_setOption: function (options, key, value, prefix) {
 		prefix = prefix ? prefix : "__";
-		this[prefix + key] = (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
+		this[prefix + key] = (options && key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value;
 	},
 	
 	/** Sets a private typed variable from an option array
@@ -7181,7 +7181,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 * @param value default value of option if not given
 	 */
 	_setOptionProperty: function (options, key, value) {
-		this.set(key, (key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
+		this.set(key, (options && key in options) && (BetaJS.Types.is_defined(options[key])) ? options[key] : value);
 	},
 	
 	/** Sets typed property variable (that will be passed to templates and dynamics by default) from an option array
@@ -8594,6 +8594,52 @@ BetaJS.Views.View.extend("BetaJS.Views.SwitchContainerView", {
 	}
 	
 });
+BetaJS.Views.ListContainerView.extend("BetaJS.Views.TabbedView", {
+	
+	constructor: function (options) {
+		options = BetaJS.Objs.extend(options || {}, {
+			"alignment": "vertical",
+			"positioning": "none"
+		});
+		this._inherited(BetaJS.Views.TabbedView, "constructor", options);
+		this.__toolbar = this.addChild(new BetaJS.Views.ToolBarView());
+		this.__container = this.addChild(new BetaJS.Views.SwitchContainerView());
+		this.__toolbar.on("item:click", function (view) {
+			this.select(view);
+		}, this);
+		if (options.tabs) {
+			BetaJS.Objs.iter(options.tabs, function (tab) {
+				this.addTab(tab);
+			}, this);
+		}
+	},
+	
+	addTab: function (options) {
+		options = BetaJS.Objs.extend(options, {
+			selectable: true,
+			deselect_all: true						
+		});
+		var button = this.__toolbar.addItem(options);
+		button.__tabView = this.__container.addChild(options.view);
+		options.view.__tabButton = button;
+		if (options.selected)
+			this.select(button);
+	},
+	
+	select: function (item_ident_or_view) {
+		var tab_view = null;
+		if (BetaJS.Types.is_string(item_ident_or_view))
+			tab_view = this.__toolbar.itemByIdent(item_ident_or_view).__tabView;
+		else if (item_ident_or_view.__tabButton)
+			tab_view = item_ident_or_view;
+		else
+			tab_view = item_ident_or_view.__tabView;
+		this.__container.select(tab_view);
+		tab_view.__tabButton.select();
+		this.trigger("select", tab_view);
+	}
+	
+});
 BetaJS.Views.View.extend("BetaJS.Views.ButtonView", {
 	_dynamics: {
 		"default": BetaJS.Templates.Cached["button-view-template"]
@@ -8753,7 +8799,6 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		}];
 	},
 	constructor: function(options) {
-		options = options || {};
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
@@ -9590,6 +9635,10 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.ToolBarView", {
 			this.__item_by_ident[parent_options.item_ident] = view;
 		}
 		return view;
+	},
+	
+	itemByIdent: function (ident) {
+		return this.__item_by_ident[ident];
 	}
 		
 });
