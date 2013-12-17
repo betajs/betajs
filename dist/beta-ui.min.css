@@ -1,7 +1,7 @@
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 
-.holygrail-view-left-container{float:left}.holygrail-view-right-container{float:right}.holygrail-view-center-container{overflow:hidden}.text-area-no-resize{resize:none}.text-area-horizontal-fill{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;width:100%}.overlay-container-class{position:absolute;z-index:20000}.fullscreen-overlay-background{background-color:#fff;opacity:.85;position:fixed;left:0;top:0;right:0;bottom:0;z-index:10000;cursor:default}.fullscreen-overlay{background-color:#000;opacity:1;z-index:10001;padding:8px;position:relative}.fullscreen-overlay-float{position:fixed}.fullscreen-overlay-fit{position:fixed;left:0;top:0;right:0;bottom:0}.fullscreen-overlay-body{overflow:hidden}.progress-view-overlay{position:absolute;left:0;right:0;top:0;bottom:0;text-align:center}
+.holygrail-view-left-container{float:left}.holygrail-view-right-container{float:right}.holygrail-view-center-container{overflow:hidden}.input-horizontal-fill{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;width:100%}.progress-view-overlay{position:absolute;left:0;right:0;top:0;bottom:0;text-align:center}.text-area-no-resize{resize:none}.text-area-horizontal-fill{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;width:100%}.fullscreen-overlay-background{background-color:#fff;opacity:.85;position:fixed;left:0;top:0;right:0;bottom:0;z-index:10000;cursor:default}.fullscreen-overlay{background-color:#000;opacity:1;z-index:10001;padding:8px;position:relative}.fullscreen-overlay-float{position:fixed}.fullscreen-overlay-fit{position:fixed;left:0;top:0;right:0;bottom:0}.fullscreen-overlay-body{overflow:hidden}.overlay-container-class{position:absolute;z-index:20000}

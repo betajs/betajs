@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-12
+  betajs - v0.0.2 - 2013-12-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5746,7 +5746,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-12-12
+  betajs - v0.0.2 - 2013-12-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7608,6 +7608,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		BetaJS.Objs.iter(this.__children_classes, function (cls) {
 			q.addClass(cls);	
 		});
+		this.trigger("render");
 	},
 	
 	/** Manually triggers rerendering of the view
@@ -8369,13 +8370,13 @@ BetaJS.Templates.Cached['holygrail-view-template'] = '  <div data-selector="righ
 
 BetaJS.Templates.Cached['list-container-view-item-template'] = '  <{%= container_element %} data-view-id="{%= cid %}"></{%= container_element %}> ';
 
-BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" class="switch-container" data-selector="switch-container-item"></div> ';
+BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" data-selector="switch-container-item"></div> ';
 
 BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.css_if("selected", "selected") %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} id="check-{%= supp.view_id %}" />  <label for="check-{%= supp.view_id %}">{%= label %}</label> ';
 
-BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" type="{%= input_type %}" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} /> ';
+BetaJS.Templates.Cached['input-view-template'] = '  <input class="input-view" type="{%= input_type %}" {%= bind.value("value") %} {%= bind.attr("placeholder", "placeholder") %} {%= bind.css_if("input-horizontal-fill", "horizontal_fill") %} /> ';
 
 BetaJS.Templates.Cached['label-view-template'] = '  <{%= element %} class="{%= supp.css(\'label\') %}" {%= bind.inner("label") %}></{%= element %}> ';
 
@@ -8602,9 +8603,9 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.TabbedView", {
 			"positioning": "none"
 		});
 		this._inherited(BetaJS.Views.TabbedView, "constructor", options);
-		this.__toolbar = this.addChild(new BetaJS.Views.ToolBarView());
-		this.__container = this.addChild(new BetaJS.Views.SwitchContainerView());
-		this.__toolbar.on("item:click", function (view) {
+		this.toolbar = this.addChild(new BetaJS.Views.ToolBarView());
+		this.container = this.addChild(new BetaJS.Views.SwitchContainerView());
+		this.toolbar.on("item:click", function (view) {
 			this.select(view);
 		}, this);
 		if (options.tabs) {
@@ -8619,24 +8620,26 @@ BetaJS.Views.ListContainerView.extend("BetaJS.Views.TabbedView", {
 			selectable: true,
 			deselect_all: true						
 		});
-		var button = this.__toolbar.addItem(options);
-		button.__tabView = this.__container.addChild(options.view);
+		var button = this.toolbar.addItem(options);
+		button.__tabView = this.container.addChild(options.view);
 		options.view.__tabButton = button;
 		if (options.selected)
 			this.select(button);
+		return button.__tabView;
 	},
 	
 	select: function (item_ident_or_view) {
 		var tab_view = null;
 		if (BetaJS.Types.is_string(item_ident_or_view))
-			tab_view = this.__toolbar.itemByIdent(item_ident_or_view).__tabView;
+			tab_view = this.toolbar.itemByIdent(item_ident_or_view).__tabView;
 		else if (item_ident_or_view.__tabButton)
 			tab_view = item_ident_or_view;
 		else
 			tab_view = item_ident_or_view.__tabView;
-		this.__container.select(tab_view);
+		this.container.select(tab_view);
 		tab_view.__tabButton.select();
 		this.trigger("select", tab_view);
+		return tab_view;
 	}
 	
 });
@@ -8802,12 +8805,17 @@ BetaJS.Views.View.extend("BetaJS.Views.InputView", {
 		this._inherited(BetaJS.Views.InputView, "constructor", options);
 		this._setOptionProperty(options, "value", "");
 		this._setOptionProperty(options, "placeholder", "");	
+		this._setOptionProperty(options, "clear_after_enter", false);	
+		this._setOptionProperty(options, "horizontal_fill", false);
 		this._setOptionProperty(options, "input_type", "text");
 	},
 	__keyupEvent: function (e) {
 		var key = e.keyCode || e.which;
-        if (key == 13)
+        if (key == 13) {
 			this.trigger("enter_key", this.get("value"));
+			if (this.get("clear_after_enter"))
+				this.set("value", "");
+		}
     },
 	__leaveEvent: function () {
 		this.trigger("leave");
@@ -8907,6 +8915,19 @@ BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
 			else
 				this.$("textarea").removeAttr("readonly");
 		}, this);
+	},
+	
+	addLine: function (s) {
+		if (this.get("value"))
+			this.set("value", this.get("value") + "\n" + s);
+		else
+			this.set("value", s);
+		this.scrollToEnd();
+	},
+	
+	scrollToEnd: function () {
+		var t = this.$("textarea").get(0);
+		t.scrollTop = t.scrollHeight;		
 	}
 });
 BetaJS.Views.View.extend("BetaJS.Views.CustomListView", {

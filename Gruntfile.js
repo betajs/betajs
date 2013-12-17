@@ -185,11 +185,9 @@ module.exports = function(grunt) {
 		    dist_ui_scss: {
 		    	files: {
 			        'dist/beta-ui.scss': [
-			            'src/views/containers/holygrail_view/styles.scss',
-			            'src/views/controls/textarea_view/styles.css',
-						'src/views/overlays/overlay_view/styles.css',
-						'src/views/overlays/fullscreen_overlay_view/styles.css',
-						'src/views/controls/progress_view/styles.css',
+			            'src/views/containers/*/styles.scss',
+			            'src/views/controls/*/styles.css',
+						'src/views/overlays/*/styles.css',
 			        ]
 		    	}
 		    },		

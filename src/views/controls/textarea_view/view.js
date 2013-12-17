@@ -16,5 +16,18 @@ BetaJS.Views.View.extend("BetaJS.Views.TextAreaView", {
 			else
 				this.$("textarea").removeAttr("readonly");
 		}, this);
+	},
+	
+	addLine: function (s) {
+		if (this.get("value"))
+			this.set("value", this.get("value") + "\n" + s);
+		else
+			this.set("value", s);
+		this.scrollToEnd();
+	},
+	
+	scrollToEnd: function () {
+		var t = this.$("textarea").get(0);
+		t.scrollTop = t.scrollHeight;		
 	}
 });

@@ -651,6 +651,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 		BetaJS.Objs.iter(this.__children_classes, function (cls) {
 			q.addClass(cls);	
 		});
+		this.trigger("render");
 	},
 	
 	/** Manually triggers rerendering of the view

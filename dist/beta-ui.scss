@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -16,6 +16,22 @@
   overflow: hidden;
 }
 
+.input-horizontal-fill {
+	-webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width:100%;
+}
+
+.progress-view-overlay {
+	position: absolute;
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	bottom: 0px;
+	text-align: center;
+}
+
 .text-area-no-resize {
 	resize: none;
 }
@@ -24,11 +40,6 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     width:100%;
-}
-
-.overlay-container-class {
-	position: absolute;
-	z-index: 20000;
 }
 
 .fullscreen-overlay-background {
@@ -63,11 +74,7 @@
 	overflow: hidden;
 }
 
-.progress-view-overlay {
+.overlay-container-class {
 	position: absolute;
-	left: 0px;
-	right: 0px;
-	top: 0px;
-	bottom: 0px;
-	text-align: center;
+	z-index: 20000;
 }
