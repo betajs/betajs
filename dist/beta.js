@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2013-12-17
+  betajs - v0.0.2 - 2013-12-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2857,7 +2857,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3141,7 +3141,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 		var q = {};
 		var objs = null;
 		var iter = null;
-		if (this.__query.sort !== null && !BetaJS.Types.is_empty(this.__query.sort))
+		if (this.__query.sort && !BetaJS.Types.is_empty(this.__query.sort))
 			q.sort = this.__query.sort;
 		if (clear_before) {
 			if (skip > 0)
@@ -3152,7 +3152,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			objs = iter.asArray();
 			this.__query.skip = skip;
 			this.__query.limit = limit;
-			this.__query.count = limit === null || objs.length < limit ? skip + objs.length : null;
+			this.__query.count = !limit || objs.length < limit ? skip + objs.length : null;
 			this.clear();
 			this.add_objects(objs);
 		} else if (skip < this.__query.skip) {
@@ -3163,15 +3163,15 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			iter = this.__query.func(this.__query.select, q);
 			objs = iter.asArray();
 			this.__query.skip = skip;
-			this.__query.limit = this.__query.limit === null ? null : this.__query.limit + objs.length;
+			this.__query.limit = !this.__query.limit ? null : this.__query.limit + objs.length;
 			this.add_objects(objs);
 		} else if (skip >= this.__query.skip) {
-			if (this.__query.limit !== null && (limit === null || skip + limit > this.__query.skip + this.__query.limit)) {
+			if (this.__query.limit && (!limit || skip + limit > this.__query.skip + this.__query.limit)) {
 				limit = (skip + limit) - (this.__query.skip + this.__query.limit);
 				skip = this.__query.skip + this.__query.limit;
 				if (skip > 0)
 					q.skip = skip;
-				if (limit !== null)
+				if (limit)
 					q.limit = limit;
 				iter = this.__query.func(this.__query.select, q);
 				objs = iter.asArray();
@@ -3184,15 +3184,15 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	increase_forwards: function (steps) {
-		steps = steps === null ? this.__query.forward_steps : steps;
-		if (steps === null || this.__query.limit === null)
+		steps = !steps ? this.__query.forward_steps : steps;
+		if (!steps || !this.__query.limit)
 			return;
 		this.__execute_query(this.__query.skip + this.__query.limit, steps, false);
 	},
 	
 	increase_backwards: function (steps) {
-		steps = steps === null ? this.__query.backward_steps : steps;
-		if (steps !== null && this.__query.skip > 0) {
+		steps = !steps ? this.__query.backward_steps : steps;
+		if (steps && this.__query.skip > 0) {
 			steps = Math.min(steps, this.__query.skip);
 			this.__execute_query(this.__query.skip - steps, steps, false);
 		}
@@ -3203,11 +3203,11 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	paginate_index: function () {
-		return this.__query.range === null ? null : Math.floor(this.__query.skip / this.__query.range);
+		return !this.__query.range ? null : Math.floor(this.__query.skip / this.__query.range);
 	},
 	
 	paginate_count: function () {
-		return this.__query.count === null || this.__query.range === null ? null : Math.ceil(this.__query.count / this.__query.range);
+		return !this.__query.count || !this.__query.range ? null : Math.ceil(this.__query.count / this.__query.range);
 	},
 	
 	next: function () {
@@ -3228,7 +3228,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	isComplete: function () {
-		return this.__query.count !== null;
+		return this.__query.count;
 	}
 	
 });
@@ -4634,7 +4634,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2013-12-06
+  betajs - v0.0.2 - 2013-12-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5746,7 +5746,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2013-12-17
+  betajs - v0.0.2 - 2013-12-28
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
