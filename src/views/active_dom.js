@@ -48,6 +48,9 @@ BetaJS.Views.ActiveDom = {
 	},
 	
 	__attach: function (element, meta_attrs) {
+		// Prevent double attachment
+		if (element.attr("data-active-dom-element"))
+			return;
 		var process = function (key, value) {
 			var i = 0;
 			while (i < BetaJS.Views.ActiveDom.__prefix_alias.length) {
@@ -74,7 +77,7 @@ BetaJS.Views.ActiveDom = {
 		var dom_attrs = {};
 		var dom_child_attrs = {};
 		var option_attrs = {};
-		var meta_attrs_scheme = {type: "View", "default": null, "name": null};
+		var meta_attrs_scheme = {type: "View", "default": null, name: null, "keep-tag": true};
 		meta_attrs = BetaJS.Objs.extend(BetaJS.Objs.clone(meta_attrs_scheme, 1), meta_attrs || {});
 		var attrs = element.get(0).attributes;
 		for (var i = 0; i < attrs.length; ++i) 
@@ -93,7 +96,10 @@ BetaJS.Views.ActiveDom = {
 			meta_attrs.type = BetaJS.Scopes.resolve(meta_attrs.type);
 		var view = new meta_attrs.type(option_attrs);
 		view.setEl("[data-active-dom-id='" + view.cid() + "']");
-		element.replaceWith("<div data-active-dom-id='" + view.cid() + "'></div>");
+		var replacement = "<div data-active-dom-id='" + view.cid() + "'></div>";
+		if (meta_attrs["keep-tag"])
+			replacement = "<" + element.prop("tagName") + " data-active-dom-element='" + view.cid() + "'>" + replacement + "</" + element.prop("tagName") + ">";
+		element.replaceWith(replacement);
 		element = BetaJS.$("[data-active-dom-id='" + view.cid() + "']");
 		var key = null;
 		for (key in dom_attrs)
