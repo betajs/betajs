@@ -42,9 +42,16 @@ BetaJS.Views.ActiveDom = {
 	},
 	
 	__on_remove_element: function (event) {
-		var element = $(event.target);
+		var element = BetaJS.$(event.target); 
 		if (element.attr("data-active-dom-id") in BetaJS.Views.ActiveDom.__views)
 			BetaJS.Views.ActiveDom.__views[element.attr("data-active-dom-id")].destroy();
+		else {
+			element.find("[data-active-dom-id]").each(function () {
+				var el = BetaJS.$(this);
+				if (el.attr("data-active-dom-id") in BetaJS.Views.ActiveDom.__views)
+					BetaJS.Views.ActiveDom.__views[el.attr("data-active-dom-id")].destroy();
+			});
+		}
 	},
 	
 	__attach: function (element, meta_attrs) {
