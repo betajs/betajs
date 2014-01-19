@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-01-07
+  betajs - v0.0.2 - 2014-01-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-12-28
+  betajs - v0.0.2 - 2014-01-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2013-12-28
+  betajs - v0.0.2 - 2014-01-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1524,6 +1524,15 @@ BetaJS.Events.EventsMixin = {
 			}
 		}
 		return this;
+	},
+	
+	triggerAsync: function () {
+		var self = this;
+		var args = BetaJS.Functions.getArguments(arguments);
+		var timeout = setTimeout(function () {
+			clearTimeout(timeout);
+			self.trigger.apply(self, args);
+		}, 0);
 	},
 
     trigger: function(events) {
@@ -5746,7 +5755,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-01-07
+  betajs - v0.0.2 - 2014-01-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7499,9 +7508,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	destroy: function () {
 		this.deactivate();
-		BetaJS.Objs.iter(this.__children, function (child) {
+		this.setParent(null);
+		var c = this.__children;
+		this.__children = {};		
+		BetaJS.Objs.iter(c, function (child) {
 			child.view.destroy();
 		});
+		this.__children = {};
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.destroy();
 		}, this);

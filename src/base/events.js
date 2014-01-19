@@ -107,6 +107,15 @@ BetaJS.Events.EventsMixin = {
 		}
 		return this;
 	},
+	
+	triggerAsync: function () {
+		var self = this;
+		var args = BetaJS.Functions.getArguments(arguments);
+		var timeout = setTimeout(function () {
+			clearTimeout(timeout);
+			self.trigger.apply(self, args);
+		}, 0);
+	},
 
     trigger: function(events) {
     	var self = this;

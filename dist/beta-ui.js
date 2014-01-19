@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-01-07
+  betajs - v0.0.2 - 2014-01-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1752,9 +1752,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	destroy: function () {
 		this.deactivate();
-		BetaJS.Objs.iter(this.__children, function (child) {
+		this.setParent(null);
+		var c = this.__children;
+		this.__children = {};		
+		BetaJS.Objs.iter(c, function (child) {
 			child.view.destroy();
 		});
+		this.__children = {};
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.destroy();
 		}, this);

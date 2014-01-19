@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2013-12-28
+  betajs - v0.0.2 - 2014-01-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1514,6 +1514,15 @@ BetaJS.Events.EventsMixin = {
 			}
 		}
 		return this;
+	},
+	
+	triggerAsync: function () {
+		var self = this;
+		var args = BetaJS.Functions.getArguments(arguments);
+		var timeout = setTimeout(function () {
+			clearTimeout(timeout);
+			self.trigger.apply(self, args);
+		}, 0);
 	},
 
     trigger: function(events) {

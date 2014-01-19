@@ -542,9 +542,13 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 	 */
 	destroy: function () {
 		this.deactivate();
-		BetaJS.Objs.iter(this.__children, function (child) {
+		this.setParent(null);
+		var c = this.__children;
+		this.__children = {};		
+		BetaJS.Objs.iter(c, function (child) {
 			child.view.destroy();
 		});
+		this.__children = {};
 		BetaJS.Objs.iter(this.__dynamics, function (dynamic) {
 			dynamic.destroy();
 		}, this);
