@@ -22,6 +22,22 @@ BetaJS.Objs = {
 			return item;
 	},
 	
+	acyclic_clone: function (object, def) {
+		if (object === null || ! BetaJS.Types.is_object(object))
+			return object;
+		var s = "__acyclic_cloned";
+		if (object[s])
+			return def || "CYCLE";
+		object[s] = true;
+		var result = {};
+		for (var key in object) {
+			if (key != s)
+				result[key] = this.acyclic_clone(object[key], def);
+		}
+		delete object[s];
+		return result;
+	},
+	
 	extend: function (target, source, depth) {
 		target = target || {};
 		if (source) {

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-01-19
+  betajs - v0.0.2 - 2014-01-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-01-19
+  betajs - v0.0.2 - 2014-01-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-01-19
+  betajs - v0.0.2 - 2014-01-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -511,6 +511,22 @@ BetaJS.Objs = {
 			return item;
 	},
 	
+	acyclic_clone: function (object, def) {
+		if (object === null || ! BetaJS.Types.is_object(object))
+			return object;
+		var s = "__acyclic_cloned";
+		if (object[s])
+			return def || "CYCLE";
+		object[s] = true;
+		var result = {};
+		for (var key in object) {
+			if (key != s)
+				result[key] = this.acyclic_clone(object[key], def);
+		}
+		delete object[s];
+		return result;
+	},
+	
 	extend: function (target, source, depth) {
 		target = target || {};
 		if (source) {
@@ -933,6 +949,13 @@ BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 	
 	format: function () {
 		return this.cls.classname + ": " + this.toString() + "\n\nCall Stack:\n" + this.callstack_to_string();
+	},
+	
+	json: function () {
+		return {
+			classname: this.cls.classname,
+			message: this.message()
+		};
 	}
 	
 }, {
@@ -2787,8 +2810,15 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 	
 	data: function () {
 		return this.__data;
+	},
+	
+	json: function () {
+		var obj = this._inherited(BetaJS.Net.AjaxException, "json");
+		obj.data = this.data();
+		return obj;
 	}
 	
+
 });
 
 BetaJS.Net = BetaJS.Net || {};

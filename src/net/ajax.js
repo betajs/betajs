@@ -118,6 +118,13 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 	
 	data: function () {
 		return this.__data;
+	},
+	
+	json: function () {
+		var obj = this._inherited(BetaJS.Net.AjaxException, "json");
+		obj.data = this.data();
+		return obj;
 	}
 	
+
 });

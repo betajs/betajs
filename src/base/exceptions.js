@@ -46,6 +46,13 @@ BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 	
 	format: function () {
 		return this.cls.classname + ": " + this.toString() + "\n\nCall Stack:\n" + this.callstack_to_string();
+	},
+	
+	json: function () {
+		return {
+			classname: this.cls.classname,
+			message: this.message()
+		};
 	}
 	
 }, {
