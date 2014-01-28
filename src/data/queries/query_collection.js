@@ -109,7 +109,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	isComplete: function () {
-		return this.__query.count;
+		return this.__query.count !== null;
 	}
 	
 });
