@@ -18,6 +18,10 @@ BetaJS.Browser.Loader = {
 			}
 		};
 		head.appendChild(script);
+	},
+	
+	inlineStyles: function (styles) {
+		BetaJS.$('<style>' + styles + "</style>").appendTo("head");
 	}
 
 };

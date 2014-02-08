@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-01-27
+  betajs - v0.0.2 - 2014-02-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5785,7 +5785,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-01-27
+  betajs - v0.0.2 - 2014-02-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6421,6 +6421,10 @@ BetaJS.Browser.Loader = {
 			}
 		};
 		head.appendChild(script);
+	},
+	
+	inlineStyles: function (styles) {
+		BetaJS.$('<style>' + styles + "</style>").appendTo("head");
 	}
 
 };
@@ -8206,8 +8210,13 @@ BetaJS.Views.ActiveDom = {
 		BetaJS.$(document).ready(function () {
 			if (BetaJS.Views.ActiveDom.__active)
 				return;
-			document.addEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
-			document.addEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			if (document.addEventListener) {
+				document.addEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+				document.addEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			} else {
+				document.attachEvent("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+				document.attachEvent("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			}
 			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
 				BetaJS.$(alias + "view").each(function () {
 					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this));

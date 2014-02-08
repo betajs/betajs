@@ -126,8 +126,13 @@ BetaJS.Views.ActiveDom = {
 		BetaJS.$(document).ready(function () {
 			if (BetaJS.Views.ActiveDom.__active)
 				return;
-			document.addEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
-			document.addEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			if (document.addEventListener) {
+				document.addEventListener("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+				document.addEventListener("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			} else {
+				document.attachEvent("DOMNodeInserted", BetaJS.Views.ActiveDom.__on_add_element);
+				document.attachEvent("DOMNodeRemoved", BetaJS.Views.ActiveDom.__on_remove_element);
+			}
 			BetaJS.Objs.iter(BetaJS.Views.ActiveDom.__prefix_alias, function (alias) {
 				BetaJS.$(alias + "view").each(function () {
 					BetaJS.Views.ActiveDom.__attach(BetaJS.$(this));
