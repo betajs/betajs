@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2014-01-27
+  betajs - v0.0.2 - 2014-02-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-01-27
+  betajs - v0.0.2 - 2014-02-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2896,7 +2896,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-01-27
+  betajs - v0.0.2 - 2014-02-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4250,7 +4250,7 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 		options = options || {};
 		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor",
 			parent,
-			new BetaJS.Stores.MemoryStore({id_key: parent.id_key()}),
+			new BetaJS.Stores.FullyCachedStore.InnerStore({id_key: parent.id_key()}),
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
@@ -4271,6 +4271,17 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
 		return this.first();
 	}
 });
+
+
+BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.FullyCachedStore.InnerStore", {
+	
+	insert: function (row, callbacks) {
+		this.trigger("cache", row);
+		return this._inherited(BetaJS.Stores.FullyCachedStore.InnerStore, "insert", row, callbacks);
+	}
+	
+});
+
 
 
 BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
