@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-02-08
+  betajs - v0.0.2 - 2014-02-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5785,7 +5785,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-02-08
+  betajs - v0.0.2 - 2014-02-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5827,6 +5827,24 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 
 });
 
+BetaJS.Browser.Cookies = {
+
+	get : function(key) {
+		var cookie = "; " + document.cookie;
+		var parts = cookie.split("; " + key + "=");
+		if (parts.length == 2)
+			return parts.pop().split(";").shift();
+		return null;
+	},
+
+	set : function(key, value) {
+		var cookie = "; " + document.cookie;
+		var parts = cookie.split("; " + key + "=");
+		if (parts.length == 2)
+			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
+		document.cookie = key + "=" + value + cookie;
+	}
+};
 BetaJS.Browser.Dom = {
 	
 	traverseNext: function (node, skip_children) {
