@@ -1,4 +1,5 @@
-BetaJS.Class.extend("BetaJS.Databases.Database", {
+BetaJS.Class.extend("BetaJS.Databases.Database", [
+	BetaJS.Classes.SyncAsyncMixin, {
 	
 	_tableClass: function () {
 		return null;
@@ -8,5 +9,5 @@ BetaJS.Class.extend("BetaJS.Databases.Database", {
 		var cls = this._tableClass();		
 		return new cls(this, table_name);
 	}
-	
-});
+		
+}]);

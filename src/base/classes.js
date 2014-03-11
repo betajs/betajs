@@ -239,3 +239,81 @@ BetaJS.Class.extend("BetaJS.Classes.Module", {
 	}
 	
 });
+
+
+
+BetaJS.Classes.SyncAsyncMixin = {
+	
+	isSync: function () {
+		return !this._is_async;
+	},
+	
+	isAsync: function () {
+		return !!this._is_async;
+	},
+	
+	either: function (callbacks, syncFunc, asyncFunc, useSync) {
+		if (BetaJS.Types.is_undefined(useSync))
+			useSync = this.isSync();
+		return BetaJS.SyncAsync.either(callbacks, useSync, syncFunc, asyncFunc, this);
+	},
+	
+	eitherFactory: function (property, callbacks, syncFunc, asyncFunc) {
+		var ctx = this;
+		return this.either(callbacks, function () {
+			if (!this[property])
+				this[property] = syncFunc.apply(this);
+			return this[property];				
+		}, function () {
+			asyncFunc.apply(this, {
+				context: callbacks.context,
+				success: function (result) {
+					ctx[property] = result;
+					callbacks.success.call(callbacks.context || obj, result);
+				},
+				failure: callbacks.failure
+			});			
+		}, this.isSync() || this[property]);
+	},
+	
+	then: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number",
+			callbacks: true,
+			success_ctx: "object",
+			success: true
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var callbacks = args.callbacks;
+		var type = args.type || (this.isSync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
+		var success_ctx = args.success_ctx || this;
+		var success = args.success;
+		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, success);
+	},
+	
+	thenSingle: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number",
+			callbacks: true,
+			success_ctx: "object",
+			success: true
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var callbacks = args.callbacks;
+		var type = args.type || (this.isSync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNCSINGLE);
+		var success_ctx = args.success_ctx || this;
+		var success = args.success;
+		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, success);
+	}
+	
+};

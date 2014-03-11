@@ -1,9 +1,25 @@
-BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
+BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
+	BetaJS.Classes.SyncAsyncMixin, {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.DatabaseTable, "constructor");
 		this._database = database;
 		this._table_name = table_name;
+		this._is_async = database.isAsync();
+	},
+	
+	findOne: function (query, options, callbacks) {
+		return this.then(this._findOne, [this._encode(query), options], callbacks, function (result, callbacks) {
+			callbacks.success(!result ? null : this._decode(result));
+		});
+	},
+	
+	_findOne: function (query, options, callbacks) {
+		options = options || {};
+		options.limit = 1;
+		return this.then(this._find, [query, options], callbacks, function (result, callbacks) {
+			callbacks.success(result.next());
+		});
 	},
 	
 	_encode: function (data) {
@@ -14,57 +30,52 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", {
 		return data;
 	},
 
-	_insertRow: function (row) {		
-	},
-	
-	_removeRow: function (query) {		
-	},
-	
-	_findOne: function (query, options) {
-	},
-	
-	_updateRow: function (query, row) {
-	},
-	
-	_find: function (query, options) {
+	_find: function (query, options, callbacks) {
 	},
 
-	insertRow: function (row) {
-		return this._decode(this._insertRow(this._encode(row)));
-	},
-	
-	removeRow: function (query) {
-		return this._removeRow(this._encode(query));
-	},
-	
-	findOne: function (query, options) {
-		var result = this._findOne(this._encode(query), options);
-		return !result ? null : this._decode(result);
-	},
-	
-	updateRow: function (query, row) {
-		return this._decode(this._updateRow(this._encode(query), this._encode(row)));
-	},
-	
-	find: function (query, options) {
-		var self = this;
-		return new BetaJS.Iterators.MappedIterator(this._find(this._encode(query), options), function (row) {
-			return self._decode(row);
+	find: function (query, options, callbacks) {
+		return this.then(this._find, [this._encode(query), options], callbacks, function (result, callbacks) {
+			callbacks.success(new BetaJS.Iterators.MappedIterator(result, this._decode, this)); 
 		});
 	},
 	
-	removeById: function (id) {
-		return this.removeRow({id : id});
+	findById: function (id, callbacks) {
+		return this.findOne({id : id}, {}, callbacks);
 	},
 	
-	findById: function (id) {
-		return this.findOne({id : id});
+	_insertRow: function (row, callbacks) {		
 	},
 	
-	updateById: function (id, data) {
-		return this.updateRow({id: id}, data);
+	_removeRow: function (query, callbacks) {		
+	},
+	
+	_updateRow: function (query, row, callbacks) {
+	},
+	
+	insertRow: function (row, callbacks) {
+		return this.then(this._insertRow, [this._encode(row)], callbacks, function (result, callbacks) {
+			callbacks.success(this._decode(result));
+		});
+	},
+	
+	removeRow: function (query, callbacks) {
+		return this._removeRow(this._encode(query), callbacks);
+	},
+	
+	updateRow: function (query, row, callbacks) {
+		return this.then(this._decode, [this._encode(query), this._encode(row)], callbacks, function (result, callbacks) {
+			callbacks.success(this._decode(result));
+		});
+	},
+	
+	removeById: function (id, callbacks) {
+		return this.removeRow({id : id}, callbacks);
+	},
+	
+	updateById: function (id, data, callbacks) {
+		return this.updateRow({id: id}, data, callbacks);
 	},
 	
 	ensureIndex: function (key) {}
 	
-});
+}]);

@@ -39,6 +39,24 @@ BetaJS.Functions = {
      */	
 	getArguments: function (args, slice) {
 		return Array.prototype.slice.call(args, slice || 0);
+	},
+	
+    /** Matches functions arguments against some pattern
+     * 
+     * @param args function arguments
+     * @param pattern typed pattern
+     * @return matched arguments as associative array 
+     */	
+	matchArgs: function (args, pattern) {
+		var i = 0;
+		var result = {};
+		for (var key in pattern) {
+			if (pattern[key] === true || BetaJS.Types.type_of(args[i]) == pattern[key]) {
+				result[key] = args[i];
+				i++;
+			}
+		}
+		return result;
 	}
-
+	
 };

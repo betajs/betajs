@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-03-01
+  betajs - v0.0.2 - 2014-03-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-01
+  betajs - v0.0.2 - 2014-03-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-01
+  betajs - v0.0.2 - 2014-03-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -162,6 +162,17 @@ BetaJS.Types = {
 		if (x == "false")
 			return false;
 		return null;
+	},
+	
+    /** Returns the type of a given expression
+     * 
+     * @param x expression
+     * @return type string
+     */	
+	type_of: function (x) {
+		if (this.is_array(x))
+			return "array";
+		return typeof x;
 	}
 
 };
@@ -350,6 +361,129 @@ BetaJS.Functions = {
      */	
 	getArguments: function (args, slice) {
 		return Array.prototype.slice.call(args, slice || 0);
+	},
+	
+    /** Matches functions arguments against some pattern
+     * 
+     * @param args function arguments
+     * @param pattern typed pattern
+     * @return matched arguments as associative array 
+     */	
+	matchArgs: function (args, pattern) {
+		var i = 0;
+		var result = {};
+		for (var key in pattern) {
+			if (pattern[key] === true || BetaJS.Types.type_of(args[i]) == pattern[key]) {
+				result[key] = args[i];
+				i++;
+			}
+		}
+		return result;
+	}
+	
+};
+
+/** @class */
+BetaJS.SyncAsync = {
+	
+    /** Converts a synchronous function to an asynchronous one and calls it
+     * 
+     * @param callbacks callbacks object with success and failure
+     * @param syncCall the synchronous function
+     * @param context optional object context
+     */	
+	syncToAsync: function (callbacks, syncCall, context) {
+		try {
+			callbacks.success.call(callbacks.context || this, syncCall.apply(context || this));
+		} catch (e) {
+			callbacks.failure.call(callbacks.context || this, e);
+		}
+	},
+	
+    /** Either calls a synchronous or asynchronous function depending on whether useSync is given
+     * 
+     * @param callbacks callbacks object with success and failure (or null)
+     * @param useSync use synchronous call?
+     * @param syncCall the synchronous function
+     * @param asyncCall the asynchronous function
+     * @param context optional object context
+     * @return the function return data
+     */	
+	either: function (callbacks, useSync, syncCall, asyncCall, context) {
+		context = context || this;
+		if (callbacks) {
+			if (useSync)
+				this.syncToAsync(callbacks, syncCall, context);
+			else
+				asyncCall.call(context, callbacks);
+		} else
+			return syncCall.apply(context);
+		return null;
+	},
+	
+	SYNC: 1,
+	ASYNC: 2,
+	ASYNCSINGLE: 3,
+	
+	toCallbackType: function (callbacks, type) {
+		if (type == this.ASYNCSINGLE)
+			return function (err, result) {
+				if (err)
+					callbacks.failure.call(callbacks.context || this, err);
+				callbacks.success.call(callbacks.context || this, result);
+			};
+		return callbacks;
+	},
+	
+	then: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number",
+			callbacks: true,
+			success_ctx: "object",
+			success: "function"
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var callbacks = args.callbacks;
+		var type = args.type || (callbacks ? this.ASYNC : this.SYNC);
+		var success_ctx = args.success_ctx || func_ctx;
+		var success = args.success;
+		if (type != this.SYNC) {			
+			params.push(this.toCallbackType(success ? {
+				context: callbacks.context,
+				success: function (ret) {
+					success.call(success_ctx, ret, callbacks);
+				},
+				failure: callbacks.failure
+			} : callbacks, type));
+			func.apply(func_ctx, params);
+		} else if (callbacks) {
+			try {
+				if (success)
+					success.call(success_ctx, func.apply(func_ctx, params), callbacks);
+				else
+					callbacks.success.call(callbacks.context || this, func.apply(func_ctx, params));
+			} catch (e) {
+				callbacks.failure.call(callbacks.context || this, e);
+			}
+		} else {
+			var ret = func.apply(func_ctx, params);
+			if (success)
+				success.call(success_ctx, ret, {
+					success: function (retv) {
+						ret = retv;
+					},
+					failure: function (err) {
+						throw err;
+					}
+				});
+			return ret;
+		}
+		return null;
 	}
 
 };
@@ -1321,10 +1455,11 @@ BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectValuesIterator", {
 
 BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	
-	constructor: function (iterator, map) {
+	constructor: function (iterator, map, context) {
 		this._inherited(BetaJS.Iterators.MappedIterator, "constructor");
 		this.__iterator = iterator;
 		this.__map = map;
+		this.__context = context || this;
 	},
 	
 	hasNext: function () {
@@ -1332,7 +1467,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	},
 	
 	next: function () {
-		return this.hasNext() ? this.__map(this.__iterator.next()) : null;
+		return this.hasNext() ? this.__map.call(this.__context, this.__iterator.next()) : null;
 	}
 	
 });
@@ -1896,6 +2031,84 @@ BetaJS.Class.extend("BetaJS.Classes.Module", {
 	}
 	
 });
+
+
+
+BetaJS.Classes.SyncAsyncMixin = {
+	
+	isSync: function () {
+		return !this._is_async;
+	},
+	
+	isAsync: function () {
+		return !!this._is_async;
+	},
+	
+	either: function (callbacks, syncFunc, asyncFunc, useSync) {
+		if (BetaJS.Types.is_undefined(useSync))
+			useSync = this.isSync();
+		return BetaJS.SyncAsync.either(callbacks, useSync, syncFunc, asyncFunc, this);
+	},
+	
+	eitherFactory: function (property, callbacks, syncFunc, asyncFunc) {
+		var ctx = this;
+		return this.either(callbacks, function () {
+			if (!this[property])
+				this[property] = syncFunc.apply(this);
+			return this[property];				
+		}, function () {
+			asyncFunc.apply(this, {
+				context: callbacks.context,
+				success: function (result) {
+					ctx[property] = result;
+					callbacks.success.call(callbacks.context || obj, result);
+				},
+				failure: callbacks.failure
+			});			
+		}, this.isSync() || this[property]);
+	},
+	
+	then: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number",
+			callbacks: true,
+			success_ctx: "object",
+			success: true
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var callbacks = args.callbacks;
+		var type = args.type || (this.isSync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
+		var success_ctx = args.success_ctx || this;
+		var success = args.success;
+		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, success);
+	},
+	
+	thenSingle: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number",
+			callbacks: true,
+			success_ctx: "object",
+			success: true
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var callbacks = args.callbacks;
+		var type = args.type || (this.isSync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNCSINGLE);
+		var success_ctx = args.success_ctx || this;
+		var success = args.success;
+		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, success);
+	}
+	
+};
 
 BetaJS.Properties = {};
 
@@ -2859,6 +3072,20 @@ BetaJS.Net = BetaJS.Net || {};
 
 BetaJS.Net.Uri = {
 	
+	build: function (obj) {
+		var s = "";
+		if (obj.username)
+			s += obj.username + ":";
+		if (obj.password)
+			s += obj.password + "@";
+		s += obj.server;
+		if (obj.port)
+			s += ":" + obj.port;
+		if (obj.path)
+			s += "/" + obj.path;
+		return s;
+	},
+	
 	encodeUriParams: function (arr, prefix) {
 		prefix = prefix || "";
 		var res = [];
@@ -2896,7 +3123,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-03-01
+  betajs - v0.0.2 - 2014-03-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4684,7 +4911,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2014-03-01
+  betajs - v0.0.2 - 2014-03-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5796,7 +6023,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-03-01
+  betajs - v0.0.2 - 2014-03-10
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

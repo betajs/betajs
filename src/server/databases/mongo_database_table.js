@@ -5,10 +5,22 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 		this.__table = null;
 	},
 	
-	table: function () {
-		if (!this.__table)
-			this.__table = this._database.mongodb().getCollection(this._table_name);
-		return this.__table;
+	_syncType: function (defasync) {
+		return this.isSync() ? BetaJS.SyncAsync.SYNC : (defasync ? BetaJS.SyncAsync.ASYNC : BetaJS.SyncAsync.ASYNCSINGLE);
+	},
+	
+	table: function (callbacks) {
+		return this.eitherFactory("__table", callbacks, function () {
+			return this._database.mongodb().getCollection(this._table_name);
+		}, function () {
+			this._database.mongodb({
+				context: this,
+				success: function (db) {
+					callbacks.success(db.collection(this._table_name));
+				},
+				failure: callbacks.failure
+			});
+		});
 	},
 	
 	_encode: function (data) {
@@ -29,39 +41,45 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 		return obj;
 	},
 
-	_insertRow: function (row) {
-		var result = this.table().insert(row);
-		return result[0] ? result[0] : result;
+	_find: function (query, options, callbacks) {
+		return this.then(this.table, callbacks, function (table, callbacks) {
+			this.thenSingle(table, table.find, [query], callbacks, function (result, callbacks) {
+				options = options || {};
+				if ("sort" in options)
+					result = result.sort(options.sort);
+				if ("skip" in options)
+					result = result.skip(options.skip);
+				if ("limit" in options)
+					result = result.limit(options.limit);
+				this.thenSingle(result, result.toArray, callbacks, function (cols, callbacks) {
+					callbacks.success(new BetaJS.Iterators.ArrayIterator(cols));
+				});
+			});
+		});
+	},
+
+	_insertRow: function (row, callbacks) {
+		return this.then(this.table, callbacks, function (table, callbacks) {
+			this.thenSingle(table, table.insert, [row], callbacks, function (result, callbacks) {
+				callbacks.success(result[0] ? result[0] : result);
+			});
+		});
 	},
 	
-	_removeRow: function (query) {
-		return this.table().remove(query);	
+	_removeRow: function (query, callbacks) {
+		return this.then(this.table, callbacks, function (table, callbacks) {
+			this.thenSingle(table, table.remove, [query], callbacks);
+		});
 	},
 	
-	_findOne: function (query, options) {
-		options = options || {};
-		options.limit = 1;
-		var result = this._find(query, options);
-		return result.next();
+	_updateRow: function (query, row, callbacks) {
+		return this.then(this.table, callbacks, function (table, callbacks) {
+			this.thenSingle(table, table.update, [query, {"$set" : row}, true, false], callbacks, function (result, callbacks) {
+				callbacks.success(row);
+			});
+		});
 	},
-	
-	_updateRow: function (query, row) {
-		var result = this.table().update(query, {"$set" : row}, true, false);
-		return row;
-	},
-	
-	_find: function (query, options) {
-		options = options || {};
-		var result = this.table().find(query);
-		if ("sort" in options)
-			result = result.sort(options.sort);
-		if ("skip" in options)
-			result = result.skip(options.skip);
-		if ("limit" in options)
-			result = result.limit(options.limit);
-		return new BetaJS.Iterators.ArrayIterator(result.toArray());
-	},
-	
+		
 	ensureIndex: function (key) {
 		var obj = {};
 		obj[key] = 1;

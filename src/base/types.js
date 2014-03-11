@@ -140,6 +140,17 @@ BetaJS.Types = {
 		if (x == "false")
 			return false;
 		return null;
+	},
+	
+    /** Returns the type of a given expression
+     * 
+     * @param x expression
+     * @return type string
+     */	
+	type_of: function (x) {
+		if (this.is_array(x))
+			return "array";
+		return typeof x;
 	}
 
 };

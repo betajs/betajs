@@ -61,10 +61,11 @@ BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectValuesIterator", {
 
 BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	
-	constructor: function (iterator, map) {
+	constructor: function (iterator, map, context) {
 		this._inherited(BetaJS.Iterators.MappedIterator, "constructor");
 		this.__iterator = iterator;
 		this.__map = map;
+		this.__context = context || this;
 	},
 	
 	hasNext: function () {
@@ -72,7 +73,7 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
 	},
 	
 	next: function () {
-		return this.hasNext() ? this.__map(this.__iterator.next()) : null;
+		return this.hasNext() ? this.__map.call(this.__context, this.__iterator.next()) : null;
 	}
 	
 });

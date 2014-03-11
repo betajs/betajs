@@ -41,6 +41,7 @@ module.exports = function(grunt) {
 					'src/base/types.js',
 					'src/base/strings.js',
 					'src/base/functions.js',
+					'src/base/syncasync.js',
 					'src/base/scopes.js', 
 					'src/base/ids.js', 
 					'src/base/tokens.js',

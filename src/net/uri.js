@@ -2,6 +2,20 @@ BetaJS.Net = BetaJS.Net || {};
 
 BetaJS.Net.Uri = {
 	
+	build: function (obj) {
+		var s = "";
+		if (obj.username)
+			s += obj.username + ":";
+		if (obj.password)
+			s += obj.password + "@";
+		s += obj.server;
+		if (obj.port)
+			s += ":" + obj.port;
+		if (obj.path)
+			s += "/" + obj.path;
+		return s;
+	},
+	
 	encodeUriParams: function (arr, prefix) {
 		prefix = prefix || "";
 		var res = [];
