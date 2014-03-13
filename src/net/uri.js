@@ -28,6 +28,10 @@ BetaJS.Net.Uri = {
 		return res.join("&");
 	},
 	
+	appendUriParams: function (uri, arr, prefix) {
+		return BetaJS.Types.is_empty(arr) ? uri : (uri + (uri.indexOf("?") != -1 ? "&" : "?") + this.encodeUriParams(arr, prefix));
+	},
+	
 	// parseUri 1.2.2
 	// (c) Steven Levithan <stevenlevithan.com>
 	// MIT License

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-03-11
+  betajs - v0.0.2 - 2014-03-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-11
+  betajs - v0.0.2 - 2014-03-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-11
+  betajs - v0.0.2 - 2014-03-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3096,6 +3096,10 @@ BetaJS.Net.Uri = {
 				res.push(prefix + key + "=" + encodeURI(value));
 		}, this);
 		return res.join("&");
+	},
+	
+	appendUriParams: function (uri, arr, prefix) {
+		return BetaJS.Types.is_empty(arr) ? uri : (uri + (uri.indexOf("?") != -1 ? "&" : "?") + this.encodeUriParams(arr, prefix));
 	},
 	
 	// parseUri 1.2.2
