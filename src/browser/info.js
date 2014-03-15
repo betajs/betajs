@@ -14,81 +14,135 @@ BetaJS.Browser.Info = {
 		};
 	},
 	
-	__flash: null,
-	__isiOS: null,
-	__isAndroid: null,
-	__iOSversion: null,
-	__isWebOS: null,
-	__isWindowsPhone: null,
-	__isBlackberry: null,
-	__isMobile: null,
-	__isInternetExplorer: null,
+	__cache: {},
+	
+	__cached: function (key, value_func) {
+		if (!(key in this.__cache))
+			this.__cache[key] = value_func.apply(this);
+		return this.__cache[key];
+	},
 
 	flash: function () {
-		if (!this.__flash)
-			this.__flash = new BetaJS.Browser.FlashDetect();
-		return this.__flash;
+		return this.__cached("flash", function () {
+			return new BetaJS.Browser.FlashDetect();
+		});
 	},
 	
 	isiOS: function () {
-		if (this.__isiOS === null)
-			this.__isiOS = (navigator.userAgent.indexOf('iPhone') != -1) || (navigator.userAgent.indexOf('iPod') != -1) || (navigator.userAgent.indexOf('iPad') != -1);
-		return this.__isiOS;
+		return this.__cached("isiOS", function () {
+			var ua = navigator.userAgent;
+			return ua.indexOf('iPhone') != -1 || ua.indexOf('iPod') != -1 || ua.indexOf('iPad') != -1;
+		});
 	},
 	
 	isChrome: function () {
-		return "chrome" in window;
+		return this.__cached("isChrome", function () {
+			return "chrome" in window;
+		});
 	},
 	
 	isAndroid: function () {
-		if (this.__isAndroid === null)
-			this.__isAndroid = navigator.userAgent.toLowerCase().indexOf("android") != -1;
-		return this.__isAndroid;
+		return this.__cached("isAndroid", function () {
+			return navigator.userAgent.toLowerCase().indexOf("android") != -1;
+		});
 	},
 	
 	isWebOS: function () {
-		if (this.__isWebOS === null)
-			this.__isWebOS = navigator.userAgent.toLowerCase().indexOf("webos") != -1;
-		return this.__isWebOS;
+		return this.__cached("isWebOS", function () {
+			return navigator.userAgent.toLowerCase().indexOf("webos") != -1;
+		});
 	},
 
 	isWindowsPhone: function () {
-		if (this.__isWindowsPhone === null)
-			this.__isWindowsPhone = navigator.userAgent.toLowerCase().indexOf("windows phone") != -1;
-		return this.__isWindowsPhone;
+		return this.__cached("isWindowsPhone", function () {
+			return navigator.userAgent.toLowerCase().indexOf("windows phone") != -1;
+		});
 	},
 
 	isBlackberry: function () {
-		if (this.__isBlackberry === null)
-			this.__isBlackberry = navigator.userAgent.toLowerCase().indexOf("blackberry") != -1;
-		return this.__isBlackberry;
+		return this.__cached("isBlackberry", function () {
+			return navigator.userAgent.toLowerCase().indexOf("blackberry") != -1;
+		});
 	},
 
 	iOSversion: function () {
-		if (this.__iOSversion === null && this.isiOS()) {
+		return this.__cached("iOSversion", function () {
+			if (!this.isiOS())
+				return false;
 		    var v = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
-		    this.__iOSversion = {
+		    return {
 		    	major: parseInt(v[1], 10),
 		    	minor: parseInt(v[2], 10),
 		    	revision: parseInt(v[3] || 0, 10)
 		    };
-		}
-		return this.__iOSversion;
+		});
 	},
 	
 	isMobile: function () {
-		if (this.__isMobile === null)
-			this.__isMobile = this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
-		return this.__isMobile;
+		return this.__cached("isMobile", function () {
+			return this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
+		});
 	},
 	
 	isInternetExplorer: function () {
-		if (this.__isInternetExplorer === null)
-			this.__isInternetExplorer = navigator.appName == 'Microsoft Internet Explorer';
-		return this.__isInternetExplorer;
+		return this.__cached("isInternetExplorer", function () {
+			//return navigator.appName == 'Microsoft Internet Explorer';
+			return this.internetExplorerVersion() !== null;
+		});
+	},
+	
+	isFirefox: function () {
+		return this.__cached("isFirefox", function () {
+			return navigator.userAgent.toLowerCase().indexOf("firefox") != -1;
+		});
+	},
+	
+	isSafari: function () {
+		return this.__cached("isSafari", function () {
+			return !this.isChrome() && navigator.userAgent.toLowerCase().indexOf("safari") != -1;
+		});
+	},
+	
+	isWindows: function () {
+		return this.__cached("isWindows", function () {
+			return navigator.appVersion.toLowerCase().indexOf("win") != -1;
+		});
+	},
+	
+	isMacOS: function () {
+		return this.__cached("isMacOS", function () {
+			return navigator.appVersion.toLowerCase().indexOf("mac") != -1;
+		});
+	},
+	
+	isUnix: function () {
+		return this.__cached("isUnix", function () {
+			return navigator.appVersion.toLowerCase().indexOf("x11") != -1;
+		});
+	},
+	
+	isLinux: function () {
+		return this.__cached("isLinux", function () {
+			return navigator.appVersion.toLowerCase().indexOf("linux") != -1;
+		});
+	},
+	
+	internetExplorerVersion: function () {
+		if (navigator.appName == 'Microsoft Internet Explorer') {
+		    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+		    if (re.exec(navigator.userAgent))
+		    	return parseFloat(RegExp.$1);
+		} else if (navigator.appName == 'Netscape') {
+		    var re2 = new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})");
+		    if (re2.exec(navigator.userAgent))
+		    	return parseFloat(RegExp.$1);
+		}
+		return null;
 	}
 	
 };
+
+
 
 
 /*
@@ -154,7 +208,7 @@ BetaJS.Class.extend("BetaJS.Browser.FlashDetect", {
 	},
 	
 	supported: function () {
-		return this.installed() || !BetaJS.Browser.Info.is_iOS();
+		return this.installed() || !BetaJS.Browser.Info.isiOS();
 	},
 	
     majorAtLeast : function (version) {
