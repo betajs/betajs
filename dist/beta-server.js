@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-03-13
+  betajs - v0.0.2 - 2014-03-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-13
+  betajs - v0.0.2 - 2014-03-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-13
+  betajs - v0.0.2 - 2014-03-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6414,7 +6414,7 @@ BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 		var decoding = {};
 		types = types || {};
 		types.id = "id";
-		var ObjectId = database.mongo_sync().ObjectId;
+		var ObjectId = database.mongo_module().ObjectId;
 		for (var key in types) {
 			if (types[key] == "id") {
 				encoding[key] = function (value) {

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-03-14
+  betajs - v0.0.2 - 2014-03-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -709,6 +709,23 @@ BetaJS.Browser.Loader = {
 		head.appendChild(script);
 	},
 	
+	loadStyles: function (url, callback, context) {
+		var executed = false;
+		var head = document.getElementsByTagName("head")[0];
+		var style = document.createElement("link");
+		style.rel = "stylesheet";
+		style.href = url;
+		style.onload = style.onreadystatechange = function() {
+			if (!executed && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
+				executed = true;
+				style.onload = style.onreadystatechange = null;
+				if (callback)
+					callback.apply(context || this, [url]);
+			}
+		};
+		head.appendChild(style);
+	},
+
 	inlineStyles: function (styles) {
 		BetaJS.$('<style>' + styles + "</style>").appendTo("head");
 	}

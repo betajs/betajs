@@ -191,15 +191,6 @@ module.exports = function(grunt) {
 						'src/views/overlays/*/styles.css',
 			        ]
 		    	}
-		    },		
-		    dist_theme_minimal_scss: {
-		    	files: {
-			        'dist/beta-theme-minimal.scss': [
-			            'src/views/controls/button_view/theme-minimal.scss',
-			            'src/views/lists/list_view/theme-minimal.scss',
-			            'src/views/overlays/overlay_view/theme-minimal.scss',
-			        ]
-		    	}
 		    }
 		},
 		uglify : {
@@ -223,13 +214,7 @@ module.exports = function(grunt) {
 		sass: {
 		    dist_ui: {
 		    	files: {
-			        'dist/beta-ui.css': 'dist/beta-ui.scss',
-			        'dist/beta-theme-minimal.css': 'dist/beta-theme-minimal.scss'
-		    	}
-		    },
-		    dist_themes: {
-		    	files: {
-			        'dist/beta-theme-minimal.css': 'dist/beta-theme-minimal.scss'
+			        'dist/beta-ui.css': 'dist/beta-ui.scss'
 		    	}
 		    }
 		},
@@ -244,14 +229,9 @@ module.exports = function(grunt) {
 				files : {
 					'dist/beta-ui.min.css' : [ 'dist/beta-ui.css' ],
 				}					
-			},
-			dist_themes : {
-				files : {
-					'dist/beta-theme-minimal.min.css' : [ 'dist/beta-theme-minimal.css' ]
-				}
 			}
 		},
-		clean: ["dist/beta-ui-templates.js", "dist/beta-ui.scss", "dist/beta-theme-minimal.scss"]
+		clean: ["dist/beta-ui-templates.js", "dist/beta-ui.scss"]
 	});
 
 	grunt.loadNpmTasks('grunt-newer');
