@@ -19,6 +19,8 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 	},
 	
 	_asyncCall: function (options) {
+		if (BetaJS.Browser.Info.isInternetExplorer() && BetaJS.Browser.Info.internetExplorerVersion() <= 9)
+			BetaJS.$.support.cors = true;
 		BetaJS.$.ajax({
 			type: options.method,
 			async: true,

@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-03-21
+  betajs - v0.0.2 - 2014-03-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6027,7 +6027,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-03-21
+  betajs - v0.0.2 - 2014-03-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6052,6 +6052,8 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 	},
 	
 	_asyncCall: function (options) {
+		if (BetaJS.Browser.Info.isInternetExplorer() && BetaJS.Browser.Info.internetExplorerVersion() <= 9)
+			BetaJS.$.support.cors = true;
 		BetaJS.$.ajax({
 			type: options.method,
 			async: true,
