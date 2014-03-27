@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2014-03-17
+  betajs - v0.0.2 - 2014-03-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-17
+  betajs - v0.0.2 - 2014-03-26
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -479,8 +479,123 @@ BetaJS.SyncAsync = {
 			return ret;
 		}
 		return null;
-	}
+	},
+	
+	PROMISE_LAZY: 1,
+	PROMISE_ACTIVE: 2,
+	PROMISE_SUCCESS: 3,
+	PROMISE_FAILURE: 4,
 
+	lazy: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number"
+		});
+		return {
+			state: this.PROMISE_LAZY,
+			func_ctx: args.func_ctx || this,
+			func: args.func,
+			params: args.params || [],
+			type: args.type || this.ASYNC
+		};
+	},
+	
+	promise: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number"
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var type = args.type || this.ASYNC;
+		if (type == this.SYNC) {
+			try {
+				return {
+					state: this.PROMISE_SUCCESS,
+					result: func.apply(func_ctx, params)
+				};
+			} catch (e) {
+				return {
+					state: this.PROMISE_FAILURE,
+					failure: e
+				};
+			}
+		} else {
+			var promise = {
+				state: this.PROMISE_ACTIVE,
+				listeners: []
+			};
+			params.push({
+				context: promise,
+				success: function (result) {
+					this.state = this.PROMISE_SUCCESS;
+					this.result = result;
+					for (var i = 0; i < this.listeners.length; ++i)
+						this.listeners[i].success.call(this.listeners[i].context || this, result);
+				},
+				failure: function (error) {
+					this.state = this.PROMISE_FAILURE;
+					this.failure = error;
+					for (var i = 0; i < this.listeners.length; ++i)
+						this.listeners[i].failure.call(this.listeners[i].context || this, error);
+				}
+			});
+			func.apply(func_ctx, params);
+			return promise;
+		}
+	},
+	
+	reveal: function (promise, callbacks) {
+		if (promise.state == this.PROMISE_LAZY) {
+			var promise_temp = this.promise(promise.func_ctx, promise.func, promise.params, promise.type);
+			for (var key in promise_temp)
+				promise[key] = promise_temp[key];
+		}
+		if (promise.state == this.PROMISE_ACTIVE)
+			promise.listeners.push(callbacks);
+		else if (promise.state == this.PROMISE_SUCCESS)
+			callbacks.success.call(callbacks.context || this, promise.result);
+		else if (promise.state == this.PROMISE_FAILURE)
+			callbacks.failure.call(callbacks.context || this, promise.failure);
+	},
+	
+	join: function (promises, callbacks) {
+		var monitor = {
+			count: promises.length,
+			failure: false,
+			results: []
+		};
+		for (var i = 0; i < count; ++i) {
+			monitor.results.push(null);
+			this.reveal(promises[i], {
+				context: {
+					monitor: monitor,
+					index: i
+				},
+				success: function (result) {
+					this.monitor.count = this.monitor.count - 1;
+					if (this.monitors.failure)
+						return;
+					this.monitor.results[this.index] = result;
+					if (this.monitor.count <= 0)
+						callbacks.success.apply(callbacks.context || this, this.monitor.results);
+				},
+				failure: function (error) {
+					this.monitor.count = this.monitor.count - 1;
+					if (this.monitors.failure)
+						return;
+					this.monitor.failure = true;
+					callbacks.failure.apply(callbacks.context || this, error);
+				}
+			});
+		}
+	}
+	
 };
 
 /** @class */
