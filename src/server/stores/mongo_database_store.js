@@ -6,7 +6,7 @@ BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 		var decoding = {};
 		types = types || {};
 		types.id = "id";
-		var ObjectId = database.mongo_module().ObjectId;
+		var ObjectId = database.mongo_module_sync().ObjectId;
 		for (var key in types) {
 			if (types[key] == "id") {
 				encoding[key] = function (value) {

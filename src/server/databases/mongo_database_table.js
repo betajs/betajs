@@ -2,25 +2,26 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.MongoDatabaseTable, "constructor", database, table_name);
-		this.__table = null;
+		this.__table_sync = null;
+		this.__table_async = null;
 	},
 	
-	_syncType: function (defasync) {
-		return this.isSync() ? BetaJS.SyncAsync.SYNC : (defasync ? BetaJS.SyncAsync.ASYNC : BetaJS.SyncAsync.ASYNCSINGLE);
+	table_sync: function (callbacks) {
+		return this.eitherSyncFactory("__table_sync", callbacks, function () {
+			return this._database.mongodb_sync().getCollection(this._table_name);
+		});		
+	},
+	
+	table_async: function (callbacks) {
+		return this.eitherAsyncFactory("__table_async", callbacks, function () {
+			this._database.mongodb_async(BetaJS.SyncAsync.mapSuccess(callbacks, function (db) {
+				BetaJS.SyncAsync.callback(callbacks, "success", db.collection(this._table_name));
+			}));
+		});
 	},
 	
 	table: function (callbacks) {
-		return this.eitherFactory("__table", callbacks, function () {
-			return this._database.mongodb().getCollection(this._table_name);
-		}, function () {
-			this._database.mongodb({
-				context: this,
-				success: function (db) {
-					callbacks.success(db.collection(this._table_name));
-				},
-				failure: callbacks.failure
-			});
-		});
+		return this.either(callbacks, this.table_sync, this.table_async);
 	},
 	
 	_encode: function (data) {
@@ -52,7 +53,7 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 				if ("limit" in options)
 					result = result.limit(options.limit);
 				this.thenSingle(result, result.toArray, callbacks, function (cols, callbacks) {
-					callbacks.success(new BetaJS.Iterators.ArrayIterator(cols));
+					BetaJS.SyncAsync.callback(callbacks, "success", new BetaJS.Iterators.ArrayIterator(cols));
 				});
 			});
 		});

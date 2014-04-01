@@ -4,6 +4,7 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 /** @class */
 BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
+	BetaJS.SyncAsync.SyncAsyncMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
 		
@@ -13,32 +14,14 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		this._id_key = options.id_key || "id";
 		this._create_ids = options.create_ids || false;
 		this._last_id = 1;
-		this._async_write = "async_write" in options ? options.async_write : false;
-		this._async_write = this._async_write && this._supports_async_write();
-		this._async_read = "async_read" in options ? options.async_read : false;
-		this._async_read = this._async_read && this._supports_async_read();
+		this._supportsSync = true;
+		this._supportsAsync = true;
 	},
 	
 	id_key: function () {
 		return this._id_key;
 	},
 	
-	_supports_async_read: function () {
-		return false;
-	},
-	
-	async_read: function () {
-		return this._async_read;
-	},
-			
-	_supports_async_write: function () {
-		return false;
-	},
-	
-	async_write: function () {
-		return this._async_write;
-	},
-
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -90,139 +73,51 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 
 	insert: function (data, callbacks) {
 		if (this._create_ids && !(this._id_key in data && data[this._id_key])) {
-			if (this._async_write)
-				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
 			while (this.get(this._last_id))
 				this._last_id++;
 			data[this._id_key] = this._last_id;
 		}
-		var self = this;
-		var success_call = function (row) {
-			self.trigger("insert", row);
-			if (callbacks && callbacks.success)
-				callbacks.success(row);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_write)
-			this._insert(data, {success: success_call, exception: exception_call});
-		else
-			try {
-				var row = this._insert(data);
-				success_call(row);
-				return row;
-			} catch (e) {
-				exception_call(e);
-			}
-		return null;
+		return this.then(this._insert, [data], callbacks, function (row, callbacks) {
+			this.trigger("insert", row);
+			BetaJS.SyncAsync.callback(callbacks, "success", row);
+		});
 	},
 	
-	insert_all: function (data) {
-		if (this._async_write) {
-			var i = -1;
-			var self = this;
-			var success = function () {
-				i++;
-				if (i < data.length)
-					self.insert(data[i], {success: success});
-			};
-			success();
-		} else {
-			var result = true;
-			BetaJS.Objs.iter(data, function (obj) {
-				result = result && this.insert(obj);
-			}, this);
-			return result;
-		}
-		return null;
+	insert_all: function (data, callbacks) {
+		var promises = BetaJS.Objs.map(data, function (obj) {
+			return this.promise(this.insert, [obj]);
+		}, this);
+		return this.join(promises, callbacks);
 	},
 
 	remove: function (id, callbacks) {
-		var self = this;
-		var success_call = function () {
-			self.trigger("remove", id);
-			if (callbacks && callbacks.success)
-				callbacks.success(id);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_write)
-			this._remove(id, {success: success_call, exception: exception_call});
-		else
-			try {
-				this._remove(id);
-				success_call();
-			} catch (e) {
-				exception_call(e);
-			}
+		return this.then(this._remove, [id], callbacks, function (result, callbacks) {
+			this.trigger("remove", id);
+			callbacks.success(id);
+		});
 	},
 	
 	get: function (id, callbacks) {
-		var self = this;
-		var success_call = function (row) {
-			if (callbacks && callbacks.success)
-				callbacks.success(row);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_read)
-			this._get(id, {success: success_call, exception: exception_call});
-		else
-			try {
-				var row = this._get(id);
-				success_call(row);
-				return row;
-			} catch (e) {
-				exception_call(e);
-			}
-		return null;
+		return this.delegate(this._get, [id], callbacks);
 	},
 	
 	update: function (id, data, callbacks) {
-		var self = this;
-		var success_call = function (row) {
-			self.trigger("update", row, data);
-			if (callbacks && callbacks.success)
-				callbacks.success(row, data);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_write)
-			this._update(id, data, {success: success_call, exception: exception_call});
-		else
-			try {
-				var row = this._update(id, data);
-				success_call(row);
-				return row;
-			} catch (e) {
-				exception_call(e);
-			}
-		return null;
+		return this.then(this._update, [id, data], callbacks, function (row, callbacks) {
+			this.trigger("update", row, data);
+			callbacks.success.call(callbacks.context || this, row, data);
+		});
 	},
 	
 	query: function (query, options, callbacks) {
-		return BetaJS.Queries.Constrained.emulate(
-			BetaJS.Queries.Constrained.make(query, options || {}),
-			this._query_capabilities(),
-			this._query,
-			this,
-			callbacks); 
+		var q = function (callbacks) {
+			return BetaJS.Queries.Constrained.emulate(
+				BetaJS.Queries.Constrained.make(query, options || {}),
+				this._query_capabilities(),
+				this._query,
+				this,
+				callbacks);			
+		};
+		return this.either(callbacks, q, q);
 	},
 	
 	_query_applies_to_id: function (query, id) {
@@ -230,10 +125,13 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		return row && BetaJS.Queries.overloaded_evaluate(query, row);
 	},
 	
-	clear: function () {
-		var iter = this.query({});
-		while (iter.hasNext())
-			this.remove(iter.next().id);
+	clear: function (callbacks) {
+		return this.then(this.query, [{}, {}], callbacks, function (iter, callbacks) {
+			var promises = [];
+			while (iter.hasNext())
+				promises.push(this.remove, [iter.next().id]);
+			return this.join(promises, callbacks);
+		});
 	},
 	
 	_ensure_index: function (key) {

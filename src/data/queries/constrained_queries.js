@@ -62,8 +62,13 @@ BetaJS.Queries.Constrained = {
 			else
 				throw e;
 		};
-		if (callbacks)
-			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}]);
+		if (callbacks) 
+			query_function.apply(query_context || this, [execute_query, execute_options, {
+				success: success_call,
+				exception: exception_call,
+				sync: callbacks.sync,
+				context: callbacks.context || this
+			}]);
 		else
 			try {
 				var raw = query_function.apply(query_context || this, [execute_query, execute_options]);

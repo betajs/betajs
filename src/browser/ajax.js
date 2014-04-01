@@ -18,7 +18,7 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 		return result;
 	},
 	
-	_asyncCall: function (options) {
+	_asyncCall: function (options, callbacks) {
 		if (BetaJS.Browser.Info.isInternetExplorer() && BetaJS.Browser.Info.internetExplorerVersion() <= 9)
 			BetaJS.$.support.cors = true;
 		BetaJS.$.ajax({
@@ -28,10 +28,11 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 			dataType: options.decodeType ? options.decodeType : null, 
 			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
-				options.success(response);
+				BetaJS.SyncAsync.callback(callbacks, "success", response);
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				var exc = new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				BetaJS.SyncAsync.callback(callbacks, "exception", exc);
 			}
 		});
 	}

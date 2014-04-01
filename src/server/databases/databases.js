@@ -1,5 +1,5 @@
 BetaJS.Class.extend("BetaJS.Databases.Database", [
-	BetaJS.Classes.SyncAsyncMixin, {
+	BetaJS.SyncAsync.SyncAsyncMixin, {
 	
 	_tableClass: function () {
 		return null;

@@ -1,4 +1,6 @@
-BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
+BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", [
+	BetaJS.SyncAsync.SyncAsyncMixin,
+	{
 
 	constructor: function (model, options) {
 		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");
@@ -18,22 +20,28 @@ BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
 	_change_id: function () {},
 	
 	__delete_cascade: function () {
-		var iter = BetaJS.Iterators.ensure(this.yield());
-		while (iter.hasNext())
-			iter.next().remove();
+		this.yield({
+			success: function (iter) {
+				iter = BetaJS.Iterators.ensure(iter).toArray();
+				var promises = [];
+				while (iter.hasNext()) {
+					var obj = iter.next();
+					promises.push(obj.promise(obj.remove));
+				}
+				this.join(promises, {success: function () {}});
+			}
+		});
 	},
 	
-	yield: function () {
-		if (this.__cache)
-			return this.__cache;
-		var obj = this._yield();
+	yield: function (callbacks) {
 		if (this._options["cached"])
-			this.__cache = obj;
-		return obj;
+			return this.eitherFactory("__cache", callbacks, this._yield, this._yield);
+		else
+			return this._yield(callbacks);
 	},
 	
 	invalidate: function () {
 		delete this["__cache"];
 	}
 
-});
+}]);

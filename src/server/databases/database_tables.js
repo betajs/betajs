@@ -1,11 +1,18 @@
 BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
-	BetaJS.Classes.SyncAsyncMixin, {
+	BetaJS.SyncAsync.SyncAsyncMixin, {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.DatabaseTable, "constructor");
 		this._database = database;
 		this._table_name = table_name;
-		this._is_async = database.isAsync();
+	},
+	
+	supportsSync: function () {
+		return this._database.supportsSync();
+	},
+	
+	supportsAsync: function () {
+		return this._database.supportsAsync();
 	},
 	
 	findOne: function (query, options, callbacks) {

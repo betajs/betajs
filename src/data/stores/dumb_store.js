@@ -20,6 +20,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 		options = options || {};
 		options.create_ids = true;
 		this._inherited(BetaJS.Stores.DumbStore, "constructor", options);
+		this._supportsAsync = false;
 	},
 
 	_insert: function (data) {

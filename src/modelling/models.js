@@ -1,4 +1,6 @@
-BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
+	BetaJS.SyncAsync.SyncAsyncMixin,
+	{
 	
 	constructor: function (attributes, options) {
 		options = options || {};
@@ -34,9 +36,9 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 		return this.__removed;
 	},
 
-	update: function (data, options) {
+	update: function (data, options, callbacks) {
 		this.setAll(data, {silent: true});
-		this.save(options);
+		this.save(options, callbacks);
 	},
 
 	_afterSet: function (key, value, old_value, options) {
@@ -60,38 +62,30 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	_before_create: function () {
 	},
 	
-	save: function (options) {
-		var self = this;
-		var opts = BetaJS.Objs.clone(options || {}, 1);
+	save: function (callbacks) {
 		if (this.__new)
 			this._before_create();
-		opts.success = function () {
-			self.trigger("save");		
-			self.__saved = true;
-			var was_new = self.__new;
-			self.__new = false;
+		return this.then(this.__table, this.__table._model_save, [this], callbacks, function (result, callbacks) {
+			this.trigger("save");
+			this.__saved = true;
+			var was_new = this.__new;
+			this.__new = false;
 			if (was_new)
-				self._after_create();
-			if (options && options.success)
-				options.success();
-		};
-		return this.__table._model_save(this, opts);
+				this._after_create();
+			this.callback(callbacks, "success", result);
+		});
 	},
 	
-	remove: function (options) {
-		var self = this;
-		var opts = BetaJS.Objs.clone(options || {}, 1);
-		opts.success = function () {
-			self.trigger("remove");		
-			self.__removed = true;
-			if (options && options.success)
-				options.success();
-		};
-		return this.__table._model_remove(this, opts);
+	remove: function (callbacks) {
+		return this.then(this.__table, this.__table._model_remove, [this], callbacks, function (result, callbacks) {
+			this.trigger("remove");		
+			this.__removed = true;
+			this.callback(callbacks, "success", result);
+		});
 	},
 	
 	table: function () {
 		return this.__table;
 	}
 	
-});
+}]);

@@ -15,8 +15,8 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 			}, this);
 	},
 	
-	_yield: function () {
-		return this._model.assocs[this._options.conditional(this._model)];
+	_yield: function (callbacks) {
+		return this._model.assocs[this._options.conditional(this._model)].yield(callbacks);
 	}
 
 });

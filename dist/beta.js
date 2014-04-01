@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-03-26
+  betajs - v0.0.2 - 2014-04-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-26
+  betajs - v0.0.2 - 2014-04-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-03-26
+  betajs - v0.0.2 - 2014-04-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -388,36 +388,60 @@ BetaJS.SyncAsync = {
 	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
-     * @param callbacks callbacks object with success and failure
+     * @param callbacks callbacks object with success and exception
      * @param syncCall the synchronous function
+     * @param params optional syncCall params
      * @param context optional object context
      */	
-	syncToAsync: function (callbacks, syncCall, context) {
+	syncToAsync: function (callbacks, syncCall) {
+		var args = BetaJS.Functions.matchArgs(BetaJS.Functions.getArguments(arguments, 2), {
+			params: "array",
+			context: "object"
+		});
 		try {
-			callbacks.success.call(callbacks.context || this, syncCall.apply(context || this));
+			if (callbacks && callbacks.success)
+				callbacks.success.call(callbacks.context || this, syncCall.apply(args.context || this, args.params || []));
 		} catch (e) {
-			callbacks.failure.call(callbacks.context || this, e);
+			if (callbacks && callbacks.exception)
+				callbacks.exception.call(callbacks.context || this, e);
 		}
 	},
 	
-    /** Either calls a synchronous or asynchronous function depending on whether useSync is given
+    /** Either calls a synchronous or asynchronous function depending on whether preferSync is given
      * 
-     * @param callbacks callbacks object with success and failure (or null)
-     * @param useSync use synchronous call?
+     * @param callbacks callbacks object with success and exception (or null)
+     * @param preferSync prefer synchronous call?
      * @param syncCall the synchronous function
      * @param asyncCall the asynchronous function
+     * @param params optional syncCall params
      * @param context optional object context
      * @return the function return data
      */	
-	either: function (callbacks, useSync, syncCall, asyncCall, context) {
-		context = context || this;
-		if (callbacks) {
-			if (useSync)
-				this.syncToAsync(callbacks, syncCall, context);
-			else
-				asyncCall.call(context, callbacks);
+	either: function (callbacks, preferSync, syncCall, asyncCall) {
+		var args = BetaJS.Functions.matchArgs(BetaJS.Functions.getArguments(arguments, 4), {
+			params: "array",
+			context: "object"
+		});
+		if (callbacks && !preferSync && !callbacks.sync) {
+			var params = args.params || [];
+			params.push(callbacks); 
+			asyncCall.apply(args.context || this, params);
+			return null;
 		} else
-			return syncCall.apply(context);
+			return this.eitherSync(callbacks, syncCall, args.params, args.context);
+	},
+	
+	eitherSync: function (callbacks, syncCall) {
+		var args = BetaJS.Functions.matchArgs(BetaJS.Functions.getArguments(arguments, 2), {
+			params: "array",
+			context: "object"
+		});
+		var context = args.context || this;
+		var params = args.params || [];
+		if (callbacks)
+			this.syncToAsync(callbacks, syncCall, params, context);
+		else
+			return syncCall.apply(context, params);
 		return null;
 	},
 	
@@ -429,7 +453,7 @@ BetaJS.SyncAsync = {
 		if (type == this.ASYNCSINGLE)
 			return function (err, result) {
 				if (err)
-					callbacks.failure.call(callbacks.context || this, err);
+					callbacks.exception.call(callbacks.context || this, err);
 				callbacks.success.call(callbacks.context || this, result);
 			};
 		return callbacks;
@@ -443,23 +467,27 @@ BetaJS.SyncAsync = {
 			type: "number",
 			callbacks: true,
 			success_ctx: "object",
-			success: "function"
+			success: "function",
+			exception: "function"
 		});
 		var func_ctx = args.func_ctx || this;
 		var func = args.func;
 		var params = args.params || [];
 		var callbacks = args.callbacks;
-		var type = args.type || (callbacks ? this.ASYNC : this.SYNC);
+		var type = args.type || (!callbacks || callbacks.sync ? this.SYNC : this.ASYNC);
 		var success_ctx = args.success_ctx || func_ctx;
 		var success = args.success;
+		var exception = args.exception;
 		if (type != this.SYNC) {			
-			params.push(this.toCallbackType(success ? {
+			params.push(this.toCallbackType({
 				context: callbacks.context,
-				success: function (ret) {
+				success: success ? function (ret) {
 					success.call(success_ctx, ret, callbacks);
-				},
-				failure: callbacks.failure
-			} : callbacks, type));
+				} : callbacks.success,
+				exception: exception ? function (error) {
+					exception.call(success_ctx, error, callbacks);
+				} : callbacks.exception
+			}, type));
 			func.apply(func_ctx, params);
 		} else if (callbacks) {
 			try {
@@ -468,20 +496,40 @@ BetaJS.SyncAsync = {
 				else
 					callbacks.success.call(callbacks.context || this, func.apply(func_ctx, params));
 			} catch (e) {
-				callbacks.failure.call(callbacks.context || this, e);
+				if (exception)
+					exception.call(success_ctx, e, callbacks);
+				else
+					callbacks.exception.call(callbacks.context || this, e);
 			}
 		} else {
-			var ret = func.apply(func_ctx, params);
-			if (success)
-				success.call(success_ctx, ret, {
-					success: function (retv) {
-						ret = retv;
-					},
-					failure: function (err) {
-						throw err;
-					}
-				});
-			return ret;
+			try {
+				var ret = func.apply(func_ctx, params);
+				if (success)
+					success.call(success_ctx, ret, {
+						sync: true,
+						success: function (retv) {
+							ret = retv;
+						},
+						exception: function (err) {
+							throw err;
+						}
+					});
+				return ret;
+			} catch (e) {
+				if (exception) {
+					exception.call(success_ctx, e, {
+						sync: true,
+						success: function (retv) {
+							ret = retv;
+						},
+						exception: function (err) {
+							throw err;
+						}
+					});
+					return ret;
+				} else
+					throw e;
+			}
 		}
 		return null;
 	},
@@ -489,7 +537,7 @@ BetaJS.SyncAsync = {
 	PROMISE_LAZY: 1,
 	PROMISE_ACTIVE: 2,
 	PROMISE_SUCCESS: 3,
-	PROMISE_FAILURE: 4,
+	PROMISE_EXCEPTION: 4,
 
 	lazy: function () {
 		var args = BetaJS.Functions.matchArgs(arguments, {
@@ -526,8 +574,8 @@ BetaJS.SyncAsync = {
 				};
 			} catch (e) {
 				return {
-					state: this.PROMISE_FAILURE,
-					failure: e
+					state: this.PROMISE_EXCEPTION,
+					exception: e
 				};
 			}
 		} else {
@@ -538,16 +586,16 @@ BetaJS.SyncAsync = {
 			params.push({
 				context: promise,
 				success: function (result) {
-					this.state = this.PROMISE_SUCCESS;
+					this.state = BetaJS.SyncAsync.PROMISE_SUCCESS;
 					this.result = result;
 					for (var i = 0; i < this.listeners.length; ++i)
 						this.listeners[i].success.call(this.listeners[i].context || this, result);
 				},
-				failure: function (error) {
-					this.state = this.PROMISE_FAILURE;
-					this.failure = error;
+				exception: function (error) {
+					this.state = BetaJS.SyncAsync.PROMISE_EXCEPTION;
+					this.exception = error;
 					for (var i = 0; i < this.listeners.length; ++i)
-						this.listeners[i].failure.call(this.listeners[i].context || this, error);
+						this.listeners[i].exception.call(this.listeners[i].context || this, error);
 				}
 			});
 			func.apply(func_ctx, params);
@@ -565,43 +613,209 @@ BetaJS.SyncAsync = {
 			promise.listeners.push(callbacks);
 		else if (promise.state == this.PROMISE_SUCCESS)
 			callbacks.success.call(callbacks.context || this, promise.result);
-		else if (promise.state == this.PROMISE_FAILURE)
-			callbacks.failure.call(callbacks.context || this, promise.failure);
+		else if (promise.state == this.PROMISE_EXCEPTION)
+			callbacks.exception.call(callbacks.context || this, promise.exception);
 	},
 	
 	join: function (promises, callbacks) {
 		var monitor = {
 			count: promises.length,
-			failure: false,
+			exception: false,
 			results: []
 		};
-		for (var i = 0; i < count; ++i) {
+		for (var i = 0; i < promises.length; ++i) {
 			monitor.results.push(null);
 			this.reveal(promises[i], {
 				context: {
 					monitor: monitor,
 					index: i
 				},
+				sync: callbacks && callbacks.sync,
 				success: function (result) {
 					this.monitor.count = this.monitor.count - 1;
-					if (this.monitors.failure)
+					if (this.monitor.exception)
 						return;
 					this.monitor.results[this.index] = result;
-					if (this.monitor.count <= 0)
-						callbacks.success.apply(callbacks.context || this, this.monitor.results);
+					if (this.monitor.count <= 0) {
+						if (callbacks)
+							callbacks.success.apply(callbacks.context || this, this.monitor.results);
+					}
 				},
-				failure: function (error) {
+				exception: function (error) {
 					this.monitor.count = this.monitor.count - 1;
-					if (this.monitors.failure)
+					if (this.monitor.exception)
 						return;
-					this.monitor.failure = true;
-					callbacks.failure.apply(callbacks.context || this, error);
+					this.monitor.exception = true;
+					if (callbacks)
+						callbacks.exception.apply(callbacks.context || this, error);
+					else
+						throw error;
 				}
 			});
 		}
+		return monitor.results;
+	},
+	
+	mapSuccess: function (callbacks, success) {
+		var obj = BetaJS.Objs.clone(callbacks, 1);
+		obj.success = success;
+		return obj;
+	},
+	
+	mapException: function (callbacks, exception) {
+		var obj = BetaJS.Objs.clone(callbacks, 1);
+		obj.exception = exception;
+		return obj;
+	},
+
+	callback: function (callbacks, type) {
+		if (!callbacks || (type != "success" && type != "exception"))
+			return;
+		var context = callbacks.context || this;
+		var params = BetaJS.Functions.getArguments(arguments, 2);
+		if (type in callbacks)
+			callbacks[type].apply(context, params);
+		if ("complete" in callbacks)
+			callbacks.complete.apply(context);
 	}
 	
 };
+
+
+
+BetaJS.SyncAsync.SyncAsyncMixin = {
+	
+	supportsSync: function () {
+		return this._supportsSync;
+	},
+	
+	supportsAsync: function () {
+		return this._supportsAsync;
+	},
+	
+	eitherSync: function (callbacks, syncFunc, params) {
+		return BetaJS.SyncAsync.eitherSync(callbacks, syncFunc, params || [], this);
+	},
+		
+	either: function (callbacks, syncFunc, asyncFunc, preferSync, params) {
+		if (BetaJS.Types.is_undefined(preferSync))
+			preferSync = !this.supportsAsync();
+		return BetaJS.SyncAsync.either(callbacks, preferSync, syncFunc, asyncFunc, params || [], this);
+	},
+	
+	eitherSyncFactory: function (property, callbacks, syncFunc, params) {
+		return BetaJS.SyncAsync.eitherSync(callbacks, function () {
+			if (!this[property])
+				this[property] = syncFunc.apply(this, params);
+			return this[property];				
+		}, this);
+	},
+
+	eitherAsyncFactory: function (property, callbacks, asyncFunc, params) {
+		var ctx = this;
+		return this.either(callbacks, function () {
+			return this[property];				
+		}, function () {
+			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+				ctx[property] = result;
+				callbacks.success.call(this, result);
+			}));
+		}, property in this, this);
+	},
+
+	eitherFactory: function (property, callbacks, syncFunc, asyncFunc, params) {
+		var ctx = this;
+		return this.either(callbacks, function () {
+			if (!this[property])
+				this[property] = syncFunc.apply(this, params);
+			return this[property];				
+		}, function () {
+			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+				ctx[property] = result;
+				callbacks.success.call(this, result);
+			}));
+		}, this[property] || !this.supportsAsync());
+	},
+	
+	then: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number",
+			callbacks: true,
+			success_ctx: "object",
+			success: true,
+			exception: "function"
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var callbacks = args.callbacks;
+		var type = args.type || (!callbacks || !this.supportsAsync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
+		var success_ctx = args.success_ctx || this;
+		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, args.success, args.exception);
+	},
+	
+	thenSingle: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number",
+			callbacks: true,
+			success_ctx: "object",
+			success: true
+		});
+		var func_ctx = args.func_ctx || this;
+		var func = args.func;
+		var params = args.params || [];
+		var callbacks = args.callbacks;
+		var type = args.type || (!callbacks || !this.supportsAsync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNCSINGLE);
+		var success_ctx = args.success_ctx || this;
+		var success = args.success;
+		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, success);
+	},
+	
+	promise: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			type: "number"
+		});
+		return BetaJS.SyncAsync.promise(args.func_ctx || this, args.func, args.params || [], args.type);
+	},
+	
+	join: function (promises, callbacks) {
+		return BetaJS.SyncAsync.join(promises, callbacks);
+	},
+	
+	delegate: function () {
+		var args = BetaJS.Functions.matchArgs(arguments, {
+			func_ctx: "object",
+			func: true,
+			params: "array",
+			callbacks: "object"
+		});
+		var ctx = args.func_ctx || this;
+		var params = args.params || [];
+		if (args.callbacks) {
+			if (this.supportsAsync() && !args.callbacks.sync) {
+				params.push(args.callbacks);
+				return args.func.apply(ctx, params);
+			} else
+				return BetaJS.SyncAsync.syncToAsync(args.callbacks, args.func, params, ctx);
+		} else
+			return args.func.apply(ctx, params);
+	},
+	
+	callback: function () {
+		return BetaJS.SyncAsync.callback.apply(this, arguments);
+	}
+	
+};
+
 
 /** @class */
 BetaJS.Scopes = {
@@ -970,6 +1184,29 @@ BetaJS.Objs = {
 		for (var i = 0; i < arr.length; ++i)
 			result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
 		return result;
+	},
+	
+	peek: function (obj) {
+		if (BetaJS.Types.is_array(obj))
+			return obj.length > 0 ? obj[0] : null;
+		else {
+			for (var key in obj)
+				return obj[key];
+			return null;
+		} 
+	},
+	
+	poll: function (obj) {
+		if (BetaJS.Types.is_array(obj))
+			return obj.shift();
+		else {
+			for (var key in obj) {
+				var item = obj[key];
+				delete obj[key];
+				return item;
+			}
+			return null;
+		} 
 	}
 
 };
@@ -2147,84 +2384,6 @@ BetaJS.Class.extend("BetaJS.Classes.Module", {
 	
 });
 
-
-
-BetaJS.Classes.SyncAsyncMixin = {
-	
-	isSync: function () {
-		return !this._is_async;
-	},
-	
-	isAsync: function () {
-		return !!this._is_async;
-	},
-	
-	either: function (callbacks, syncFunc, asyncFunc, useSync) {
-		if (BetaJS.Types.is_undefined(useSync))
-			useSync = this.isSync();
-		return BetaJS.SyncAsync.either(callbacks, useSync, syncFunc, asyncFunc, this);
-	},
-	
-	eitherFactory: function (property, callbacks, syncFunc, asyncFunc) {
-		var ctx = this;
-		return this.either(callbacks, function () {
-			if (!this[property])
-				this[property] = syncFunc.apply(this);
-			return this[property];				
-		}, function () {
-			asyncFunc.apply(this, {
-				context: callbacks.context,
-				success: function (result) {
-					ctx[property] = result;
-					callbacks.success.call(callbacks.context || obj, result);
-				},
-				failure: callbacks.failure
-			});			
-		}, this.isSync() || this[property]);
-	},
-	
-	then: function () {
-		var args = BetaJS.Functions.matchArgs(arguments, {
-			func_ctx: "object",
-			func: true,
-			params: "array",
-			type: "number",
-			callbacks: true,
-			success_ctx: "object",
-			success: true
-		});
-		var func_ctx = args.func_ctx || this;
-		var func = args.func;
-		var params = args.params || [];
-		var callbacks = args.callbacks;
-		var type = args.type || (this.isSync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
-		var success_ctx = args.success_ctx || this;
-		var success = args.success;
-		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, success);
-	},
-	
-	thenSingle: function () {
-		var args = BetaJS.Functions.matchArgs(arguments, {
-			func_ctx: "object",
-			func: true,
-			params: "array",
-			type: "number",
-			callbacks: true,
-			success_ctx: "object",
-			success: true
-		});
-		var func_ctx = args.func_ctx || this;
-		var func = args.func;
-		var params = args.params || [];
-		var callbacks = args.callbacks;
-		var type = args.type || (this.isSync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNCSINGLE);
-		var success_ctx = args.success_ctx || this;
-		var success = args.success;
-		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, success);
-	}
-	
-};
-
 BetaJS.Properties = {};
 
 
@@ -3040,81 +3199,26 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 	},
 	
 	syncCall: function (options) {
-		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.Objs.extend(opts, options);
-		var success_callback = opts.success_callback;
-		delete opts["success_callback"];
-		var failure_callback = opts.failure_callback;
-		delete opts["failure_callback"];
-		var complete_callback = opts.complete_callback;
-		delete opts["complete_callback"];
 		try {
-			var result = this._syncCall(opts);
-			if (success_callback)
-				success_callback(result);
-			if (complete_callback)
-				complete_callback();
-			return result;
+			return this._syncCall(BetaJS.Objs.extend(BetaJS.Objs.clone(this.__options, 1), options));
 		} catch (e) {
 			e = BetaJS.Exceptions.ensure(e);
 			e.assert(BetaJS.Net.AjaxException);
-			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data());
-			else
-				throw e;
+			throw e;
 		}
-		return false;
 	},
 	
-	asyncCall: function (options) {
-		var opts = BetaJS.Objs.clone(this.__options, 1);
-		opts = BetaJS.Objs.extend(opts, options);
-		var success_callback = opts.success_callback;
-		delete opts["success_callback"];
-		var failure_callback = opts.failure_callback;
-		delete opts["failure_callback"];
-		var complete_callback = opts.complete_callback;
-		delete opts["complete_callback"];
-		try {
-			var result = this._asyncCall(BetaJS.Objs.extend({
-				"success": function (data) {
-					if (success_callback)
-						success_callback(data);
-					if (complete_callback)
-						complete_callback();
-				},
-				"failure": function (status_code, status_text, data) {
-					if (failure_callback)
-						failure_callback(status_code, status_text, data);
-					else
-						throw new BetaJS.Net.AjaxException(status_code, status_text, data);
-					if (complete_callback)
-						complete_callback();
-				}
-			}, opts));
-			return result;
-		} catch (e) {
-			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
-			if (failure_callback)
-				failure_callback(e.status_code(), e.status_text(), e.data());
-			else
-				throw e;
-		}
-		return false;
+	asyncCall: function (options, callbacks) {
+		this._asyncCall(BetaJS.Objs.extend(BetaJS.Objs.clone(this.__options, 1), options), callbacks);
 	},
 	
-	call: function (options) {
-		if (!("async" in options))
-			return false;
-		var async = options["async"];
-		delete options["async"];
-		return async ? this.asyncCall(options) : this.syncCall(options);
+	call: function (options, callbacks) {
+		return callbacks ? this.asyncCall(options, callbacks) : this.syncCall(options);
 	},
 	
 	_syncCall: function (options) {},
 	
-	_asyncCall: function (options) {}
+	_asyncCall: function (options, callbacks) {}
 	
 });
 
@@ -3146,7 +3250,6 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 		return obj;
 	}
 	
-
 });
 
 BetaJS.Net = BetaJS.Net || {};
@@ -3242,7 +3345,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-03-10
+  betajs - v0.0.2 - 2014-04-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3486,8 +3589,13 @@ BetaJS.Queries.Constrained = {
 			else
 				throw e;
 		};
-		if (callbacks)
-			query_function.apply(query_context || this,[execute_query, execute_options, {success: success_call, exception: exception_call}]);
+		if (callbacks) 
+			query_function.apply(query_context || this, [execute_query, execute_options, {
+				success: success_call,
+				exception: exception_call,
+				sync: callbacks.sync,
+				context: callbacks.context || this
+			}]);
 		else
 			try {
 				var raw = query_function.apply(query_context || this, [execute_query, execute_options]);
@@ -3674,15 +3782,19 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	register: function (aq) {
 		this.__aqs[aq.cid()] = aq;
 		var query = aq.query();
-		var result = this._query(query);
-		while (result.hasNext()) {
-			var object = result.next();
-			if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
-				this.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()] = aq;
-				aq._add(object);
-			} else
-				this.insert(object);
-		}
+		this._query(query, {
+			context: this,
+			success: function (result) {
+				while (result.hasNext()) {
+					var object = result.next();
+					if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
+						this.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()] = aq;
+						aq._add(object);
+					} else
+						this.insert(object);
+				}
+			}
+		});
 	},
 	
 	unregister: function (aq) {
@@ -3755,6 +3867,7 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 /** @class */
 BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.Events.EventsMixin,
+	BetaJS.SyncAsync.SyncAsyncMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
 		
@@ -3764,32 +3877,14 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		this._id_key = options.id_key || "id";
 		this._create_ids = options.create_ids || false;
 		this._last_id = 1;
-		this._async_write = "async_write" in options ? options.async_write : false;
-		this._async_write = this._async_write && this._supports_async_write();
-		this._async_read = "async_read" in options ? options.async_read : false;
-		this._async_read = this._async_read && this._supports_async_read();
+		this._supportsSync = true;
+		this._supportsAsync = true;
 	},
 	
 	id_key: function () {
 		return this._id_key;
 	},
 	
-	_supports_async_read: function () {
-		return false;
-	},
-	
-	async_read: function () {
-		return this._async_read;
-	},
-			
-	_supports_async_write: function () {
-		return false;
-	},
-	
-	async_write: function () {
-		return this._async_write;
-	},
-
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -3841,139 +3936,51 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 
 	insert: function (data, callbacks) {
 		if (this._create_ids && !(this._id_key in data && data[this._id_key])) {
-			if (this._async_write)
-				throw new BetaJS.Stores.StoreException("Unsupported Creation of Ids");
 			while (this.get(this._last_id))
 				this._last_id++;
 			data[this._id_key] = this._last_id;
 		}
-		var self = this;
-		var success_call = function (row) {
-			self.trigger("insert", row);
-			if (callbacks && callbacks.success)
-				callbacks.success(row);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_write)
-			this._insert(data, {success: success_call, exception: exception_call});
-		else
-			try {
-				var row = this._insert(data);
-				success_call(row);
-				return row;
-			} catch (e) {
-				exception_call(e);
-			}
-		return null;
+		return this.then(this._insert, [data], callbacks, function (row, callbacks) {
+			this.trigger("insert", row);
+			BetaJS.SyncAsync.callback(callbacks, "success", row);
+		});
 	},
 	
-	insert_all: function (data) {
-		if (this._async_write) {
-			var i = -1;
-			var self = this;
-			var success = function () {
-				i++;
-				if (i < data.length)
-					self.insert(data[i], {success: success});
-			};
-			success();
-		} else {
-			var result = true;
-			BetaJS.Objs.iter(data, function (obj) {
-				result = result && this.insert(obj);
-			}, this);
-			return result;
-		}
-		return null;
+	insert_all: function (data, callbacks) {
+		var promises = BetaJS.Objs.map(data, function (obj) {
+			return this.promise(this.insert, [obj]);
+		}, this);
+		return this.join(promises, callbacks);
 	},
 
 	remove: function (id, callbacks) {
-		var self = this;
-		var success_call = function () {
-			self.trigger("remove", id);
-			if (callbacks && callbacks.success)
-				callbacks.success(id);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_write)
-			this._remove(id, {success: success_call, exception: exception_call});
-		else
-			try {
-				this._remove(id);
-				success_call();
-			} catch (e) {
-				exception_call(e);
-			}
+		return this.then(this._remove, [id], callbacks, function (result, callbacks) {
+			this.trigger("remove", id);
+			callbacks.success(id);
+		});
 	},
 	
 	get: function (id, callbacks) {
-		var self = this;
-		var success_call = function (row) {
-			if (callbacks && callbacks.success)
-				callbacks.success(row);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_read)
-			this._get(id, {success: success_call, exception: exception_call});
-		else
-			try {
-				var row = this._get(id);
-				success_call(row);
-				return row;
-			} catch (e) {
-				exception_call(e);
-			}
-		return null;
+		return this.delegate(this._get, [id], callbacks);
 	},
 	
 	update: function (id, data, callbacks) {
-		var self = this;
-		var success_call = function (row) {
-			self.trigger("update", row, data);
-			if (callbacks && callbacks.success)
-				callbacks.success(row, data);
-		};
-		var exception_call = function (e) {
-			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
-			else
-				throw e;
-		};
-		if (this._async_write)
-			this._update(id, data, {success: success_call, exception: exception_call});
-		else
-			try {
-				var row = this._update(id, data);
-				success_call(row);
-				return row;
-			} catch (e) {
-				exception_call(e);
-			}
-		return null;
+		return this.then(this._update, [id, data], callbacks, function (row, callbacks) {
+			this.trigger("update", row, data);
+			callbacks.success.call(callbacks.context || this, row, data);
+		});
 	},
 	
 	query: function (query, options, callbacks) {
-		return BetaJS.Queries.Constrained.emulate(
-			BetaJS.Queries.Constrained.make(query, options || {}),
-			this._query_capabilities(),
-			this._query,
-			this,
-			callbacks); 
+		var q = function (callbacks) {
+			return BetaJS.Queries.Constrained.emulate(
+				BetaJS.Queries.Constrained.make(query, options || {}),
+				this._query_capabilities(),
+				this._query,
+				this,
+				callbacks);			
+		};
+		return this.either(callbacks, q, q);
 	},
 	
 	_query_applies_to_id: function (query, id) {
@@ -3981,10 +3988,13 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 		return row && BetaJS.Queries.overloaded_evaluate(query, row);
 	},
 	
-	clear: function () {
-		var iter = this.query({});
-		while (iter.hasNext())
-			this.remove(iter.next().id);
+	clear: function (callbacks) {
+		return this.then(this.query, [{}, {}], callbacks, function (iter, callbacks) {
+			var promises = [];
+			while (iter.hasNext())
+				promises.push(this.remove, [iter.next().id]);
+			return this.join(promises, callbacks);
+		});
 	},
 	
 	_ensure_index: function (key) {
@@ -4027,6 +4037,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 		options = options || {};
 		options.create_ids = true;
 		this._inherited(BetaJS.Stores.AssocStore, "constructor", options);
+		this._supportsAsync = false;
 	},
 	
 	_insert: function (data) {
@@ -4108,6 +4119,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DumbStore", {
 		options = options || {};
 		options.create_ids = true;
 		this._inherited(BetaJS.Stores.DumbStore, "constructor", options);
+		this._supportsAsync = false;
 	},
 
 	_insert: function (data) {
@@ -4323,10 +4335,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			query_options: {}
 		}, options || {});
 		options.id_key = first._id_key;
-		options.async_write = first.async_write();
 		this.__first = first;
 		this.__second = second;
 		this._inherited(BetaJS.Stores.DualStore, "constructor", options);
+		this._supportsSync = first.supportsSync() && second.supportsSync();
+		this._supportsAsync = (first.supportsAsync() && second.supportsAsync()) || !this._supportsSync;
 		this.__create_options = BetaJS.Objs.extend({
 			start: "first", // "second"
 			strategy: "then" // "or", "single"
@@ -4363,14 +4376,6 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		return this.__second;
 	},
 
-	_supports_async_read: function () {
-		return false;
-	},
-	
-	_supports_async_write: function () {
-		return this.__first.async_write();
-	},
-
 	_insert: function (data, callbacks) {
 		var first = this.__first;
 		var second = this.__second;
@@ -4379,7 +4384,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			second = this.__first;
 		}
 		var strategy = this.__create_options.strategy;
-		if (this.async_write()) {
+		if (callbacks) {
 			if (strategy == "then")
 				first.insert(data, {
 					success: function (row) {
@@ -4419,7 +4424,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			second = this.__first;
 		}
 		var strategy = this.__update_options.strategy;
-		if (this.async_write()) {
+		if (callbacks) {
 			if (strategy == "then")
 				first.update(id, data, {
 					success: function (row) {
@@ -4459,7 +4464,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 			second = this.__first;
 		}
 		var strategy = this.__remove_options.strategy;
-		if (this.async_write()) {
+		if (callbacks) {
 			if (strategy == "then")
 				first.remove(id, {
 					success: function () {
@@ -4492,7 +4497,16 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		}
 	},
 
-	_get: function (id) {
+	_query_capabilities: function () {
+		return {
+			"query": true,
+			"sort": true,
+			"limit": true,
+			"skip": true
+		};
+	},
+
+	_get: function (id, callbacks) {
 		var first = this.__first;
 		var second = this.__second;
 		if (this.__get_options.start != "first") {
@@ -4504,41 +4518,42 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__get_options.or_on_null;
 		var result = null;
-		if (strategy == "or")
-			try {
-				result = first.get(id);
-				if (!result && or_on_null)
-					throw new {};
-				if (clone_second) {
-					try {
-						if (second.get(id))
-							clone_second = false;
-					} catch (e) {
-					}
-					if (clone_second)
-						second.insert(result);
+		if (strategy == "or") {
+			var fallback = function (callbacks) {
+				second.get(id, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+					if (result && clone)
+						first.delegate(first.insert, [result], callbacks);
+					else
+						this.callback(callbacks, "success", result);
+				}));
+			};
+			return first.then(first.get, [id], callbacks, function (result, callbacks) {
+				if (!result && or_on_null) {
+					fallback(callbacks);
+					return;
 				}
-				return result;
-			} catch (e) {
-				result = second.get(id);
-				if (result && clone)
-					first.insert(result);
-				return result;
-			}
-		else
-			return first.get(id);
+				if (clone_second) {
+					second.get(id, {
+						success: function (row) {
+							if (row)
+								this.callback(callbacks, "success", result);
+							else
+								second.insert(result, callbacks);
+						},
+						exception: function () {
+							second.insert(result, callbacks);
+						}
+					});
+				} else
+					this.callback(callbacks, "success", result);
+			}, function (error, callbacks) {
+				fallback(callbacks);
+			});
+		} else
+			return first.get(id, callbacks);
 	},
 
-	_query_capabilities: function () {
-		return {
-			"query": true,
-			"sort": true,
-			"limit": true,
-			"skip": true
-		};
-	},
-
-	_query: function (query, options) {
+	_query: function (query, options, callbacks) {
 		var first = this.__first;
 		var second = this.__second;
 		if (this.__query_options.start != "first") {
@@ -4550,41 +4565,58 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var clone_second = this.__get_options.clone_second;
 		var or_on_null = this.__query_options.or_on_null;
 		var result = null;
-		if (strategy == "or")
-			try {
-				result = first.query(query, options);
-				if (!result && or_on_null)
-					throw {};
-				if (clone_second) {
-					try {
-						if (second.get(query, options))
-							clone = false;
-					} catch (e) {
-					}
-					if (clone_second) {
-						result = result.asArray();
-						if ("cache_query" in second)
-							second.cache_query(query, options, result);
+		if (strategy == "or") {
+			var fallback = function (callbacks) {
+				second.query(query, options, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+					if (result && clone) {
+						arr = result.asArray();
+						result = new BetaJS.Iterators.ArrayIterator(arr);
+						var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
+							BetaJS.SyncAsync.callback(callbacks, "success", result);
+						});
+						if ("cache_query" in first)
+							first.cache_query(query, options, arr, cb);
 						else
-							second.insert_all(result);
-						result = new BetaJS.Iterators.ArrayIterator(result);
-					}
-				}
+							first.insert_all(arr, cb);				
+					} else
+						callbacks.success(result);
+				}));
 				return result;
-			} catch (e) {
-				result = second.query(query, options);
-				if (result && clone) {
-					result = result.asArray();
-					if ("cache_query" in first)
-						first.cache_query(query, options, result);
-					else
-						first.insert_all(result);
-					result = new BetaJS.Iterators.ArrayIterator(result);
+			};
+			var insert_second = function (result, callbacks) {
+				arr = result.asArray();
+				result = new BetaJS.Iterators.ArrayIterator(arr);
+				var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
+					BetaJS.SyncAsync.callback(callbacks, "success", result);
+				});
+				if ("cache_query" in second)
+					second.cache_query(query, options, arr, cb);
+				else
+					second.insert_all(arr, cb);				
+			};
+			return first.then(first.query, [query, options], callbacks, function (result, callbacks) {
+				if (!result && or_on_null) {
+					fallback(callbacks);
+					return;
 				}
-				return result;
-			}
-		else
-			return first.query(query, options);
+				if (clone_second) {
+					second.query(query, options, {
+						success: function (result2) {
+							if (result2) 
+								this.callback(callbacks, "success", result);
+							else
+								insert_second(result, callbacks);
+						}, exception: function () {
+							insert_second(result, callbacks);
+						}
+					});
+				} else
+					this.callback(callbacks, "success", result);
+			}, function (error, callbacks) {
+				fallback(callbacks);
+			});
+		} else
+			return first.query(query, options, callbacks);
 	}
 
 });
@@ -4684,7 +4716,7 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 		throw new BetaJS.Stores.StoreCacheException();
 	},
 	
-	cache_query: function (query, options, result) {
+	cache_query: function (query, options, result, callbacks) {
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		this.__queries[encoded] = {};
@@ -4693,6 +4725,7 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 			this.insert(row);
 			this.__queries[encoded][row[this.id_key()]] = row;
 		}
+		this.callback(callbacks, "success", result);
 	},
 	
 	insert: function (row, callbacks) {
@@ -4745,38 +4778,44 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 		return key in this.__value_decoding ? this.__value_decoding[key](value) : value;
 	},	
 
-	_insert: function (data) {
-		return this.decode_object(this.__store.insert(this.encode_object(data)));
-	},
-	
-	_remove: function (id) {
-		return this.__store.remove(this.encode_value(this._id_key, id));
-	},
-
-	_get: function (id) {
-		return this.decode_object(this.__store.get(this.encode_value(this._id_key, id)));
-	},
-	
-	_update: function (id, data) {
-		return this.decode_object(this.__store.update(this.encode_value(this._id_key, id), this.encode_object(data)));
-	},
-	
 	_query_capabilities: function () {
 		return this.__store._query_capabilities();
 	},
 	
-	_query: function (query, options) {
-		var self = this;
-		var result = this.__store.query(this.encode_object(query), options);
-		return new BetaJS.Iterators.MappedIterator(result, function (row) {
-			return self.decode_object(row);
+	_ensure_index: function (key) {
+		return this.__store.ensure_index(key);
+	},
+	
+	_insert: function (data, callbacks) {
+		return this.then(this.__store, this.__store.insert, [this.encode_object(data)], callbacks, function (result, callbacks) {
+			callbacks.success(this.decode_object(result));
 		});
 	},
 	
-	_ensure_index: function (key) {
-		return this.__store.ensure_index(key);
-	}
+	_remove: function (id, callbacks) {
+		return this.delegate(this.__store, this.__store.remove, [this.encode_value(this._id_key, id)], callbacks);
+	},
+
+	_get: function (id, callbacks) {
+		return this.then(this.__store, this.__store.get, [this.encode_value(this._id_key, id)], callbacks, function (result, callbacks) {
+			callbacks.success(this.decode_object(result));
+		});
+	},
 	
+	_update: function (id, data, callbacks) {
+		return this.then(this.__store, this.__store.update, [this.encode_value(this._id_key, id), this.encode_object(data)], callbacks, function (result, callbacks) {
+			callbacks.success(this.decode_object(result));
+		});
+	},
+	
+	_query: function (query, options, callbacks) {
+		return this.then(this.__store, this.__store.query, [this.encode_object(query), options], callbacks, function (result, callbacks) {
+			var mapped = new BetaJS.Iterators.MappedIterator(result, function (row) {
+				return this.decode_object(row);
+			}, this);
+			callbacks.success(mapped);
+		});
+	}		
 
 });
 
@@ -4786,19 +4825,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 		this.__store = store;
 		options = options || {};
 		options.id_key = store.id_key();
-		options.async_read = store.async_read;
-		options.async_write = store.async_write;
 		this._inherited(BetaJS.Stores.PassthroughStore, "constructor", options);
+		this._supportsAsync = store.supportsAsync();
+		this._supportsSync = store.supportsSync();
 	},
 	
-	_supports_async_read: function () {
-		return this.__store._supports_async_read();
-	},
-			
-	_supports_async_write: function () {
-		return this.__store._supports_async_read();
-	},
-
 	_query_capabilities: function () {
 		return this.__store._query_capabilities();
 	},
@@ -4811,16 +4842,16 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 		return this.__store.remove(id, callbacks);
 	},
 	
-	_get: function (id) {
-		return this.__store.get(id);
+	_get: function (id, callbacks) {
+		return this.__store.get(id, callbacks);
 	},
 	
 	_update: function (id, data, callbacks) {
 		return this.__store.update(id, data, callbacks);
 	},
 	
-	_query: function (query, options) {
-		return this.__store.query(query, options);
+	_query: function (query, options, callbacks) {
+		return this.__store.query(query, options, callbacks);
 	},
 	
 	_ensure_index: function (key) {
@@ -4838,6 +4869,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		this.__id_to_queue = {};
 		this.__combine_updates = "combine_updates" in options ? options.combine_updates : true;
 		this.__auto_clear_updates = "auto_clear_updates" in options ? options.auto_clear_updates : true;
+		this.__flushing = false;
 		this.__cache = {};
 		if (this.__auto_clear_updates)
 			this.on("remove", function (id) {
@@ -4855,13 +4887,24 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 	__remove_update: function (id) {
 		var revs = this.__id_to_queue[id];
 		delete this.__id_to_queue[id];
-		for (var rev in rev)
+		for (var rev in revs)
 			delete this.__update_queue[rev];
 		delete this.__cache[id];
 	},
 	
+	__remove_revision: function (revision_id) {
+		var revision = this.__update_queue[revision_id];
+		delete this.__update_queue[revision_id];
+		var revs = this.__id_to_queue[revision.id];
+		delete revs[revision_id];
+		if (BetaJS.Types.is_empty(revs)) {
+			delete this.__id_to_queue[revision.id];
+			delete this.__cache[revision.id];
+		}
+	},
+	
 	__insert_update: function (id, data) {
-		if (this.__combine_updates && this.__id_to_queue[id]) {
+		if (this.__combine_updates && this.__id_to_queue[id] && !this.__flushing) {
 			var comm = {};
 			for (var rev in this.__id_to_queue[id]) {
 				comm = BetaJS.Objs.extend(comm, this.__update_queue[rev].data);
@@ -4883,47 +4926,49 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		this.trigger("queue:update", id, data);
 	},
 	
-	flush: function (callbacks, revision_id) {
-		if (!revision_id)
-			revision_id = this.__revision_id;
-		if (this.async_write()) {
-			var first = null;
-			var self = this;
-			for (var key in this.__update_queue) {
-				first = this.__update_queue[key];
-				break;
-			}
-			if (first) {
-				if (first.revision_id >= revision_id)
+	flush: function (callbacks) {
+		if (this.__flushing)
+			return;
+		this.__flushing = true;
+		var revision_id = this.__revision_id;
+		if (callbacks) {
+			var next = function () {
+				var item = BetaJS.Objs.peek(this.__update_queue);
+				if (!item || item.revision_id >= revision_id) {
+					BetaJS.SyncAsync.callback(callbacks, "success");
+					this.__flushing = false;
 					return;
-				this.__store.update(first.id, first.data, {
-					exception: callbacks.exception,
+				}
+				this.__store.update(item.id, item.data, {
+					context: this,
 					success: function () {
-						delete this.__update_queue[first.revision_id];
-						delete this.__id_to_queue[first.id][first.revision_id];
-						self.flush(callbacks, revision_id);
+						this.__remove_revision(item.revision_id);
+						next.apply(this);
+					},
+					exception: function (e) {
+						BetaJS.SyncAsync.callback(callbacks, "exception", e);
+						this.__flushing = false;
 					}
 				});
-			} else {
-				if (callbacks)
-					callbacks.success();
-			}
+			};
+			next.apply(this);
 		} else {
-			try {
-				BetaJS.Objs.iter(this.__update_queue, function (item) {
-					if (item.revision_id >= revision_id)
-						return false;
+			var exc = null;
+			while (true) {
+				var item = BetaJS.Objs.peek(this.__update_queue);
+				if (!item || item.revision_id >= revision_id)
+					break;
+				try {
 					this.__store.update(item.id, item.data);
-					return true;
-				}, this);
-				if (callbacks && callbacks.success)
-					callbacks.success();
-			} catch (e) {
-				if (callbacks && callbacks.exception)
-					callbacks.exception(e);
-				else
-					throw e;
+					this.__remove_revision(item.revision_id);
+				} catch (e) {
+					exc = e;
+					break;
+				}
 			}
+			this.__flushing = false;
+			if (exc)
+				throw exc;
 		}
 	},
 	
@@ -4961,12 +5006,21 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 		options = options || {};
 		this.__stores = {};
 		this.__changed = false;
+		this.__flushing = false;
+		this.__async = "async" in options ? options.async : false;
 		this.__min_delay = options.min_delay ? options.min_delay : null;
 		this.__max_delay = options.max_delay ? options.max_delay : null;
-		if (this.__min_delay || this.__max_delay)
+		if (this.__min_delay || this.__max_delay) {
 			this.on("changed", function () {
-				this.flush();
+				if (this.__async)
+					this.flush({
+						success: function () {},
+						exception: function () {}
+					});
+				else
+					this.flush();
 			}, this, {min_delay: this.__min_delay, max_delay: this.__max_delay});
+		}
 	},
 	
 	destroy: function () {
@@ -4998,39 +5052,64 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	},
 	
 	flush: function (callbacks) {
+		if (this.__flushing)
+			return;
+		this.__flushing = true;
 		this.trigger("flush_start");
 		this.trigger("flush");
-		var success_count = 0;
-		var count = BetaJS.Objs.count(this.__stores);
-		var self = this;
-		BetaJS.Objs.iter(this.__stores, function (store) {
-			store.flush({
-				exception: function (e) {
-					self.trigger("flush_error");
-					if (callbacks && callbacks.exception)
-						callbacks.exception(e);
-					else
-						throw e;
-				},
+		if (callbacks) {
+			var promises = [];
+			BetaJS.Objs.iter(this.__stores, function (store) {
+				promises.push(BetaJS.SyncAsync.promise(store, store.flush));
+			});
+			BetaJS.SyncAsync.join(promises, {
+				context: this,
 				success: function () {
-					success_count++;
-					if (success_count == count) {
-						self.trigger("flush_end");
-						if (callbacks && callbacks.success)
-							callbacks.success();
-					}
+					this.trigger("flush_end");
+					this.__flushing = false;
+					BetaJS.SyncAsync.callback(callbacks, "success");
+					this.__changed = false;
+					BetaJS.Objs.iter(this.__stores, function (store) {
+						this.__changed = this.__changed || store.changed();
+					}, this);
+				},
+				exception: function (exc) {
+					this.trigger("flush_error");
+					this.__flushing = false;
+						BetaJS.SyncAsync.callback(callbacks, "exception", exc);
+					this.__changed = false;
+					BetaJS.Objs.iter(this.__stores, function (store) {
+						this.__changed = this.__changed || store.changed();
+					}, this);
 				}
 			});
-		}, this);
-		this.__changed = false;
-		BetaJS.Objs.iter(this.__stores, function (store) {
-			this.__changed = this.__changed || store.changed();
-		}, this);
+		} else {
+			var exc = null;
+			BetaJS.Objs.iter(this.__stores, function (store) {
+				try {
+					store.flush();
+				} catch (e) {
+					exc = e;
+					return false;
+				}
+				return true;
+			}, this);
+			this.__flushing = false;
+			if (exc) {
+				this.trigger("flush_error");
+				throw exc;
+			} else
+				this.trigger("flush_end");
+			this.__changed = false;
+			BetaJS.Objs.iter(this.__stores, function (store) {
+				this.__changed = this.__changed || store.changed();
+			}, this);
+		}
 	}	
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2014-03-10
+  betajs - v0.0.2 - 2014-03-30
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5376,7 +5455,9 @@ BetaJS.Modelling.SchemedProperties.extend("BetaJS.Modelling.AssociatedProperties
 	}
 
 });
-BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
+BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
+	BetaJS.SyncAsync.SyncAsyncMixin,
+	{
 	
 	constructor: function (attributes, options) {
 		options = options || {};
@@ -5412,9 +5493,9 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 		return this.__removed;
 	},
 
-	update: function (data, options) {
+	update: function (data, options, callbacks) {
 		this.setAll(data, {silent: true});
-		this.save(options);
+		this.save(options, callbacks);
 	},
 
 	_afterSet: function (key, value, old_value, options) {
@@ -5438,43 +5519,36 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", {
 	_before_create: function () {
 	},
 	
-	save: function (options) {
-		var self = this;
-		var opts = BetaJS.Objs.clone(options || {}, 1);
+	save: function (callbacks) {
 		if (this.__new)
 			this._before_create();
-		opts.success = function () {
-			self.trigger("save");		
-			self.__saved = true;
-			var was_new = self.__new;
-			self.__new = false;
+		return this.then(this.__table, this.__table._model_save, [this], callbacks, function (result, callbacks) {
+			this.trigger("save");
+			this.__saved = true;
+			var was_new = this.__new;
+			this.__new = false;
 			if (was_new)
-				self._after_create();
-			if (options && options.success)
-				options.success();
-		};
-		return this.__table._model_save(this, opts);
+				this._after_create();
+			this.callback(callbacks, "success", result);
+		});
 	},
 	
-	remove: function (options) {
-		var self = this;
-		var opts = BetaJS.Objs.clone(options || {}, 1);
-		opts.success = function () {
-			self.trigger("remove");		
-			self.__removed = true;
-			if (options && options.success)
-				options.success();
-		};
-		return this.__table._model_remove(this, opts);
+	remove: function (callbacks) {
+		return this.then(this.__table, this.__table._model_remove, [this], callbacks, function (result, callbacks) {
+			this.trigger("remove");		
+			this.__removed = true;
+			this.callback(callbacks, "success", result);
+		});
 	},
 	
 	table: function () {
 		return this.__table;
 	}
 	
-});
+}]);
 BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
+	BetaJS.SyncAsync.SyncAsyncMixin,
 	{
 
 	constructor: function (store, model_type, options) {
@@ -5488,22 +5562,12 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			model_cache_size: null,
 			// Attribute that describes the type
 			type_column: null,
-			// Removing options
-			remove_exception: true,
 			// Creation options
 			auto_create: false,
-			create_exception: true,
-			invalid_create_exception: true,
-			invalid_create_save: false,
-			greedy_create: false,
 			// Validation options
 			store_validation_conversion: true,
 			// Update options
-			auto_update: true,
-			update_exception: true,
-			invalid_update_exception: true,
-			invalid_update_save: false,
-			greedy_update: false
+			auto_update: true
 		}, options || {});
 		this.__models_by_cid = new BetaJS.Classes.ObjectCache({ size: this.__options.model_cache_size });
 		this._auto_destroy(this.__models_by_cid);
@@ -5513,14 +5577,6 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		}, this);
 	},
 	
-	async_read: function () {
-		return this.__store.async_read();
-	},
-	
-	async_write: function () {
-		return this.__store.async_write();
-	},
-
 	_model_register: function (model) {
 		if (this.hasModel(model))
 			return;
@@ -5546,184 +5602,108 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		return this.__models_by_cid.get(model) !== null;
 	},
 
-	_model_remove: function (model, options) {
+	_model_remove: function (model, callbacks) {
 		if (!this.hasModel(model))
 			return false;
-		var self = this;
-		var callback = {
-			success : function () {
-				if (options && options.success)
-					options.success();
-				if (options && options.complete)
-					options.complete();
-				self.trigger("remove", model);
-				model.destroy();
-				return true;
-			},
-			exception : function (e) {
-				if (options && options.exception)
-					options.exception(e);
-				if (options && options.complete)
-					options.complete();
-				if ((!options || !options.exception) && self.__options.remove_exception)
-					throw e;
-				return false;
-			}
-		};
-		if (this.async_write())
-			this.__store.remove(model.id(), callback);
-		else try {
-			this.__store.remove(model.id());
-			return callback.success();
-		} catch (e) {
-			return callback.exception(e);
-		}
-		return false;
+		return this.then(this.__store, this.__store.remove, [model.id()], callbacks, function (result, callbacks) {
+			this.trigger("remove", model);
+			model.destroy();
+			this.callback(callbacks, "success", true);
+		}, function (error, callbacks) {
+			this.callback(callbacks, "exception", error);
+		});
 	},
 
-	_model_save: function (model, options) {
-		return model.isNew() ? this._model_create(model, options) : this._model_update(model, options);
+	_model_save: function (model, callbacks) {
+		return model.isNew() ? this._model_create(model, callbacks) : this._model_update(model, callbacks);
 	},
 	
 	__exception_conversion: function (model, e) {
 		return this.__options.store_validation_conversion ? model.validation_exception_conversion(e) : e;
 	},
 	
-	_model_create: function (model, options) {
+	_model_create: function (model, callbacks) {
 		if (!this.hasModel(model) || !model.isNew())
 			return false;
-		var self = this;
-		var is_valid = model.validate();
-		if (!is_valid) {
+		if (!model.validate()) {
 		 	var e = new BetaJS.Modelling.ModelInvalidException(model);
-			if (options && options.exception)
-				options.exception(e);
-			if (options && options.complete)
-				options.complete();
-			 if ((!options || !options.exception) && self.__options.invalid_create_exception)
-				throw e;
-			 if (!this.__options.invalid_create_save)
-			 	return false;
+		 	if (callbacks)
+		 		this.callback(callbacks, "exception", e);
+		 	else
+		 		throw e;
 		}
-		var attrs = this.__options.greedy_create ? model.properties_by(true) : model.get_all_properties();
-		attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(attrs);
+		var attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(model.get_all_properties());
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
-		var callback = {
-			success : function (confirmed) {
-				if (!(model.cls.primary_key() in confirmed))
-					return callback.exception(new BetaJS.Modelling.ModelMissingIdException(model));
-				self.__models_by_id[confirmed[model.cls.primary_key()]] = model;
-				if (!self.__options.greedy_create) {
-					for (var key in model.properties_by(false))
-						delete confirmed[key];
-				}
-				model.setAll(confirmed, {no_change: true, silent: true});
-				if (is_valid)
-					delete self.__models_changed[model.cid()];
-				self.trigger("create", model);
-				self.trigger("save", model);
-				if (options && options.success)
-					options.success(confirmed);
-				if (options && options.complete)
-					options.complete();
-				return true;		
-			},
-			exception : function (e) {
-				e = BetaJS.Exceptions.ensure(e);
-				e = self.__exception_conversion(model, e);
-				if (options && options.exception)
-					options.exception(e);
-				if (options && options.complete)
-					options.complete();
-				if ((!options || !options.exception) && self.__options.create_exception)
-					throw e;
-				return false;
-			}
-		};
-		if (this.async_write())
-			this.__store.insert(attrs, callback);
-		else try {
-			var confirmed = this.__store.insert(attrs);
-			return callback.success(confirmed);		
-		} catch (e) {
-			return callback.exception(e);
-		}
-		return true;
+		return this.then(this.__store, this.__store.insert, [attrs], callbacks, function (confirmed, callbacks) {
+			if (!(model.cls.primary_key() in confirmed))
+				return this.callback(callbacks, "exception", new BetaJS.Modelling.ModelMissingIdException(model));
+			this.__models_by_id[confirmed[model.cls.primary_key()]] = model;
+			model.setAll(confirmed, {no_change: true, silent: true});
+			delete this.__models_changed[model.cid()];
+			this.trigger("create", model);
+			this.trigger("save", model);
+			return true;		
+		}, function (e, callbacks) {
+			e = BetaJS.Exceptions.ensure(e);
+			e = self.__exception_conversion(model, e);
+			this.callback(callbacks, "exception", e);
+		});
 	},
 
-
-
-	_model_update: function (model, options) {
+	_model_update: function (model, callbacks) {
 		if (!this.hasModel(model) || model.isNew())
 			return false;
-		var self = this;
-		var is_valid = model.validate();
-		if (!is_valid) {
+		if (!model.validate()) {
 		 	var e = new BetaJS.Modelling.ModelInvalidException(model);
-			if (options && options.exception)
-				options.exception(e);
-			if (options && options.complete)
-				options.complete();
-			 if ((!options || !options.exception) && self.__options.invalid_update_exception)
-				throw e;
-			 if (!this.__options.invalid_update_save)
-			 	return false;
+		 	if (callbacks)
+		 		this.callback(callbacks, "exception", e);
+		 	else
+		 		throw e;
 		}
-		var attrs = this.__options.greedy_update ? model.properties_changed(true) : model.properties_changed();
-		attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(attrs);
-		var callback = {
-			success : function (confirmed) {
-				if (!self.__options.greedy_update) {
-					for (var key in model.properties_changed(false))
-						delete confirmed[key];
-				}
-				model.setAll(confirmed, {no_change: true, silent: true});
-				if (is_valid)
-					delete self.__models_changed[model.cid()];
-				self.trigger("update", model);
-				self.trigger("save", model);
-				if (options && options.success)
-					options.success(confirmed);
-				if (options && options.complete)
-					options.complete();
-				return true;		
-			},
-			exception : function (e) {
-				if (options && options.exception)
-					options.exception(e);
-				if (options && options.complete)
-					options.complete();
-				if ((!options || !options.exception) && self.__options.update_exception)
-					throw e;
-				return false;
-			}
-		};
-		if (this.async_write() && !BetaJS.Types.is_empty(attrs))
-			this.__store.update(model.id(), attrs, callback);
-		else try {
-			var confirmed = BetaJS.Types.is_empty(attrs) ? {} : this.__store.update(model.id(), attrs);
-			return callback.success(confirmed);		
-		} catch (e) {
-			return callback.exception(e);
+		var attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(model.properties_changed());
+		if (BetaJS.Types.is_empty(attrs)) {
+			if (callbacks)
+				this.callback(callbacks, "success", attrs);
+			return attrs;
 		}
-		return true;
+		return this.then(this.__store, this.__store.update, [model.id(), attrs], callbacks, function (confirmed, callbacks) {
+			model.setAll(confirmed, {no_change: true, silent: true});
+			delete this.__models_changed[model.cid()];
+			this.trigger("update", model);
+			this.trigger("save", model);
+			this.callback(callbacks, "success", confirmed);
+			return confirmed;		
+		}, function (e, callbacks) {
+			e = BetaJS.Exceptions.ensure(e);
+			e = this.__exception_conversion(model, e);
+			this.callback(callbacks, "exception", e);
+			return false;
+		});
 	},
 
-	_model_set_value: function (model, key, value, options) {
+	_model_set_value: function (model, key, value, callbacks) {
 		this.__models_changed[model.cid()] = model;
 		this.trigger("change", model, key, value);
 		this.trigger("change:" + key, model, value);
 		if (this.__options.auto_update)
-			return model.save(options);
+			return model.save(callbacks);
 	},
-		
-	save: function () {
-		var result = true;
-		BetaJS.Objs.iter(this.__models_changed, function (obj, id) {
-			result = obj.save() && result;
-		});
-		return result;
+	
+	save: function (callbacks) {
+		if (callbacks) {
+			var promises = [];
+			BetaJS.Objs.iter(this.__models_changed, function (obj) {
+				promises.push(obj.promise(obj.save));
+			}, this);
+			return this.join(promises, callbacks);
+		} else {
+			var result = true;
+			BetaJS.Objs.iter(this.__models_changed, function (obj, id) {
+				result = obj.save() && result;
+			});
+			return result;
+		}
 	},
 	
 	primary_key: function () {
@@ -5747,36 +5727,42 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		return model;
 	},
 	
-	findById: function (id) {
-		if (this.__models_by_id[id])
+	findById: function (id, callbacks) {
+		if (this.__models_by_id[id]) {
+			if (callbacks)
+				this.callback(callbacks, "success", this.__models_by_id[id]);
 			return this.__models_by_id[id];
-		else
-			return this.__materialize(this.__store.get(id));
+		} else
+			return this.then(this.__store, this.__store.get, [id], callbacks, function (attrs, callbacks) {
+				this.callback(callbacks, "success", this.__materialize(this.__store.get(id)));
+			});
 	},
 
-	findBy: function (query) {
-		return this.allBy(query, {limit: 1}).next();
+	findBy: function (query, callbacks) {
+		return this.then(this, this.allBy, [query, {limit: 1}], callbacks, function (iterator, callbacks) {
+			this.callback(callbacks, "success", iterator.next());
+		});
 	},
 
-	all: function (options) {
-		return this.allBy({}, options);
+	all: function (options, callbacks) {
+		return this.allBy({}, options, callbacks);
 	},
 	
-	allBy: function (query, options) {
-		var iterator = this.__store.query(query, options);
-		var self = this;
-		var mapped_iterator = new BetaJS.Iterators.MappedIterator(iterator, function (obj) {
-			return self.__materialize(obj);
+	allBy: function (query, options, callbacks) {
+		return this.then(this.__store, this.__store.query, [query, options], callbacks, function (iterator, callbacks) {
+			var mapped_iterator = new BetaJS.Iterators.MappedIterator(iterator, function (obj) {
+				return this.__materialize(obj);
+			}, this);
+			this.callback(callbacks, "success", mapped_iterator);
 		});
-		return mapped_iterator; 
 	},
 	
 	active_query_engine: function () {
 		if (!this._active_query_engine) {
 			var self = this;
 			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
-			this._active_query_engine._query = function (query) {
-				return self.allBy(query);
+			this._active_query_engine._query = function (query, callbacks) {
+				return self.allBy(query, {}, callbacks);
 			};
 			this.on("create", function (object) {
 				this._active_query_engine.insert(object);
@@ -5807,7 +5793,9 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	}
 	
 }]);
-BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
+BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", [
+	BetaJS.SyncAsync.SyncAsyncMixin,
+	{
 
 	constructor: function (model, options) {
 		this._inherited(BetaJS.Modelling.Associations.Association, "constructor");
@@ -5827,25 +5815,31 @@ BetaJS.Class.extend("BetaJS.Modelling.Associations.Association", {
 	_change_id: function () {},
 	
 	__delete_cascade: function () {
-		var iter = BetaJS.Iterators.ensure(this.yield());
-		while (iter.hasNext())
-			iter.next().remove();
+		this.yield({
+			success: function (iter) {
+				iter = BetaJS.Iterators.ensure(iter).toArray();
+				var promises = [];
+				while (iter.hasNext()) {
+					var obj = iter.next();
+					promises.push(obj.promise(obj.remove));
+				}
+				this.join(promises, {success: function () {}});
+			}
+		});
 	},
 	
-	yield: function () {
-		if (this.__cache)
-			return this.__cache;
-		var obj = this._yield();
+	yield: function (callbacks) {
 		if (this._options["cached"])
-			this.__cache = obj;
-		return obj;
+			return this.eitherFactory("__cache", callbacks, this._yield, this._yield);
+		else
+			return this._yield(callbacks);
 	},
 	
 	invalidate: function () {
 		delete this["__cache"];
 	}
 
-});
+}]);
 BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.TableAssociation", {
 
 	constructor: function (model, foreign_table, foreign_key, options) {
@@ -5873,21 +5867,29 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 		return this._primary_key ? this._model.get(this._primary_key) : this._model.id();
 	},
 
-	_yield: function () {
-		return this.allBy({});
+	_yield: function (callbacks) {
+		return this.allBy({}, callbacks);
 	},
 
-	yield: function () {
+	yield: function (callbacks) {
 		if (!this._options["cached"])
-			return this._yield();
-		if (!this.__cache)
-			this.__cache = this._yield().asArray();
-		BetaJS.Objs.iter(this.__cache, function (model) {
-			model.on("destroy", function () {
-				this.invalidate();
-			}, this);
-		}, this);
-		return new BetaJS.Iterators.ArrayIterator(this.__cache);
+			return this._yield(callbacks);
+		if (this.__cache) {
+			var iter = new BetaJS.Iterators.ArrayIterator(this.__cache);
+			if (callbacks)
+				this.callback(callbacks, "success", iter);
+			return iter;
+		} else {
+			return this.then(this._yield, callbacks, function (result, callbacks) {
+				this.__cache = result.asArray();
+				BetaJS.Objs.iter(this.__cache, function (model) {
+					model.on("destroy", function () {
+						this.invalidate();
+					}, this);
+				}, this);
+				this.callback(callbacks, "success", new BetaJS.Iterators.ArrayIterator(this.__cache));
+			});
+		}
 	},
 	
 	invalidate: function () {
@@ -5897,55 +5899,79 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 		this._inherited(BetaJS.Modelling.Associations.HasManyAssociation, "invalidate");
 	},
 
-	findBy: function (query) {
+	findBy: function (query, callbacks) {
 		query[this._foreign_key] = this._id();
-		return this._foreign_table.findBy(query);
+		return this._foreign_table.findBy(query, callbacks);
 	},
 
-	allBy: function (query) {
-		query[this._foreign_key] = this._id();
-		return this._foreign_table.allBy(query);
+	allBy: function (query, callbacks, id) {
+		query[this._foreign_key] = id ? id : this._id();
+		return this._foreign_table.allBy(query, {}, callbacks);
 	},
 
 	_change_id: function (new_id, old_id) {
-		var objects = this._yield();
-		while (objects.hasNext()) {
-			var object = objects.next();
-			object.set(this._foreign_key, new_id);
-			object.save();
-		}
+		this.allBy({}, {
+			content: this,
+			success: function (objects) {
+				while (objects.hasNext()) {
+					var object = objects.next();
+					object.set(this._foreign_key, new_id);
+					object.save();
+				}
+			}
+		}, old_id);
 	}
 
 });
 BetaJS.Modelling.Associations.HasManyAssociation.extend("BetaJS.Modelling.Associations.HasManyThroughArrayAssociation", {
 
-	_yield: function () {
-		var result = [];
-		BetaJS.Objs.iter(this._model.get(this._foreign_key), function ($id) {
-			var item = this._foreign_table.findById($id);
-			if (item)
-				result.push(item);
-		}, this);
-		return result;
+	_yield: function (callbacks) {
+		if (callbacks) {
+			var promises = [];		
+			BetaJS.Objs.iter(this._model.get(this._foreign_key), function (id) {
+				promises.push(this._foreign_table.promise(this._foreign_table.findById, [id]));
+			}, this);
+			return this.join(promises, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+				this.callback(callbacks, "success", BetaJS.Objs.filter(result, function (item) {
+					return !!item;
+				}));
+			}));
+		} else {
+			var result = [];		
+			BetaJS.Objs.iter(this._model.get(this._foreign_key), function (id) {
+				var item = this._foreign_table.findById(id);
+				if (item)
+					result.push(item);
+			}, this);
+			return result;
+		}
 	},
 
-	yield: function () {
+	yield: function (callbacks) {
 		if (!this._options["cached"])
-			return new BetaJS.Iterators.ArrayIterator(this._yield());
-		if (!this.__cache)
-			this.__cache = this._yield();
-		BetaJS.Objs.iter(this.__cache, function (model) {
-			model.on("destroy", function () {
-				this.invalidate();
-			}, this);
-		}, this);
-		return new BetaJS.Iterators.ArrayIterator(this.__cache);
+			return new BetaJS.Iterators.ArrayIterator(this._yield(callbacks));
+		if (this.__cache) {
+			var iter = new BetaJS.Iterators.ArrayIterator(this.__cache);
+			if (callbacks)
+				this.callback(callbacks, "success", iter);
+			return iter;
+		} else {
+			return this.then(this._yield, callbacks, function (result, callbacks) {
+				this.__cache = result;
+				BetaJS.Objs.iter(this.__cache, function (model) {
+					model.on("destroy", function () {
+						this.invalidate();
+					}, this);
+				}, this);
+				this.callback(callbacks, "success", new BetaJS.Iterators.ArrayIterator(this.__cache));
+			});
+		}
 	}
 
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.HasOneAssociation", {
 
-	_yield: function (id) {
+	_yield: function (callbacks, id) {
 		var query = {};
 		if (id)
 			query[this._foreign_key] = id;
@@ -5953,39 +5979,43 @@ BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associat
 			query[this._foreign_key] = this._model.get(this._primary_key);
 		else
 			query[this._foreign_key] = this._model.id();
-		var model = this._foreign_table.findBy(query);
-		if (model)
-			model.on("destroy", function () {
-				this.invalidate();
-			}, this);
-		return model;
+		return this.then(this._foreign_table, this._foreign_table.findBy, [query], callbacks, function (model, callbacks) {
+			if (model)
+				model.on("destroy", function () {
+					this.invalidate();
+				}, this);
+			this.callback(callbacks, "success", model);
+		});
 	},
 	
 	_change_id: function (new_id, old_id) {
-		var object = this._yield(old_id);
-		if (object) {
-			object.set(this._foreign_key, new_id);
-			object.save();
-		}
+		this._yield({
+			context: this,
+			success: function (object) {
+				if (object) {
+					object.set(this._foreign_key, new_id);
+					object.save();
+				}
+			}
+		}, old_id);
 	}
 
 });
 BetaJS.Modelling.Associations.TableAssociation.extend("BetaJS.Modelling.Associations.BelongsToAssociation", {
 	
-	_yield: function () {
-		var model = null;
-		if (this._primary_key) {
-			var obj = {};
-			obj[this._primary_key] = this._model.get(this._foreign_key);
-			model = this._foreign_table.findBy(obj);
-		}
-		else
-			model = this._foreign_table.findById(this._model.get(this._foreign_key));
-		if (model)
-			model.on("destroy", function () {
-				this.invalidate();
-			}, this);
-		return model;
+	_yield: function (callbacks) {
+		var success = function (model, callbacks) {
+			if (model)
+				model.on("destroy", function () {
+					this.invalidate();
+				}, this);
+			this.callback(callbacks, "success", model);
+		};
+		if (!this._primary_key)
+			return this.then(this._foreign_table, this._foreign_table.findById, [this._model.get(this._foreign_key)], callbacks, success);
+		var obj = {};
+		obj[this._primary_key] = this._model.get(this._foreign_key);
+		return this.then(this._foreign_table, this._foreign_table.findBy, [obj], callbacks, success);
 	}
 	
 });
@@ -6006,8 +6036,8 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 			}, this);
 	},
 	
-	_yield: function () {
-		return this._model.assocs[this._options.conditional(this._model)];
+	_yield: function (callbacks) {
+		return this._model.assocs[this._options.conditional(this._model)].yield(callbacks);
 	}
 
 });
@@ -6021,7 +6051,7 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 			this._primary_key = options.primary_key;
 	},
 
-	_yield: function (id) {
+	_yield: function (callbacks, id) {
 		var query = {};
 		if (id)
 			query[this._foreign_key] = id;
@@ -6030,20 +6060,24 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 		else
 			query[this._foreign_key] = this._model.id();
 		var foreign_table = BetaJS.Scopes.resolve(this._model.get(this._foreign_table_key));
-		var model = foreign_table ? foreign_table.findBy(query) : null;
-		if (model)
-			model.on("destroy", function () {
-				this.invalidate();
-			}, this);
-		return model;
+		return this.then(foreign_table, foreign_table.findBy, [query], callbacks, function (model, callbacks) {
+			if (model)
+				model.on("destroy", function () {
+					this.invalidate();
+				}, this);
+			this.callback(callbacks, "success", model);
+		});
 	},
 	
 	_change_id: function (new_id, old_id) {
-		var object = this._yield(old_id);
-		if (object) {
-			object.set(this._foreign_key, new_id);
-			object.save();
-		}
+		this._yield({
+			success: function (object) {
+				if (object) {
+					object.set(this._foreign_key, new_id);
+					object.save();
+				}
+			}
+		}, old_id);
 	}
 
 });
@@ -6142,7 +6176,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-03-26
+  betajs - v0.0.2 - 2014-03-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6166,7 +6200,7 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 		return result;
 	},
 	
-	_asyncCall: function (options) {
+	_asyncCall: function (options, callbacks) {
 		if (BetaJS.Browser.Info.isInternetExplorer() && BetaJS.Browser.Info.internetExplorerVersion() <= 9)
 			BetaJS.$.support.cors = true;
 		BetaJS.$.ajax({
@@ -6176,10 +6210,11 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 			dataType: options.decodeType ? options.decodeType : null, 
 			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
-				options.success(response);
+				BetaJS.SyncAsync.callback(callbacks, "success", response);
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				var exc = new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				BetaJS.SyncAsync.callback(callbacks, "exception", exc);
 			}
 		});
 	}
@@ -7289,14 +7324,6 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		}, options || {});
 	},
 	
-	_supports_async_write: function () {
-		return true;
-	},
-
-	_supports_async_read: function () {
-		return false;
-	},
-
 	getUri: function () {
 		return this._uri;
 	},
@@ -7308,110 +7335,80 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 			return this.getUri() + "/" + data[this._id_key];
 		return this.getUri();
 	},
-
-	_include_callbacks: function (opts, error_callback, success_callback) {
-		opts.failure = function (status_code, status_text, data) {
-			error_callback(new BetaJS.Stores.RemoteStoreException(new BetaJS.Browser.AjaxException(status_code, status_text, data)));
-		};
-		opts.success = success_callback;
-		return opts;
-	},
-
-	_insert : function(data, callbacks) {
-		try {
-			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
-			if (this._async_write) 
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-
-	_remove : function(id, callbacks) {
-		try {
-			var data = {};
-			data[this._id_key] = id;
-			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
-			if (this._async_write) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					if (!response) {
-						response = {};
-						response[self._id_key] = id;
-					}
-					callbacks.success(response);
-				});
-				this.__ajax.asyncCall(opts);
-			} else {
-				var response = this.__ajax.syncCall(opts);
-				if (!response) {
-					response = {};
-					response[this._id_key] = id;
-				}
-				return response;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-
-	_get : function(id, callbacks) {
-		var data = {};
-		data[this._id_key] = id;
-		try {
-			var opts = {uri: this.prepare_uri("get", data)};
-			if (this._async_read)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-
-	_update : function(id, data, callbacks) {
-		var copy = BetaJS.Objs.clone(data, 1);
-		copy[this._id_key] = id;
-		try {
-			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
-			if (this._async_write)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-	
-	_query : function(query, options, callbacks) {
-		try {		
-			var opts = this._encode_query(query, options);
-			if (this._async_read) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw);
-				});
-				this.__ajax.asyncCall(opts);
-				return true;
-			} else {
-				var raw = this.__ajax.syncCall(opts);
-				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
 	
 	_encode_query: function (query, options) {
 		return {
 			uri: this.prepare_uri("query")
 		};		
+	},
+	
+	__invoke: function (options, callbacks, parse_json) {
+		if (callbacks) {
+			return this.__ajax.asyncCall(options, {
+				success: function (result) {
+					if (parse_json && BetaJS.Types.is_string(result)) {
+						try {
+							result = JSON.parse(result);
+						} catch (e) {}
+					}
+					BetaJS.SyncAsync.callback(callbacks, "success", result);
+				}, exception: function (e) {
+					BetaJS.SyncAsync.callback(callbacks, "exception", new BetaJS.Stores.RemoteStoreException(e));					
+				}
+			});
+		} else {
+			try {
+				var result = this.__ajax.syncCall(options);
+				if (parse_json && BetaJS.Types.is_string(result)) {
+					try {
+						return JSON.parse(result);
+					} catch (e) {}
+				}
+				return result;
+			} catch (e) {
+				throw new BetaJS.Stores.RemoteStoreException(e); 			
+			}
+			return false;
+		}
+	},
+	
+	_insert : function(data, callbacks) {
+		return this.__invoke({
+			method: "POST",
+			uri: this.prepare_uri("insert", data),
+			data: data
+		}, callbacks);
+	},
+
+	_get : function(id, callbacks) {
+		var data = {};
+		data[this._id_key] = id;
+		return this.__invoke({
+			uri: this.prepare_uri("get", data)
+		}, callbacks);
+	},
+
+	_update : function(id, data, callbacks) {
+		var copy = BetaJS.Objs.clone(data, 1);
+		copy[this._id_key] = id;
+		return this.__invoke({
+			method: this.__options.update_method,
+			uri: this.prepare_uri("update", copy),
+			data: data
+		}, callbacks);
+	},
+	
+	_remove : function(id, callbacks) {
+		var data = {};
+		data[this._id_key] = id;
+		return this.__invoke({
+			method: "DELETE",
+			uri: this.prepare_uri("remove", data)
+		}, callbacks);
+	},
+
+	_query : function(query, options, callbacks) {
+		return this.__invoke(this._encode_query(query, options), callbacks, true);
 	}
 	
 });

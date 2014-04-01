@@ -93,7 +93,7 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 		throw new BetaJS.Stores.StoreCacheException();
 	},
 	
-	cache_query: function (query, options, result) {
+	cache_query: function (query, options, result, callbacks) {
 		var constrained = BetaJS.Queries.Constrained.make(query, options);
 		var encoded = BetaJS.Queries.Constrained.format(constrained);
 		this.__queries[encoded] = {};
@@ -102,6 +102,7 @@ BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
 			this.insert(row);
 			this.__queries[encoded][row[this.id_key()]] = row;
 		}
+		this.callback(callbacks, "success", result);
 	},
 	
 	insert: function (row, callbacks) {

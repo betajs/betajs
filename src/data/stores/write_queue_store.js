@@ -8,6 +8,7 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		this.__id_to_queue = {};
 		this.__combine_updates = "combine_updates" in options ? options.combine_updates : true;
 		this.__auto_clear_updates = "auto_clear_updates" in options ? options.auto_clear_updates : true;
+		this.__flushing = false;
 		this.__cache = {};
 		if (this.__auto_clear_updates)
 			this.on("remove", function (id) {
@@ -25,13 +26,24 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 	__remove_update: function (id) {
 		var revs = this.__id_to_queue[id];
 		delete this.__id_to_queue[id];
-		for (var rev in rev)
+		for (var rev in revs)
 			delete this.__update_queue[rev];
 		delete this.__cache[id];
 	},
 	
+	__remove_revision: function (revision_id) {
+		var revision = this.__update_queue[revision_id];
+		delete this.__update_queue[revision_id];
+		var revs = this.__id_to_queue[revision.id];
+		delete revs[revision_id];
+		if (BetaJS.Types.is_empty(revs)) {
+			delete this.__id_to_queue[revision.id];
+			delete this.__cache[revision.id];
+		}
+	},
+	
 	__insert_update: function (id, data) {
-		if (this.__combine_updates && this.__id_to_queue[id]) {
+		if (this.__combine_updates && this.__id_to_queue[id] && !this.__flushing) {
 			var comm = {};
 			for (var rev in this.__id_to_queue[id]) {
 				comm = BetaJS.Objs.extend(comm, this.__update_queue[rev].data);
@@ -53,47 +65,49 @@ BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
 		this.trigger("queue:update", id, data);
 	},
 	
-	flush: function (callbacks, revision_id) {
-		if (!revision_id)
-			revision_id = this.__revision_id;
-		if (this.async_write()) {
-			var first = null;
-			var self = this;
-			for (var key in this.__update_queue) {
-				first = this.__update_queue[key];
-				break;
-			}
-			if (first) {
-				if (first.revision_id >= revision_id)
+	flush: function (callbacks) {
+		if (this.__flushing)
+			return;
+		this.__flushing = true;
+		var revision_id = this.__revision_id;
+		if (callbacks) {
+			var next = function () {
+				var item = BetaJS.Objs.peek(this.__update_queue);
+				if (!item || item.revision_id >= revision_id) {
+					BetaJS.SyncAsync.callback(callbacks, "success");
+					this.__flushing = false;
 					return;
-				this.__store.update(first.id, first.data, {
-					exception: callbacks.exception,
+				}
+				this.__store.update(item.id, item.data, {
+					context: this,
 					success: function () {
-						delete this.__update_queue[first.revision_id];
-						delete this.__id_to_queue[first.id][first.revision_id];
-						self.flush(callbacks, revision_id);
+						this.__remove_revision(item.revision_id);
+						next.apply(this);
+					},
+					exception: function (e) {
+						BetaJS.SyncAsync.callback(callbacks, "exception", e);
+						this.__flushing = false;
 					}
 				});
-			} else {
-				if (callbacks)
-					callbacks.success();
-			}
+			};
+			next.apply(this);
 		} else {
-			try {
-				BetaJS.Objs.iter(this.__update_queue, function (item) {
-					if (item.revision_id >= revision_id)
-						return false;
+			var exc = null;
+			while (true) {
+				var item = BetaJS.Objs.peek(this.__update_queue);
+				if (!item || item.revision_id >= revision_id)
+					break;
+				try {
 					this.__store.update(item.id, item.data);
-					return true;
-				}, this);
-				if (callbacks && callbacks.success)
-					callbacks.success();
-			} catch (e) {
-				if (callbacks && callbacks.exception)
-					callbacks.exception(e);
-				else
-					throw e;
+					this.__remove_revision(item.revision_id);
+				} catch (e) {
+					exc = e;
+					break;
+				}
 			}
+			this.__flushing = false;
+			if (exc)
+				throw exc;
 		}
 	},
 	
@@ -131,12 +145,21 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 		options = options || {};
 		this.__stores = {};
 		this.__changed = false;
+		this.__flushing = false;
+		this.__async = "async" in options ? options.async : false;
 		this.__min_delay = options.min_delay ? options.min_delay : null;
 		this.__max_delay = options.max_delay ? options.max_delay : null;
-		if (this.__min_delay || this.__max_delay)
+		if (this.__min_delay || this.__max_delay) {
 			this.on("changed", function () {
-				this.flush();
+				if (this.__async)
+					this.flush({
+						success: function () {},
+						exception: function () {}
+					});
+				else
+					this.flush();
 			}, this, {min_delay: this.__min_delay, max_delay: this.__max_delay});
+		}
 	},
 	
 	destroy: function () {
@@ -168,34 +191,59 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	},
 	
 	flush: function (callbacks) {
+		if (this.__flushing)
+			return;
+		this.__flushing = true;
 		this.trigger("flush_start");
 		this.trigger("flush");
-		var success_count = 0;
-		var count = BetaJS.Objs.count(this.__stores);
-		var self = this;
-		BetaJS.Objs.iter(this.__stores, function (store) {
-			store.flush({
-				exception: function (e) {
-					self.trigger("flush_error");
-					if (callbacks && callbacks.exception)
-						callbacks.exception(e);
-					else
-						throw e;
-				},
+		if (callbacks) {
+			var promises = [];
+			BetaJS.Objs.iter(this.__stores, function (store) {
+				promises.push(BetaJS.SyncAsync.promise(store, store.flush));
+			});
+			BetaJS.SyncAsync.join(promises, {
+				context: this,
 				success: function () {
-					success_count++;
-					if (success_count == count) {
-						self.trigger("flush_end");
-						if (callbacks && callbacks.success)
-							callbacks.success();
-					}
+					this.trigger("flush_end");
+					this.__flushing = false;
+					BetaJS.SyncAsync.callback(callbacks, "success");
+					this.__changed = false;
+					BetaJS.Objs.iter(this.__stores, function (store) {
+						this.__changed = this.__changed || store.changed();
+					}, this);
+				},
+				exception: function (exc) {
+					this.trigger("flush_error");
+					this.__flushing = false;
+						BetaJS.SyncAsync.callback(callbacks, "exception", exc);
+					this.__changed = false;
+					BetaJS.Objs.iter(this.__stores, function (store) {
+						this.__changed = this.__changed || store.changed();
+					}, this);
 				}
 			});
-		}, this);
-		this.__changed = false;
-		BetaJS.Objs.iter(this.__stores, function (store) {
-			this.__changed = this.__changed || store.changed();
-		}, this);
+		} else {
+			var exc = null;
+			BetaJS.Objs.iter(this.__stores, function (store) {
+				try {
+					store.flush();
+				} catch (e) {
+					exc = e;
+					return false;
+				}
+				return true;
+			}, this);
+			this.__flushing = false;
+			if (exc) {
+				this.trigger("flush_error");
+				throw exc;
+			} else
+				this.trigger("flush_end");
+			this.__changed = false;
+			BetaJS.Objs.iter(this.__stores, function (store) {
+				this.__changed = this.__changed || store.changed();
+			}, this);
+		}
 	}	
 	
 }]);

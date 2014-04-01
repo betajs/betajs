@@ -55,15 +55,19 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
 	register: function (aq) {
 		this.__aqs[aq.cid()] = aq;
 		var query = aq.query();
-		var result = this._query(query);
-		while (result.hasNext()) {
-			var object = result.next();
-			if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
-				this.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()] = aq;
-				aq._add(object);
-			} else
-				this.insert(object);
-		}
+		this._query(query, {
+			context: this,
+			success: function (result) {
+				while (result.hasNext()) {
+					var object = result.next();
+					if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
+						this.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()] = aq;
+						aq._add(object);
+					} else
+						this.insert(object);
+				}
+			}
+		});
 	},
 	
 	unregister: function (aq) {

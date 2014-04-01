@@ -8,7 +8,7 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 			this._primary_key = options.primary_key;
 	},
 
-	_yield: function (id) {
+	_yield: function (callbacks, id) {
 		var query = {};
 		if (id)
 			query[this._foreign_key] = id;
@@ -17,20 +17,24 @@ BetaJS.Modelling.Associations.Association.extend("BetaJS.Modelling.Associations.
 		else
 			query[this._foreign_key] = this._model.id();
 		var foreign_table = BetaJS.Scopes.resolve(this._model.get(this._foreign_table_key));
-		var model = foreign_table ? foreign_table.findBy(query) : null;
-		if (model)
-			model.on("destroy", function () {
-				this.invalidate();
-			}, this);
-		return model;
+		return this.then(foreign_table, foreign_table.findBy, [query], callbacks, function (model, callbacks) {
+			if (model)
+				model.on("destroy", function () {
+					this.invalidate();
+				}, this);
+			this.callback(callbacks, "success", model);
+		});
 	},
 	
 	_change_id: function (new_id, old_id) {
-		var object = this._yield(old_id);
-		if (object) {
-			object.set(this._foreign_key, new_id);
-			object.save();
-		}
+		this._yield({
+			success: function (object) {
+				if (object) {
+					object.set(this._foreign_key, new_id);
+					object.save();
+				}
+			}
+		}, old_id);
 	}
 
 });

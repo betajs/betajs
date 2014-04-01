@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-03-26
+  betajs - v0.0.2 - 2014-03-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -23,7 +23,7 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 		return result;
 	},
 	
-	_asyncCall: function (options) {
+	_asyncCall: function (options, callbacks) {
 		if (BetaJS.Browser.Info.isInternetExplorer() && BetaJS.Browser.Info.internetExplorerVersion() <= 9)
 			BetaJS.$.support.cors = true;
 		BetaJS.$.ajax({
@@ -33,10 +33,11 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 			dataType: options.decodeType ? options.decodeType : null, 
 			data: options.encodeType && options.encodeType == "json" ? JSON.stringify(options.data) : options.data,
 			success: function (response) {
-				options.success(response);
+				BetaJS.SyncAsync.callback(callbacks, "success", response);
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				options.failure(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				var exc = new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				BetaJS.SyncAsync.callback(callbacks, "exception", exc);
 			}
 		});
 	}
@@ -1146,14 +1147,6 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		}, options || {});
 	},
 	
-	_supports_async_write: function () {
-		return true;
-	},
-
-	_supports_async_read: function () {
-		return false;
-	},
-
 	getUri: function () {
 		return this._uri;
 	},
@@ -1165,110 +1158,80 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 			return this.getUri() + "/" + data[this._id_key];
 		return this.getUri();
 	},
-
-	_include_callbacks: function (opts, error_callback, success_callback) {
-		opts.failure = function (status_code, status_text, data) {
-			error_callback(new BetaJS.Stores.RemoteStoreException(new BetaJS.Browser.AjaxException(status_code, status_text, data)));
-		};
-		opts.success = success_callback;
-		return opts;
-	},
-
-	_insert : function(data, callbacks) {
-		try {
-			var opts = {method: "POST", uri: this.prepare_uri("insert", data), data: data};
-			if (this._async_write) 
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-
-	_remove : function(id, callbacks) {
-		try {
-			var data = {};
-			data[this._id_key] = id;
-			var opts = {method: "DELETE", uri: this.prepare_uri("remove", data)};
-			if (this._async_write) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					if (!response) {
-						response = {};
-						response[self._id_key] = id;
-					}
-					callbacks.success(response);
-				});
-				this.__ajax.asyncCall(opts);
-			} else {
-				var response = this.__ajax.syncCall(opts);
-				if (!response) {
-					response = {};
-					response[this._id_key] = id;
-				}
-				return response;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-
-	_get : function(id, callbacks) {
-		var data = {};
-		data[this._id_key] = id;
-		try {
-			var opts = {uri: this.prepare_uri("get", data)};
-			if (this._async_read)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-
-	_update : function(id, data, callbacks) {
-		var copy = BetaJS.Objs.clone(data, 1);
-		copy[this._id_key] = id;
-		try {
-			var opts = {method: this.__options.update_method, uri: this.prepare_uri("update", copy), data: data};
-			if (this._async_write)
-				this.__ajax.asyncCall(this._include_callbacks(opts, callbacks.exception, callbacks.success));
-			else
-				return this.__ajax.syncCall(opts);
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-		return true;
-	},
-	
-	_query : function(query, options, callbacks) {
-		try {		
-			var opts = this._encode_query(query, options);
-			if (this._async_read) {
-				var self = this;
-				opts = this._include_callbacks(opts, callbacks.exception, function (response) {
-					callbacks.success(BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw);
-				});
-				this.__ajax.asyncCall(opts);
-				return true;
-			} else {
-				var raw = this.__ajax.syncCall(opts);
-				return BetaJS.Types.is_string(raw) ? JSON.parse(raw) : raw;
-			}
-		} catch (e) {
-			throw new BetaJS.Stores.RemoteStoreException(e); 			
-		}
-	},
 	
 	_encode_query: function (query, options) {
 		return {
 			uri: this.prepare_uri("query")
 		};		
+	},
+	
+	__invoke: function (options, callbacks, parse_json) {
+		if (callbacks) {
+			return this.__ajax.asyncCall(options, {
+				success: function (result) {
+					if (parse_json && BetaJS.Types.is_string(result)) {
+						try {
+							result = JSON.parse(result);
+						} catch (e) {}
+					}
+					BetaJS.SyncAsync.callback(callbacks, "success", result);
+				}, exception: function (e) {
+					BetaJS.SyncAsync.callback(callbacks, "exception", new BetaJS.Stores.RemoteStoreException(e));					
+				}
+			});
+		} else {
+			try {
+				var result = this.__ajax.syncCall(options);
+				if (parse_json && BetaJS.Types.is_string(result)) {
+					try {
+						return JSON.parse(result);
+					} catch (e) {}
+				}
+				return result;
+			} catch (e) {
+				throw new BetaJS.Stores.RemoteStoreException(e); 			
+			}
+			return false;
+		}
+	},
+	
+	_insert : function(data, callbacks) {
+		return this.__invoke({
+			method: "POST",
+			uri: this.prepare_uri("insert", data),
+			data: data
+		}, callbacks);
+	},
+
+	_get : function(id, callbacks) {
+		var data = {};
+		data[this._id_key] = id;
+		return this.__invoke({
+			uri: this.prepare_uri("get", data)
+		}, callbacks);
+	},
+
+	_update : function(id, data, callbacks) {
+		var copy = BetaJS.Objs.clone(data, 1);
+		copy[this._id_key] = id;
+		return this.__invoke({
+			method: this.__options.update_method,
+			uri: this.prepare_uri("update", copy),
+			data: data
+		}, callbacks);
+	},
+	
+	_remove : function(id, callbacks) {
+		var data = {};
+		data[this._id_key] = id;
+		return this.__invoke({
+			method: "DELETE",
+			uri: this.prepare_uri("remove", data)
+		}, callbacks);
+	},
+
+	_query : function(query, options, callbacks) {
+		return this.__invoke(this._encode_query(query, options), callbacks, true);
 	}
 	
 });

@@ -13,20 +13,20 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 		return this.__table;
 	},
 	
-	_insert: function (data) {
-		return this.table().insertRow(data);
+	_insert: function (data, callbacks) {
+		return this.table().insertRow(data, callbacks);
 	},
 	
-	_remove: function (id) {
-		return this.table().removeById(id);
+	_remove: function (id, callbacks) {
+		return this.table().removeById(id, callbacks);
 	},
 	
-	_get: function (id) {
-		return this.table().findById(id);
+	_get: function (id, callbacks) {
+		return this.table().findById(id, callbacks);
 	},
 	
-	_update: function (id, data) {
-		return this.table().updateById(id, data);
+	_update: function (id, data, callbacks) {
+		return this.table().updateById(id, data, callbacks);
 	},
 	
 	_query_capabilities: function () {
@@ -38,8 +38,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 		};
 	},
 	
-	_query: function (query, options) {
-		return this.table().find(query, options);
+	_query: function (query, options, callbacks) {
+		return this.table().find(query, options, callbacks);
 	},
 	
 	_ensure_index: function (key) {

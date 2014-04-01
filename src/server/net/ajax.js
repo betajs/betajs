@@ -4,7 +4,7 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Server.Net.HttpAjax", {
 		throw "Unsupported";
 	},
 	
-	_asyncCall: function (options) {
+	_asyncCall: function (options, callbacks) {
 		var parsed = BetaJS.Net.Uri.parse(options.uri);
 		var opts = {
 			method: options.method,
@@ -30,17 +30,10 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Server.Net.HttpAjax", {
 			result.on("data", function (chunk) {
 				data += chunk;
 			}).on("end", function () {
-				if (result.statusCode >= 200 && result.statusCode < 300) {
-					if (options) {
-						if (options.success)
-							options.success(data);
-						else
-							callbacks(data);
-					}
-				} else {
-					if (options.failure)
-						options.failure(data);
-				}
+				if (result.statusCode >= 200 && result.statusCode < 300) 
+					BetaJS.SyncAsync.callback(callbacks, "success", data);
+				else
+					BetaJS.SyncAsync.callback(callbacks, "exception", data);
 			});
 		});
 		if (post_data && post_data.length > 0)

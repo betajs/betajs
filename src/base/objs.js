@@ -232,6 +232,29 @@ BetaJS.Objs = {
 		for (var i = 0; i < arr.length; ++i)
 			result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
 		return result;
+	},
+	
+	peek: function (obj) {
+		if (BetaJS.Types.is_array(obj))
+			return obj.length > 0 ? obj[0] : null;
+		else {
+			for (var key in obj)
+				return obj[key];
+			return null;
+		} 
+	},
+	
+	poll: function (obj) {
+		if (BetaJS.Types.is_array(obj))
+			return obj.shift();
+		else {
+			for (var key in obj) {
+				var item = obj[key];
+				delete obj[key];
+				return item;
+			}
+			return null;
+		} 
 	}
 
 };
