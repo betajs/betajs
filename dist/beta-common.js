@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2014-04-01
+  betajs - v0.0.2 - 2014-04-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-04-01
+  betajs - v0.0.2 - 2014-04-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1543,6 +1543,10 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 			var ret = cb.apply(this, [object, ident]);
 			return BetaJS.Types.is_defined(ret) ? ret : true;
 		}, context);
+	},
+	
+	iterator: function () {
+		return BetaJS.Iterators.ArrayIterator.byIterate(this.iterate, this);
 	}
 
 });
@@ -1780,6 +1784,16 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 		var ret = this.__array[this.__i];
 		this.__i++;
 		return ret;
+	}
+	
+}, {
+	
+	byIterate: function (iterate_func, iterate_func_ctx) {
+		var result = [];
+		iterate_func.call(iterate_func_ctx || this, function (item) {
+			result.push(item);
+		}, this);
+		return new this(result);
 	}
 	
 });
@@ -2465,6 +2479,8 @@ BetaJS.Properties.PropertiesMixin = {
 						self.off("change:" + dep, null, this.__properties[key]);
 				}, this);
 			}
+			this.trigger("unset", key);
+			this.trigger("unset:" + key);
 			delete this.__properties[key];
 		}
 	},
@@ -2580,6 +2596,28 @@ BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	}
 	
 }]);
+
+
+
+BetaJS.Class.extend("BetaJS.Properties.PropertiesData", {
+	
+	constructor: function (properties) {
+		this._inherited(BetaJS.Properties.PropertiesData, "constructor");
+		this.__properties = properties;
+		this.data = this.__properties.getAll();
+		this.__properties.on("change", function (key, value) {
+			this.data[key] = value;
+		}, this);
+		this.__properties.on("unset", function (key) {
+			delete this.data[key];
+		}, this);
+	},
+	
+	properties: function () {
+		return this.__properties;
+	}
+	
+});
 
 BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	BetaJS.Events.EventsMixin, {
@@ -2697,6 +2735,10 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		this.__data.iterate(cb, context);
 	},
 	
+	iterator: function () {
+		return BetaJS.Iterators.ArrayIterator.byIterate(this.iterate, this);
+	},
+	
 	clear: function () {
 		this.iterate(function (obj) {
 			this.remove(obj);
@@ -2704,6 +2746,42 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	}
 		
 }]);
+
+
+BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
+	
+	constructor: function (collection) {
+		this._inherited(BetaJS.Collections.CollectionData, "constructor");
+		this.__collection = collection;
+		this.data = [];
+		this.__properties_data = {};
+		this.__collection.iterate(this.__insert, this);
+		this.__collection.on("add", this.__insert, this);
+		this.__collection.on("remove", this.__remove, this);
+	},
+	
+	collection: function () {
+		return collection;
+	},
+	
+	__insert: function (property) {
+		var id = BetaJS.Ids.objectId(property);
+		this.__properties_data[id] = {
+			data: new BetaJS.Properties.PropertiesData(property),
+			index: this.data.length
+		};
+		this.data.push(this.__properties_data[id].data.data);  
+	},
+	
+	__remove: function (property) {
+		var id = BetaJS.Ids.objectId(property);
+		var index = this.__properties_data[id].index;
+		this.__properties_data[id].data.destroy();
+		delete this.__properties_data[id];
+		this.data.splice(index, 1);
+	}
+	
+});
 
 
 
@@ -3340,7 +3418,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-04-01
+  betajs - v0.0.2 - 2014-04-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3810,7 +3888,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", {
 	constructor: function (engine, query) {
 		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
 		this.__engine = engine;
-		this.__query = query;
+		this.__query = query || {};
 		this.__collection = new BetaJS.Collections.Collection();
 		this.__collection.on("destroy", function () {
 			this.destroy();
@@ -5104,7 +5182,7 @@ BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
 	
 }]);
 /*!
-  betajs - v0.0.2 - 2014-03-30
+  betajs - v0.0.2 - 2014-04-03
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5462,7 +5540,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		this.__removed = false;
 		if (this.__saved)
 			this._properties_changed = {};
-		this.__table = options["table"];
+		this.__table = options["table"] || this.cls.defaultTable();
 		this.__table._model_register(this);
 		this.__destroying = false;
 	},
@@ -5540,7 +5618,15 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		return this.__table;
 	}
 	
-}]);
+}], {
+	
+	defaultTable: function () {
+		if (!this.table)
+			this.table = new BetaJS.Modelling.Table(new BetaJS.Stores.MemoryStore(), this);
+		return this.table;
+	}
+	
+});
 BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	BetaJS.Events.EventsMixin,
 	BetaJS.SyncAsync.SyncAsyncMixin,

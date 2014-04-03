@@ -78,6 +78,10 @@ BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 			var ret = cb.apply(this, [object, ident]);
 			return BetaJS.Types.is_defined(ret) ? ret : true;
 		}, context);
+	},
+	
+	iterator: function () {
+		return BetaJS.Iterators.ArrayIterator.byIterate(this.iterate, this);
 	}
 
 });

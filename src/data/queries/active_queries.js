@@ -88,7 +88,7 @@ BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", {
 	constructor: function (engine, query) {
 		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
 		this.__engine = engine;
-		this.__query = query;
+		this.__query = query || {};
 		this.__collection = new BetaJS.Collections.Collection();
 		this.__collection.on("destroy", function () {
 			this.destroy();

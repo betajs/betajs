@@ -84,6 +84,8 @@ BetaJS.Properties.PropertiesMixin = {
 						self.off("change:" + dep, null, this.__properties[key]);
 				}, this);
 			}
+			this.trigger("unset", key);
+			this.trigger("unset:" + key);
 			delete this.__properties[key];
 		}
 	},
@@ -199,3 +201,25 @@ BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	}
 	
 }]);
+
+
+
+BetaJS.Class.extend("BetaJS.Properties.PropertiesData", {
+	
+	constructor: function (properties) {
+		this._inherited(BetaJS.Properties.PropertiesData, "constructor");
+		this.__properties = properties;
+		this.data = this.__properties.getAll();
+		this.__properties.on("change", function (key, value) {
+			this.data[key] = value;
+		}, this);
+		this.__properties.on("unset", function (key) {
+			delete this.data[key];
+		}, this);
+	},
+	
+	properties: function () {
+		return this.__properties;
+	}
+	
+});

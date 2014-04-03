@@ -41,6 +41,16 @@ BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
 		return ret;
 	}
 	
+}, {
+	
+	byIterate: function (iterate_func, iterate_func_ctx) {
+		var result = [];
+		iterate_func.call(iterate_func_ctx || this, function (item) {
+			result.push(item);
+		}, this);
+		return new this(result);
+	}
+	
 });
 
 BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectKeysIterator", {

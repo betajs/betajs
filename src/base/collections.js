@@ -114,6 +114,10 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		this.__data.iterate(cb, context);
 	},
 	
+	iterator: function () {
+		return BetaJS.Iterators.ArrayIterator.byIterate(this.iterate, this);
+	},
+	
 	clear: function () {
 		this.iterate(function (obj) {
 			this.remove(obj);
@@ -121,6 +125,42 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	}
 		
 }]);
+
+
+BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
+	
+	constructor: function (collection) {
+		this._inherited(BetaJS.Collections.CollectionData, "constructor");
+		this.__collection = collection;
+		this.data = [];
+		this.__properties_data = {};
+		this.__collection.iterate(this.__insert, this);
+		this.__collection.on("add", this.__insert, this);
+		this.__collection.on("remove", this.__remove, this);
+	},
+	
+	collection: function () {
+		return collection;
+	},
+	
+	__insert: function (property) {
+		var id = BetaJS.Ids.objectId(property);
+		this.__properties_data[id] = {
+			data: new BetaJS.Properties.PropertiesData(property),
+			index: this.data.length
+		};
+		this.data.push(this.__properties_data[id].data.data);  
+	},
+	
+	__remove: function (property) {
+		var id = BetaJS.Ids.objectId(property);
+		var index = this.__properties_data[id].index;
+		this.__properties_data[id].data.destroy();
+		delete this.__properties_data[id];
+		this.data.splice(index, 1);
+	}
+	
+});
 
 
 
