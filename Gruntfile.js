@@ -68,10 +68,10 @@ module.exports = function(grunt) {
 				src : [
 					'src/data/queries/queries.js', 
 					'src/data/queries/constrained_queries.js', 
+					'src/data/queries/query_model.js', 
 					'src/data/queries/query_collection.js',
-					'src/data/queries/active_queries.js',
+//					'src/data/queries/active_queries.js',
 					'src/data/stores/base_store.js',
-					'src/data/stores/stores_monitor.js',
 					'src/data/stores/assoc_store.js',
 					'src/data/stores/memory_store.js',
 					'src/data/stores/dumb_store.js',
@@ -81,7 +81,9 @@ module.exports = function(grunt) {
 					'src/data/stores/cached_stores.js',
 					'src/data/stores/conversion_store.js',
 					'src/data/stores/passthrough_store.js',
-					'src/data/stores/write_queue_store.js',
+					'src/data/stores/socket_stores.js',
+					'src/data/support/stores_monitor.js',
+					'src/data/support/store_history.js',
 				]
 			},
 			dist_beta_models : {
@@ -165,7 +167,7 @@ module.exports = function(grunt) {
 			dist_profiler: {
 				dest : 'dist/beta-profiler.js',
 				src : [
-				    'src/tools/profiling/profiler.js',
+				    'src/tools/profiling/*.js',
 				]
 			},
 			dist_server: {

@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-04-03
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-04-03
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-04-03
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -386,6 +386,13 @@ BetaJS.Functions = {
 /** @class */
 BetaJS.SyncAsync = {
 	
+	eventually: function (func, params, context) {
+		var timer = setTimeout(function () {
+			clearTimeout(timer);
+			func.apply(context || this, params || []);
+		}, 0);
+	},
+	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
      * @param callbacks callbacks object with success and exception
@@ -498,8 +505,10 @@ BetaJS.SyncAsync = {
 			} catch (e) {
 				if (exception)
 					exception.call(success_ctx, e, callbacks);
-				else
+				else if (callbacks.exception)
 					callbacks.exception.call(callbacks.context || this, e);
+				else
+					throw e;
 			}
 		} else {
 			try {
@@ -1207,6 +1216,38 @@ BetaJS.Objs = {
 			}
 			return null;
 		} 
+	},
+	
+	objectBy: function () {
+		var obj = {};
+		var count = arguments.length / 2;
+		for (var i = 0; i < count; ++i)
+			obj[arguments[2 * i]] = arguments[2 * i + 1];
+		return obj;
+	},
+	
+	valueByIndex: function (obj, idx) {
+		idx = idx || 0;
+		if (BetaJS.Types.is_array(obj))
+			return obj[idx];
+		for (var key in obj) {
+			if (idx === 0)
+				return obj[key];
+			idx--;
+		}
+		return null;
+	},
+	
+	keyByIndex: function (obj, idx) {
+		idx = idx || 0;
+		if (BetaJS.Types.is_array(obj))
+			return idx;
+		for (var key in obj) {
+			if (idx === 0)
+				return key;
+			idx--;
+		}
+		return null;
 	}
 
 };
@@ -1769,6 +1810,20 @@ BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
 		while (this.hasNext())
 			arr.push(this.next());
 		return arr;
+	},
+	
+	asArrayDelegate: function (f) {
+		var arr = [];
+		while (this.hasNext()) {
+			var obj = this.next();			
+			arr.push(obj[f].apply(obj, BetaJS.Functions.getArguments(arguments, 1)));
+		}
+		return arr;
+	},
+	
+	iterate: function (callback, context) {
+		while (this.hasNext())
+			callback.call(context || this, this.next());
 	}
 	
 });
@@ -1952,6 +2007,8 @@ BetaJS.Events.EventsMixin = {
 			callback: callback,
 			context: context
 		};
+		if (options.eventually)
+			obj.eventually = options.eventually;
 		if (options.min_delay)
 			obj.min_delay = new BetaJS.Timers.Timer({
 				delay: options.min_delay,
@@ -1991,9 +2048,12 @@ BetaJS.Events.EventsMixin = {
 			object.min_delay.restart();
 		if (object.max_delay)
 			object.max_delay.start();
-		if (!object.min_delay && !object.max_delay)
-			object.callback.apply(object.context || this, params);
-		else
+		if (!object.min_delay && !object.max_delay) {
+			if (object.eventually)
+				BetaJS.SyncAsync.eventually(object.callback, params, object.context || this);
+			else
+				object.callback.apply(object.context || this, params);
+		} else
 			object.params = params;
 	},
 	
@@ -2705,9 +2765,12 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	add_objects: function (objects) {
+		var count = 0;
 		BetaJS.Objs.iter(objects, function (object) {
-			this.add(object);
+			if (this.add(object))
+				count++;
 		}, this);		
+		return count;
 	},
 	
 	exists: function (object) {
@@ -2869,14 +2932,14 @@ BetaJS.Comparators = {
 	
 	byValue: function (a, b) {
 		if (BetaJS.Types.is_string(a))
-			return a.localCompare(b);
+			return a.localeCompare(b);
 		if (a < b)
 			return -1;
 		if (a > b)
 			return 1;
 		return 0;
 	}
-	
+		
 };
 
 BetaJS.Sort = {
@@ -3423,7 +3486,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-04-03
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3440,6 +3503,17 @@ BetaJS.Queries = {
 	 * condition :== $in: simples | $gt: simple | $lt: simple | $sw: simple | $gtic: simple | $ltic: simple | $swic: simple
 	 *
 	 */
+	
+	subsumizes: function (query, query2) {
+		// This is very simple at this point
+		if (!BetaJS.Types.is_object(query) || !BetaJS.Types.is_object)
+			return query == query2;
+		for (var key in query) {
+			if (!(key in query2) || !this.subsumizes(query[key], query2[key]))
+				return false;
+		}
+		return true;
+	},
 	
 	__increase_dependency: function (key, dep) {
 		if (key in dep)
@@ -3612,6 +3686,10 @@ BetaJS.Queries.Constrained = {
 		};
 	},
 	
+	is_constrained: function (query) {
+		return query && (query.query || query.options);
+	},
+	
 	format: function (instance) {
 		var query = instance.query;
 		instance.query = BetaJS.Queries.format(query);
@@ -3621,8 +3699,8 @@ BetaJS.Queries.Constrained = {
 	},
 	
 	emulate: function (constrained_query, query_capabilities, query_function, query_context, callbacks) {
-		var query = constrained_query.query;
-		var options = constrained_query.options;
+		var query = constrained_query.query || {};
+		var options = constrained_query.options || {};
 		var execute_query = {};
 		var execute_options = {};
 		if ("sort" in options && "sort" in query_capabilities)
@@ -3682,103 +3760,188 @@ BetaJS.Queries.Constrained = {
 				exception_call(e);
 			}
 		return true;	
+	},
+	
+	subsumizes: function (query, query2) {
+		qopt = query.options || {};
+		qopt2 = query2.options || {};
+		qskip = qopt.skip || 0;
+		qskip2 = qopt2.skip || 0;
+		qlimit = qopt.limit || null;
+		qlimit2 = qopt2.limit || null;
+		qsort = qopt.sort;
+		qsort2 = qopt2.sort;
+		if (qskip > qskip2)
+			return false;
+		if (qlimit) {
+			if (!qlimit2)
+				return false;
+			if (qlimit2 + qskip2 > qlimit + qskip)
+				return false;
+		}
+		if ((qskip || qlimit) && (qsort || qsort2) && qsort != qsort2)
+			return false;
+		return BetaJS.Queries.subsumizes(query.query, query2.query);
 	}
-	
-	
 
 }; 
 
+BetaJS.Class.extend("BetaJS.Queries.AbstractQueryModel", {
+	
+	register: function (query) {
+	},
+	
+	executable: function (query) {
+	}
+	
+});
+
+
+BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
+	
+	__queries: {},
+	
+	exists: function (query) {
+		return BetaJS.Queries.Constrained.format(query) in this.__queries;
+	},
+	
+	executable: function (query) {
+		if (this.exists(query))
+			return true;
+		var result = false;
+		BetaJS.Objs.iter(this.__queries, function (query2) {
+			result = BetaJS.Queries.Constrained.subsumizes(query2, query);
+			if (result) console.log(JSON.stringify(query2) + " subsumizes " + JSON.stringify(query));
+			return !result;
+		}, this);
+		return result;
+	},
+	
+	register: function (query) {
+		BetaJS.Objs.iter(this.__queries, function (query2) {
+			if (BetaJS.Queries.Constrained.subsumizes(query, query2))
+				delete this.__queries[BetaJS.Queries.Constrained.format(query2)];
+		}, this);
+		this.__queries[BetaJS.Queries.Constrained.format(query)] = query;
+	}	
+	
+});
+
 BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
-	constructor: function (options) {
+	constructor: function (source, query, options) {
+		this._source = source;
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);
-		this.__query = BetaJS.Objs.extend({
-			func: null,
-			select: {},
-			skip: 0,
-			limit: null,
+		this._options = BetaJS.Objs.extend({
 			forward_steps: null,
 			backward_steps: null,
-			range: null,
-			count: null,
-			sort: {}
-		}, options.query);
-		if (!("objects" in options))
-			options.objects = this.__execute_query(this.__query.skip, this.__query.limit, true);
+			range: null
+		}, options);
+		this.set_query(query);
+	},
+	
+	query: function () {
+		return this._query;
+	},
+	
+	set_query: function (query) {
+		this._query = BetaJS.Objs.extend({
+			query: {},
+			options: {}
+		}, query);
+		this._query.options.skip = this._query.options.skip || 0;
+		this._query.options.limit = this._query.options.limit || null;
+		this._query.options.sort = this._query.options.sort || {};  
+		this._count = 0;
+		this.__execute_query(this._query.options.skip, this._query.options.limit, true);
+	},
+	
+	__sub_query: function (options, callbacks) {
+		this._source.query(this._query.query, options, callbacks);
 	},
 	
 	__execute_query: function (skip, limit, clear_before) {
 		skip = Math.max(skip, 0);
 		var q = {};
-		var objs = null;
-		var iter = null;
-		if (this.__query.sort && !BetaJS.Types.is_empty(this.__query.sort))
-			q.sort = this.__query.sort;
+		if (this._query.options.sort && !BetaJS.Types.is_empty(this._query.options.sort))
+			q.sort = this._query.options.sort;
 		if (clear_before) {
 			if (skip > 0)
 				q.skip = skip;
 			if (limit !== null)
 				q.limit = limit;
-			iter = this.__query.func(this.__query.select, q);
-			objs = iter.asArray();
-			this.__query.skip = skip;
-			this.__query.limit = limit;
-			this.__query.count = !limit || objs.length < limit ? skip + objs.length : null;
-			this.clear();
-			this.add_objects(objs);
-		} else if (skip < this.__query.skip) {
-			limit = this.__query.skip - skip;
+			this.__sub_query(q, {
+				context: this,
+				success: function (iter) {
+					var objs = iter.asArray();
+					this._query.options.skip = skip;
+					this._query.options.limit = limit;
+					this._count = !limit || objs.length < limit ? skip + objs.length : null;
+					this.clear();
+					this.add_objects(objs);
+				}
+			});
+		} else if (skip < this._query.options.skip) {
+			limit = this._query.options.skip - skip;
 			if (skip > 0)
 				q.skip = skip;
 			q.limit = limit;
-			iter = this.__query.func(this.__query.select, q);
-			objs = iter.asArray();
-			this.__query.skip = skip;
-			this.__query.limit = !this.__query.limit ? null : this.__query.limit + objs.length;
-			this.add_objects(objs);
-		} else if (skip >= this.__query.skip) {
-			if (this.__query.limit && (!limit || skip + limit > this.__query.skip + this.__query.limit)) {
-				limit = (skip + limit) - (this.__query.skip + this.__query.limit);
-				skip = this.__query.skip + this.__query.limit;
+			this.__sub_query(q, {
+				context: this,
+				success: function (iter) {
+					var objs = iter.asArray();
+					this._query.options.skip = skip;
+					var added = this.add_objects(objs);
+					this._query.options.limit = this._query.options.limit === null ? null : this._query.options.limit + added;
+				}
+			});
+		} else if (skip >= this._query.options.skip) {
+			if (this._query.options.limit !== null && (!limit || skip + limit > this._query.options.skip + this._query.options.limit)) {
+				limit = (skip + limit) - (this._query.options.skip + this._query.options.limit);
+				skip = this._query.options.skip + this._query.options.limit;
 				if (skip > 0)
 					q.skip = skip;
 				if (limit)
 					q.limit = limit;
-				iter = this.__query.func(this.__query.select, q);
-				objs = iter.asArray();
-				this.__query.limit = this.__query.limit + objs.length;
-				if (limit > objs.length)
-					this.__query.count = skip + objs.length;
-				this.add_objects(objs);
+				this.__sub_query(q, {
+					context: this,
+					success: function (iter) {
+						var objs = iter.asArray();
+						var added = this.add_objects(objs);
+						this._query.options.limit = this._query.options.limit + added;
+						if (limit > objs.length)
+							this._count = skip + added;
+					}
+				});
 			}
 		}
 	},
 	
 	increase_forwards: function (steps) {
-		steps = !steps ? this.__query.forward_steps : steps;
-		if (!steps || !this.__query.limit)
+		steps = !steps ? this._options.forward_steps : steps;
+		if (!steps || this._query.options.limit === null)
 			return;
-		this.__execute_query(this.__query.skip + this.__query.limit, steps, false);
+		this.__execute_query(this._query.options.skip + this._query.options.limit, steps, false);
 	},
 	
 	increase_backwards: function (steps) {
-		steps = !steps ? this.__query.backward_steps : steps;
-		if (steps && this.__query.skip > 0) {
-			steps = Math.min(steps, this.__query.skip);
-			this.__execute_query(this.__query.skip - steps, steps, false);
+		steps = !steps ? this._options.backward_steps : steps;
+		if (steps && this._query.options.skip > 0) {
+			steps = Math.min(steps, this._query.options.skip);
+			this.__execute_query(this._query.options.skip - steps, steps, false);
 		}
 	},
 	
 	paginate: function (index) {
-		this.__execute_query(this.__query.range * index, this.__query.range, true);
+		this.__execute_query(this._options.range * index, this._options.range, true);
 	},
 	
 	paginate_index: function () {
-		return !this.__query.range ? null : Math.floor(this.__query.skip / this.__query.range);
+		return !this._options.range ? null : Math.floor(this._query.options.skip / this._options.range);
 	},
 	
 	paginate_count: function () {
-		return !this.__query.count || !this.__query.range ? null : Math.ceil(this.__query.count / this.__query.range);
+		return !this._count || !this._options.range ? null : Math.ceil(this._count / this._options.range);
 	},
 	
 	next: function () {
@@ -3799,168 +3962,105 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	isComplete: function () {
-		return this.__query.count !== null;
-	}
-	
-});
-BetaJS.Class.extend("BetaJS.Queries.ActiveQueryEngine", {
-	
-	constructor: function () {
-		this._inherited(BetaJS.Queries.ActiveQueryEngine, "constructor");
-		this.__aqs = {};
-		this.__object_to_aqs = {};
-	},
-	
-	__valid_for_aq: function (raw, aq) {
-		return BetaJS.Queries.evaluate(aq.query(), raw);
-	},
-	
-	insert: function (object) {
-		if (this.__object_to_aqs[BetaJS.Ids.objectId(object)])
-			return;
-		var raw = object.getAll();
-		var aqs = {};
-		this.__object_to_aqs[BetaJS.Ids.objectId(object)] = aqs;
-		BetaJS.Objs.iter(this.__aqs, function (aq) {
-			if (this.__valid_for_aq(raw, aq)) {
-				aq._add(object);
-				aqs[aq.cid()] = aq;
-			}
-		}, this);
-		object.on("change", function () {
-			this.update(object);
-		}, this);
-	},
-	
-	remove: function (object) {
-		BetaJS.Objs.iter(this.__object_to_aqs[BetaJS.Ids.objectId(object)], function (aq) {
-			aq._remove(object);
-		}, this);
-		delete this.__object_to_aqs[BetaJS.Ids.objectId(object)];
-		object.off(null, this, null);
-	},
-	
-	update: function (object) {
-		var raw = object.getAll();
-		var aqs = this.__object_to_aqs[BetaJS.Ids.objectId(object)];
-		BetaJS.Objs.iter(this.__object_to_aqs[BetaJS.Ids.objectId(object)], function (aq) {
-			if (!this.__valid_for_aq(raw, aq)) {
-				aq._remove(object);
-				delete aqs[aq.cid()];
-			}
-		}, this);
-		BetaJS.Objs.iter(this.__aqs, function (aq) {
-			if (this.__valid_for_aq(raw, aq)) {
-				aq._add(object);
-				aqs[aq.cid()] = aq;
-			}
-		}, this);
-	},
-	
-	register: function (aq) {
-		this.__aqs[aq.cid()] = aq;
-		var query = aq.query();
-		this._query(query, {
-			context: this,
-			success: function (result) {
-				while (result.hasNext()) {
-					var object = result.next();
-					if (this.__object_to_aqs[BetaJS.Ids.objectId(object)]) {
-						this.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()] = aq;
-						aq._add(object);
-					} else
-						this.insert(object);
-				}
-			}
-		});
-	},
-	
-	unregister: function (aq) {
-		delete this.__aqs[aq.cid()];
-		var self = this;
-		aq.collection().iterate(function (object) {
-			delete self.__object_to_aqs[BetaJS.Ids.objectId(object)][aq.cid()];
-		});
-	},
-	
-	_query: function (query) {
+		return this._count !== null;
 	}
 	
 });
 
-BetaJS.Class.extend("BetaJS.Queries.ActiveQuery", {
+
+
+BetaJS.Collections.QueryCollection.extend("BetaJS.Collections.ActiveQueryCollection", {
 	
-	constructor: function (engine, query) {
-		this._inherited(BetaJS.Queries.ActiveQuery, "constructor");
-		this.__engine = engine;
-		this.__query = query || {};
-		this.__collection = new BetaJS.Collections.Collection();
-		this.__collection.on("destroy", function () {
-			this.destroy();
-		}, this);
-		engine.register(this);
+	constructor: function (source, query, options) {
+		this._inherited(BetaJS.Collections.ActiveQueryCollection, "constructor", source, query, options);
+		source.on("create", this.__active_create, this);
+		source.on("remove", this.__active_remove, this);
+		source.on("update", this.__active_update, this);
 	},
 	
 	destroy: function () {
-		this.__engine.unregister(this);
-		this._inherited(BetaJS.Queries.ActiveQuery, "destroy");
+		this._source.off(null, null, this);
+		this._inherited(BetaJS.Collections.ActiveQueryCollection, "destroy");
 	},
 	
-	isUniform: function () {
-		return BetaJS.Types.is_empty(this.query());
+	is_valid: function (object) {
+		return BetaJS.Queries.evaluate(this.query().query, object.getAll());
 	},
 	
-	engine: function () {
-		return this.__engine;
+	__active_create: function (object) {
+		if (!this.is_valid(object) || this.exists(object))
+			return;
+		this.add(object);
+		this._count = this._count + 1;
+		if (this._query.options.limit !== null)
+			this._query.options.limit = this._query.options.limit + 1;
 	},
 	
-	query: function () {
-		return this.__query;
+	__active_remove: function (object) {
+		if (!this.exists(object))
+			return;
+		this.remove(object);
+		this._count = this._count - 1;
+		if (this._query.options.limit !== null)
+			this._query.options.limit = this._query.options.limit - 1;
 	},
 	
-	collection: function () {
-		return this.__collection;
-	},
-	
-	_add: function (object) {
-		this.__collection.add(object);		
-	},
-	
-	_remove: function (object) {
-		this.__collection.remove(object);
-	},
-	
-	change_query: function (query) {
-		this.__engine.unregister(this);
-		this.__query = query;
-		this.__collection.clear();
-		this.__engine.register(this);
+	__active_update: function (object) {
+		if (!this.is_valid(object))
+			this.__active_remove(object);
+		else
+			this.__active_create(object);
 	}
 	
 });
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Stores.StoreException");
 
+BetaJS.Class.extend("BetaJS.Stores.ListenerStore", [
+	BetaJS.Events.EventsMixin,
+	{
+		
+	constructor: function (options) {
+		this._inherited(BetaJS.Stores.ListenerStore, "constructor");
+		options = options || {};
+		this._id_key = options.id_key || "id";
+	},
+
+	id_key: function () {
+		return this._id_key;
+	},
+	
+	_inserted: function (row, event_data) {
+		this.trigger("insert", row, event_data);		
+	},
+	
+	_removed: function (id, event_data) {
+		this.trigger("remove", id, event_data);		
+	},
+	
+	_updated: function (row, data, event_data) {
+		this.trigger("update", row, data, event_data);		
+	} 
+		
+}]);
+
+
 
 /** @class */
-BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
-	BetaJS.Events.EventsMixin,
+BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.BaseStore", [
 	BetaJS.SyncAsync.SyncAsyncMixin,
 	/** @lends BetaJS.Stores.BaseStore.prototype */
 	{
 		
 	constructor: function (options) {
-		this._inherited(BetaJS.Stores.BaseStore, "constructor");
+		this._inherited(BetaJS.Stores.BaseStore, "constructor", options);
 		options = options || {};
 		this._id_key = options.id_key || "id";
 		this._create_ids = options.create_ids || false;
 		this._last_id = 1;
 		this._supportsSync = true;
 		this._supportsAsync = true;
-	},
-	
-	id_key: function () {
-		return this._id_key;
+		this._query_model = "query_model" in options ? options.query_model : null;
 	},
 	
 	/** Insert data to store. Return inserted data with id.
@@ -3970,6 +4070,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
  	 * @exception if it fails
 	 */
 	_insert: function (data, callbacks) {
+		throw new BetaJS.Stores.StoreException("unsupported: insert");
 	},
 	
 	/** Remove data from store. Return removed data.
@@ -3978,6 +4079,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
  	 * @exception if it fails
 	 */
 	_remove: function (id, callbacks) {
+		throw new BetaJS.Stores.StoreException("unsupported: remove");
 	},
 	
 	/** Get data from store by id.
@@ -3987,6 +4089,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	 * @exception if it fails
 	 */
 	_get: function (id, callbacks) {
+		throw new BetaJS.Stores.StoreException("unsupported: get");
 	},
 	
 	/** Update data by id.
@@ -3997,6 +4100,7 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	 * @exception if it fails
 	 */
 	_update: function (id, data, callbacks) {
+		throw new BetaJS.Stores.StoreException("unsupported: update");
 	},
 	
 	_query_capabilities: function () {
@@ -4007,24 +4111,34 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	 * @exception if it fails
 	 */
 	_query: function (query, options, callbacks) {
+		throw new BetaJS.Stores.StoreException("unsupported: query");
 	},
 	
 	_new_id: function (callbacks) {
 	},
 
 	insert: function (data, callbacks) {
+		var event_data = null;
+		if (BetaJS.Types.is_array(data)) {
+			event_data = data[1];
+			data = data[0];
+		}			
 		if (this._create_ids && !(this._id_key in data && data[this._id_key])) {
 			while (this.get(this._last_id))
 				this._last_id++;
 			data[this._id_key] = this._last_id;
 		}
 		return this.then(this._insert, [data], callbacks, function (row, callbacks) {
-			this.trigger("insert", row);
+			this._inserted(row, event_data);
 			BetaJS.SyncAsync.callback(callbacks, "success", row);
 		});
 	},
 	
-	insert_all: function (data, callbacks) {
+	insert_all: function (data, callbacks, query) {
+		if (query && this._query_model) {
+			this.trigger("query_register", query);
+			this._query_model.register(query);
+		}
 		var promises = BetaJS.Objs.map(data, function (obj) {
 			return this.promise(this.insert, [obj]);
 		}, this);
@@ -4032,9 +4146,14 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	},
 
 	remove: function (id, callbacks) {
+		var event_data = null;
+		if (BetaJS.Types.is_array(id)) {
+			event_data = id[1];
+			id = id[0];
+		}			
 		return this.then(this._remove, [id], callbacks, function (result, callbacks) {
-			this.trigger("remove", id);
-			callbacks.success(id);
+			this._removed(id, event_data);
+			BetaJS.SyncAsync.callback(callbacks, "success", id);
 		});
 	},
 	
@@ -4043,13 +4162,27 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	},
 	
 	update: function (id, data, callbacks) {
+		var event_data = null;
+		if (BetaJS.Types.is_array(data)) {
+			event_data = data[1];
+			data = data[0];
+		}			
 		return this.then(this._update, [id, data], callbacks, function (row, callbacks) {
-			this.trigger("update", row, data);
-			callbacks.success.call(callbacks.context || this, row, data);
+			this._updated(row, data, event_data);
+			BetaJS.SyncAsync.callback(callbacks, "success", row, data);
 		});
 	},
 	
 	query: function (query, options, callbacks) {
+		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
+			this.trigger("query_miss", {query: query, options: options});
+			var e = BetaJS.Stores.StoreException("Cannot execute query");
+			if (callbacks)
+				calbacks.exception.call(callbacks.context || this, e);
+			else
+				throw e;
+			return null;
+		}
 		var q = function (callbacks) {
 			return BetaJS.Queries.Constrained.emulate(
 				BetaJS.Queries.Constrained.make(query, options || {}),
@@ -4080,28 +4213,59 @@ BetaJS.Stores.BaseStore = BetaJS.Class.extend("BetaJS.Stores.BaseStore", [
 	
 	ensure_index: function (key) {
 		this._ensure_index(key);
-	}
+	},
+	
+	perform: function (commit, callbacks) {
+		var action = BetaJS.Objs.keyByIndex(commit);
+		var data = BetaJS.Objs.valueByIndex(commit);
+		if (action == "insert")
+			this.insert(data, callbacks);
+		else if (action == "remove")
+			this.remove(data, callbacks);
+		else if (action == "update")
+			this.update(BetaJS.Objs.keyByIndex(data), BetaJS.Objs.valueByIndex(data), callbacks);
+		else
+			throw new BetaJS.Stores.StoreException("unsupported: perform " + action);
+	},
+	
+	bulk: function (commits, optimistic, callbacks) {
+		var result = [];
+		if (callbacks) {
+			var helper = function () {
+				if (result.length < commits.length) {
+					this.perform(commits[result.length], {
+						context: this,
+						success: function () {
+							result.push(true);
+							helper.apply(this);
+						},
+						exception: function (e) {
+							result.push(false);
+							if (optimistic)
+								helper.apply(this);
+							else
+								callbacks.exception.apply(callbacks.context || this, e);
+						}
+					});
+				} else
+					callbacks.success.call(callbacks.context || this, result);
+			};
+			helper.apply(this);
+		} else {
+			for (var i = 0; i < commits.length; ++i) {
+				try {
+					this.perform(commits[i]);
+					result.push(true);
+				} catch (e) {
+					result.push(false);
+					if (!optimistic)
+						throw e;
+				}
+			}
+		}
+		return result;
+	}	
 
-}]);
-
-BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
-	BetaJS.Events.EventsMixin,
-{
-	attach: function (ident, store) {
-		store.on("insert", function (row) {
-			this.trigger("insert", ident, store, row);
-			this.trigger("write", "insert", ident, store, row);
-		}, this);
-		store.on("remove", function (id) {
-			this.trigger("remove", ident, store, id);
-			this.trigger("write", "remove", ident, store, id);
-		}, this);
-		store.on("update", function (row, data) {
-			this.trigger("update", ident, store, row, data);
-			this.trigger("write", "update", ident, store, row, data);
-		}, this);
-	}
-		
 }]);
 
 BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
@@ -4420,15 +4584,18 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		this._supportsAsync = (first.supportsAsync() && second.supportsAsync()) || !this._supportsSync;
 		this.__create_options = BetaJS.Objs.extend({
 			start: "first", // "second"
-			strategy: "then" // "or", "single"
+			strategy: "then", // "or", "single"
+			auto_replicate: "first" // "first", "second", "both", "none"
 		}, options.create_options);
 		this.__update_options = BetaJS.Objs.extend({
 			start: "first", // "second"
-			strategy: "then" // "or", "single"
+			strategy: "then", // "or", "single"
+			auto_replicate: "first" // "first", "second", "both", "none"
 		}, options.update_options);
 		this.__remove_options = BetaJS.Objs.extend({
 			start: "first", // "second"
-			strategy: "then" // "or", "single"
+			strategy: "then", // "or", "single",
+			auto_replicate: "first" // "first", "second", "both", "none"
 		}, options.delete_options);
 		this.__get_options = BetaJS.Objs.extend({
 			start: "first", // "second"
@@ -4440,12 +4607,66 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		this.__query_options = BetaJS.Objs.extend({
 			start: "first", // "second"
 			strategy: "or", // "single"
-			clone: true, // false (will use "cache_query" if present and inserts otherwise)
+			clone: true, // false
 			clone_second: false,
 			or_on_null: true // false
 		}, options.query_options);
+		this.__first.on("insert", this.__inserted_first, this);
+		this.__second.on("insert", this.__inserted_second, this);
+		this.__first.on("update", this.__updated_first, this);
+		this.__second.on("update", this.__updated_second, this);
+		this.__first.on("remove", this.__removed_first, this);
+		this.__second.on("remove", this.__removed_second, this);
 	},
 	
+	__inserted_first: function (row, event_data) {
+		if (event_data && event_data.dual_insert)
+			return;
+		if (this.__create_options.auto_replicate == "first" || this.__create_options.auto_replicate == "both")
+			this.__second.insert([row, {dual_insert: true}], {});
+		this._inserted(row);
+	},
+	
+	__inserted_second: function (row, event_data) {
+		if (event_data && event_data.dual_insert)
+			return;
+		if (this.__create_options.auto_replicate == "second" || this.__create_options.auto_replicate == "both")
+			this.__first.insert([row, {dual_insert: true}], {});
+		this._inserted(row);
+	},
+
+	__updated_first: function (row, update, event_data) {
+		if (event_data && event_data.dual_update)
+			return;
+		if (this.__update_options.auto_replicate == "first" || this.__update_options.auto_replicate == "both")
+			this.__second.update(row[this.id_key()], [update, {dual_update: true}], {});
+		this._updated(row, update);
+	},
+	
+	__updated_second: function (row, update, event_data) {
+		if (event_data && event_data.dual_update)
+			return;
+		if (this.__update_options.auto_replicate == "second" || this.__update_options.auto_replicate == "both")
+			this.__first.update(row[this.id_key()], [update, {dual_update: true}], {});
+		this._updated(row, update);
+	},
+
+	__removed_first: function (id, event_data) {
+		if (event_data && event_data.dual_remove)
+			return;
+		if (this.__remove_options.auto_replicate == "first" || this.__remove_options.auto_replicate == "both")
+			this.__second.remove([id, {dual_remove: true}], {});
+		this._removed(id);
+	},
+	
+	__removed_second: function (id, event_data) {
+		if (event_data && event_data.dual_remove)
+			return;
+		if (this.__remove_options.auto_replicate == "second" || this.__remove_options.auto_replicate == "both")
+			this.__first.remove([id, {dual_remove: true}], {});
+		this._removed(id);
+	},
+
 	first: function () {
 		return this.__first;
 	},
@@ -4464,32 +4685,32 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var strategy = this.__create_options.strategy;
 		if (callbacks) {
 			if (strategy == "then")
-				first.insert(data, {
+				first.insert([data, {dual_insert: true}], {
 					success: function (row) {
-						second.insert(row, callbacks);
+						second.insert([row, {dual_insert: true}], callbacks);
 					},
 					exception: callbacks.exception
 				});
 			else if (strategy == "or")
-				return first.insert(data, {
+				return first.insert([data, {dual_insert: true}], {
 					success: callbacks.success,
 					exception: function () {
-						second.insert(data, callbacks);
+						second.insert([data, {dual_insert: true}], callbacks);
 					}
 				});
 			else
-				first.insert(data, callbacks);
+				first.insert([data, {dual_insert: true}], callbacks);
 		} else {
 			if (strategy == "then")
-				return second.insert(first.insert(data));
+				return second.insert([first.insert([data, {dual_insert: true}]), {dual_insert: true}]);
 			else if (strategy == "or")
 				try {
-					return first.insert(data);
+					return first.insert([data, {dual_insert: true}]);
 				} catch (e) {
-					return second.insert(data);
+					return second.insert([data, {dual_insert: true}]);
 				}
 			else
-				return first.insert(data);
+				return first.insert([data, {dual_insert: true}]);
 		}
 		return true;
 	},
@@ -4504,32 +4725,32 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var strategy = this.__update_options.strategy;
 		if (callbacks) {
 			if (strategy == "then")
-				first.update(id, data, {
+				first.update(id, [data, {dual_update: true}], {
 					success: function (row) {
-						second.update(id, row, callbacks);
+						second.update(id, [row, {dual_update: true}], callbacks);
 					},
 					exception: callbacks.exception
 				});
 			else if (strategy == "or")
-				return first.update(id, data, {
+				return first.update(id, [data, {dual_update: true}], {
 					success: callbacks.success,
 					exception: function () {
-						second.update(id, data, callbacks);
+						second.update(id, [data, {dual_update: true}], callbacks);
 					}
 				});
 			else
-				first.update(id, data, callbacks);
+				first.update(id, [data, {dual_update: true}], callbacks);
 		} else {
 			if (strategy == "then")
-				return second.update(id, first.update(id, data));
+				return second.update(id, [first.update(id, [data, {dual_update: true}]), {dual_update: true}]);
 			else if (strategy == "or")
 				try {
-					return first.update(id, data);
+					return first.update(id, [data, {dual_update: true}]);
 				} catch (e) {
-					return second.update(id, data);
+					return second.update(id, [data, {dual_update: true}]);
 				}
 			else
-				return first.update(id, data);
+				return first.update(id, [data, {dual_update: true}]);
 		}
 		return true;
 	},
@@ -4544,34 +4765,34 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var strategy = this.__remove_options.strategy;
 		if (callbacks) {
 			if (strategy == "then")
-				first.remove(id, {
+				first.remove([id, {dual_remove: true}], {
 					success: function () {
-						second.remove(id, callbacks);
+						second.remove([id, {dual_remove: true}], callbacks);
 					},
 					exception: callbacks.exception
 				});
 			else if (strategy == "or")
-				first.remove(id, {
+				first.remove([id, {dual_remove: true}], {
 					success: callbacks.success,
 					exception: function () {
-						second.remove(id, callbacks);
+						second.remove([id, {dual_remove: true}], callbacks);
 					}
 				});
 			else
 				first.remove(id, callbacks);
 		} else {
 			if (strategy == "then") {
-				first.remove(id);
-				second.remove(id);
+				first.remove([id, {dual_remove: true}]);
+				second.remove([id, {dual_remove: true}]);
 			}
 			else if (strategy == "or")
 				try {
-					first.remove(id);
+					first.remove([id, {dual_remove: true}]);
 				} catch (e) {
-					second.remove(id);
+					second.remove([id, {dual_remove: true}]);
 				}
 			else
-				first.remove(id);
+				first.remove([id, {dual_remove: true}]);
 		}
 	},
 
@@ -4645,6 +4866,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var result = null;
 		if (strategy == "or") {
 			var fallback = function (callbacks) {
+				this.trigger("query_second", query, options);
 				second.query(query, options, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 					if (result && clone) {
 						arr = result.asArray();
@@ -4652,10 +4874,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 							BetaJS.SyncAsync.callback(callbacks, "success", result);
 						});
-						if ("cache_query" in first)
-							first.cache_query(query, options, arr, cb);
-						else
-							first.insert_all(arr, cb);				
+						first.insert_all(arr, cb, {query: query, options: options});				
 					} else
 						callbacks.success(result);
 				}));
@@ -4667,17 +4886,16 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 					BetaJS.SyncAsync.callback(callbacks, "success", result);
 				});
-				if ("cache_query" in second)
-					second.cache_query(query, options, arr, cb);
-				else
-					second.insert_all(arr, cb);				
+				second.insert_all(arr, cb, {query: query, options: options});				
 			};
-			return first.then(first.query, [query, options], callbacks, function (result, callbacks) {
+			this.trigger("query_first", query, options);
+			return this.then(first, first.query, [query, options], callbacks, function (result, callbacks) {
 				if (!result && or_on_null) {
-					fallback(callbacks);
+					fallback.call(this, callbacks);
 					return;
 				}
 				if (clone_second) {
+					this.trigger("query_second", query, options);
 					second.query(query, options, {
 						success: function (result2) {
 							if (result2) 
@@ -4691,61 +4909,25 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				} else
 					this.callback(callbacks, "success", result);
 			}, function (error, callbacks) {
-				fallback(callbacks);
+				fallback.call(this, callbacks);
 			});
-		} else
+		} else {
+			this.trigger("query_first", query, options);
 			return first.query(query, options, callbacks);
+		}
 	}
 
 });
 
-BetaJS.Stores.StoreException.extend("BetaJS.Stores.StoreCacheException");
-
-BetaJS.Stores.DualStore.extend("BetaJS.Stores.FullyCachedStore", {
+BetaJS.Stores.DualStore.extend("BetaJS.Stores.CachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
-		this._inherited(BetaJS.Stores.FullyCachedStore, "constructor",
+		this._inherited(BetaJS.Stores.CachedStore, "constructor",
 			parent,
-			new BetaJS.Stores.FullyCachedStore.InnerStore({id_key: parent.id_key()}),
-			BetaJS.Objs.extend({
-				get_options: {
-					start: "second",
-					strategy: "single"
-				},
-				query_options: {
-					start: "second",
-					strategy: "single"
-				}
-			}, options));
-	},
-	
-	cache: function () {
-		return this.second();
-	},
-	
-	store: function () {
-		return this.first();
-	}
-});
-
-
-BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.FullyCachedStore.InnerStore", {
-	
-	insert: function (row, callbacks) {
-		this.trigger("cache", row);
-		return this._inherited(BetaJS.Stores.FullyCachedStore.InnerStore, "insert", row, callbacks);
-	}
-	
-});
-
-
-
-BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
-	constructor: function (parent, options) {
-		options = options || {};
-		this._inherited(BetaJS.Stores.QueryCachedStore, "constructor",
-			parent,
-			new BetaJS.Stores.QueryCachedStore.InnerStore({id_key: parent.id_key()}),
+			new BetaJS.Stores.MemoryStore({
+				id_key: parent.id_key(),
+				query_model: new BetaJS.Queries.DefaultQueryModel()
+			}),
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
@@ -4755,7 +4937,7 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 					start: "second",
 					strategy: "or",
 					clone: true,
-					or_on_null: true
+					or_on_null: false
 				}
 			}, options));
 	},
@@ -4768,51 +4950,6 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.QueryCachedStore", {
 		return this.first();
 	}
 });
-
-
-BetaJS.Stores.MemoryStore.extend("BetaJS.Stores.QueryCachedStore.InnerStore", {
-	
-	constructor: function (options) {
-		this._inherited(BetaJS.Stores.QueryCachedStore.InnerStore, "constructor", options);
-		this.__queries = {};
-	},
-	
-	_query_capabilities: function () {
-		return {
-			"query": true,
-			"sort": true,
-			"limit": true,
-			"skip": true
-		};
-	},
-
-	_query: function (query, options) {
-		var constrained = BetaJS.Queries.Constrained.make(query, options);
-		var encoded = BetaJS.Queries.Constrained.format(constrained);
-		if (encoded in this.__queries)
-			return new BetaJS.Iterators.ArrayIterator(BetaJS.Objs.values(this.__queries[encoded]));
-		throw new BetaJS.Stores.StoreCacheException();
-	},
-	
-	cache_query: function (query, options, result, callbacks) {
-		var constrained = BetaJS.Queries.Constrained.make(query, options);
-		var encoded = BetaJS.Queries.Constrained.format(constrained);
-		this.__queries[encoded] = {};
-		for (var i = 0; i < result.length; ++i) {
-			var row = result[i];
-			this.insert(row);
-			this.__queries[encoded][row[this.id_key()]] = row;
-		}
-		this.callback(callbacks, "success", result);
-	},
-	
-	insert: function (row, callbacks) {
-		this.trigger("cache", row);
-		return this._inherited(BetaJS.Stores.QueryCachedStore.InnerStore, "insert", row, callbacks);
-	}
-	
-});
-
 BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	constructor: function (store, options) {
@@ -4934,260 +5071,228 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	
 	_ensure_index: function (key) {
 		return this.__store.ensure_index(key);
-	}	
+	},
+	
+	_store: function () {
+		return this.__store;
+	}
 
 });
-BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.WriteQueueStore", {
+
+
+
+BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.ActiveStore", {
 	
-	constructor: function (store, options) {		
-		this._inherited(BetaJS.Stores.WriteQueueStore, "constructor", store, options);
-		options = options || {};
-		this.__update_queue = {};
-		this.__revision_id = 1;
-		this.__id_to_queue = {};
-		this.__combine_updates = "combine_updates" in options ? options.combine_updates : true;
-		this.__auto_clear_updates = "auto_clear_updates" in options ? options.auto_clear_updates : true;
-		this.__flushing = false;
-		this.__cache = {};
-		if (this.__auto_clear_updates)
-			this.on("remove", function (id) {
-				this.__remove_update(id);
-			}, this);
-	},
-	
-	update: function (id, data, callbacks) {
-		this.__insert_update(id, data);
-		if (callbacks && callbacks.success)
-			callbacks.success(id, data, data);
-		return data;
-	},
-	
-	__remove_update: function (id) {
-		var revs = this.__id_to_queue[id];
-		delete this.__id_to_queue[id];
-		for (var rev in revs)
-			delete this.__update_queue[rev];
-		delete this.__cache[id];
-	},
-	
-	__remove_revision: function (revision_id) {
-		var revision = this.__update_queue[revision_id];
-		delete this.__update_queue[revision_id];
-		var revs = this.__id_to_queue[revision.id];
-		delete revs[revision_id];
-		if (BetaJS.Types.is_empty(revs)) {
-			delete this.__id_to_queue[revision.id];
-			delete this.__cache[revision.id];
-		}
-	},
-	
-	__insert_update: function (id, data) {
-		if (this.__combine_updates && this.__id_to_queue[id] && !this.__flushing) {
-			var comm = {};
-			for (var rev in this.__id_to_queue[id]) {
-				comm = BetaJS.Objs.extend(comm, this.__update_queue[rev].data);
-				delete this.__update_queue[rev];
-			}
-			comm = BetaJS.Objs.extend(comm, data);				 
-			this.__id_to_queue[id] = {};
-		} 
-		this.__id_to_queue[id] = this.__id_to_queue[id] || {};
-		this.__id_to_queue[id][this.__revision_id] = true;
-		this.__update_queue[this.__revision_id] = {
-			id: id,
-			data: data,
-			revision_id: this.__revision_id
-		};
-		this.__cache[id] = BetaJS.Objs.extend(this.__cache[id] || {}, data);
-		this.__revision_id++;
-		this.trigger("queue", "update", id, data);
-		this.trigger("queue:update", id, data);
-	},
-	
-	flush: function (callbacks) {
-		if (this.__flushing)
-			return;
-		this.__flushing = true;
-		var revision_id = this.__revision_id;
-		if (callbacks) {
-			var next = function () {
-				var item = BetaJS.Objs.peek(this.__update_queue);
-				if (!item || item.revision_id >= revision_id) {
-					BetaJS.SyncAsync.callback(callbacks, "success");
-					this.__flushing = false;
-					return;
-				}
-				this.__store.update(item.id, item.data, {
-					context: this,
-					success: function () {
-						this.__remove_revision(item.revision_id);
-						next.apply(this);
-					},
-					exception: function (e) {
-						BetaJS.SyncAsync.callback(callbacks, "exception", e);
-						this.__flushing = false;
-					}
-				});
-			};
-			next.apply(this);
-		} else {
-			var exc = null;
-			while (true) {
-				var item = BetaJS.Objs.peek(this.__update_queue);
-				if (!item || item.revision_id >= revision_id)
-					break;
-				try {
-					this.__store.update(item.id, item.data);
-					this.__remove_revision(item.revision_id);
-				} catch (e) {
-					exc = e;
-					break;
-				}
-			}
-			this.__flushing = false;
-			if (exc)
-				throw exc;
-		}
-	},
-	
-	changed: function () {
-		return !BetaJS.Types.is_empty(this.__update_queue);
-	},
-	
-	get: function (id) {
-		var obj = this.__store.get(id);
-		if (obj && this.__cache[id])
-			return BetaJS.Objs.extend(obj, this.__cache[id]);
-		return obj;
-	},
-	
-	query: function (query, options) {
-		var self = this;
-		return new BetaJS.Iterators.MappedIterator(this.__store.query(query, options), function (item) {
-			if (self.__cache[item[self.id_key()]])
-				return BetaJS.Objs.extend(item, self.__cache[item[self.id_key()]]);
-			return item;
-		});
+	constructor: function (store, listener, options) {
+		this._inherited(BetaJS.Stores.ActiveStore, "constructor", store, options);
+		this.__listener = listener;
+		this.delegateEvents(null, listener);
 	}
 	
 });
 
+BetaJS.Stores.BaseStore.extend("BetaJS.Stores.SocketStore", {
+	
+	constructor: function (options, socket, prefix) {
+		this._inherited(BetaJS.Stores.SocketStore, "constructor", options);
+		this.__socket = socket;
+		this.__prefix = prefix;
+		this._supportsAsync = false;
+	},
+	
+	__send: function (action, data) {
+		this.__socket.emit(this.__prefix + ":" + action, data);
+	},
+	
+	_insert: function (data) {
+		this.__send("insert", data);
+	},
+	
+	_remove: function (id) {
+		this.__send("remove", id);
+	},
+	
+	_update: function (id, data) {
+		this.__send("update", BetaJS.Objs.objectBy(id, data));
+	},
+	
+	bulk: function (commits, optimistic, callbacks) {
+		this.__send("bulk", commits);
+	}	
+	
+});
 
 
-BetaJS.Class.extend("BetaJS.Stores.WriteQueueStoreManager", [
+BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.SocketListenerStore", {
+
+	constructor: function (options, socket, prefix) {
+		this._inherited(BetaJS.Stores.SocketListenerStore, "constructor", options);
+		var self = this;
+		this.__prefix = prefix;
+		socket.on(this.__prefix + ":insert", function (data) {
+			self._perform("insert", data);
+		});
+		socket.on(this.__prefix + ":remove", function (id) {
+			self._perform("remove", id);
+		});
+		socket.on(this.__prefix + ":update", function (data) {
+			self._perform("update", data);
+		});
+		socket.on(this.__prefix + ":bulk", function (commits) {
+			for (var i = 0; i < commits.length; ++i)
+				self._perform(BetaJS.Objs.keyByIndex(commits[i]), BetaJS.Objs.valueByIndex(commits[i]));
+		});
+	},
+	
+	_perform: function (action, data) {
+		if (action == "insert")
+			this._inserted(data);
+		else if (action == "remove")
+			this._removed(data);
+		else if (action == "update")
+			this._updated(BetaJS.Objs.objectBy(this.id_key(), BetaJS.Objs.keyByIndex(data)), BetaJS.Objs.valueByIndex(data));
+		else
+			throw new BetaJS.Stores.StoreException("unsupported: perform " + action);
+	}
+
+});
+BetaJS.Class.extend("BetaJS.Stores.StoresMonitor", [
+	BetaJS.Events.EventsMixin,
+{
+	attach: function (ident, store) {
+		store.on("insert", function (row) {
+			this.trigger("insert", ident, store, row);
+			this.trigger("write", "insert", ident, store, row);
+		}, this);
+		store.on("remove", function (id) {
+			this.trigger("remove", ident, store, id);
+			this.trigger("write", "remove", ident, store, id);
+		}, this);
+		store.on("update", function (row, data) {
+			this.trigger("update", ident, store, row, data);
+			this.trigger("write", "update", ident, store, row, data);
+		}, this);
+	}
+		
+}]);
+
+BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	BetaJS.Events.EventsMixin,
 	{
 	
-	
-	constructor: function (options) {
-		this._inherited(BetaJS.Stores.WriteQueueStoreManager, "constructor");
+	constructor: function (store, options) {
+		this._inherited(BetaJS.Stores.StoreHistory, "constructor");
 		options = options || {};
-		this.__stores = {};
-		this.__changed = false;
-		this.__flushing = false;
-		this.__async = "async" in options ? options.async : false;
-		this.__min_delay = options.min_delay ? options.min_delay : null;
-		this.__max_delay = options.max_delay ? options.max_delay : null;
-		if (this.__min_delay || this.__max_delay) {
-			this.on("changed", function () {
-				if (this.__async)
-					this.flush({
-						success: function () {},
-						exception: function () {}
-					});
-				else
-					this.flush();
-			}, this, {min_delay: this.__min_delay, max_delay: this.__max_delay});
-		}
-	},
-	
-	destroy: function () {
-		this.off(null, null, this);
-		BetaJS.Objs.iter(this.__stores, function (store) {
-			this.unregister(store);
+		this._combine_update_update = options.combine_update_update || false;
+		this._combine_insert_update = options.combine_insert_update || false;
+		this._combine_insert_remove = options.combine_insert_remove || false;
+		this._combine_update_remove = options.combine_update_remove || false;
+		this._commits = {};
+		this._revision_id = null;
+		this._store = store;
+		this._item_commits = {};
+		this._store.on("insert", function (data) {
+			this.__add_commit({action: "insert", id: data[this._store.id_key()], data: data});
 		}, this);
-		this._inherited(BetaJS.Stores.WriteQueueStoreManager, "destroy");
-	},
-	
-	__get: function (store) {
-//		return store.instance_of(BetaJS.Stores.WriteQueueCachedStore) ? store.second() : store;
-		return store;
-	},
-	
-	register: function (store) {
-		store = this.__get(store);
-		this.__stores[BetaJS.Ids.objectId(store)] = store;
-		store.on("queue:update", function () {
-			this.__changed = true;
-			this.trigger("changed");
+		this._store.on("remove", function (id) {
+			this.__add_commit({action: "remove", id: id});
+		}, this);
+		this._store.on("update", function (id, data) {
+			this.__add_commit({action: "update", id: id, data: data});
 		}, this);
 	},
 	
-	unregister: function (store) {
-		store = this.__get(store);
-		delete this.__stores[BetaJS.Ids.objectId(store)];
-		store.off(null, null, this);
+	__remove_commit: function (revision_id) {
+		this.trigger("remove", this._commits[revision_id]);
+		var id = this._commits[revision_id].id;
+		delete this._commits[revision_id];
+		delete this._item_commits[id];
+		if (BetaJS.Objs.is_empty(this._item_commits[id]))
+			delete this._item_commits[id];
 	},
 	
-	flush: function (callbacks) {
-		if (this.__flushing)
-			return;
-		this.__flushing = true;
-		this.trigger("flush_start");
-		this.trigger("flush");
-		if (callbacks) {
-			var promises = [];
-			BetaJS.Objs.iter(this.__stores, function (store) {
-				promises.push(BetaJS.SyncAsync.promise(store, store.flush));
-			});
-			BetaJS.SyncAsync.join(promises, {
-				context: this,
-				success: function () {
-					this.trigger("flush_end");
-					this.__flushing = false;
-					BetaJS.SyncAsync.callback(callbacks, "success");
-					this.__changed = false;
-					BetaJS.Objs.iter(this.__stores, function (store) {
-						this.__changed = this.__changed || store.changed();
-					}, this);
-				},
-				exception: function (exc) {
-					this.trigger("flush_error");
-					this.__flushing = false;
-						BetaJS.SyncAsync.callback(callbacks, "exception", exc);
-					this.__changed = false;
-					BetaJS.Objs.iter(this.__stores, function (store) {
-						this.__changed = this.__changed || store.changed();
-					}, this);
-				}
-			});
-		} else {
-			var exc = null;
-			BetaJS.Objs.iter(this.__stores, function (store) {
-				try {
-					store.flush();
-				} catch (e) {
-					exc = e;
-					return false;
-				}
-				return true;
-			}, this);
-			this.__flushing = false;
-			if (exc) {
-				this.trigger("flush_error");
-				throw exc;
-			} else
-				this.trigger("flush_end");
-			this.__changed = false;
-			BetaJS.Objs.iter(this.__stores, function (store) {
-				this.__changed = this.__changed || store.changed();
-			}, this);
+	__add_commit: function (object) {
+		object.revision_id = this._new_revision_id();
+		var has_insert = false;
+		var has_update = false;
+		var last_rev_id = null;
+		for (var rev_id in this._item_commits[object.id]) {
+			var obj = this._commits[rev_id];
+			has_insert = has_insert || obj.action == "insert";
+			has_update = has_update || obj.action == "update";
+			last_rev_id = rev_id;
+		}	
+		this._revision_id = object.revision_id;
+		this._commits[this._revision_id] = object;
+		this._item_commits[object.id] = this._item_commits[object.id] || {};
+		this._item_commits[object.id][object.revision_id] = true;
+		this.trigger("commit", object);
+		if (object.action == "update") {
+			if ((this._combine_insert_update && !has_update && has_insert) || (this._combine_update_update && has_update)) {
+				this.__remove_commit(object.revision_id);
+				this._commits[last_rev_id].data = BetaJS.Objs.extend(this._commits[last_rev_id].data, object.data);
+			}
+		} else if (object.action == "remove") {
+			for (rev_id in this._item_commits[object.id]) {
+				obj = this._commits[rev_id];
+				if ((has_insert && this._combine_insert_remove) || (obj.action == "update" && this._combine_update_remove))
+					this.__remove_commit(rev_id);
+			}
 		}
-	}	
+	},
 	
-}]);
+	flush: function (revision_id) {
+		revision_id = revision_id || this._revision_id;
+		for (var id in this._commits) {
+			if (id > revision_id)
+				break;
+			this.__remove_commit(id);
+		}
+	},
+	
+	serialize: function (revision_id) {
+		var commit = this._commits[revision_id];
+		if (commin.action == "insert")
+			return {
+				"insert": commit.data
+			};
+		else if (commit.action == "remove")
+			return {
+				"remove": commit.id
+			};
+		else if (commit == "update")
+			return {
+				"update": BetaJS.Objs.objectBy(commit.id, commit.data) 
+			};
+		return null;
+	},
+	
+	serialize_bulk: function (revision_id) {
+		revision_id = revision_id || this._revision_id;
+		var result = [];
+		for (var id in this._commits) {
+			if (id > revision_id)
+				break;
+			result.push(this.serialize(id));
+		}
+		return result;
+	},
+	
+	revision_id: function () {
+		return this._revision_id;
+	},
+	
+	_new_revision_id: function () {
+		return this.cls.__revision_id + 1;
+	}
+	
+}], {
+	
+	__revision_id: 0
+	
+});
 /*!
-  betajs - v0.0.2 - 2014-04-03
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5551,7 +5656,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	},
 	
 	destroy: function () {
-		if (this.__destroying)
+		if (this.__destroying || !this.__table)
 			return;
 		this.__destroying = true;
 		this.__table._model_unregister(this);
@@ -5573,7 +5678,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 
 	update: function (data, options, callbacks) {
 		this.setAll(data, {silent: true});
-		this.save(options, callbacks);
+		this.save(callbacks);
 	},
 
 	_afterSet: function (key, value, old_value, options) {
@@ -5653,13 +5758,37 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			// Validation options
 			store_validation_conversion: true,
 			// Update options
-			auto_update: true
+			auto_update: true,
+			// Include new inserts automagically
+			auto_materialize: false
 		}, options || {});
 		this.__models_by_cid = new BetaJS.Classes.ObjectCache({ size: this.__options.model_cache_size });
 		this._auto_destroy(this.__models_by_cid);
 		this.__models_by_cid.on("release", function (model) {
 			if (model.hasId())
 				delete this.__models_by_id[model.id()];
+		}, this);
+		if (this.__options.auto_materialize) {
+			this.__store.on("insert", function (obj, event_data) {
+				if (this.__models_by_id[obj[this.primary_key()]] || (event_data && event_data.model_create))
+					return;
+				var model = this.__materialize(obj);
+				this.trigger("create", model);				
+			}, this);
+		}
+		this.__store.on("update", function (row, data, event_data) {
+			if (!this.__models_by_id[row[this.primary_key()]] || (event_data && event_data.model_update))
+				return;
+			var model = this.__models_by_id[row[this.primary_key()]];
+			model.setAll(data, {silent: true});
+			this.trigger("update", model);
+		}, this);
+		this.__store.on("remove", function (id, event_data) {
+			if (!this.__models_by_id[id] || (event_data && event_data.model_remove))
+				return;
+			var model = this.__models_by_id[id];
+			this.trigger("remove", model);
+			model.destroy();
 		}, this);
 	},
 	
@@ -5691,7 +5820,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	_model_remove: function (model, callbacks) {
 		if (!this.hasModel(model))
 			return false;
-		return this.then(this.__store, this.__store.remove, [model.id()], callbacks, function (result, callbacks) {
+		return this.then(this.__store, this.__store.remove, [[model.id(), {model_remove: true}]], callbacks, function (result, callbacks) {
 			this.trigger("remove", model);
 			model.destroy();
 			this.callback(callbacks, "success", true);
@@ -5721,7 +5850,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		var attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(model.get_all_properties());
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
-		return this.then(this.__store, this.__store.insert, [attrs], callbacks, function (confirmed, callbacks) {
+		return this.then(this.__store, this.__store.insert, [[attrs, {model_create: true}]], callbacks, function (confirmed, callbacks) {
 			if (!(model.cls.primary_key() in confirmed))
 				return this.callback(callbacks, "exception", new BetaJS.Modelling.ModelMissingIdException(model));
 			this.__models_by_id[confirmed[model.cls.primary_key()]] = model;
@@ -5732,7 +5861,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			return true;		
 		}, function (e, callbacks) {
 			e = BetaJS.Exceptions.ensure(e);
-			e = self.__exception_conversion(model, e);
+			e = this.__exception_conversion(model, e);
 			this.callback(callbacks, "exception", e);
 		});
 	},
@@ -5753,7 +5882,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 				this.callback(callbacks, "success", attrs);
 			return attrs;
 		}
-		return this.then(this.__store, this.__store.update, [model.id(), attrs], callbacks, function (confirmed, callbacks) {
+		return this.then(this.__store, this.__store.update, [model.id(), [attrs, {model_update: true}]], callbacks, function (confirmed, callbacks) {
 			model.setAll(confirmed, {no_change: true, silent: true});
 			delete this.__models_changed[model.cid()];
 			this.trigger("update", model);
@@ -5843,12 +5972,17 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		});
 	},
 	
+	query: function () {
+		// Alias
+		return this.allBy.apply(this, arguments);
+	},
+	/*
 	active_query_engine: function () {
 		if (!this._active_query_engine) {
 			var self = this;
 			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
 			this._active_query_engine._query = function (query, callbacks) {
-				return self.allBy(query, {}, callbacks);
+				return self.allBy(query.query || {}, query.options || {}, callbacks);
 			};
 			this.on("create", function (object) {
 				this._active_query_engine.insert(object);
@@ -5862,7 +5996,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		}
 		return this._active_query_engine;
 	},
-	
+	*/
 	scheme: function () {
 		return this.__model_type.scheme();
 	},
@@ -6262,7 +6396,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-03-31
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7387,7 +7521,7 @@ BetaJS.Browser.RouteBinder.extend("BetaJS.Browser.LocationRouteBinder", {
 BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
-		source = BetaJS.Browser.AjaxException.ensure(source);
+		source = BetaJS.Net.AjaxException.ensure(source);
 		this._inherited(BetaJS.Stores.RemoteStoreException, "constructor", source.toString());
 		this.__source = source;
 	},
@@ -7406,7 +7540,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		this.__ajax = ajax;
 		this.__options = BetaJS.Objs.extend({
 			"update_method": "PUT",
-			"uri_mappings": {}
+			"uri_mappings": {},
+			"bulk_method": "POST",
+			"supports_bulk": false
 		}, options || {});
 	},
 	
@@ -7495,7 +7631,17 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	_query : function(query, options, callbacks) {
 		return this.__invoke(this._encode_query(query, options), callbacks, true);
-	}
+	},
+	
+	bulk: function (commits, optimistic, callbacks) {
+		if (!this.__options["supports_bulk"]) 
+			return this._inherited(BetaJS.Stores.RemoteStore, "bulk", commits, optimistic);
+		return this.__invoke({
+			method: this.__options["bulk_method"],
+			uri: this.prepare_uri("bulk"),
+			data: commits
+		});
+	}	
 	
 });
 
@@ -7513,6 +7659,10 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 			caps.skip = true;
 		if ("limit" in this.__capability_params)
 			caps.limit = true;
+		if ("query" in this.__capability_params)
+			caps.query = true;
+		if ("sort" in this.__capability_params)
+			caps.sort = true;
 		return caps;
 	},
 
@@ -7523,6 +7673,10 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 			uri += this.__capability_params["skip"] + "=" + options["skip"] + "&";
 		if (options["limit"] && "limit" in this.__capability_params)
 			uri += this.__capability_params["limit"] + "=" + options["limit"] + "&";
+		if (options["sort"] && "sort" in this.__capability_params)
+			uri += this.__capability_params["sort"] + "=" + JSON.stringify(options["sort"]) + "&";
+		if ("query" in this.__capability_params)
+			uri += this.__capability_params["query"] + "=" + JSON.stringify(query) + "&";
 		return {
 			uri: uri
 		};		

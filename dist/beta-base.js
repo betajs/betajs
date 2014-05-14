@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-04-03
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -376,6 +376,13 @@ BetaJS.Functions = {
 /** @class */
 BetaJS.SyncAsync = {
 	
+	eventually: function (func, params, context) {
+		var timer = setTimeout(function () {
+			clearTimeout(timer);
+			func.apply(context || this, params || []);
+		}, 0);
+	},
+	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
      * @param callbacks callbacks object with success and exception
@@ -488,8 +495,10 @@ BetaJS.SyncAsync = {
 			} catch (e) {
 				if (exception)
 					exception.call(success_ctx, e, callbacks);
-				else
+				else if (callbacks.exception)
 					callbacks.exception.call(callbacks.context || this, e);
+				else
+					throw e;
 			}
 		} else {
 			try {
@@ -1197,6 +1206,38 @@ BetaJS.Objs = {
 			}
 			return null;
 		} 
+	},
+	
+	objectBy: function () {
+		var obj = {};
+		var count = arguments.length / 2;
+		for (var i = 0; i < count; ++i)
+			obj[arguments[2 * i]] = arguments[2 * i + 1];
+		return obj;
+	},
+	
+	valueByIndex: function (obj, idx) {
+		idx = idx || 0;
+		if (BetaJS.Types.is_array(obj))
+			return obj[idx];
+		for (var key in obj) {
+			if (idx === 0)
+				return obj[key];
+			idx--;
+		}
+		return null;
+	},
+	
+	keyByIndex: function (obj, idx) {
+		idx = idx || 0;
+		if (BetaJS.Types.is_array(obj))
+			return idx;
+		for (var key in obj) {
+			if (idx === 0)
+				return key;
+			idx--;
+		}
+		return null;
 	}
 
 };
@@ -1759,6 +1800,20 @@ BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
 		while (this.hasNext())
 			arr.push(this.next());
 		return arr;
+	},
+	
+	asArrayDelegate: function (f) {
+		var arr = [];
+		while (this.hasNext()) {
+			var obj = this.next();			
+			arr.push(obj[f].apply(obj, BetaJS.Functions.getArguments(arguments, 1)));
+		}
+		return arr;
+	},
+	
+	iterate: function (callback, context) {
+		while (this.hasNext())
+			callback.call(context || this, this.next());
 	}
 	
 });
@@ -1942,6 +1997,8 @@ BetaJS.Events.EventsMixin = {
 			callback: callback,
 			context: context
 		};
+		if (options.eventually)
+			obj.eventually = options.eventually;
 		if (options.min_delay)
 			obj.min_delay = new BetaJS.Timers.Timer({
 				delay: options.min_delay,
@@ -1981,9 +2038,12 @@ BetaJS.Events.EventsMixin = {
 			object.min_delay.restart();
 		if (object.max_delay)
 			object.max_delay.start();
-		if (!object.min_delay && !object.max_delay)
-			object.callback.apply(object.context || this, params);
-		else
+		if (!object.min_delay && !object.max_delay) {
+			if (object.eventually)
+				BetaJS.SyncAsync.eventually(object.callback, params, object.context || this);
+			else
+				object.callback.apply(object.context || this, params);
+		} else
 			object.params = params;
 	},
 	
@@ -2695,9 +2755,12 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	add_objects: function (objects) {
+		var count = 0;
 		BetaJS.Objs.iter(objects, function (object) {
-			this.add(object);
+			if (this.add(object))
+				count++;
 		}, this);		
+		return count;
 	},
 	
 	exists: function (object) {
@@ -2859,14 +2922,14 @@ BetaJS.Comparators = {
 	
 	byValue: function (a, b) {
 		if (BetaJS.Types.is_string(a))
-			return a.localCompare(b);
+			return a.localeCompare(b);
 		if (a < b)
 			return -1;
 		if (a > b)
 			return 1;
 		return 0;
 	}
-	
+		
 };
 
 BetaJS.Sort = {

@@ -79,9 +79,12 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	add_objects: function (objects) {
+		var count = 0;
 		BetaJS.Objs.iter(objects, function (object) {
-			this.add(object);
+			if (this.add(object))
+				count++;
 		}, this);		
+		return count;
 	},
 	
 	exists: function (object) {

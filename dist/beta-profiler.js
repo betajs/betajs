@@ -1,13 +1,13 @@
 /*!
-  betajs - v0.0.2 - 2014-03-10
+  betajs - v0.0.2 - 2014-05-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
-BetaJS.Class.extend("BetaJS.Profiling.Profiler", [
+BetaJS.Class.extend("BetaJS.Profiling.ClassProfiler", [
     BetaJS.Events.EventsMixin, {
 	
 	constructor: function (cls) {
-		this._inherited(BetaJS.Profiling.Profiler, "constructor");
+		this._inherited(BetaJS.Profiling.ClassProfiler, "constructor");
 		if (!cls)
 			cls = BetaJS.Class;
 		this.__cls = cls;
@@ -28,7 +28,7 @@ BetaJS.Class.extend("BetaJS.Profiling.Profiler", [
 	destroy: function () {
 		this.__cls.prototype.constructor = this.__old_constructor;
 		this.__cls.prototype.destroy = this.__old_destroy;
-		this._inherited(BetaJS.Profiling.Profiler, "destroy");
+		this._inherited(BetaJS.Profiling.ClassProfiler, "destroy");
 	},
 	
 	__on_construct_helper: function (instance, cls) {
@@ -101,10 +101,10 @@ BetaJS.Class.extend("BetaJS.Profiling.Profiler", [
 }]);
 
 
-BetaJS.Class.extend("BetaJS.Profiling.ProfilerHtmlViewer", {
+BetaJS.Class.extend("BetaJS.Profiling.ClassProfilerHtmlViewer", {
                                                                                        
     constructor: function (profiler) {
-    	this._inherited(BetaJS.Profiling.ProfilerHtmlViewer, "constructor");
+    	this._inherited(BetaJS.Profiling.ClassProfilerHtmlViewer, "constructor");
     	this.__profiler = profiler;
     	this.__rendered = false;
     	profiler.on("update", function (cls) {
@@ -114,7 +114,7 @@ BetaJS.Class.extend("BetaJS.Profiling.ProfilerHtmlViewer", {
     
     destroy: function () {
     	this.__profiler.off(null, null, this);
-    	this._inherited(BetaJS.Profiling.ProfilerHtmlViewer, "destroy");
+    	this._inherited(BetaJS.Profiling.ClassProfilerHtmlViewer, "destroy");
     },
     
     render: function ($el) {
@@ -140,3 +140,16 @@ BetaJS.Class.extend("BetaJS.Profiling.ProfilerHtmlViewer", {
     }
 
 });
+BetaJS.Class.extend("BetaJS.Profiling.PerformanceProfiler", [
+	BetaJS.Events.EventsMixin,
+	{
+		
+	execute: function (name, callback) {
+		var start_time = BetaJS.Time.now();
+		callback.apply();
+		var end_time = BetaJS.Time.now();
+		var diff_time = end_time - start_time;
+		this.trigger("execute", name, diff_time, start_time, end_time);
+	}
+	
+}]);

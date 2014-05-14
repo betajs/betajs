@@ -35,6 +35,22 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	
 	_ensure_index: function (key) {
 		return this.__store.ensure_index(key);
-	}	
+	},
+	
+	_store: function () {
+		return this.__store;
+	}
 
+});
+
+
+
+BetaJS.Stores.PassthroughStore.extend("BetaJS.Stores.ActiveStore", {
+	
+	constructor: function (store, listener, options) {
+		this._inherited(BetaJS.Stores.ActiveStore, "constructor", store, options);
+		this.__listener = listener;
+		this.delegateEvents(null, listener);
+	}
+	
 });

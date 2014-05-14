@@ -19,6 +19,20 @@ BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
 		while (this.hasNext())
 			arr.push(this.next());
 		return arr;
+	},
+	
+	asArrayDelegate: function (f) {
+		var arr = [];
+		while (this.hasNext()) {
+			var obj = this.next();			
+			arr.push(obj[f].apply(obj, BetaJS.Functions.getArguments(arguments, 1)));
+		}
+		return arr;
+	},
+	
+	iterate: function (callback, context) {
+		while (this.hasNext())
+			callback.call(context || this, this.next());
 	}
 	
 });

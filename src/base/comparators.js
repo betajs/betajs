@@ -17,12 +17,12 @@ BetaJS.Comparators = {
 	
 	byValue: function (a, b) {
 		if (BetaJS.Types.is_string(a))
-			return a.localCompare(b);
+			return a.localeCompare(b);
 		if (a < b)
 			return -1;
 		if (a > b)
 			return 1;
 		return 0;
 	}
-	
+		
 };

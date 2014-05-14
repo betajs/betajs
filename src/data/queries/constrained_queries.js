@@ -7,6 +7,10 @@ BetaJS.Queries.Constrained = {
 		};
 	},
 	
+	is_constrained: function (query) {
+		return query && (query.query || query.options);
+	},
+	
 	format: function (instance) {
 		var query = instance.query;
 		instance.query = BetaJS.Queries.format(query);
@@ -16,8 +20,8 @@ BetaJS.Queries.Constrained = {
 	},
 	
 	emulate: function (constrained_query, query_capabilities, query_function, query_context, callbacks) {
-		var query = constrained_query.query;
-		var options = constrained_query.options;
+		var query = constrained_query.query || {};
+		var options = constrained_query.options || {};
 		var execute_query = {};
 		var execute_options = {};
 		if ("sort" in options && "sort" in query_capabilities)
@@ -77,8 +81,28 @@ BetaJS.Queries.Constrained = {
 				exception_call(e);
 			}
 		return true;	
+	},
+	
+	subsumizes: function (query, query2) {
+		qopt = query.options || {};
+		qopt2 = query2.options || {};
+		qskip = qopt.skip || 0;
+		qskip2 = qopt2.skip || 0;
+		qlimit = qopt.limit || null;
+		qlimit2 = qopt2.limit || null;
+		qsort = qopt.sort;
+		qsort2 = qopt2.sort;
+		if (qskip > qskip2)
+			return false;
+		if (qlimit) {
+			if (!qlimit2)
+				return false;
+			if (qlimit2 + qskip2 > qlimit + qskip)
+				return false;
+		}
+		if ((qskip || qlimit) && (qsort || qsort2) && qsort != qsort2)
+			return false;
+		return BetaJS.Queries.subsumizes(query.query, query2.query);
 	}
-	
-	
 
 }; 

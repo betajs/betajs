@@ -255,6 +255,38 @@ BetaJS.Objs = {
 			}
 			return null;
 		} 
+	},
+	
+	objectBy: function () {
+		var obj = {};
+		var count = arguments.length / 2;
+		for (var i = 0; i < count; ++i)
+			obj[arguments[2 * i]] = arguments[2 * i + 1];
+		return obj;
+	},
+	
+	valueByIndex: function (obj, idx) {
+		idx = idx || 0;
+		if (BetaJS.Types.is_array(obj))
+			return obj[idx];
+		for (var key in obj) {
+			if (idx === 0)
+				return obj[key];
+			idx--;
+		}
+		return null;
+	},
+	
+	keyByIndex: function (obj, idx) {
+		idx = idx || 0;
+		if (BetaJS.Types.is_array(obj))
+			return idx;
+		for (var key in obj) {
+			if (idx === 0)
+				return key;
+			idx--;
+		}
+		return null;
 	}
 
 };

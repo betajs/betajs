@@ -1,7 +1,7 @@
 BetaJS.Stores.StoreException.extend("BetaJS.Stores.RemoteStoreException", {
 	
 	constructor: function (source) {
-		source = BetaJS.Browser.AjaxException.ensure(source);
+		source = BetaJS.Net.AjaxException.ensure(source);
 		this._inherited(BetaJS.Stores.RemoteStoreException, "constructor", source.toString());
 		this.__source = source;
 	},
@@ -20,7 +20,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 		this.__ajax = ajax;
 		this.__options = BetaJS.Objs.extend({
 			"update_method": "PUT",
-			"uri_mappings": {}
+			"uri_mappings": {},
+			"bulk_method": "POST",
+			"supports_bulk": false
 		}, options || {});
 	},
 	
@@ -109,7 +111,17 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 
 	_query : function(query, options, callbacks) {
 		return this.__invoke(this._encode_query(query, options), callbacks, true);
-	}
+	},
+	
+	bulk: function (commits, optimistic, callbacks) {
+		if (!this.__options["supports_bulk"]) 
+			return this._inherited(BetaJS.Stores.RemoteStore, "bulk", commits, optimistic);
+		return this.__invoke({
+			method: this.__options["bulk_method"],
+			uri: this.prepare_uri("bulk"),
+			data: commits
+		});
+	}	
 	
 });
 
@@ -127,6 +139,10 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 			caps.skip = true;
 		if ("limit" in this.__capability_params)
 			caps.limit = true;
+		if ("query" in this.__capability_params)
+			caps.query = true;
+		if ("sort" in this.__capability_params)
+			caps.sort = true;
 		return caps;
 	},
 
@@ -137,6 +153,10 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 			uri += this.__capability_params["skip"] + "=" + options["skip"] + "&";
 		if (options["limit"] && "limit" in this.__capability_params)
 			uri += this.__capability_params["limit"] + "=" + options["limit"] + "&";
+		if (options["sort"] && "sort" in this.__capability_params)
+			uri += this.__capability_params["sort"] + "=" + JSON.stringify(options["sort"]) + "&";
+		if ("query" in this.__capability_params)
+			uri += this.__capability_params["query"] + "=" + JSON.stringify(query) + "&";
 		return {
 			uri: uri
 		};		

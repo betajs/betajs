@@ -10,6 +10,8 @@ BetaJS.Events.EventsMixin = {
 			callback: callback,
 			context: context
 		};
+		if (options.eventually)
+			obj.eventually = options.eventually;
 		if (options.min_delay)
 			obj.min_delay = new BetaJS.Timers.Timer({
 				delay: options.min_delay,
@@ -49,9 +51,12 @@ BetaJS.Events.EventsMixin = {
 			object.min_delay.restart();
 		if (object.max_delay)
 			object.max_delay.start();
-		if (!object.min_delay && !object.max_delay)
-			object.callback.apply(object.context || this, params);
-		else
+		if (!object.min_delay && !object.max_delay) {
+			if (object.eventually)
+				BetaJS.SyncAsync.eventually(object.callback, params, object.context || this);
+			else
+				object.callback.apply(object.context || this, params);
+		} else
 			object.params = params;
 	},
 	

@@ -44,18 +44,6 @@ test("test tables all async", function() {
 	});
 });
 
-test("test tables active query engine", function() {
-	var store = new BetaJS.Stores.MemoryStore();
-	var Model = BetaJS.Modelling.Model.extend("Model", {});
-	var table = new BetaJS.Modelling.Table(store, Model, {});
-	var model = new Model({}, {
-		table : table
-	});
-	model.save();
-	var active_query = new BetaJS.Queries.ActiveQuery(table.active_query_engine(), {});
-	QUnit.equal(active_query.collection().count(), 1);
-});
-
 test("test tables findBy", function() {
 	var store = new BetaJS.Stores.MemoryStore();
 	var Model = BetaJS.Modelling.Model.extend("Model", {});

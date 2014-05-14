@@ -1,94 +1,118 @@
 BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
-	constructor: function (options) {
+	constructor: function (source, query, options) {
+		this._source = source;
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);
-		this.__query = BetaJS.Objs.extend({
-			func: null,
-			select: {},
-			skip: 0,
-			limit: null,
+		this._options = BetaJS.Objs.extend({
 			forward_steps: null,
 			backward_steps: null,
-			range: null,
-			count: null,
-			sort: {}
-		}, options.query);
-		if (!("objects" in options))
-			options.objects = this.__execute_query(this.__query.skip, this.__query.limit, true);
+			range: null
+		}, options);
+		this.set_query(query);
+	},
+	
+	query: function () {
+		return this._query;
+	},
+	
+	set_query: function (query) {
+		this._query = BetaJS.Objs.extend({
+			query: {},
+			options: {}
+		}, query);
+		this._query.options.skip = this._query.options.skip || 0;
+		this._query.options.limit = this._query.options.limit || null;
+		this._query.options.sort = this._query.options.sort || {};  
+		this._count = 0;
+		this.__execute_query(this._query.options.skip, this._query.options.limit, true);
+	},
+	
+	__sub_query: function (options, callbacks) {
+		this._source.query(this._query.query, options, callbacks);
 	},
 	
 	__execute_query: function (skip, limit, clear_before) {
 		skip = Math.max(skip, 0);
 		var q = {};
-		var objs = null;
-		var iter = null;
-		if (this.__query.sort && !BetaJS.Types.is_empty(this.__query.sort))
-			q.sort = this.__query.sort;
+		if (this._query.options.sort && !BetaJS.Types.is_empty(this._query.options.sort))
+			q.sort = this._query.options.sort;
 		if (clear_before) {
 			if (skip > 0)
 				q.skip = skip;
 			if (limit !== null)
 				q.limit = limit;
-			iter = this.__query.func(this.__query.select, q);
-			objs = iter.asArray();
-			this.__query.skip = skip;
-			this.__query.limit = limit;
-			this.__query.count = !limit || objs.length < limit ? skip + objs.length : null;
-			this.clear();
-			this.add_objects(objs);
-		} else if (skip < this.__query.skip) {
-			limit = this.__query.skip - skip;
+			this.__sub_query(q, {
+				context: this,
+				success: function (iter) {
+					var objs = iter.asArray();
+					this._query.options.skip = skip;
+					this._query.options.limit = limit;
+					this._count = !limit || objs.length < limit ? skip + objs.length : null;
+					this.clear();
+					this.add_objects(objs);
+				}
+			});
+		} else if (skip < this._query.options.skip) {
+			limit = this._query.options.skip - skip;
 			if (skip > 0)
 				q.skip = skip;
 			q.limit = limit;
-			iter = this.__query.func(this.__query.select, q);
-			objs = iter.asArray();
-			this.__query.skip = skip;
-			this.__query.limit = !this.__query.limit ? null : this.__query.limit + objs.length;
-			this.add_objects(objs);
-		} else if (skip >= this.__query.skip) {
-			if (this.__query.limit && (!limit || skip + limit > this.__query.skip + this.__query.limit)) {
-				limit = (skip + limit) - (this.__query.skip + this.__query.limit);
-				skip = this.__query.skip + this.__query.limit;
+			this.__sub_query(q, {
+				context: this,
+				success: function (iter) {
+					var objs = iter.asArray();
+					this._query.options.skip = skip;
+					var added = this.add_objects(objs);
+					this._query.options.limit = this._query.options.limit === null ? null : this._query.options.limit + added;
+				}
+			});
+		} else if (skip >= this._query.options.skip) {
+			if (this._query.options.limit !== null && (!limit || skip + limit > this._query.options.skip + this._query.options.limit)) {
+				limit = (skip + limit) - (this._query.options.skip + this._query.options.limit);
+				skip = this._query.options.skip + this._query.options.limit;
 				if (skip > 0)
 					q.skip = skip;
 				if (limit)
 					q.limit = limit;
-				iter = this.__query.func(this.__query.select, q);
-				objs = iter.asArray();
-				this.__query.limit = this.__query.limit + objs.length;
-				if (limit > objs.length)
-					this.__query.count = skip + objs.length;
-				this.add_objects(objs);
+				this.__sub_query(q, {
+					context: this,
+					success: function (iter) {
+						var objs = iter.asArray();
+						var added = this.add_objects(objs);
+						this._query.options.limit = this._query.options.limit + added;
+						if (limit > objs.length)
+							this._count = skip + added;
+					}
+				});
 			}
 		}
 	},
 	
 	increase_forwards: function (steps) {
-		steps = !steps ? this.__query.forward_steps : steps;
-		if (!steps || !this.__query.limit)
+		steps = !steps ? this._options.forward_steps : steps;
+		if (!steps || this._query.options.limit === null)
 			return;
-		this.__execute_query(this.__query.skip + this.__query.limit, steps, false);
+		this.__execute_query(this._query.options.skip + this._query.options.limit, steps, false);
 	},
 	
 	increase_backwards: function (steps) {
-		steps = !steps ? this.__query.backward_steps : steps;
-		if (steps && this.__query.skip > 0) {
-			steps = Math.min(steps, this.__query.skip);
-			this.__execute_query(this.__query.skip - steps, steps, false);
+		steps = !steps ? this._options.backward_steps : steps;
+		if (steps && this._query.options.skip > 0) {
+			steps = Math.min(steps, this._query.options.skip);
+			this.__execute_query(this._query.options.skip - steps, steps, false);
 		}
 	},
 	
 	paginate: function (index) {
-		this.__execute_query(this.__query.range * index, this.__query.range, true);
+		this.__execute_query(this._options.range * index, this._options.range, true);
 	},
 	
 	paginate_index: function () {
-		return !this.__query.range ? null : Math.floor(this.__query.skip / this.__query.range);
+		return !this._options.range ? null : Math.floor(this._query.options.skip / this._options.range);
 	},
 	
 	paginate_count: function () {
-		return !this.__query.count || !this.__query.range ? null : Math.ceil(this.__query.count / this.__query.range);
+		return !this._count || !this._options.range ? null : Math.ceil(this._count / this._options.range);
 	},
 	
 	next: function () {
@@ -109,7 +133,54 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	isComplete: function () {
-		return this.__query.count !== null;
+		return this._count !== null;
+	}
+	
+});
+
+
+
+BetaJS.Collections.QueryCollection.extend("BetaJS.Collections.ActiveQueryCollection", {
+	
+	constructor: function (source, query, options) {
+		this._inherited(BetaJS.Collections.ActiveQueryCollection, "constructor", source, query, options);
+		source.on("create", this.__active_create, this);
+		source.on("remove", this.__active_remove, this);
+		source.on("update", this.__active_update, this);
+	},
+	
+	destroy: function () {
+		this._source.off(null, null, this);
+		this._inherited(BetaJS.Collections.ActiveQueryCollection, "destroy");
+	},
+	
+	is_valid: function (object) {
+		return BetaJS.Queries.evaluate(this.query().query, object.getAll());
+	},
+	
+	__active_create: function (object) {
+		if (!this.is_valid(object) || this.exists(object))
+			return;
+		this.add(object);
+		this._count = this._count + 1;
+		if (this._query.options.limit !== null)
+			this._query.options.limit = this._query.options.limit + 1;
+	},
+	
+	__active_remove: function (object) {
+		if (!this.exists(object))
+			return;
+		this.remove(object);
+		this._count = this._count - 1;
+		if (this._query.options.limit !== null)
+			this._query.options.limit = this._query.options.limit - 1;
+	},
+	
+	__active_update: function (object) {
+		if (!this.is_valid(object))
+			this.__active_remove(object);
+		else
+			this.__active_create(object);
 	}
 	
 });

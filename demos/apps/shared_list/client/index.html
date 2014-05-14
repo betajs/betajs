@@ -1,0 +1,131 @@
+<html>
+	<head>
+		<script src="../../../jquery-1.9.1.min.js"></script>
+		<script src="../../../../dist/beta.js"></script>
+		<script src="../../../../dist/beta-profiler.js"></script>
+		<script src="../common/demo_data.js"></script>
+		<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+		<script src="client.js"></script>
+		<link rel="stylesheet" href="../../../../dist/beta-ui.css" type="text/css" />
+		<style>
+			.left {
+				width: 50%;
+				float: left;
+			}
+			.right {
+				width: 50%;
+				float: right;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="left">
+			<div class="new">
+				New
+				<input id="new-item" />
+				<button id="add-item">Add</button>
+				<button id="add-item-backend">Add Backend</button>
+			</div>
+			<div class="query">
+				Query
+				<input id="query" value="Demo 11"/>
+			</div>
+			<div class="list">
+				<div class="list-inner">
+					<script type="text/template" id="item-template">
+						<span {%= bind.inner("item.text") %} update-item-id="{%= item.id() %}">							
+						</span>
+						<button delete-item-id="{%= item.id() %}">Delete</button>
+					</script>
+				</div>
+				<button id="more">More</button>
+			</div>
+		</div>
+		<div class="right">
+			Logging
+			<div id="logging-inner">
+			</div>
+			<!--
+			Todo-List
+			<ul>
+				<li>Client Commit</li>
+				<li>Server Commit</li>
+				<li>Connection Error / Offline</li>
+				<li>Commit Conflicts</li>
+				<li>Client Save Data</li>
+				<li>Server Save Data</li>
+				<li>Threadable + Remove Cache</li>
+				<li>Streamline + Update Applications</li>
+			</ul>
+			-->
+		</div>
+		<script>
+		/*
+			var history = new BetaJS.Stores.StoreHistory(App.Stores.Items);
+			history.on("commit", function (object) {
+				$("#logging-inner").append("<p>Commit " + JSON.stringify(object) + "</p>");
+			});
+			*/
+			/*
+			var perfprof = new BetaJS.Profiling.PerformanceProfiler();
+			perfprof.on("execute", function (name, time) {
+				console.log("PerfProf Execute: " + name + " - " + time + "ms");
+			});
+			*/
+			$("#add-item").on("click", function () {
+				var model = new App.Models.Item({
+					text: $("#new-item").val()
+				});
+				model.save();
+				$("#new-item").val("");
+			});
+			$("#add-item-backend").on("click", function () {
+				App.Stores.BackendItems.insert({
+					text: $("#new-item").val()
+				});
+				$("#new-item").val("");
+			});
+			$("body").on("click", "[delete-item-id]", function () {
+				App.Tables.Items.findById($(this).attr('delete-item-id')).remove();
+			});
+			$("body").on("click", "[update-item-id]", function () {
+				var item = App.Tables.Items.findById($(this).attr('update-item-id'));
+				var result = prompt("Change Text", item.get("text"));
+				if (result)
+					item.set("text", result); 
+			});
+			App.Stores.Items.on("query_second", function (query, options) {
+				$("#logging-inner").append("<p>Query Miss " + JSON.stringify(query) + " / " + JSON.stringify(options) + "</p>");
+			});
+			var list = new BetaJS.Views.ListView({
+				el: ".list-inner",
+				dynamics: {
+					"item": $("#item-template")
+				},
+				collection: new BetaJS.Collections.ActiveQueryCollection(App.Tables.Items, {
+					query: {
+						"text": {'$sw' : $("#query").val() }
+					}, options: {
+						limit: 5,
+						sort: {"text": 1}
+					}
+				}, {
+					forward_steps: 5					
+				})
+			});
+			list.activate();
+			$("#query").on("keyup change", function () {
+				list.collection().set_query({
+					query: {
+						"text": {'$sw' : $("#query").val() }
+					}, options: {
+						limit: 5
+					}
+				});
+			});
+			$("#more").on("click", function () {
+				list.collection().increase_forwards();
+			});
+		</script>
+	</body>
+</html>

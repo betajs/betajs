@@ -16,15 +16,18 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		this._supportsAsync = (first.supportsAsync() && second.supportsAsync()) || !this._supportsSync;
 		this.__create_options = BetaJS.Objs.extend({
 			start: "first", // "second"
-			strategy: "then" // "or", "single"
+			strategy: "then", // "or", "single"
+			auto_replicate: "first" // "first", "second", "both", "none"
 		}, options.create_options);
 		this.__update_options = BetaJS.Objs.extend({
 			start: "first", // "second"
-			strategy: "then" // "or", "single"
+			strategy: "then", // "or", "single"
+			auto_replicate: "first" // "first", "second", "both", "none"
 		}, options.update_options);
 		this.__remove_options = BetaJS.Objs.extend({
 			start: "first", // "second"
-			strategy: "then" // "or", "single"
+			strategy: "then", // "or", "single",
+			auto_replicate: "first" // "first", "second", "both", "none"
 		}, options.delete_options);
 		this.__get_options = BetaJS.Objs.extend({
 			start: "first", // "second"
@@ -36,12 +39,66 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		this.__query_options = BetaJS.Objs.extend({
 			start: "first", // "second"
 			strategy: "or", // "single"
-			clone: true, // false (will use "cache_query" if present and inserts otherwise)
+			clone: true, // false
 			clone_second: false,
 			or_on_null: true // false
 		}, options.query_options);
+		this.__first.on("insert", this.__inserted_first, this);
+		this.__second.on("insert", this.__inserted_second, this);
+		this.__first.on("update", this.__updated_first, this);
+		this.__second.on("update", this.__updated_second, this);
+		this.__first.on("remove", this.__removed_first, this);
+		this.__second.on("remove", this.__removed_second, this);
 	},
 	
+	__inserted_first: function (row, event_data) {
+		if (event_data && event_data.dual_insert)
+			return;
+		if (this.__create_options.auto_replicate == "first" || this.__create_options.auto_replicate == "both")
+			this.__second.insert([row, {dual_insert: true}], {});
+		this._inserted(row);
+	},
+	
+	__inserted_second: function (row, event_data) {
+		if (event_data && event_data.dual_insert)
+			return;
+		if (this.__create_options.auto_replicate == "second" || this.__create_options.auto_replicate == "both")
+			this.__first.insert([row, {dual_insert: true}], {});
+		this._inserted(row);
+	},
+
+	__updated_first: function (row, update, event_data) {
+		if (event_data && event_data.dual_update)
+			return;
+		if (this.__update_options.auto_replicate == "first" || this.__update_options.auto_replicate == "both")
+			this.__second.update(row[this.id_key()], [update, {dual_update: true}], {});
+		this._updated(row, update);
+	},
+	
+	__updated_second: function (row, update, event_data) {
+		if (event_data && event_data.dual_update)
+			return;
+		if (this.__update_options.auto_replicate == "second" || this.__update_options.auto_replicate == "both")
+			this.__first.update(row[this.id_key()], [update, {dual_update: true}], {});
+		this._updated(row, update);
+	},
+
+	__removed_first: function (id, event_data) {
+		if (event_data && event_data.dual_remove)
+			return;
+		if (this.__remove_options.auto_replicate == "first" || this.__remove_options.auto_replicate == "both")
+			this.__second.remove([id, {dual_remove: true}], {});
+		this._removed(id);
+	},
+	
+	__removed_second: function (id, event_data) {
+		if (event_data && event_data.dual_remove)
+			return;
+		if (this.__remove_options.auto_replicate == "second" || this.__remove_options.auto_replicate == "both")
+			this.__first.remove([id, {dual_remove: true}], {});
+		this._removed(id);
+	},
+
 	first: function () {
 		return this.__first;
 	},
@@ -60,32 +117,32 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var strategy = this.__create_options.strategy;
 		if (callbacks) {
 			if (strategy == "then")
-				first.insert(data, {
+				first.insert([data, {dual_insert: true}], {
 					success: function (row) {
-						second.insert(row, callbacks);
+						second.insert([row, {dual_insert: true}], callbacks);
 					},
 					exception: callbacks.exception
 				});
 			else if (strategy == "or")
-				return first.insert(data, {
+				return first.insert([data, {dual_insert: true}], {
 					success: callbacks.success,
 					exception: function () {
-						second.insert(data, callbacks);
+						second.insert([data, {dual_insert: true}], callbacks);
 					}
 				});
 			else
-				first.insert(data, callbacks);
+				first.insert([data, {dual_insert: true}], callbacks);
 		} else {
 			if (strategy == "then")
-				return second.insert(first.insert(data));
+				return second.insert([first.insert([data, {dual_insert: true}]), {dual_insert: true}]);
 			else if (strategy == "or")
 				try {
-					return first.insert(data);
+					return first.insert([data, {dual_insert: true}]);
 				} catch (e) {
-					return second.insert(data);
+					return second.insert([data, {dual_insert: true}]);
 				}
 			else
-				return first.insert(data);
+				return first.insert([data, {dual_insert: true}]);
 		}
 		return true;
 	},
@@ -100,32 +157,32 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var strategy = this.__update_options.strategy;
 		if (callbacks) {
 			if (strategy == "then")
-				first.update(id, data, {
+				first.update(id, [data, {dual_update: true}], {
 					success: function (row) {
-						second.update(id, row, callbacks);
+						second.update(id, [row, {dual_update: true}], callbacks);
 					},
 					exception: callbacks.exception
 				});
 			else if (strategy == "or")
-				return first.update(id, data, {
+				return first.update(id, [data, {dual_update: true}], {
 					success: callbacks.success,
 					exception: function () {
-						second.update(id, data, callbacks);
+						second.update(id, [data, {dual_update: true}], callbacks);
 					}
 				});
 			else
-				first.update(id, data, callbacks);
+				first.update(id, [data, {dual_update: true}], callbacks);
 		} else {
 			if (strategy == "then")
-				return second.update(id, first.update(id, data));
+				return second.update(id, [first.update(id, [data, {dual_update: true}]), {dual_update: true}]);
 			else if (strategy == "or")
 				try {
-					return first.update(id, data);
+					return first.update(id, [data, {dual_update: true}]);
 				} catch (e) {
-					return second.update(id, data);
+					return second.update(id, [data, {dual_update: true}]);
 				}
 			else
-				return first.update(id, data);
+				return first.update(id, [data, {dual_update: true}]);
 		}
 		return true;
 	},
@@ -140,34 +197,34 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var strategy = this.__remove_options.strategy;
 		if (callbacks) {
 			if (strategy == "then")
-				first.remove(id, {
+				first.remove([id, {dual_remove: true}], {
 					success: function () {
-						second.remove(id, callbacks);
+						second.remove([id, {dual_remove: true}], callbacks);
 					},
 					exception: callbacks.exception
 				});
 			else if (strategy == "or")
-				first.remove(id, {
+				first.remove([id, {dual_remove: true}], {
 					success: callbacks.success,
 					exception: function () {
-						second.remove(id, callbacks);
+						second.remove([id, {dual_remove: true}], callbacks);
 					}
 				});
 			else
 				first.remove(id, callbacks);
 		} else {
 			if (strategy == "then") {
-				first.remove(id);
-				second.remove(id);
+				first.remove([id, {dual_remove: true}]);
+				second.remove([id, {dual_remove: true}]);
 			}
 			else if (strategy == "or")
 				try {
-					first.remove(id);
+					first.remove([id, {dual_remove: true}]);
 				} catch (e) {
-					second.remove(id);
+					second.remove([id, {dual_remove: true}]);
 				}
 			else
-				first.remove(id);
+				first.remove([id, {dual_remove: true}]);
 		}
 	},
 
@@ -241,6 +298,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		var result = null;
 		if (strategy == "or") {
 			var fallback = function (callbacks) {
+				this.trigger("query_second", query, options);
 				second.query(query, options, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 					if (result && clone) {
 						arr = result.asArray();
@@ -248,10 +306,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 							BetaJS.SyncAsync.callback(callbacks, "success", result);
 						});
-						if ("cache_query" in first)
-							first.cache_query(query, options, arr, cb);
-						else
-							first.insert_all(arr, cb);				
+						first.insert_all(arr, cb, {query: query, options: options});				
 					} else
 						callbacks.success(result);
 				}));
@@ -263,17 +318,16 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 					BetaJS.SyncAsync.callback(callbacks, "success", result);
 				});
-				if ("cache_query" in second)
-					second.cache_query(query, options, arr, cb);
-				else
-					second.insert_all(arr, cb);				
+				second.insert_all(arr, cb, {query: query, options: options});				
 			};
-			return first.then(first.query, [query, options], callbacks, function (result, callbacks) {
+			this.trigger("query_first", query, options);
+			return this.then(first, first.query, [query, options], callbacks, function (result, callbacks) {
 				if (!result && or_on_null) {
-					fallback(callbacks);
+					fallback.call(this, callbacks);
 					return;
 				}
 				if (clone_second) {
+					this.trigger("query_second", query, options);
 					second.query(query, options, {
 						success: function (result2) {
 							if (result2) 
@@ -287,10 +341,12 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				} else
 					this.callback(callbacks, "success", result);
 			}, function (error, callbacks) {
-				fallback(callbacks);
+				fallback.call(this, callbacks);
 			});
-		} else
+		} else {
+			this.trigger("query_first", query, options);
 			return first.query(query, options, callbacks);
+		}
 	}
 
 });

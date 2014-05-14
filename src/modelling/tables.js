@@ -19,13 +19,37 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			// Validation options
 			store_validation_conversion: true,
 			// Update options
-			auto_update: true
+			auto_update: true,
+			// Include new inserts automagically
+			auto_materialize: false
 		}, options || {});
 		this.__models_by_cid = new BetaJS.Classes.ObjectCache({ size: this.__options.model_cache_size });
 		this._auto_destroy(this.__models_by_cid);
 		this.__models_by_cid.on("release", function (model) {
 			if (model.hasId())
 				delete this.__models_by_id[model.id()];
+		}, this);
+		if (this.__options.auto_materialize) {
+			this.__store.on("insert", function (obj, event_data) {
+				if (this.__models_by_id[obj[this.primary_key()]] || (event_data && event_data.model_create))
+					return;
+				var model = this.__materialize(obj);
+				this.trigger("create", model);				
+			}, this);
+		}
+		this.__store.on("update", function (row, data, event_data) {
+			if (!this.__models_by_id[row[this.primary_key()]] || (event_data && event_data.model_update))
+				return;
+			var model = this.__models_by_id[row[this.primary_key()]];
+			model.setAll(data, {silent: true});
+			this.trigger("update", model);
+		}, this);
+		this.__store.on("remove", function (id, event_data) {
+			if (!this.__models_by_id[id] || (event_data && event_data.model_remove))
+				return;
+			var model = this.__models_by_id[id];
+			this.trigger("remove", model);
+			model.destroy();
 		}, this);
 	},
 	
@@ -57,7 +81,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	_model_remove: function (model, callbacks) {
 		if (!this.hasModel(model))
 			return false;
-		return this.then(this.__store, this.__store.remove, [model.id()], callbacks, function (result, callbacks) {
+		return this.then(this.__store, this.__store.remove, [[model.id(), {model_remove: true}]], callbacks, function (result, callbacks) {
 			this.trigger("remove", model);
 			model.destroy();
 			this.callback(callbacks, "success", true);
@@ -87,7 +111,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		var attrs = BetaJS.Scopes.resolve(this.__model_type).filterPersistent(model.get_all_properties());
 		if (this.__options.type_column)
 			attrs[this.__options.type_column] = model.cls.classname;
-		return this.then(this.__store, this.__store.insert, [attrs], callbacks, function (confirmed, callbacks) {
+		return this.then(this.__store, this.__store.insert, [[attrs, {model_create: true}]], callbacks, function (confirmed, callbacks) {
 			if (!(model.cls.primary_key() in confirmed))
 				return this.callback(callbacks, "exception", new BetaJS.Modelling.ModelMissingIdException(model));
 			this.__models_by_id[confirmed[model.cls.primary_key()]] = model;
@@ -98,7 +122,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			return true;		
 		}, function (e, callbacks) {
 			e = BetaJS.Exceptions.ensure(e);
-			e = self.__exception_conversion(model, e);
+			e = this.__exception_conversion(model, e);
 			this.callback(callbacks, "exception", e);
 		});
 	},
@@ -119,7 +143,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 				this.callback(callbacks, "success", attrs);
 			return attrs;
 		}
-		return this.then(this.__store, this.__store.update, [model.id(), attrs], callbacks, function (confirmed, callbacks) {
+		return this.then(this.__store, this.__store.update, [model.id(), [attrs, {model_update: true}]], callbacks, function (confirmed, callbacks) {
 			model.setAll(confirmed, {no_change: true, silent: true});
 			delete this.__models_changed[model.cid()];
 			this.trigger("update", model);
@@ -209,12 +233,17 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		});
 	},
 	
+	query: function () {
+		// Alias
+		return this.allBy.apply(this, arguments);
+	},
+	/*
 	active_query_engine: function () {
 		if (!this._active_query_engine) {
 			var self = this;
 			this._active_query_engine = new BetaJS.Queries.ActiveQueryEngine();
 			this._active_query_engine._query = function (query, callbacks) {
-				return self.allBy(query, {}, callbacks);
+				return self.allBy(query.query || {}, query.options || {}, callbacks);
 			};
 			this.on("create", function (object) {
 				this._active_query_engine.insert(object);
@@ -228,7 +257,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 		}
 		return this._active_query_engine;
 	},
-	
+	*/
 	scheme: function () {
 		return this.__model_type.scheme();
 	},

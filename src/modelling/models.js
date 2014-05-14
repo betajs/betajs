@@ -16,7 +16,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 	},
 	
 	destroy: function () {
-		if (this.__destroying)
+		if (this.__destroying || !this.__table)
 			return;
 		this.__destroying = true;
 		this.__table._model_unregister(this);
@@ -38,7 +38,7 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 
 	update: function (data, options, callbacks) {
 		this.setAll(data, {silent: true});
-		this.save(options, callbacks);
+		this.save(callbacks);
 	},
 
 	_afterSet: function (key, value, old_value, options) {

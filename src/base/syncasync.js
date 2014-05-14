@@ -1,6 +1,13 @@
 /** @class */
 BetaJS.SyncAsync = {
 	
+	eventually: function (func, params, context) {
+		var timer = setTimeout(function () {
+			clearTimeout(timer);
+			func.apply(context || this, params || []);
+		}, 0);
+	},
+	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
      * @param callbacks callbacks object with success and exception
@@ -113,8 +120,10 @@ BetaJS.SyncAsync = {
 			} catch (e) {
 				if (exception)
 					exception.call(success_ctx, e, callbacks);
-				else
+				else if (callbacks.exception)
 					callbacks.exception.call(callbacks.context || this, e);
+				else
+					throw e;
 			}
 		} else {
 			try {

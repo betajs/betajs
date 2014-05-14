@@ -12,6 +12,17 @@ BetaJS.Queries = {
 	 *
 	 */
 	
+	subsumizes: function (query, query2) {
+		// This is very simple at this point
+		if (!BetaJS.Types.is_object(query) || !BetaJS.Types.is_object)
+			return query == query2;
+		for (var key in query) {
+			if (!(key in query2) || !this.subsumizes(query[key], query2[key]))
+				return false;
+		}
+		return true;
+	},
+	
 	__increase_dependency: function (key, dep) {
 		if (key in dep)
 			dep[key]++;
