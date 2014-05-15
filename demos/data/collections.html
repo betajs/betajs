@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Collections</title>
+		<script src="../jquery-1.9.1.min.js"></script>
+		<script src="../../dist/beta.js"></script>
+	</head>
+	<body>
+		<div id="list1">
+		</div>
+		<hr />
+		<div id="list2">
+		</div>
+		<hr />
+		<div>
+			<input id="first" />
+			<input id="last" />
+			<button id="add">Add</button>
+		</div>
+		<script>
+			var collections = new BetaJS.Collections.Collection();
+			collections.on("add", function (property) {
+				$("#list1").append("<p>" + property.get("first") + " " + property.get("last") + "</p>");
+				$("#list2").append("<p>" + property.get("first") + " " + property.get("last") + "</p>");
+			});
+			collections.add(new BetaJS.Properties.Properties({"first": "Max", "last": "Master"}));
+			collections.add(new BetaJS.Properties.Properties({"first": "Fred", "last": "Fischer"}));
+			$("#add").on("click", function () {
+				collections.add(new BetaJS.Properties.Properties({"first": $("#first").val(), "last": $("#last").val()}));
+				$("#first").val("");
+				$("#last").val("");
+			});
+		</script>
+	</body>
+</html>

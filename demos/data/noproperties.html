@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS NoProperties</title>
+		<script src="../jquery-1.9.1.min.js"></script>
+	</head>
+	<body>
+		<div>
+			<input type="text" id="text1" />
+		</div>		
+		<div>
+			<input type="text" id="text2" />
+		</div>
+		<script>
+			var properties = {};
+			var old_properties = {};
+			$("#text1").on("input", function () {
+				properties.text = $("#text1").val();
+				update();
+			});
+			$("#text2").on("input", function () {
+				properties.text = $("#text2").val();
+				update();
+			});
+			function update() {
+				if (old_properties.text != properties.text) {
+					old_properties.text = properties.text;
+					document.title = properties.text;
+					$("#text1").val(properties.text);
+					$("#text2").val(properties.text);
+				}
+			}
+		</script>
+	</body>
+</html>
