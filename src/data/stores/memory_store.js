@@ -1,3 +1,5 @@
+// Stores everything temporarily in the browser's memory
+
 BetaJS.Stores.AssocStore.extend("BetaJS.Stores.MemoryStore", {
 	
 	constructor: function (options) {

@@ -1,3 +1,5 @@
+// Stores everything permanently in the browser's local storage
+
 BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	
 	constructor: function (options) {
