@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-14
+  betajs - v0.0.2 - 2014-05-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3481,7 +3481,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-05-14
+  betajs - v0.0.2 - 2014-05-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3707,8 +3707,11 @@ BetaJS.Queries.Constrained = {
 			if (!("sort" in options) || "sort" in query_capabilities) {
 				if ("skip" in options && "skip" in query_capabilities)
 					execute_options.skip = options.skip;
-				if ("limit" in options && "limit" in query_capabilities)
+				if ("limit" in options && "limit" in query_capabilities) {
 					execute_options.limit = options.limit;
+					if ("skip" in options && !("skip" in query_capabilities))
+						execute_options.limit += options.skip;
+				}
 			}
 		}
 		var params = [execute_query, execute_options];
@@ -4309,6 +4312,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 
 });
 
+// Stores everything temporarily in the browser's memory
+
 BetaJS.Stores.AssocStore.extend("BetaJS.Stores.MemoryStore", {
 	
 	constructor: function (options) {
@@ -4534,6 +4539,8 @@ BetaJS.Stores.DumbStore.extend("BetaJS.Stores.AssocDumbStore", {
 	}
 	
 });
+
+// Stores everything permanently in the browser's local storage
 
 BetaJS.Stores.AssocDumbStore.extend("BetaJS.Stores.LocalStore", {
 	

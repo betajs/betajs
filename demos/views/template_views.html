@@ -6,7 +6,7 @@
 		<script src="../jquery-1.9.1.min.js"></script>
 		<script src="../../dist/beta.js"></script>	
 		<script type="text/template" id="button-view-template">
-			<button>{%= label %}</button>
+			<button {%= text %}>{%= label %}</button>
 		</script>		
 		<script type="text/template" id="list-view-template">
 			<ul data-selector="inner"></ul>
@@ -26,6 +26,7 @@
 					constructor: function(options) {
 						this._inherited(ButtonView, "constructor", options);
 						this._setOptionProperty(options, "label", "");
+						this._setOptionProperty(options, "text", "");
 					},
 					_events: function () {
 						return this._inherited(ButtonView, "_events").concat([{
@@ -63,7 +64,8 @@
 				});
 				var button = new ButtonView({
 					el: "#button",
-					label: "Click Me"
+					label: "Click Me",
+					text: "style='background: blue;'"
 				});
 				var list = new ListView({
 					el_styles: {color: "blue"},

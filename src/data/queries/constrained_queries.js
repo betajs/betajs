@@ -33,8 +33,11 @@ BetaJS.Queries.Constrained = {
 			if (!("sort" in options) || "sort" in query_capabilities) {
 				if ("skip" in options && "skip" in query_capabilities)
 					execute_options.skip = options.skip;
-				if ("limit" in options && "limit" in query_capabilities)
+				if ("limit" in options && "limit" in query_capabilities) {
 					execute_options.limit = options.limit;
+					if ("skip" in options && !("skip" in query_capabilities))
+						execute_options.limit += options.skip;
+				}
 			}
 		}
 		var params = [execute_query, execute_options];

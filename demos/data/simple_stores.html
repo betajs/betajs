@@ -9,7 +9,7 @@
 	<body>
 		<div>
 			<input id="query" placeholder="Query" value="{}" />
-			<input id="query_params" placeholder="Params" value="{}" />
+			<input id="query_params" placeholder="Params" value='{"limit": 3}' />
 			<button id="execute">Execute</button>
 		</div>
 		<hr >
@@ -23,7 +23,11 @@
 		<script>
 			// Stores: insert, remove, update, get, query
 			//var store = new BetaJS.Stores.MemoryStore(); // stores everything temporarily in the browser's memory
-			var store = new BetaJS.Stores.LocalStore({prefix: "test12345"});
+			//var store = new BetaJS.Stores.LocalStore({prefix: "test12345"});
+			//var store = new BetaJS.Stores.RemoteStore("http://10.0.0.121:3000/users", new BetaJS.Browser.JQueryAjax());
+			var store = new BetaJS.Stores.QueryGetParamsRemoteStore("http://10.0.0.121:3000/users", new BetaJS.Browser.JQueryAjax(),
+			            {"limit": "limit", "skip": "skip", "sort": "sort", "query": "query"});
+			store = new BetaJS.Stores.CachedStore(store);
 			var add_default_data = false;
 			
 			$("#execute").on("click", execute_query);
@@ -73,16 +77,7 @@
 				$("#first").val("");
 				$("#last").val("");
 			});
-			
-			
-			$.ajax({
-				url: "http://localhost/qe867934543",
-				method: "POST",
-				success: function (result) {
-					
-				}
-			});
-			
+						
 		</script>
 	</body>
 </html>
