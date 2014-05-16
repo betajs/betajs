@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BetaJS Models</title>
+		<script src="../jquery-1.9.1.min.js"></script>
+		<script src="../../dist/beta.js"></script>
+	</head>
+	<body>
+		<div id="list">
+		</div>
+		<hr />
+		<div>
+			<input id="first" />
+			<input id="last" />
+			<button id="add">Add</button>
+		</div>
+		<script>
+			var userStore = new BetaJS.Stores.MemoryStore();
+			
+			var UserModel = BetaJS.Modelling.Model.extend("UserModel", {}, {
+				defaultTable: function () {
+					return userTable;
+				},
+				
+				_initializeScheme: function () {
+					return BetaJS.Objs.extend({
+						"first": {
+							type: "string"
+						},
+						"last": {
+							type: "string"
+						}
+					}, this._inherited(UserModel, "_initializeScheme"));
+				}
+			});
+
+			var userTable = new BetaJS.Modelling.Table(userStore, UserModel);
+			
+			var collection = new BetaJS.Collections.ActiveQueryCollection(userTable);
+			
+			collection.on("add", function (property) {
+				$("#list").append("<p>" + property.get("first") + " " + property.get("last") + "</p>");
+			});
+
+			var user = new UserModel({"first": "Max", "last": "Master"});
+			user.save();
+			user = new UserModel({"first": "Fred", "last": "Fischer"});
+			user.save();
+			
+			$("#add").on("click", function () {
+				var user = new UserModel({"first": $("#first").val(), "last": $("#last").val()});
+				user.save();
+				$("#first").val("");
+				$("#last").val("");
+			});
+			
+			
+			/*
+			 * (1) user.save
+			 * 	(2) table.save
+			 *    (3) store.save
+			 *    (4) notify all interested listeners (including active query collection)
+			 *      (5) collection.add
+			 *        (6) collection.trigger("add")
+			 *
+			 */
+		</script>
+	</body>
+</html>
