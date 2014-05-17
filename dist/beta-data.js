@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-15
+  betajs - v0.0.2 - 2014-05-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -345,7 +345,7 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 
 BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
-	constructor: function (source, query, options) {
+	constructor: function (source, query, options, callbacks) {
 		this._source = source;
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);
 		this._options = BetaJS.Objs.extend({
@@ -353,14 +353,16 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			backward_steps: null,
 			range: null
 		}, options);
-		this.set_query(query);
+		if (callbacks)
+			callbacks.context = callbacks.context || this;
+		this.set_query(query, callbacks);
 	},
 	
 	query: function () {
 		return this._query;
 	},
 	
-	set_query: function (query) {
+	set_query: function (query, callbacks) {
 		this._query = BetaJS.Objs.extend({
 			query: {},
 			options: {}
@@ -369,14 +371,14 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 		this._query.options.limit = this._query.options.limit || null;
 		this._query.options.sort = this._query.options.sort || {};  
 		this._count = 0;
-		this.__execute_query(this._query.options.skip, this._query.options.limit, true);
+		this.__execute_query(this._query.options.skip, this._query.options.limit, true, callbacks);
 	},
 	
 	__sub_query: function (options, callbacks) {
 		this._source.query(this._query.query, options, callbacks);
 	},
 	
-	__execute_query: function (skip, limit, clear_before) {
+	__execute_query: function (skip, limit, clear_before, callbacks) {
 		skip = Math.max(skip, 0);
 		var q = {};
 		if (this._query.options.sort && !BetaJS.Types.is_empty(this._query.options.sort))
@@ -395,6 +397,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 					this._count = !limit || objs.length < limit ? skip + objs.length : null;
 					this.clear();
 					this.add_objects(objs);
+					BetaJS.SyncAsync.callback(callbacks, "success");
 				}
 			});
 		} else if (skip < this._query.options.skip) {
@@ -409,6 +412,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 					this._query.options.skip = skip;
 					var added = this.add_objects(objs);
 					this._query.options.limit = this._query.options.limit === null ? null : this._query.options.limit + added;
+					BetaJS.SyncAsync.callback(callbacks, "success");
 				}
 			});
 		} else if (skip >= this._query.options.skip) {
@@ -427,17 +431,18 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 						this._query.options.limit = this._query.options.limit + added;
 						if (limit > objs.length)
 							this._count = skip + added;
+						BetaJS.SyncAsync.callback(callbacks, "success");
 					}
 				});
 			}
 		}
 	},
 	
-	increase_forwards: function (steps) {
+	increase_forwards: function (steps, callbacks) {
 		steps = !steps ? this._options.forward_steps : steps;
 		if (!steps || this._query.options.limit === null)
 			return;
-		this.__execute_query(this._query.options.skip + this._query.options.limit, steps, false);
+		this.__execute_query(this._query.options.skip + this._query.options.limit, steps, false, callbacks);
 	},
 	
 	increase_backwards: function (steps) {
@@ -487,8 +492,8 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 
 BetaJS.Collections.QueryCollection.extend("BetaJS.Collections.ActiveQueryCollection", {
 	
-	constructor: function (source, query, options) {
-		this._inherited(BetaJS.Collections.ActiveQueryCollection, "constructor", source, query, options);
+	constructor: function (source, query, options, callbacks) {
+		this._inherited(BetaJS.Collections.ActiveQueryCollection, "constructor", source, query, options, callbacks);
 		source.on("create", this.__active_create, this);
 		source.on("remove", this.__active_remove, this);
 		source.on("update", this.__active_update, this);
@@ -655,10 +660,22 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 			this.trigger("query_register", query);
 			this._query_model.register(query);
 		}
-		var promises = BetaJS.Objs.map(data, function (obj) {
-			return this.promise(this.insert, [obj]);
-		}, this);
-		return this.join(promises, callbacks);
+		if (callbacks) {
+			var self = this;
+			var f = function (i) {
+				if (i >= data.length) {
+					BetaJS.SyncAsync.callback(callbacks, "success");
+					return;
+				}
+				this.insert(data[i], BetaJS.SyncAsync.mapSuccess(callbacks, function () {
+					f.call(self, i + 1);
+				}));
+			};
+			f.call(this, 0);
+		} else {
+			for (var i = 0; i < callbacks.length; ++i)
+				this.insert(data[i]);
+		}
 	},
 
 	remove: function (id, callbacks) {
@@ -692,9 +709,9 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 	query: function (query, options, callbacks) {
 		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
 			this.trigger("query_miss", {query: query, options: options});
-			var e = BetaJS.Stores.StoreException("Cannot execute query");
+			var e = new BetaJS.Stores.StoreException("Cannot execute query");
 			if (callbacks)
-				calbacks.exception.call(callbacks.context || this, e);
+				callbacks.exception.call(callbacks.context || this, e);
 			else
 				throw e;
 			return null;
@@ -1101,7 +1118,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		this.__second = second;
 		this._inherited(BetaJS.Stores.DualStore, "constructor", options);
 		this._supportsSync = first.supportsSync() && second.supportsSync();
-		this._supportsAsync = (first.supportsAsync() && second.supportsAsync()) || !this._supportsSync;
+		this._supportsAsync = first.supportsAsync() || second.supportsAsync();
 		this.__create_options = BetaJS.Objs.extend({
 			start: "first", // "second"
 			strategy: "then", // "or", "single"
@@ -1396,7 +1413,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						});
 						first.insert_all(arr, cb, {query: query, options: options});				
 					} else
-						callbacks.success(result);
+						BetaJS.SyncAsync.callback(callbacks, "success", result);
 				}));
 				return result;
 			};
@@ -1426,8 +1443,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 							insert_second(result, callbacks);
 						}
 					});
-				} else
+				} else {
 					this.callback(callbacks, "success", result);
+				}
 			}, function (error, callbacks) {
 				fallback.call(this, callbacks);
 			});

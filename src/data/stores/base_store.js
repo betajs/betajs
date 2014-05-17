@@ -123,10 +123,22 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 			this.trigger("query_register", query);
 			this._query_model.register(query);
 		}
-		var promises = BetaJS.Objs.map(data, function (obj) {
-			return this.promise(this.insert, [obj]);
-		}, this);
-		return this.join(promises, callbacks);
+		if (callbacks) {
+			var self = this;
+			var f = function (i) {
+				if (i >= data.length) {
+					BetaJS.SyncAsync.callback(callbacks, "success");
+					return;
+				}
+				this.insert(data[i], BetaJS.SyncAsync.mapSuccess(callbacks, function () {
+					f.call(self, i + 1);
+				}));
+			};
+			f.call(this, 0);
+		} else {
+			for (var i = 0; i < callbacks.length; ++i)
+				this.insert(data[i]);
+		}
 	},
 
 	remove: function (id, callbacks) {
@@ -160,9 +172,9 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 	query: function (query, options, callbacks) {
 		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
 			this.trigger("query_miss", {query: query, options: options});
-			var e = BetaJS.Stores.StoreException("Cannot execute query");
+			var e = new BetaJS.Stores.StoreException("Cannot execute query");
 			if (callbacks)
-				calbacks.exception.call(callbacks.context || this, e);
+				callbacks.exception.call(callbacks.context || this, e);
 			else
 				throw e;
 			return null;

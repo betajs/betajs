@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-14
+  betajs - v0.0.2 - 2014-05-17
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -671,11 +671,12 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 	},
 	
 	allBy: function (query, options, callbacks) {
-		return this.then(this.__store, this.__store.query, [query, options], callbacks, function (iterator, callbacks) {
+		var self = this;
+		return this.__store.then(this.__store.query, [query, options], callbacks, function (iterator, callbacks) {
 			var mapped_iterator = new BetaJS.Iterators.MappedIterator(iterator, function (obj) {
 				return this.__materialize(obj);
-			}, this);
-			this.callback(callbacks, "success", mapped_iterator);
+			}, self);
+			self.callback(callbacks, "success", mapped_iterator);
 		});
 	},
 	

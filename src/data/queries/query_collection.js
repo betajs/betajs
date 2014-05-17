@@ -1,6 +1,6 @@
 BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	
-	constructor: function (source, query, options) {
+	constructor: function (source, query, options, callbacks) {
 		this._source = source;
 		this._inherited(BetaJS.Collections.QueryCollection, "constructor", options);
 		this._options = BetaJS.Objs.extend({
@@ -8,14 +8,16 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			backward_steps: null,
 			range: null
 		}, options);
-		this.set_query(query);
+		if (callbacks)
+			callbacks.context = callbacks.context || this;
+		this.set_query(query, callbacks);
 	},
 	
 	query: function () {
 		return this._query;
 	},
 	
-	set_query: function (query) {
+	set_query: function (query, callbacks) {
 		this._query = BetaJS.Objs.extend({
 			query: {},
 			options: {}
@@ -24,14 +26,14 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 		this._query.options.limit = this._query.options.limit || null;
 		this._query.options.sort = this._query.options.sort || {};  
 		this._count = 0;
-		this.__execute_query(this._query.options.skip, this._query.options.limit, true);
+		this.__execute_query(this._query.options.skip, this._query.options.limit, true, callbacks);
 	},
 	
 	__sub_query: function (options, callbacks) {
 		this._source.query(this._query.query, options, callbacks);
 	},
 	
-	__execute_query: function (skip, limit, clear_before) {
+	__execute_query: function (skip, limit, clear_before, callbacks) {
 		skip = Math.max(skip, 0);
 		var q = {};
 		if (this._query.options.sort && !BetaJS.Types.is_empty(this._query.options.sort))
@@ -50,6 +52,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 					this._count = !limit || objs.length < limit ? skip + objs.length : null;
 					this.clear();
 					this.add_objects(objs);
+					BetaJS.SyncAsync.callback(callbacks, "success");
 				}
 			});
 		} else if (skip < this._query.options.skip) {
@@ -64,6 +67,7 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 					this._query.options.skip = skip;
 					var added = this.add_objects(objs);
 					this._query.options.limit = this._query.options.limit === null ? null : this._query.options.limit + added;
+					BetaJS.SyncAsync.callback(callbacks, "success");
 				}
 			});
 		} else if (skip >= this._query.options.skip) {
@@ -82,17 +86,18 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 						this._query.options.limit = this._query.options.limit + added;
 						if (limit > objs.length)
 							this._count = skip + added;
+						BetaJS.SyncAsync.callback(callbacks, "success");
 					}
 				});
 			}
 		}
 	},
 	
-	increase_forwards: function (steps) {
+	increase_forwards: function (steps, callbacks) {
 		steps = !steps ? this._options.forward_steps : steps;
 		if (!steps || this._query.options.limit === null)
 			return;
-		this.__execute_query(this._query.options.skip + this._query.options.limit, steps, false);
+		this.__execute_query(this._query.options.skip + this._query.options.limit, steps, false, callbacks);
 	},
 	
 	increase_backwards: function (steps) {
@@ -142,8 +147,8 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 
 BetaJS.Collections.QueryCollection.extend("BetaJS.Collections.ActiveQueryCollection", {
 	
-	constructor: function (source, query, options) {
-		this._inherited(BetaJS.Collections.ActiveQueryCollection, "constructor", source, query, options);
+	constructor: function (source, query, options, callbacks) {
+		this._inherited(BetaJS.Collections.ActiveQueryCollection, "constructor", source, query, options, callbacks);
 		source.on("create", this.__active_create, this);
 		source.on("remove", this.__active_remove, this);
 		source.on("update", this.__active_update, this);

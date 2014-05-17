@@ -13,7 +13,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 		this.__second = second;
 		this._inherited(BetaJS.Stores.DualStore, "constructor", options);
 		this._supportsSync = first.supportsSync() && second.supportsSync();
-		this._supportsAsync = (first.supportsAsync() && second.supportsAsync()) || !this._supportsSync;
+		this._supportsAsync = first.supportsAsync() || second.supportsAsync();
 		this.__create_options = BetaJS.Objs.extend({
 			start: "first", // "second"
 			strategy: "then", // "or", "single"
@@ -308,7 +308,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						});
 						first.insert_all(arr, cb, {query: query, options: options});				
 					} else
-						callbacks.success(result);
+						BetaJS.SyncAsync.callback(callbacks, "success", result);
 				}));
 				return result;
 			};
@@ -338,8 +338,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 							insert_second(result, callbacks);
 						}
 					});
-				} else
+				} else {
 					this.callback(callbacks, "success", result);
+				}
 			}, function (error, callbacks) {
 				fallback.call(this, callbacks);
 			});
