@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-17
+  betajs - v0.0.2 - 2014-05-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3481,7 +3481,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-05-17
+  betajs - v0.0.2 - 2014-05-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4155,7 +4155,7 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 			};
 			f.call(this, 0);
 		} else {
-			for (var i = 0; i < callbacks.length; ++i)
+			for (var i = 0; i < data.length; ++i)
 				this.insert(data[i]);
 		}
 	},

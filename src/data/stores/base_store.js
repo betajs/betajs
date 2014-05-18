@@ -136,7 +136,7 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 			};
 			f.call(this, 0);
 		} else {
-			for (var i = 0; i < callbacks.length; ++i)
+			for (var i = 0; i < data.length; ++i)
 				this.insert(data[i]);
 		}
 	},
