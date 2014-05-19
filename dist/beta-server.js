@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-18
+  betajs - v0.0.2 - 2014-05-19
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6950,7 +6950,9 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 	
 	constructor: function (options) {
 		this._inherited(BetaJS.Stores.ImapStore, "constructor", options);
-		this.__imap = options.imap;
+		this._supportSync = false;
+		this.__imap = BetaJS.Objs.extend(BetaJS.Objs.clone(options.base, 1), options.imap);
+		this.__smtp = BetaJS.Objs.extend(BetaJS.Objs.clone(options.base, 1), options.smtp);
 	},
 	
 	_query_capabilities: function () {
@@ -7025,9 +7027,27 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 		});
 		imap.connect();
 		imap.on("error", function () {
-			// Ignore for now, TODO later
+			// Ignore for now
 		});
-	} 
+	},
+	
+	_insert: function (mail, callbacks) {
+		var email = require("emailjs");
+		var server = email.server.connect(this.__smtp);
+ 		var message = email.message.create({
+ 			from: mail.from,
+ 			to: mail.to,
+ 			subject: mail.subject,
+			text: mail.body,
+		});
+		var self = this;
+		server.send(message, function (err, msg) {
+			if (err)
+				self.callback(callbacks, "failure", new BetaJS.Stores.StoreException(err));
+			else
+				self.callback(callbacks, "success", mail);
+		});
+	},
 	
 }, {
 	
