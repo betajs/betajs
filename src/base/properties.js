@@ -186,6 +186,7 @@ BetaJS.Properties.PropertiesMixin = {
 	__properties_destroy: function () {
 		for (var key in this.__properties) 
 			this.unset(key);
+		this.trigger("destroy");
 	}
 	
 };
@@ -215,6 +216,9 @@ BetaJS.Class.extend("BetaJS.Properties.PropertiesData", {
 		}, this);
 		this.__properties.on("unset", function (key) {
 			delete this.data[key];
+		}, this);
+		this.__properties.on("destroy", function () {
+			this.destroy();
 		}, this);
 	},
 	

@@ -143,6 +143,9 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		this.__collection.iterate(this.__insert, this);
 		this.__collection.on("add", this.__insert, this);
 		this.__collection.on("remove", this.__remove, this);
+		this.__collection.on("destroy", function () {
+			this.destroy();
+		}, this);
 	},
 	
 	collection: function () {

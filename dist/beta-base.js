@@ -2636,6 +2636,7 @@ BetaJS.Properties.PropertiesMixin = {
 	__properties_destroy: function () {
 		for (var key in this.__properties) 
 			this.unset(key);
+		this.trigger("destroy");
 	}
 	
 };
@@ -2665,6 +2666,9 @@ BetaJS.Class.extend("BetaJS.Properties.PropertiesData", {
 		}, this);
 		this.__properties.on("unset", function (key) {
 			delete this.data[key];
+		}, this);
+		this.__properties.on("destroy", function () {
+			this.destroy();
 		}, this);
 	},
 	
@@ -2819,6 +2823,9 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		this.__collection.iterate(this.__insert, this);
 		this.__collection.on("add", this.__insert, this);
 		this.__collection.on("remove", this.__remove, this);
+		this.__collection.on("destroy", function () {
+			this.destroy();
+		}, this);
 	},
 	
 	collection: function () {
