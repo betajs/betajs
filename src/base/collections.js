@@ -57,6 +57,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	_object_changed: function (object, key, value) {
+		this.trigger("update");
 		this.trigger("change", object, key, value);
 		this.trigger("change:" + key, object, value);
 		this.__data.re_index(this.getIndex(object));
@@ -70,6 +71,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		var ident = this.__data.add(object);
 		if (ident !== null) {
 			this.trigger("add", object);
+			this.trigger("update");
 			if ("on" in object)
 				object.on("change", function (key, value) {
 					this._object_changed(object, key, value);
@@ -95,6 +97,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (!this.exists(object))
 			return null;
 		this.trigger("remove", object);
+		this.trigger("update");
 		var result = this.__data.remove(object);
 		if ("off" in object)
 			object.off(null, null, this);

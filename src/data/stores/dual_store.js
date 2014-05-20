@@ -306,7 +306,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 							BetaJS.SyncAsync.callback(callbacks, "success", result);
 						});
-						first.insert_all(arr, cb, {query: query, options: options});				
+						first.insert_all(arr, cb, {query: query, options: options}, {dual_insert: true});				
 					} else
 						BetaJS.SyncAsync.callback(callbacks, "success", result);
 				}));
@@ -318,7 +318,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 					BetaJS.SyncAsync.callback(callbacks, "success", result);
 				});
-				second.insert_all(arr, cb, {query: query, options: options});				
+				second.insert_all(arr, cb, {query: query, options: options}, {dual_insert: true});				
 			};
 			this.trigger("query_first", query, options);
 			return this.then(first, first.query, [query, options], callbacks, function (result, callbacks) {

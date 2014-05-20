@@ -119,6 +119,9 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 	},
 	
 	insert_all: function (data, callbacks, query) {
+		var event_data = null;
+		if (arguments.length > 3)
+			event_data = arguments[3];
 		if (query && this._query_model) {
 			this.trigger("query_register", query);
 			this._query_model.register(query);
@@ -130,14 +133,14 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 					BetaJS.SyncAsync.callback(callbacks, "success");
 					return;
 				}
-				this.insert(data[i], BetaJS.SyncAsync.mapSuccess(callbacks, function () {
+				this.insert(event_data ? [data[i], event_data] : data[i], BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 					f.call(self, i + 1);
 				}));
 			};
 			f.call(this, 0);
 		} else {
 			for (var i = 0; i < data.length; ++i)
-				this.insert(data[i]);
+				this.insert(event_data ? [data[i], event_data] : data[i]);
 		}
 	},
 
@@ -170,6 +173,12 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 	},
 	
 	query: function (query, options, callbacks) {
+		if (options) {
+			if (options.limit)
+				options.limit = parseInt(options.limit, 10);
+			if (options.skip)
+				options.skip = parseInt(options.skip, 10);
+		}
 		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
 			this.trigger("query_miss", {query: query, options: options});
 			var e = new BetaJS.Stores.StoreException("Cannot execute query");

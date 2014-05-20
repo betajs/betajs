@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-05-19
+  betajs - v0.0.2 - 2014-05-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-05-18
+  betajs - v0.0.2 - 2014-05-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-05-17
+  betajs - v0.0.2 - 2014-05-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2743,6 +2743,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	},
 	
 	_object_changed: function (object, key, value) {
+		this.trigger("update");
 		this.trigger("change", object, key, value);
 		this.trigger("change:" + key, object, value);
 		this.__data.re_index(this.getIndex(object));
@@ -2756,6 +2757,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		var ident = this.__data.add(object);
 		if (ident !== null) {
 			this.trigger("add", object);
+			this.trigger("update");
 			if ("on" in object)
 				object.on("change", function (key, value) {
 					this._object_changed(object, key, value);
@@ -2781,6 +2783,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		if (!this.exists(object))
 			return null;
 		this.trigger("remove", object);
+		this.trigger("update");
 		var result = this.__data.remove(object);
 		if ("off" in object)
 			object.off(null, null, this);
@@ -3486,7 +3489,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-05-18
+  betajs - v0.0.2 - 2014-05-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3709,7 +3712,7 @@ BetaJS.Queries.Constrained = {
 		execute_query = query;
 		if ("query" in query_capabilities || BetaJS.Types.is_empty(query)) {
 			execute_query = query;
-			if (!("sort" in options) || "sort" in query_capabilities) {
+			if (!options.sort || ("sort" in query_capabilities)) {
 				if ("skip" in options && "skip" in query_capabilities)
 					execute_options.skip = options.skip;
 				if ("limit" in options && "limit" in query_capabilities) {
@@ -3718,7 +3721,7 @@ BetaJS.Queries.Constrained = {
 						execute_options.limit += options.skip;
 				}
 			}
-		}
+		}  
 		var params = [execute_query, execute_options];
 		if (callbacks)
 			params.push(callbacks);
@@ -3840,9 +3843,8 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			backward_steps: null,
 			range: null
 		}, options);
-		if (callbacks)
-			callbacks.context = callbacks.context || this;
-		this.set_query(query, callbacks);
+		if (query !== null)
+			this.set_query(query, callbacks);
 	},
 	
 	query: function () {
@@ -3850,6 +3852,8 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	set_query: function (query, callbacks) {
+		if (callbacks)
+			callbacks.context = callbacks.context || this;
 		this._query = BetaJS.Objs.extend({
 			query: {},
 			options: {}
@@ -4143,6 +4147,9 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 	},
 	
 	insert_all: function (data, callbacks, query) {
+		var event_data = null;
+		if (arguments.length > 3)
+			event_data = arguments[3];
 		if (query && this._query_model) {
 			this.trigger("query_register", query);
 			this._query_model.register(query);
@@ -4154,14 +4161,14 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 					BetaJS.SyncAsync.callback(callbacks, "success");
 					return;
 				}
-				this.insert(data[i], BetaJS.SyncAsync.mapSuccess(callbacks, function () {
+				this.insert(event_data ? [data[i], event_data] : data[i], BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 					f.call(self, i + 1);
 				}));
 			};
 			f.call(this, 0);
 		} else {
 			for (var i = 0; i < data.length; ++i)
-				this.insert(data[i]);
+				this.insert(event_data ? [data[i], event_data] : data[i]);
 		}
 	},
 
@@ -4194,6 +4201,12 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 	},
 	
 	query: function (query, options, callbacks) {
+		if (options) {
+			if (options.limit)
+				options.limit = parseInt(options.limit, 10);
+			if (options.skip)
+				options.skip = parseInt(options.skip, 10);
+		}
 		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
 			this.trigger("query_miss", {query: query, options: options});
 			var e = new BetaJS.Stores.StoreException("Cannot execute query");
@@ -4898,7 +4911,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 						var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 							BetaJS.SyncAsync.callback(callbacks, "success", result);
 						});
-						first.insert_all(arr, cb, {query: query, options: options});				
+						first.insert_all(arr, cb, {query: query, options: options}, {dual_insert: true});				
 					} else
 						BetaJS.SyncAsync.callback(callbacks, "success", result);
 				}));
@@ -4910,7 +4923,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 				var cb = BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 					BetaJS.SyncAsync.callback(callbacks, "success", result);
 				});
-				second.insert_all(arr, cb, {query: query, options: options});				
+				second.insert_all(arr, cb, {query: query, options: options}, {dual_insert: true});				
 			};
 			this.trigger("query_first", query, options);
 			return this.then(first, first.query, [query, options], callbacks, function (result, callbacks) {
@@ -5317,7 +5330,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-05-17
+  betajs - v0.0.2 - 2014-05-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6963,66 +6976,28 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 	},
 
 	_query: function (query, options, callbacks) {
-		var Imap = require("imap");
-		var imap = new Imap(BetaJS.Objs.extend({
-			tls : true,
-			tlsOptions : {
-				rejectUnauthorized : false
-			}
-		}, this.__imap));
-		var skip = options && options.skip ? options.skip + 1 : 1;
-		var limit = options && options.limit ? options.limit : 100;
+		var imap = BetaJS.Stores.ImapStore.init_imap(this.__imap);
+		var self = this;
+		this.__count = 0;
+		imap.on('mail', function (count) {
+			self.__count += count;
+		});
 		imap.once('ready', function() {
 			imap.openBox("INBOX", true, function (err, box) {
 				if (err) {
 					callbacks.failure(err);
 					return;
 				}
-				var mails = [];
-				var f = imap.seq.fetch(skip + ":" + limit, {
-					bodies : ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
-					struct : true
+				BetaJS.Stores.ImapStore.imap_query(imap, options, self.__count, {
+					success: function (mails) {
+						imap.end();
+						BetaJS.SyncAsync.callback(callbacks, "success", mails);
+					},
+					failure: function (err) {
+						imap.end();
+						BetaJS.SyncAsync.callback(callbacks, "failure", err);
+					}
 				});
-				f.on('message', function(msg, seqno) {
-					var mail = {};
-					var mail_failed = false;
-					var header_buffer = '';
-					var body_buffer = '';
-					msg.on('body', function(stream, info) {
-						stream.on('data', function(chunk) {
-							if (info.which === 'TEXT')
-								body_buffer += chunk.toString('utf8');
-							else
-								header_buffer += chunk.toString('utf8');
-						});
-						stream.once('end', function() {
-							var header = Imap.parseHeader(header_buffer);
-							var body = body_buffer;
-							try {
-								mail.subject = header.subject[0];
-								mail.to = BetaJS.Stores.ImapStore.__get_name(header.to[0]);
-								mail.from = BetaJS.Stores.ImapStore.__get_name(header.from[0]);
-								mail.time = BetaJS.Stores.ImapStore.__get_time(header.date[0]);
-								mail.read = false;
-								mail.preview = "To come soon";
-							} catch (e) {
-								mail_failed = true;
-							}
-						});
-					});
-					msg.once('end', function() {
-						if (!mail_failed)
-							mails.push(mail);
-					});
-				});
-				f.once('error', function(err) {
-					imap.end();
-					callbacks.failure(err);
-				});
-				f.once('end', function() {
-					imap.end();
-					callbacks.success(mails);				
-				});			
 			});			
 		});
 		imap.connect();
@@ -7038,7 +7013,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
  			from: mail.from,
  			to: mail.to,
  			subject: mail.subject,
-			text: mail.body,
+			text: mail.body
 		});
 		var self = this;
 		server.send(message, function (err, msg) {
@@ -7047,7 +7022,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 			else
 				self.callback(callbacks, "success", mail);
 		});
-	},
+	}
 	
 }, {
 	
@@ -7061,9 +7036,110 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 		return name;
 	},
 	
-	__get_time: function (s) {
-		var date = new Date(s);
-		return BetaJS.Time.format_time(date, "hh:mm");
+	__get_date: function (s) {
+		var d = new Date(s);
+		return d.getTime();
+	},
+	
+	init_imap: function (opts) {
+		var Imap = require("imap");
+		return new Imap(BetaJS.Objs.extend({
+			tls : true,
+			tlsOptions : {
+				rejectUnauthorized : false
+			}
+		}, opts));
+	},
+	
+	imap_query: function (imap, options, count, callbacks) {
+		var Imap = require("imap");
+		var mails = [];
+		var start_mail = options && options.skip ? options.skip + 1 : 1;
+		var end_mail = start_mail + (options && options.limit ? options.limit : 100) - 1;
+		if (count) {
+			end_mail = options && options.skip ? count - options.skip : count;
+			start_mail = Math.max(end_mail - (options && options.limit ? options.limit : 100) + 1, 1);
+		}
+		var f = imap.seq.fetch(start_mail + ":" + end_mail, {
+			bodies : ['HEADER.FIELDS (FROM TO SUBJECT DATE)', 'TEXT'],
+			struct : true
+		});
+		f.on('message', function(msg, seqno) {
+			var mail = {};
+			var mail_failed = false;
+			var header_buffer = '';
+			var body_buffer = '';
+			msg.on('body', function(stream, info) {
+				stream.on('data', function(chunk) {
+					if (info.which === 'TEXT')
+						body_buffer += chunk.toString('utf8');
+					else
+						header_buffer += chunk.toString('utf8');
+				});
+				stream.once('end', function() {
+					var header = Imap.parseHeader(header_buffer);
+					var body = body_buffer;
+					try {
+						mail.subject = header.subject[0];
+						mail.to = BetaJS.Stores.ImapStore.__get_name(header.to[0]);
+						mail.from = BetaJS.Stores.ImapStore.__get_name(header.from[0]);
+						mail.date = BetaJS.Stores.ImapStore.__get_date(header.date[0]);
+						mail.read = false;
+						mail.preview = "To come soon";
+					} catch (e) {
+						mail_failed = true;
+					}
+				});
+			});
+		  	msg.once('attributes', function(attrs) {
+	        	mail.id = attrs.uid;
+	      	});
+	      	msg.once('end', function() {
+				if (!mail_failed)
+					mails.push(mail);
+			});
+		});
+		f.once('error', function(err) {
+			BetaJS.SyncAsync.callback(callbacks, "failure", err);
+		});
+		f.once('end', function() {
+			BetaJS.SyncAsync.callback(callbacks, "success", mails);
+		});			
 	}
 	
+});
+
+
+BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.ImapListenerStore", {
+
+	constructor: function (options) {
+		this._inherited(BetaJS.Stores.ImapListenerStore, "constructor", options);
+		this.__imap = BetaJS.Objs.extend(BetaJS.Objs.clone(options.base, 1), options.imap);
+		var imap = BetaJS.Stores.ImapStore.init_imap(this.__imap);
+		var self = this;
+		this.__count = 0;
+		imap.on('mail', function (count) {
+			self.__count += count;
+		});
+		imap.once('ready', function() {
+			imap.openBox("INBOX", true, function (err, box) {
+				if (err) 
+					throw err;
+				imap.on('mail', function (count) {
+					BetaJS.Stores.ImapStore.imap_query(imap, {limit: count}, self.__count, {
+						success: function (mails) {
+							BetaJS.Objs.iter(mails, function (mail) {
+								self._inserted(mail);
+							});
+						}
+					});
+				});
+			});			
+		});
+		imap.connect();
+		imap.on("error", function () {
+			// Ignore for now
+		});
+	}
+
 });

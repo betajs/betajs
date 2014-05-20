@@ -30,7 +30,7 @@ BetaJS.Queries.Constrained = {
 		execute_query = query;
 		if ("query" in query_capabilities || BetaJS.Types.is_empty(query)) {
 			execute_query = query;
-			if (!("sort" in options) || "sort" in query_capabilities) {
+			if (!options.sort || ("sort" in query_capabilities)) {
 				if ("skip" in options && "skip" in query_capabilities)
 					execute_options.skip = options.skip;
 				if ("limit" in options && "limit" in query_capabilities) {
@@ -39,7 +39,7 @@ BetaJS.Queries.Constrained = {
 						execute_options.limit += options.skip;
 				}
 			}
-		}
+		}  
 		var params = [execute_query, execute_options];
 		if (callbacks)
 			params.push(callbacks);

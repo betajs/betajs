@@ -8,9 +8,8 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 			backward_steps: null,
 			range: null
 		}, options);
-		if (callbacks)
-			callbacks.context = callbacks.context || this;
-		this.set_query(query, callbacks);
+		if (query !== null)
+			this.set_query(query, callbacks);
 	},
 	
 	query: function () {
@@ -18,6 +17,8 @@ BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
 	},
 	
 	set_query: function (query, callbacks) {
+		if (callbacks)
+			callbacks.context = callbacks.context || this;
 		this._query = BetaJS.Objs.extend({
 			query: {},
 			options: {}
