@@ -175,7 +175,8 @@ module.exports = function(grunt) {
 				src: [
 					'dist/beta-common.js',
 					
-					'src/server/net/ajax.js',
+					'src/server/net/*.js',
+					
 					'src/server/databases/databases.js',
 					'src/server/databases/database_tables.js',
 					'src/server/databases/mongo_database.js',
