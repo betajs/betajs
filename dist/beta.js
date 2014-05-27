@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-05-20
+  betajs - v0.0.2 - 2014-05-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-05-20
+  betajs - v0.0.2 - 2014-05-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-05-20
+  betajs - v0.0.2 - 2014-05-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -316,6 +316,22 @@ BetaJS.Strings = {
 		for (i = 0; i < a.length; ++i)
 			a[i] = a[i].substring(len);
 		return a.join("\n").trim();
+	},
+	
+	read_cookie_string: function (raw, key) {
+		var cookie = "; " + raw;
+		var parts = cookie.split("; " + key + "=");
+		if (parts.length == 2)
+			return parts.pop().split(";").shift();
+		return null;
+	},
+	
+	write_cookie_string: function (raw, key, value) {
+		var cookie = "; " + raw;
+		var parts = cookie.split("; " + key + "=");
+		if (parts.length == 2)
+			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
+		return key + "=" + value + cookie;
 	}
 
 };
@@ -6442,7 +6458,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-05-17
+  betajs - v0.0.2 - 2014-05-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6490,19 +6506,11 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 BetaJS.Browser.Cookies = {
 
 	get : function(key) {
-		var cookie = "; " + document.cookie;
-		var parts = cookie.split("; " + key + "=");
-		if (parts.length == 2)
-			return parts.pop().split(";").shift();
-		return null;
+		return BetaJS.Strings.read_cookie_string(document.cookie, key);
 	},
 
 	set : function(key, value) {
-		var cookie = "; " + document.cookie;
-		var parts = cookie.split("; " + key + "=");
-		if (parts.length == 2)
-			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
-		document.cookie = key + "=" + value + cookie;
+		document.cookie = BetaJS.Strings.write_cookie_string(document.cookie, key, value);
 	}
 };
 BetaJS.Browser.Dom = {

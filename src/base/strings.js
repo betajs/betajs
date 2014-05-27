@@ -137,6 +137,22 @@ BetaJS.Strings = {
 		for (i = 0; i < a.length; ++i)
 			a[i] = a[i].substring(len);
 		return a.join("\n").trim();
+	},
+	
+	read_cookie_string: function (raw, key) {
+		var cookie = "; " + raw;
+		var parts = cookie.split("; " + key + "=");
+		if (parts.length == 2)
+			return parts.pop().split(";").shift();
+		return null;
+	},
+	
+	write_cookie_string: function (raw, key, value) {
+		var cookie = "; " + raw;
+		var parts = cookie.split("; " + key + "=");
+		if (parts.length == 2)
+			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
+		return key + "=" + value + cookie;
 	}
 
 };

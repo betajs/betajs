@@ -185,8 +185,17 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 			var text_body = null;
 			for (var k = 0; k < parts.length; ++k) {
 				var encoded = parts[k].body;
-				if (parts[k].meta.encoding.toLowerCase() == "base64")
+				try {
 					encoded = new Buffer(encoded, parts[k].meta.encoding).toString(parts[k].meta.params.charset);
+				} catch (e) {
+					try {
+						encoded = new Buffer(encoded, parts[k].meta.encoding).toString();
+					} catch (e) {
+						try {
+							encoded = new Buffer(encoded).toString(parts[k].meta.params.charset);
+						} catch (e) {}
+					}
+				}
 				if (parts[k].meta.subtype == "html")
 					html_body = encoded;
 				else

@@ -2,8 +2,6 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	
 	constructor: function (database, table_name) {
 		this._inherited(BetaJS.Databases.MongoDatabaseTable, "constructor", database, table_name);
-		this.__table_sync = null;
-		this.__table_async = null;
 	},
 	
 	table_sync: function (callbacks) {
@@ -13,9 +11,10 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	},
 	
 	table_async: function (callbacks) {
+		var self = this;
 		return this.eitherAsyncFactory("__table_async", callbacks, function () {
 			this._database.mongodb_async(BetaJS.SyncAsync.mapSuccess(callbacks, function (db) {
-				BetaJS.SyncAsync.callback(callbacks, "success", db.collection(this._table_name));
+				BetaJS.SyncAsync.callback(callbacks, "success", db.collection(self._table_name));
 			}));
 		});
 	},

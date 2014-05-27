@@ -39,6 +39,10 @@ BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 		return this.__mongo_module_async;
 	},
 	
+	mongo_object_id: function (id) {
+		return this.supportsSync() ? this.mongo_module_sync().ObjectId : this.mongo_module_async().BSONNative.ObjectID;
+	},
+	
 	mongodb_sync: function (callbacks) {
 		return this.eitherSyncFactory("__mongodb_sync", callbacks, function () {
 			var mod = this.mongo_module_sync();
