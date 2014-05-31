@@ -23,7 +23,6 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 		var result = false;
 		BetaJS.Objs.iter(this.__queries, function (query2) {
 			result = BetaJS.Queries.Constrained.subsumizes(query2, query);
-			if (result) console.log(JSON.stringify(query2) + " subsumizes " + JSON.stringify(query));
 			return !result;
 		}, this);
 		return result;

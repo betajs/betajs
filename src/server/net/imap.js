@@ -22,7 +22,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		this.__imap.on("error", function () {
 			self.trigger("error");
 			if (options.reconnect_on_error)
-				self.reconnect();
+				BetaJS.SyncAsync.eventually(self.reconnect, [], self);
 		});
 	},
 	
@@ -35,12 +35,20 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		if (this.__connected)
 			return;
 		this.__count = 0;
-		this.__imap.connect();
 		var self = this;
+		var f = function () {
+			BetaJS.SyncAsync.callback(callbacks, "exception");
+			self.off("error", f);
+		};
+		this.on("error", f);
+		this.__imap.connect();
 		this.__imap.once('ready', function() {
+			this.__connected = true;
 			self.__imap.openBox("INBOX", true, function (err, box) {
+				self.off("error", f);
 				if (err) {
-					BetaJS.SyncAsync.callback(callbacks, "failure", err);
+					BetaJS.SyncAsync.callback(callbacks, "exception", err);
+					this.__connected = false;
 					throw err;
 				}
 				self.__imap.on('mail', function (count) {
@@ -49,7 +57,6 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 				BetaJS.SyncAsync.callback(callbacks, "success");
 			});
 		});
-		this.__connected = true;
 	},
 	
 	disconnect: function () {
@@ -135,7 +142,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 			});
 		});
 		f.once('error', function(err) {
-			BetaJS.SyncAsync.callback(callbacks, "failure", err);
+			BetaJS.SyncAsync.callback(callbacks, "exception", err);
 		});
 		f.once('end', function() {
 			BetaJS.SyncAsync.callback(callbacks, "success", mails);

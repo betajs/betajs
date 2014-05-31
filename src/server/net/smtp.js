@@ -6,7 +6,7 @@ BetaJS.Server.Net.Smtp = {
 			if (err)
 				BetaJS.SyncAsync.callback(callbacks, "failure", err);
 			else
-				BetaJS.SyncAsync.callback(callbacks, "success");
+				BetaJS.SyncAsync.callback(callbacks, "success", msg);
  		});
 	}
 	

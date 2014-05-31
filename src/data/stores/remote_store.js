@@ -79,7 +79,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 			method: "POST",
 			uri: this.prepare_uri("insert", data),
 			data: data
-		}, callbacks);
+		}, callbacks, true);
 	},
 
 	_get : function(id, callbacks) {

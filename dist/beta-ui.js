@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-27
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1194,7 +1194,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.RemoteStore", {
 			method: "POST",
 			uri: this.prepare_uri("insert", data),
 			data: data
-		}, callbacks);
+		}, callbacks, true);
 	},
 
 	_get : function(id, callbacks) {

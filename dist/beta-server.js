@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2014-05-30
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-05-30
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3525,7 +3525,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-05-20
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3853,7 +3853,6 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 		var result = false;
 		BetaJS.Objs.iter(this.__queries, function (query2) {
 			result = BetaJS.Queries.Constrained.subsumizes(query2, query);
-			if (result) console.log(JSON.stringify(query2) + " subsumizes " + JSON.stringify(query));
 			return !result;
 		}, this);
 		return result;
@@ -5366,7 +5365,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-05-20
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6557,7 +6556,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		this.__imap.on("error", function () {
 			self.trigger("error");
 			if (options.reconnect_on_error)
-				self.reconnect();
+				BetaJS.SyncAsync.eventually(self.reconnect, [], self);
 		});
 	},
 	
@@ -6570,12 +6569,20 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		if (this.__connected)
 			return;
 		this.__count = 0;
-		this.__imap.connect();
 		var self = this;
+		var f = function () {
+			BetaJS.SyncAsync.callback(callbacks, "exception");
+			self.off("error", f);
+		};
+		this.on("error", f);
+		this.__imap.connect();
 		this.__imap.once('ready', function() {
+			this.__connected = true;
 			self.__imap.openBox("INBOX", true, function (err, box) {
+				self.off("error", f);
 				if (err) {
-					BetaJS.SyncAsync.callback(callbacks, "failure", err);
+					BetaJS.SyncAsync.callback(callbacks, "exception", err);
+					this.__connected = false;
 					throw err;
 				}
 				self.__imap.on('mail', function (count) {
@@ -6584,7 +6591,6 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 				BetaJS.SyncAsync.callback(callbacks, "success");
 			});
 		});
-		this.__connected = true;
 	},
 	
 	disconnect: function () {
@@ -6670,7 +6676,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 			});
 		});
 		f.once('error', function(err) {
-			BetaJS.SyncAsync.callback(callbacks, "failure", err);
+			BetaJS.SyncAsync.callback(callbacks, "exception", err);
 		});
 		f.once('end', function() {
 			BetaJS.SyncAsync.callback(callbacks, "success", mails);
@@ -6753,7 +6759,7 @@ BetaJS.Server.Net.Smtp = {
 			if (err)
 				BetaJS.SyncAsync.callback(callbacks, "failure", err);
 			else
-				BetaJS.SyncAsync.callback(callbacks, "success");
+				BetaJS.SyncAsync.callback(callbacks, "success", msg);
  		});
 	}
 	
@@ -7232,6 +7238,20 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 		this.__smtp = BetaJS.Objs.extend(BetaJS.Objs.clone(options.base, 1), options.smtp);
 	},
 	
+	test: function (callbacks) {
+		var imap = new BetaJS.Server.Net.Imap(this.__imap, {reconnect_on_error: false});
+		imap.connect({
+			success: function () {
+				imap.destroy();
+				BetaJS.SyncAsync.callback(callbacks, "success");
+			},
+			exception: function () {
+				imap.destroy();
+				BetaJS.SyncAsync.callback(callbacks, "exception");
+			}
+		});
+	},
+	
 	_query_capabilities: function () {
 		return {
 			skip: true,
@@ -7263,12 +7283,15 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
  			from: mail.from,
  			to: mail.to,
  			subject: mail.subject,
-			text: mail.body
+			text_body: mail.body
 		}, {
 			context: callbacks.context,
-			success: callbacks.success,
-			failure: function (err) {
-				BetaJS.SyncAsync.callback(callbacks, "failure", new BetaJS.Stores.StoreException(err));
+			success: function (msg) {
+				mail.id = msg.header["message-id"];
+				BetaJS.SyncAsync.callback(callbacks, "success", mail);
+			},
+			exception: function (err) {
+				BetaJS.SyncAsync.callback(callbacks, "exception", new BetaJS.Stores.StoreException(err));
 			}
 		});
 	}

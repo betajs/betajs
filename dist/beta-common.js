@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-30
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3520,7 +3520,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-05-20
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3848,7 +3848,6 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 		var result = false;
 		BetaJS.Objs.iter(this.__queries, function (query2) {
 			result = BetaJS.Queries.Constrained.subsumizes(query2, query);
-			if (result) console.log(JSON.stringify(query2) + " subsumizes " + JSON.stringify(query));
 			return !result;
 		}, this);
 		return result;
@@ -5361,7 +5360,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-05-20
+  betajs - v0.0.2 - 2014-05-31
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
