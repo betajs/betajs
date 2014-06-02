@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-31
+  betajs - v0.0.2 - 2014-06-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6670,9 +6670,11 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 	      	});
 	      	msg.once('end', function() {
 		  		attrs.seqno = seqno;
-	      		var mail = self.__parse(self.__Imap.parseHeader(header_buffer), body_buffer, attrs);
-				if (mail)
-					mails.push(mail);
+		  		try {
+		      		var mail = self.__parse(self.__Imap.parseHeader(header_buffer), body_buffer, attrs);
+					if (mail)
+						mails.push(mail);
+				} catch (e) {}
 			});
 		});
 		f.once('error', function(err) {

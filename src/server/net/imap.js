@@ -136,9 +136,11 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 	      	});
 	      	msg.once('end', function() {
 		  		attrs.seqno = seqno;
-	      		var mail = self.__parse(self.__Imap.parseHeader(header_buffer), body_buffer, attrs);
-				if (mail)
-					mails.push(mail);
+		  		try {
+		      		var mail = self.__parse(self.__Imap.parseHeader(header_buffer), body_buffer, attrs);
+					if (mail)
+						mails.push(mail);
+				} catch (e) {}
 			});
 		});
 		f.once('error', function(err) {
