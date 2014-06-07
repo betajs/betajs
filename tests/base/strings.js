@@ -5,3 +5,11 @@ test("test nl2br", function() {
 test("test htmlentities", function() {
 	ok(BetaJS.Strings.htmlentities("<test>") == "&lt;test&gt;");
 });
+
+test("test email_get_email", function() {
+	QUnit.equal(BetaJS.Strings.email_get_email("tester <test@test.com>"), "test@test.com");
+});
+
+test("test email_get_name", function() {
+	QUnit.equal(BetaJS.Strings.email_get_name("tester <test@test.com>"), "tester");
+});

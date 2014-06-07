@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2014-05-31
+  betajs - v0.0.2 - 2014-06-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-05-30
+  betajs - v0.0.2 - 2014-06-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -327,6 +327,28 @@ BetaJS.Strings = {
 		if (parts.length == 2)
 			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
 		return key + "=" + value + cookie;
+	},
+	
+	email_get_name: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (!input && temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
+	},
+	
+	email_get_email: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
 	}
 
 };
@@ -403,7 +425,7 @@ BetaJS.SyncAsync = {
 			func.apply(context || this, params || []);
 		}, 0);
 	},
-	
+
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
      * @param callbacks callbacks object with success and exception
@@ -5360,7 +5382,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-05-31
+  betajs - v0.0.2 - 2014-06-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5721,6 +5743,8 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		this.__table = options["table"] || this.cls.defaultTable();
 		this.__table._model_register(this);
 		this.__destroying = false;
+		this._supportsAsync = this.__table.supportsAsync();
+		this._supportsSync = this.__table.supportsSync();
 	},
 	
 	destroy: function () {
@@ -5858,6 +5882,8 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			this.trigger("remove", model);
 			model.destroy();
 		}, this);
+		this._supportsAsync = true;
+		this._supportsSync = store.supportsSync();
 	},
 	
 	_model_register: function (model) {
@@ -5926,6 +5952,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			delete this.__models_changed[model.cid()];
 			this.trigger("create", model);
 			this.trigger("save", model);
+			this.callback(callbacks, "success", model);
 			return true;		
 		}, function (e, callbacks) {
 			e = BetaJS.Exceptions.ensure(e);

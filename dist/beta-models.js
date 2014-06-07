@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-31
+  betajs - v0.0.2 - 2014-06-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -360,6 +360,8 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		this.__table = options["table"] || this.cls.defaultTable();
 		this.__table._model_register(this);
 		this.__destroying = false;
+		this._supportsAsync = this.__table.supportsAsync();
+		this._supportsSync = this.__table.supportsSync();
 	},
 	
 	destroy: function () {
@@ -497,6 +499,8 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			this.trigger("remove", model);
 			model.destroy();
 		}, this);
+		this._supportsAsync = true;
+		this._supportsSync = store.supportsSync();
 	},
 	
 	_model_register: function (model) {
@@ -565,6 +569,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			delete this.__models_changed[model.cid()];
 			this.trigger("create", model);
 			this.trigger("save", model);
+			this.callback(callbacks, "success", model);
 			return true;		
 		}, function (e, callbacks) {
 			e = BetaJS.Exceptions.ensure(e);

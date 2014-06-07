@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-05-30
+  betajs - v0.0.2 - 2014-06-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -322,6 +322,28 @@ BetaJS.Strings = {
 		if (parts.length == 2)
 			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
 		return key + "=" + value + cookie;
+	},
+	
+	email_get_name: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (!input && temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
+	},
+	
+	email_get_email: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
 	}
 
 };
@@ -398,7 +420,7 @@ BetaJS.SyncAsync = {
 			func.apply(context || this, params || []);
 		}, 0);
 	},
-	
+
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
      * @param callbacks callbacks object with success and exception

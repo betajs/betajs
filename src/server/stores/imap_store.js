@@ -52,7 +52,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
  			from: mail.from,
  			to: mail.to,
  			subject: mail.subject,
-			text_body: mail.body
+			text_body: mail.text_body
 		}, {
 			context: callbacks.context,
 			success: function (msg) {

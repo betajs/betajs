@@ -153,6 +153,28 @@ BetaJS.Strings = {
 		if (parts.length == 2)
 			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
 		return key + "=" + value + cookie;
+	},
+	
+	email_get_name: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (!input && temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
+	},
+	
+	email_get_email: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
 	}
 
 };

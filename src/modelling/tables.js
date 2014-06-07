@@ -51,6 +51,8 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			this.trigger("remove", model);
 			model.destroy();
 		}, this);
+		this._supportsAsync = true;
+		this._supportsSync = store.supportsSync();
 	},
 	
 	_model_register: function (model) {
@@ -119,6 +121,7 @@ BetaJS.Class.extend("BetaJS.Modelling.Table", [
 			delete this.__models_changed[model.cid()];
 			this.trigger("create", model);
 			this.trigger("save", model);
+			this.callback(callbacks, "success", model);
 			return true;		
 		}, function (e, callbacks) {
 			e = BetaJS.Exceptions.ensure(e);
