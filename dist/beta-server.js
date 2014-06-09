@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-06-06
+  betajs - v0.0.2 - 2014-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-06-06
+  betajs - v0.0.2 - 2014-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-06-06
+  betajs - v0.0.2 - 2014-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -283,7 +283,9 @@ BetaJS.Strings = {
 		return this.EMAIL_ADDRESS_REGEX.test(s);
 	},
 	
+	STRIP_HTML_TAGS: ["script", "style", "head"],
 	STRIP_HTML_REGEX: /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
+	STRIP_HTML_COMMENT_REGEX: /<![^>]*>/gi,
 		
     /** Removes all html from data and returns plain text
      * 
@@ -291,7 +293,11 @@ BetaJS.Strings = {
      * @return string containing the plain text part of it
      */
 	strip_html: function (html) {
-    	return html.replace(this.STRIP_HTML_REGEX, '');
+		var result = html;
+		for (i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
+			result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">" , "i"), '');
+		result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
+    	return result;
     },
    
     /** Trims all trailing and leading whitespace and removes block indentations
@@ -430,7 +436,7 @@ BetaJS.SyncAsync = {
 			func.apply(context || this, params || []);
 		}, 0);
 	},
-
+	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
      * @param callbacks callbacks object with success and exception
@@ -6562,11 +6568,15 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Server.Net.HttpAjax", {
 BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 	BetaJS.Events.EventsMixin,
 	{
+		
+	__quoted_printable: require("quoted-printable"),
+	__html_strip: require('htmlstrip-native'),
 	
 	constructor: function (auth, options) {
 		this._inherited(BetaJS.Server.Net.Imap, "constructor");
 		this.__auth = auth;
-		this.__options = options || {};
+		options = options || {};
+		this.__options = options;
 		this.__count = 0;
 		this.__Imap = require("imap");
 		this.__connected = false;
@@ -6713,6 +6723,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 	},
 	
 	__parse: function (header, body, attrs) {
+		this.trigger("parse", header, body, attrs);
 		var mail = {};
 		/* Attrs */
     	mail.uid = attrs.uid;
@@ -6737,6 +6748,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 			if (struct.length > 1) {
 				var boundary = struct[0].params.boundary;
 				var rest = body;
+				var boundary_prefix = rest.indexOf(boundary);
 				for (var i = 1; i < struct.length; ++i) {
 					var obj = struct[i][0] || {};
 					// Remove everything before boundary
@@ -6746,7 +6758,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 					// Ignore attachments for now
 					if (obj.disposition || obj.type != 'text')
 						continue;
-					var j = rest.indexOf(boundary);
+					var j = rest.indexOf(boundary) - boundary_prefix;
 					parts.push({meta: obj, body: j >= 0 ? rest.substring(0, j) : rest});
 				}
 			} else
@@ -6755,24 +6767,26 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 			var text_body = null;
 			for (var k = 0; k < parts.length; ++k) {
 				var encoded = parts[k].body;
+				var encoding = parts[k].meta.encoding.toLowerCase();
 				try {
-					encoded = new Buffer(encoded, parts[k].meta.encoding).toString(parts[k].meta.params.charset);
-				} catch (e) {
-					try {
-						encoded = new Buffer(encoded, parts[k].meta.encoding).toString();
-					} catch (e) {
-						try {
-							encoded = new Buffer(encoded).toString(parts[k].meta.params.charset);
-						} catch (e) {}
+					if (encoding == "quoted-printable") {
+						encoded = this.__quoted_printable.decode(encoded).toString();
+					} else {
+						encoded = new Buffer(encoded, encoding).toString();
 					}
-				}
+				} catch (e) {}
 				if (parts[k].meta.subtype == "html")
 					html_body = encoded;
 				else
 					text_body = encoded;
 			}
-			if (text_body === null && html_body !== null)
-				text_body = BetaJS.Strings.strip_html(html_body);
+			if (!text_body && html_body) {
+				text_body = this.__html_strip.html_strip(html_body, {
+			        include_script : false,
+			        include_style : false,
+			        compact_whitespace : true
+				});
+		    }
 			mail.html_body = html_body;
 			mail.text_body = text_body;
 		}
