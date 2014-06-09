@@ -3553,7 +3553,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-05-31
+  betajs - v0.0.2 - 2014-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5393,7 +5393,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-06-06
+  betajs - v0.0.2 - 2014-06-09
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7102,7 +7102,12 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	ensureIndex: function (key) {
 		var obj = {};
 		obj[key] = 1;
-		return this.table().ensureIndex(obj);
+		this.table({
+			success: function (table) {
+				table.ensureIndex(obj, function () {
+				});
+			}
+		});
 	}	
 
 });
