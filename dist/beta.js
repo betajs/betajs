@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-06-09
+  betajs - v0.0.2 - 2014-06-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-06-09
+  betajs - v0.0.2 - 2014-06-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-06-09
+  betajs - v0.0.2 - 2014-06-12
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2872,8 +2872,8 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 	constructor: function (collection) {
 		this._inherited(BetaJS.Collections.CollectionData, "constructor");
 		this.__collection = collection;
-		this.data = [];
 		this.__properties_data = {};
+		this.data = {};
 		this.__collection.iterate(this.__insert, this);
 		this.__collection.on("add", this.__insert, this);
 		this.__collection.on("remove", this.__remove, this);
@@ -2883,24 +2883,20 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 	},
 	
 	collection: function () {
-		return collection;
+		return this.__collection;
 	},
 	
 	__insert: function (property) {
 		var id = BetaJS.Ids.objectId(property);
-		this.__properties_data[id] = {
-			data: new BetaJS.Properties.PropertiesData(property),
-			index: this.data.length
-		};
-		this.data.push(this.__properties_data[id].data.data);  
+		this.__properties_data[id] = new BetaJS.Properties.PropertiesData(property);
+		this.data[id] = this.__properties_data[id].data;
 	},
 	
 	__remove: function (property) {
 		var id = BetaJS.Ids.objectId(property);
-		var index = this.__properties_data[id].index;
-		this.__properties_data[id].data.destroy();
+		this.__properties_data[id].destroy();
 		delete this.__properties_data[id];
-		this.data.splice(index, 1);
+		delete this.data[id];
 	}
 	
 });
