@@ -104,7 +104,9 @@ BetaJS.Strings = {
 		return this.EMAIL_ADDRESS_REGEX.test(s);
 	},
 	
+	STRIP_HTML_TAGS: ["script", "style", "head"],
 	STRIP_HTML_REGEX: /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
+	STRIP_HTML_COMMENT_REGEX: /<![^>]*>/gi,
 		
     /** Removes all html from data and returns plain text
      * 
@@ -112,7 +114,11 @@ BetaJS.Strings = {
      * @return string containing the plain text part of it
      */
 	strip_html: function (html) {
-    	return html.replace(this.STRIP_HTML_REGEX, '');
+		var result = html;
+		for (i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
+			result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">" , "i"), '');
+		result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
+    	return result;
     },
    
     /** Trims all trailing and leading whitespace and removes block indentations
@@ -153,6 +159,28 @@ BetaJS.Strings = {
 		if (parts.length == 2)
 			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
 		return key + "=" + value + cookie;
+	},
+	
+	email_get_name: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (!input && temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
+	},
+	
+	email_get_email: function (input) {
+		var temp = input.split("<");
+		input = temp[0].trim();
+		if (temp.length > 1) {
+			temp = temp[1].split(">");
+			input = temp[0].trim();
+		}
+		input = input.replace(/'/g, "").replace(/"/g, "");
+		return input;
 	}
 
 };

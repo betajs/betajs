@@ -83,7 +83,12 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	ensureIndex: function (key) {
 		var obj = {};
 		obj[key] = 1;
-		return this.table().ensureIndex(obj);
+		this.table({
+			success: function (table) {
+				table.ensureIndex(obj, function () {
+				});
+			}
+		});
 	}	
 
 });

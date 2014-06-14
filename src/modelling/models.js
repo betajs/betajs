@@ -13,6 +13,8 @@ BetaJS.Modelling.AssociatedProperties.extend("BetaJS.Modelling.Model", [
 		this.__table = options["table"] || this.cls.defaultTable();
 		this.__table._model_register(this);
 		this.__destroying = false;
+		this._supportsAsync = this.__table.supportsAsync();
+		this._supportsSync = this.__table.supportsSync();
 	},
 	
 	destroy: function () {
