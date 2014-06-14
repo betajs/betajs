@@ -1,6 +1,27 @@
 BetaJS.Classes = {};
 
 
+BetaJS.Classes.InvokerMixin = {
+	
+	invoke_delegate: function (invoker, members) {
+		if (!BetaJS.Types.is_array(members))
+			members = [members];
+		invoker = this[invoker];
+		var self = this;
+		for (var i = 0; i < members.length; ++i) {
+			var member = members[i];
+			this[member] = function () {
+				var args = BetaJS.Functions.getArguments(arguments);
+				args.unshift(member);
+				return invoker.apply(self, args);
+			};
+		}
+	}
+	
+};
+
+
+
 BetaJS.Classes.AutoDestroyMixin = {
 	
 	_notifications: {

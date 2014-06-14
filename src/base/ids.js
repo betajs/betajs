@@ -12,13 +12,16 @@ BetaJS.Ids = {
 		return (prefix || "") + (this.__uniqueId++);
 	},
 	
-    /** Returns the object's unique identifier
+    /** Returns the object's unique identifier or sets it
      * 
      * @param object the object
+     * @param id (optional)
      * @return object's unique identifier
      */
-	objectId: function (object) {
-		if (!object.__cid)
+	objectId: function (object, id) {
+		if (typeof id != "undefined")
+			object.__cid = id;
+		else if (!object.__cid)
 			object.__cid = this.uniqueId("cid_");
 		return object.__cid;
 	}
