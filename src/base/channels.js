@@ -179,7 +179,7 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 						id: sent.id
 					});
 				} else {
-					BetaJS.SyncAsync.callback(this.__sent[data.id].callbacks, "failure", {
+					BetaJS.SyncAsync.callback(sent.callbacks, "failure", {
 						message: sent.message,
 						data: sent.data
 					});

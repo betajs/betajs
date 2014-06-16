@@ -1,12 +1,11 @@
 BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 	BetaJS.Events.EventsMixin,
 	{
-		
-	__quoted_printable: require("quoted-printable"),
-	__html_strip: require('htmlstrip-native'),
-	
+			
 	constructor: function (auth, options) {
 		this._inherited(BetaJS.Server.Net.Imap, "constructor");
+		this.__quoted_printable = require("quoted-printable");
+		this.__html_strip = require('htmlstrip-native');
 		this.__auth = auth;
 		options = options || {};
 		this.__options = options;

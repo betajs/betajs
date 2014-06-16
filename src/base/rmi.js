@@ -69,20 +69,25 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 		this._inherited(BetaJS.RMI.Skeleton, "destroy");
 	},
 	
-	invoke: function (message, data, callbacks) {
+	invoke: function (message, data, callbacks, caller) {
 		if (!(this._intf[message])) {
 			this._failure(callbacks);
 			return;
 		}
-		data.unshift(callbacks);
+		data.unshift({
+			callbacks: callbacks,
+			caller: caller
+		});
 		this[message].apply(this, data);
 	},
 	
 	_success: function (callbacks, result) {
+		callbacks = callbacks.callbacks ? callbacks.callbacks : callbacks;
 		BetaJS.SyncAsync.callback(callbacks, "success", result);
 	},
 	
 	_failure: function (callbacks) {
+		callbacks = callbacks.callbacks ? callbacks.callbacks : callbacks;
 		BetaJS.SyncAsync.callback(callbacks, "failure");
 	}
 	
@@ -141,7 +146,7 @@ BetaJS.Class.extend("BetaJS.RMI.Server", {
 			return;
 		}
 		instance = instance.instance;
-		instance.invoke(method, data, callbacks);
+		instance.invoke(method, data, callbacks, channel);
 	}
 	
 });

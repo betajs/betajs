@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2014-06-13
+  betajs - v0.0.2 - 2014-06-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-06-13
+  betajs - v0.0.2 - 2014-06-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2260,56 +2260,54 @@ BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
 
 BetaJS.Classes = {};
 
-
 BetaJS.Classes.InvokerMixin = {
-	
-	invoke_delegate: function (invoker, members) {
+
+	invoke_delegate : function(invoker, members) {
 		if (!BetaJS.Types.is_array(members))
 			members = [members];
 		invoker = this[invoker];
 		var self = this;
 		for (var i = 0; i < members.length; ++i) {
 			var member = members[i];
-			this[member] = function () {
-				var args = BetaJS.Functions.getArguments(arguments);
-				args.unshift(member);
-				return invoker.apply(self, args);
-			};
+			this[member] = function(member) {
+				return function() {
+					var args = BetaJS.Functions.getArguments(arguments);
+					args.unshift(member);
+					return invoker.apply(self, args);
+				};
+			}.call(self, member);
 		}
 	}
-	
 };
 
-
-
 BetaJS.Classes.AutoDestroyMixin = {
-	
-	_notifications: {
-		construct: "__initialize_auto_destroy",
-		destroy: "__finalize_auto_destroy"
+
+	_notifications : {
+		construct : "__initialize_auto_destroy",
+		destroy : "__finalize_auto_destroy"
 	},
-	
-	__initialize_auto_destroy: function () {
+
+	__initialize_auto_destroy : function() {
 		this.__auto_destroy = {};
 	},
-	
-	__finalize_auto_destroy: function () {
+
+	__finalize_auto_destroy : function() {
 		var copy = this.__auto_destroy;
 		this.__auto_destroy = {};
-		BetaJS.Objs.iter(copy, function (object) {
+		BetaJS.Objs.iter(copy, function(object) {
 			object.unregister(this);
 		}, this);
 	},
 
-	register_auto_destroy: function (object) {
+	register_auto_destroy : function(object) {
 		if (object.cid() in this.__auto_destroy)
 			return;
 		this.__auto_destroy[object.cid()] = object;
 		object.register(this);
 		this._notify("register_auto_destroy", object);
 	},
-	
-	unregister_auto_destroy: function (object) {
+
+	unregister_auto_destroy : function(object) {
 		if (!(object.cid() in this.__auto_destroy))
 			return;
 		this._notify("unregister_auto_destroy", object);
@@ -2318,71 +2316,64 @@ BetaJS.Classes.AutoDestroyMixin = {
 		if (BetaJS.Types.is_empty(this.__auto_destroy))
 			this.destroy();
 	}
-		
 };
 
-
 BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", {
-		
-	constructor: function () {
+
+	constructor : function() {
 		this._inherited(BetaJS.Classes.AutoDestroyObject, "constructor");
 		this.__objects = {};
 	},
-	
-	register: function (object) {
+
+	register : function(object) {
 		var id = BetaJS.Ids.objectId(object);
-		if (id in this.__objects)
+		if ( id in this.__objects)
 			return;
 		this.__objects[id] = object;
 		object.register_auto_destroy(this);
 	},
-	
-	unregister: function (object) {
+
+	unregister : function(object) {
 		var id = BetaJS.Ids.objectId(object);
-		if (!(id in this.__objects))
+		if (!( id in this.__objects))
 			return;
 		delete this.__objects[id];
 		object.unregister_auto_destroy(this);
 	},
-	
-	clear: function () {
-		BetaJS.Objs.iter(this.__objects, function (object) {
+
+	clear : function() {
+		BetaJS.Objs.iter(this.__objects, function(object) {
 			this.unregister(object);
 		}, this);
 	}
-	
 });
 
+BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [BetaJS.Events.EventsMixin, {
 
-
-BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
-	BetaJS.Events.EventsMixin,
-	{
-	
-	constructor: function (options) {
+	constructor : function(options) {
 		this._inherited(BetaJS.Classes.ObjectCache, "constructor");
 		this.__size = "size" in options ? options.size : null;
 		this.__destroy_on_remove = "destroy_on_remove" in options ? options.destroy_on_remove : true;
-		this.__id_to_container= {};
+		this.__id_to_container = {};
 		this.__first = null;
 		this.__last = null;
 		this.__count = 0;
 	},
-	
-	destroy: function () {
+
+	destroy : function() {
 		this.clear();
 		this._inherited(BetaJS.Classes.ObjectCache, "destroy");
 	},
-	
-	add: function (object) {
+
+	add : function(object) {
 		if (this.get(object))
 			return;
 		if (this.__size !== null && this.__count >= this.__size && this.__first)
 			this.remove(this.__first.object);
 		var container = {
-			object: object,
-			prev: this.__last,
-			next: null
+			object : object,
+			prev : this.__last,
+			next : null
 		};
 		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
 		if (this.__first)
@@ -2390,11 +2381,11 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 		else
 			this.__first = container;
 		this.__last = container;
-		this.__count++;		
+		this.__count++;
 		this.trigger("cache", object);
 	},
-	
-	remove: function (id) {
+
+	remove : function(id) {
 		if (BetaJS.Class.is_class_instance(id))
 			id = BetaJS.Ids.objectId(id);
 		var container = this.__id_to_container[id];
@@ -2409,89 +2400,85 @@ BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [
 			container.prev.next = container.next;
 		else
 			this.__first = container.next;
-		this.__count--;		
+		this.__count--;
 		this.trigger("release", container.object);
 		if (this.__destroy_on_remove)
 			container.object.destroy();
 	},
-	
-	get: function (id) {
+
+	get : function(id) {
 		if (BetaJS.Class.is_class_instance(id))
 			id = BetaJS.Ids.objectId(id);
 		return this.__id_to_container[id] ? this.__id_to_container[id].object : null;
 	},
-	
-	clear: function () {
-		BetaJS.Objs.iter(this.__id_to_container, function (container) {
+
+	clear : function() {
+		BetaJS.Objs.iter(this.__id_to_container, function(container) {
 			this.remove(container.object);
 		}, this);
 	}
-	
 }]);
 
-
-
 BetaJS.Classes.ModuleMixin = {
-	
-	_notifications: {
-		construct: function () {
+
+	_notifications : {
+		construct : function() {
 			this.__modules = {};
 		},
-		destroy: function () {
+		destroy : function() {
 			BetaJS.Objs.iter(this.__modules, this.remove_module, this);
 		}
 	},
-	
-	add_module: function (module) {
+
+	add_module : function(module) {
 		if (module.cid() in this.__modules)
 			return;
 		this.__modules[module.cid()] = module;
 		module.register(this);
 		this._notify("add_module", module);
 	},
-	
-	remove_module: function (module) {
+
+	remove_module : function(module) {
 		if (!(module.cid() in this.__modules))
 			return;
 		delete this.__modules[module.cid()];
 		module.unregister(this);
 		this._notify("remove_module", module);
 	}
-	
 };
 
-
 BetaJS.Class.extend("BetaJS.Classes.Module", {
-		
-	constructor: function (options) {
+
+	constructor : function(options) {
 		this._inherited(BetaJS.Classes.Module, "constructor");
 		this._objects = {};
 		this.__auto_destroy = "auto_destroy" in options ? options.auto_destroy : true;
 	},
-	
-	destroy: function () {
+
+	destroy : function() {
 		BetaJS.Objs.iter(this._objects, this.unregister, this);
 		this._inherited(BetaJS.Classes.Module, "destroy");
 	},
-	
-	register: function (object) {
+
+	register : function(object) {
 		var id = BetaJS.Ids.objectId(object);
-		if (id in this._objects)
+		if ( id in this._objects)
 			return;
 		var data = {};
 		this._objects[id] = {
-			object: object,
-			data: data
+			object : object,
+			data : data
 		};
 		object.add_module(this);
 		this._register(object, data);
 	},
-	
-	_register: function (object) {},
-	
-	unregister: function (object) {
+
+	_register : function(object) {
+	},
+
+	unregister : function(object) {
 		var id = BetaJS.Ids.objectId(object);
-		if (!(id in this._objects))
+		if (!( id in this._objects))
 			return;
 		var data = this._objects[id].data;
 		this._unregister(object, data);
@@ -2502,23 +2489,24 @@ BetaJS.Class.extend("BetaJS.Classes.Module", {
 		if (this.__auto_destroy && BetaJS.Types.is_empty(this._objects))
 			this.destroy();
 	},
-	
-	_unregister: function (object) {},
-	
-	_data: function (object) {
+
+	_unregister : function(object) {
+	},
+
+	_data : function(object) {
 		return this._objects[BetaJS.Ids.objectId(object)].data;
 	}
-	
 }, {
-	
-	__instance: null,
-	
-	singleton: function () {
+
+	__instance : null,
+
+	singleton : function() {
 		if (!this.__instance)
-			this.__instance = new this({auto_destroy: false});
+			this.__instance = new this({
+				auto_destroy : false
+			});
 		return this.__instance;
 	}
-	
 });
 
 BetaJS.Properties = {};
@@ -3581,7 +3569,7 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 						id: sent.id
 					});
 				} else {
-					BetaJS.SyncAsync.callback(this.__sent[data.id].callbacks, "failure", {
+					BetaJS.SyncAsync.callback(sent.callbacks, "failure", {
 						message: sent.message,
 						data: sent.data
 					});
@@ -3664,20 +3652,25 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 		this._inherited(BetaJS.RMI.Skeleton, "destroy");
 	},
 	
-	invoke: function (message, data, callbacks) {
+	invoke: function (message, data, callbacks, caller) {
 		if (!(this._intf[message])) {
 			this._failure(callbacks);
 			return;
 		}
-		data.unshift(callbacks);
+		data.unshift({
+			callbacks: callbacks,
+			caller: caller
+		});
 		this[message].apply(this, data);
 	},
 	
 	_success: function (callbacks, result) {
+		callbacks = callbacks.callbacks ? callbacks.callbacks : callbacks;
 		BetaJS.SyncAsync.callback(callbacks, "success", result);
 	},
 	
 	_failure: function (callbacks) {
+		callbacks = callbacks.callbacks ? callbacks.callbacks : callbacks;
 		BetaJS.SyncAsync.callback(callbacks, "failure");
 	}
 	
@@ -3736,7 +3729,7 @@ BetaJS.Class.extend("BetaJS.RMI.Server", {
 			return;
 		}
 		instance = instance.instance;
-		instance.invoke(method, data, callbacks);
+		instance.invoke(method, data, callbacks, channel);
 	}
 	
 });
@@ -3868,6 +3861,36 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 	
 });
 
+BetaJS.Channels.Sender.extend("BetaJS.Net.SocketSenderChannel", {
+	
+	constructor: function (socket, message) {
+		this._inherited(BetaJS.Net.SocketSenderChannel, "constructor");
+		this.__socket = socket;
+		this.__message = message;
+	},
+	
+	_send: function (message, data) {
+		this.__socket.emit(this.__message, {
+			message: message,
+			data: data
+		});
+	}
+	
+});
+
+
+BetaJS.Channels.Receiver.extend("BetaJS.Net.SocketReceiverChannel", {
+	
+	constructor: function (socket, message) {
+		this._inherited(BetaJS.Net.SocketReceiverChannel, "constructor");
+		var self = this;
+		socket.on(message, function (data) {
+			self._receive(data.message, data.data);
+		});
+	}
+	
+});
+
 BetaJS.Net = BetaJS.Net || {};
 
 BetaJS.Net.HttpHeader = {
@@ -3961,7 +3984,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-06-13
+  betajs - v0.0.2 - 2014-06-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5801,7 +5824,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-06-13
+  betajs - v0.0.2 - 2014-06-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
