@@ -106,6 +106,7 @@ BetaJS.Class.extend("BetaJS.RMI.Server", {
 		BetaJS.Objs.iter(this.__instances, function (inst) {
 			this.unregisterInstance(inst.instance);
 		}, this);
+		this.__channels.destroy();
 		this._inherited(BetaJS.RMI.Server, "destroy");
 	},
 	
