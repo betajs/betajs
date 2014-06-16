@@ -48,7 +48,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		this.__imap.connect();
 		this.__imap.once('ready', function() {
 			this.__connected = true;
-			self.__imap.openBox("INBOX", true, function (err, box) {
+			self.__imap.openBox(self.__options.mailbox || "INBOX", true, function (err, box) {
 				self.off("error", f);
 				if (err) {
 					BetaJS.SyncAsync.callback(callbacks, "exception", err);

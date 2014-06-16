@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-06-12
+  betajs - v0.0.2 - 2014-06-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6611,7 +6611,7 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		this.__imap.connect();
 		this.__imap.once('ready', function() {
 			this.__connected = true;
-			self.__imap.openBox("INBOX", true, function (err, box) {
+			self.__imap.openBox(self.__options.mailbox || "INBOX", true, function (err, box) {
 				self.off("error", f);
 				if (err) {
 					BetaJS.SyncAsync.callback(callbacks, "exception", err);
@@ -7286,10 +7286,12 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 		this._supportSync = false;
 		this.__imap = BetaJS.Objs.extend(BetaJS.Objs.clone(options.base, 1), options.imap);
 		this.__smtp = BetaJS.Objs.extend(BetaJS.Objs.clone(options.base, 1), options.smtp);
+		this.__imap_opts = options.imap_options || {};
+		this.__imap_opts.reconnect_on_error = false;
 	},
 	
 	test: function (callbacks) {
-		var imap = new BetaJS.Server.Net.Imap(this.__imap, {reconnect_on_error: false});
+		var imap = new BetaJS.Server.Net.Imap(this.__imap, this.__imap_opts);
 		imap.connect({
 			success: function () {
 				imap.destroy();
@@ -7311,7 +7313,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ImapStore", {
 
 	_query: function (query, options, callbacks) {
 		var self = this;
-		var imap = new BetaJS.Server.Net.Imap(this.__imap, {reconnect_on_error: false});
+		var imap = new BetaJS.Server.Net.Imap(this.__imap, this.__imap_opts);
 		imap.connect(BetaJS.SyncAsync.mapSuccess(callbacks, function () {
 			var opts = {};
 			if ("skip" in options)
