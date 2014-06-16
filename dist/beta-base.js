@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-06-12
+  betajs - v0.0.2 - 2014-06-13
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -964,13 +964,16 @@ BetaJS.Ids = {
 		return (prefix || "") + (this.__uniqueId++);
 	},
 	
-    /** Returns the object's unique identifier
+    /** Returns the object's unique identifier or sets it
      * 
      * @param object the object
+     * @param id (optional)
      * @return object's unique identifier
      */
-	objectId: function (object) {
-		if (!object.__cid)
+	objectId: function (object, id) {
+		if (typeof id != "undefined")
+			object.__cid = id;
+		else if (!object.__cid)
 			object.__cid = this.uniqueId("cid_");
 		return object.__cid;
 	}
@@ -2253,6 +2256,27 @@ BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
 BetaJS.Classes = {};
 
 
+BetaJS.Classes.InvokerMixin = {
+	
+	invoke_delegate: function (invoker, members) {
+		if (!BetaJS.Types.is_array(members))
+			members = [members];
+		invoker = this[invoker];
+		var self = this;
+		for (var i = 0; i < members.length; ++i) {
+			var member = members[i];
+			this[member] = function () {
+				var args = BetaJS.Functions.getArguments(arguments);
+				args.unshift(member);
+				return invoker.apply(self, args);
+			};
+		}
+	}
+	
+};
+
+
+
 BetaJS.Classes.AutoDestroyMixin = {
 	
 	_notifications: {
@@ -3371,6 +3395,399 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 	}
 	
 });
+BetaJS.Class.extend("BetaJS.Channels.Sender", [
+	BetaJS.Events.EventsMixin,
+	{
+	
+	send: function (message, data) {
+		this.trigger("send", message, data);
+		this._send(message, data);
+	},
+	
+	_send: function (message, data) {}
+	
+}]);
+
+BetaJS.Class.extend("BetaJS.Channels.Receiver", [
+	BetaJS.Events.EventsMixin,
+	{
+		
+	_receive: function (message, data) {
+		this.trigger("receive", message, data);
+		this.trigger("receive:" + message, data);
+	}
+	
+}]);
+
+BetaJS.Channels.Sender.extend("BetaJS.Channels.ReveiverSender", {
+	
+	constructor: function (receiver) {
+		this._inherited(BetaJS.Channels.ReveiverSender, "constructor");
+		this.__receiver = receiver;
+	},
+	
+	_send: function (message, data) {
+		this.__receiver._receive(message, data);
+	}
+	
+});
+
+BetaJS.Class.extend("BetaJS.Channels.SenderMultiplexer", {
+	
+	constructor: function (sender, prefix) {
+		this._inherited(BetaJS.Channels.SenderMultiplexer, "constructor");
+		this.__sender = sender;
+		this.__prefix = prefix;
+	},
+	
+	_send: function (message, data) {
+		this.__sender.send(prefix + ":" + message, data);
+	}
+	
+});
+
+BetaJS.Class.extend("BetaJS.Channels.ReceiverMultiplexer", {
+
+	constructor: function (receiver, prefix) {
+		this._inherited(BetaJS.Channels.ReceiverMultiplexer, "constructor");
+		this.__receiver = receiver;
+		this.__prefix = prefix;
+		this.__receiver.on("receive", function (message, data) {
+			if (BetaJS.Strings.starts_with(message, this.__prefix + ":"))
+				this._receive(BetaJS.Strings.strip_start(message, this.__prefix + ":"), data);
+		}, this);
+	}
+		
+});
+
+
+
+BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
+	
+	constructor: function (sender, receiver, options) {
+		this._inherited(BetaJS.Channels.TransportChannel, "constructor");
+		this.__sender = sender;
+		this.__receiver = receiver;
+		this.__options = BetaJS.Objs.extend(options, {
+			timeout: 10000,
+			tries: 1,
+			timer: 500
+		});
+		this.__receiver.on("receive:send", function (data) {
+			this.__reply(data);
+		}, this);
+		this.__receiver.on("receive:reply", function (data) {
+			this.__complete(data);
+		}, this);
+		this.__sent_id = 0;
+		this.__sent = {};
+		this.__received = {};
+		this.__timer = this._auto_destroy(new BetaJS.Timers.Timer({
+			delay: this.__options.timer,
+			context: this,
+			fire: this.__maintenance
+		}));
+	},
+	
+	_reply: function (message, data, callbacks) {},
+	
+	send: function (message, data, callbacks, options) {
+		options = options || {};
+		if (options.stateless) {
+			this.__sender.send("send", {
+				message: message,
+				data: data,
+				stateless: true
+			});
+		} else {
+			this.__sent_id++;
+			this.__sent[this.__sent_id] = {
+				message: message,
+				data: data,
+				tries: 1,
+				time: BetaJS.Time.now(),
+				id: this.__sent_id,
+				callbacks: callbacks
+			};
+			this.__sender.send("send", {
+				message: message,
+				data: data,
+				id: this.__sent_id
+			});
+		}
+	},
+	
+	__reply: function (data) {
+		if (data.stateless) {
+			this._reply(data.message, data.data);
+			return;
+		}
+		if (!this.__received[data.id]) {
+			this.__received[data.id] = data;
+			this.__received[data.id].time = BetaJS.Time.now();
+			this.__received[data.id].returned = false;
+			this.__received[data.id].success = false;
+			this._reply(data.message, data.data, {
+				context: this,
+				success: function (result) {
+					this.__received[data.id].reply = result;
+					this.__received[data.id].success = true;
+				}, complete: function () {
+					this.__received[data.id].returned = true;
+					this.__sender.send("reply", {
+						id: data.id,
+						reply: data.reply,
+						success: data.success
+					});
+				}
+			});
+			  
+		} else if (this.__received[data.id].returned) {
+			this.__sender.send("reply", {
+				id: data.id,
+				reply: data.reply,
+				success: data.success
+			});
+		}
+	},
+	
+	__complete: function (data) {
+		if (this.__sent[data.id]) {
+			BetaJS.SyncAsync.callback(this.__sent[data.id].callbacks, "success", data.reply);
+			delete this.__sent[data.id];
+		}
+	},
+	
+	__maintenance: function () {
+		var now = BetaJS.Time.now();
+		for (var received_key in this.__received) {
+			var received = this.__received[received_key];
+			if (received.time + this.__options.tries * this.__options.timeout <= now)
+				delete this.__received[received_key];
+		}
+		for (var sent_key in this.__sent) {
+			var sent = this.__sent[sent_key];
+			if (sent.time + sent.tries * this.__options.timeout <= now) {
+				if (sent.tries < this.__options.tries) {
+					sent.tries++;
+					this.__sender.send("send", {
+						message: sent.message,
+						data: sent.data,
+						id: sent.id
+					});
+				} else {
+					BetaJS.SyncAsync.callback(this.__sent[data.id].callbacks, "failure", {
+						message: sent.message,
+						data: sent.data
+					});
+					delete this.__sent[sent_key];
+				}
+			}
+		}
+	}
+	
+});
+
+BetaJS.Class.extend("BetaJS.RMI.Stub", [
+	BetaJS.Classes.InvokerMixin,
+	BetaJS.Events.EventsMixin,
+	{
+		
+	intf: [],
+	
+	constructor: function () {
+		this._inherited(BetaJS.RMI.Stub, "constructor");
+		this.invoke_delegate("invoke", this.intf);
+	},
+	
+	destroy: function () {
+		this.trigger("destroy");
+		this._inherited(BetaJS.RMI.Stub, "destroy");
+	},
+	
+	invoke: function (message) {
+		var promise = {
+			context: this,
+			success: function (f) {
+				this.__success = f;
+				if (this.is_complete && this.is_success)
+					this.__success.call(this, this.result);
+			},
+			failure: function (f) {
+				this.__failure = f;
+				if (this.is_complete && this.is_failure)
+					this.__failure.call(this);
+			}
+		};
+		this.trigger("send", message, BetaJS.Functions.getArguments(arguments, 1), {
+			context: this,
+			success: function (result) {
+				promise.result = result;
+				promise.is_complete = true;
+				promise.is_success = true;
+				if (promise.__success)
+					promise.__success.call(this, result);
+			},
+			failure: function () {
+				promise.is_complete = true;
+				promise.is_failure = true;		
+				if (promise.__failure)
+					promise.__failure.call(this);
+			}
+		});
+		return promise;
+	}
+	
+}]);
+
+
+BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
+	BetaJS.Events.EventsMixin,
+	{
+	
+	intf: [],
+	_intf: {},
+	
+	constructor: function () {
+		this._inherited(BetaJS.RMI.Skeleton, "constructor");
+		for (var i = 0; i < this.intf.length; ++i)
+			this._intf[this.intf[i]] = true;
+	},
+
+	destroy: function () {
+		this.trigger("destroy");
+		this._inherited(BetaJS.RMI.Skeleton, "destroy");
+	},
+	
+	invoke: function (message, data, callbacks) {
+		if (!(this._intf[message])) {
+			this._failure(callbacks);
+			return;
+		}
+		data.unshift(callbacks);
+		this[message].apply(this, data);
+	},
+	
+	_success: function (callbacks, result) {
+		BetaJS.SyncAsync.callback(callbacks, "success", result);
+	},
+	
+	_failure: function (callbacks) {
+		BetaJS.SyncAsync.callback(callbacks, "failure");
+	}
+	
+}]);
+
+BetaJS.Class.extend("BetaJS.RMI.Server", {
+	
+	constructor: function () {
+		this._inherited(BetaJS.RMI.Server, "constructor");
+		this.__channels = new BetaJS.Lists.ObjectIdList();
+		this.__instances = {};
+	},
+	
+	destroy: function () {
+		this.__channels.iterate(this.unregisterClient, this);
+		BetaJS.Objs.iter(this.__instances, function (inst) {
+			this.unregisterInstance(inst.instance);
+		}, this);
+		this._inherited(BetaJS.RMI.Server, "destroy");
+	},
+	
+	registerInstance: function (instance, options) {
+		options = options || {};
+		this.__instances[BetaJS.Ids.objectId(instance, options.name)] = {
+			instance: instance,
+			options: options
+		};
+	},
+	
+	unregisterInstance: function (instance) {
+		delete this.__instances[BetaJS.Ids.objectId(instance)];
+		instance.destroy();
+	},
+	
+	registerClient: function (channel) {
+		var self = this;
+		this.__channels.add(channel);
+		channel._reply = function (message, data, callbacks) {
+			var components = message.split(":");
+			if (components.length == 2)
+				self._invoke(channel, components[0], components[1], data, callbacks);
+			else
+				BetaJS.SyncAsync.callback(callbacks, "failure");
+		};
+	},
+	
+	unregisterClient: function (channel) {
+		this.__channels.remove(channel);
+		channel._reply = null;
+	},
+	
+	_invoke: function (channel, instance_id, method, data, callbacks) {
+		var instance = this.__instances[instance_id];
+		if (!instance) {
+			BetaJS.SyncAsync.callback(callbacks, "failure");
+			return;
+		}
+		instance = instance.instance;
+		instance.invoke(method, data, callbacks);
+	}
+	
+});
+
+
+BetaJS.Class.extend("BetaJS.RMI.Client", {
+	
+	constructor: function () {
+		this._inherited(BetaJS.RMI.Client, "constructor");
+		this.__channel = null;
+		this.__instances = {};
+	},
+	
+	destroy: function () {
+		if (this.__channel)
+			this.disconnect();
+		this._inherited(BetaJS.RMI.Client, "destroy");
+	},
+	
+	connect: function (channel) {
+		if (this.__channel)
+			return;
+		this.__channel = channel;
+	},
+	
+	disconnect: function () {
+		if (!this.__channel)
+			return;
+		this.__channel = null;
+		BetaJS.Objs.iter(this.__instances, function (inst) {
+			this.release(inst);
+		}, this);
+	},
+	
+	acquire: function (class_type, instance_name) {
+		if (this.__instances[instance_name])
+			return this.__instances[instance_name];
+		var instance = new class_type();
+		this.__instances[BetaJS.Ids.objectId(instance, instance_name)] = instance;
+		instance.on("send", function (message, data, callbacks) {
+			this.__channel.send(instance_name + ":" + message, data, callbacks);
+		}, this);
+		return instance;		
+	},
+	
+	release: function (instance) {
+		var instance_name = BetaJS.Ids.objectId(instance);
+		if (!this.__instances[instance_name])
+			return;
+		instance.off(null, null, this);
+		instance.destroy();
+		delete this.__instances[instance_name];
+	}
+	
+});
+
 /*
  * <ul>
  *  <li>uri: target uri</li>

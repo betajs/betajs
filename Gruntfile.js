@@ -60,6 +60,8 @@ module.exports = function(grunt) {
 					'src/base/time.js',
 					'src/base/timers.js',
 					'src/base/templates.js', 
+					'src/base/channels.js',
+					'src/base/rmi.js',
 					'src/net/*.js',
 				]
 			},
