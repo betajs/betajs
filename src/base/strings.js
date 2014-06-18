@@ -183,7 +183,7 @@ BetaJS.Strings = {
 		return input;
 	},
 	
-	email_get_salutory_name: function (input) {
+	email_get_salutatory_name: function (input) {
 		return (this.email_get_name(input).split(" "))[0];
 	}
 

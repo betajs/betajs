@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-06-16
+  betajs - v0.0.2 - 2014-06-18
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -352,7 +352,7 @@ BetaJS.Strings = {
 		return input;
 	},
 	
-	email_get_salutory_name: function (input) {
+	email_get_salutatory_name: function (input) {
 		return (this.email_get_name(input).split(" "))[0];
 	}
 
