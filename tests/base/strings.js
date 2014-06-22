@@ -11,5 +11,5 @@ test("test email_get_email", function() {
 });
 
 test("test email_get_name", function() {
-	QUnit.equal(BetaJS.Strings.email_get_name("tester <test@test.com>"), "tester");
+	QUnit.equal(BetaJS.Strings.email_get_name("tester <test@test.com>"), "Tester");
 });

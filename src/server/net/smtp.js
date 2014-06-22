@@ -10,7 +10,7 @@ BetaJS.Server.Net.Smtp = {
 		}
  		email.server.connect(config).send(email.message.create(message), function (err, msg) {
 			if (err)
-				BetaJS.SyncAsync.callback(callbacks, "failure", err);
+				BetaJS.SyncAsync.callback(callbacks, "exception", err);
 			else
 				BetaJS.SyncAsync.callback(callbacks, "success", msg);
  		});

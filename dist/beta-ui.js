@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-06-16
+  betajs - v0.0.2 - 2014-06-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -17,7 +17,13 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 				result = response;
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				var err = "";
+				try {
+					err = JSON.parse(jqXHR.responseText);
+				} catch (e) {
+					err = JSON.parse('"' + jqXHR.responseText + '"');
+				}
+				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, ee);
 			}
 		});
 		return result;
@@ -36,7 +42,13 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 				BetaJS.SyncAsync.callback(callbacks, "success", response);
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				var exc = new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				var err = "";
+				try {
+					err = JSON.parse(jqXHR.responseText);
+				} catch (e) {
+					err = JSON.parse('"' + jqXHR.responseText + '"');
+				}
+				var exc = new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, err);
 				BetaJS.SyncAsync.callback(callbacks, "exception", exc);
 			}
 		});

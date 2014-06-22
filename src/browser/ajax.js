@@ -12,7 +12,13 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 				result = response;
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				var err = "";
+				try {
+					err = JSON.parse(jqXHR.responseText);
+				} catch (e) {
+					err = JSON.parse('"' + jqXHR.responseText + '"');
+				}
+				throw new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, ee);
 			}
 		});
 		return result;
@@ -31,7 +37,13 @@ BetaJS.Net.AbstractAjax.extend("BetaJS.Browser.JQueryAjax", {
 				BetaJS.SyncAsync.callback(callbacks, "success", response);
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
-				var exc = new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, JSON.parse(jqXHR.responseText));
+				var err = "";
+				try {
+					err = JSON.parse(jqXHR.responseText);
+				} catch (e) {
+					err = JSON.parse('"' + jqXHR.responseText + '"');
+				}
+				var exc = new BetaJS.Net.AjaxException(jqXHR.status, errorThrown, err);
 				BetaJS.SyncAsync.callback(callbacks, "exception", exc);
 			}
 		});
