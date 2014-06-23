@@ -17,10 +17,10 @@
 	position: relative;
 }
 .fullscreen-overlay-float {
-	position: fixed;
+	position: fixed !important;
 }
 .fullscreen-overlay-fit {
-	position: fixed;
+	position: fixed !important;
 	left: 0px;
 	top: 0px;
 	right: 0px;
@@ -28,4 +28,8 @@
 }
 .fullscreen-overlay-body {
 	overflow: hidden;
+}
+.fullscreen-overlay-inner {
+	width: 100%;
+	height: 100%;
 }
