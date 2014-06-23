@@ -69,7 +69,7 @@ BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
 BetaJS.Exceptions.Exception.extend("BetaJS.Exceptions.NativeException", {
 	
 	constructor: function (object) {
-		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object.toString());
+		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object ? ("toString" in object ? object.toString() : object) : "null");
 		this.__object = object;
 	},
 	
