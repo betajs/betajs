@@ -95,10 +95,16 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 
 BetaJS.Class.extend("BetaJS.RMI.Server", {
 	
-	constructor: function () {
+	constructor: function (sender_or_channel_or_null, receiver_or_null) {
 		this._inherited(BetaJS.RMI.Server, "constructor");
 		this.__channels = new BetaJS.Lists.ObjectIdList();
 		this.__instances = {};
+		if (sender_or_channel_or_null) {
+			var channel = sender_or_channel_or_null;
+			if (receiver_or_null)
+				channel = this._auto_destroy(new BetaJS.Channels.TransportChannel(sender_or_channel_or_null, receiver_or_null));
+			this.registerClient(channel);
+		}
 	},
 	
 	destroy: function () {
@@ -155,10 +161,16 @@ BetaJS.Class.extend("BetaJS.RMI.Server", {
 
 BetaJS.Class.extend("BetaJS.RMI.Client", {
 	
-	constructor: function () {
+	constructor: function (sender_or_channel_or_null, receiver_or_null) {
 		this._inherited(BetaJS.RMI.Client, "constructor");
 		this.__channel = null;
 		this.__instances = {};
+		if (sender_or_channel_or_null) {
+			var channel = sender_or_channel_or_null;
+			if (receiver_or_null)
+				channel = this._auto_destroy(new BetaJS.Channels.TransportChannel(sender_or_channel_or_null, receiver_or_null));
+			this.__channel = channel;
+		}
 	},
 	
 	destroy: function () {
@@ -202,4 +214,37 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 		delete this.__instances[instance_name];
 	}
 	
+});
+
+
+BetaJS.Class.extend("BetaJS.RMI.Peer", {
+
+	constructor: function (sender, receiver) {
+		this._inherited(BetaJS.RMI.Peer, "constructor");
+		this.__sender = sender;
+		this.__receiver = receiver;
+		this.__client_sender = this._auto_destroy(new BetaJS.Channels.SenderMultiplexer(sender, "client"));
+		this.__server_sender = this._auto_destroy(new BetaJS.Channels.SenderMultiplexer(sender, "server"));
+		this.__client_receiver = this._auto_destroy(new BetaJS.Channels.ReceiverMultiplexer(receiver, "server"));
+		this.__server_receiver = this._auto_destroy(new BetaJS.Channels.ReceiverMultiplexer(receiver, "client"));
+		this.client = this._auto_destroy(new BetaJS.RMI.Client(this.__client_sender, this.__client_receiver));
+		this.server = this._auto_destroy(new BetaJS.RMI.Server(this.__server_sender, this.__server_receiver));
+	},	
+	
+	acquire: function (class_type, instance_name) {
+		return this.client.acquire(class_type, instance_name);
+	},
+	
+	release: function (instance) {
+		this.client.release(instance);
+	},
+
+	registerInstance: function (instance, options) {
+		this.server.registerInstance(instance, options);
+	},
+	
+	unregisterInstance: function (instance) {
+		this.server.unregisterInstance(instance);
+	}
+
 });

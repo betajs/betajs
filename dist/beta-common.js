@@ -1,10 +1,10 @@
 /*!
-  betajs - v0.0.2 - 2014-06-19
+  betajs - v0.0.2 - 2014-06-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-06-19
+  betajs - v0.0.2 - 2014-06-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3428,7 +3428,7 @@ BetaJS.Channels.Sender.extend("BetaJS.Channels.ReveiverSender", {
 	
 });
 
-BetaJS.Class.extend("BetaJS.Channels.SenderMultiplexer", {
+BetaJS.Channels.Sender.extend("BetaJS.Channels.SenderMultiplexer", {
 	
 	constructor: function (sender, prefix) {
 		this._inherited(BetaJS.Channels.SenderMultiplexer, "constructor");
@@ -3437,20 +3437,21 @@ BetaJS.Class.extend("BetaJS.Channels.SenderMultiplexer", {
 	},
 	
 	_send: function (message, data) {
-		this.__sender.send(prefix + ":" + message, data);
+		this.__sender.send(this.__prefix + ":" + message, data);
 	}
 	
 });
 
-BetaJS.Class.extend("BetaJS.Channels.ReceiverMultiplexer", {
+BetaJS.Channels.Receiver.extend("BetaJS.Channels.ReceiverMultiplexer", {
 
 	constructor: function (receiver, prefix) {
 		this._inherited(BetaJS.Channels.ReceiverMultiplexer, "constructor");
 		this.__receiver = receiver;
 		this.__prefix = prefix;
 		this.__receiver.on("receive", function (message, data) {
-			if (BetaJS.Strings.starts_with(message, this.__prefix + ":"))
+			if (BetaJS.Strings.starts_with(message, this.__prefix + ":")) {
 				this._receive(BetaJS.Strings.strip_start(message, this.__prefix + ":"), data);
+			}
 		}, this);
 	}
 		
@@ -3681,10 +3682,16 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 
 BetaJS.Class.extend("BetaJS.RMI.Server", {
 	
-	constructor: function () {
+	constructor: function (sender_or_channel_or_null, receiver_or_null) {
 		this._inherited(BetaJS.RMI.Server, "constructor");
 		this.__channels = new BetaJS.Lists.ObjectIdList();
 		this.__instances = {};
+		if (sender_or_channel_or_null) {
+			var channel = sender_or_channel_or_null;
+			if (receiver_or_null)
+				channel = this._auto_destroy(new BetaJS.Channels.TransportChannel(sender_or_channel_or_null, receiver_or_null));
+			this.registerClient(channel);
+		}
 	},
 	
 	destroy: function () {
@@ -3741,10 +3748,16 @@ BetaJS.Class.extend("BetaJS.RMI.Server", {
 
 BetaJS.Class.extend("BetaJS.RMI.Client", {
 	
-	constructor: function () {
+	constructor: function (sender_or_channel_or_null, receiver_or_null) {
 		this._inherited(BetaJS.RMI.Client, "constructor");
 		this.__channel = null;
 		this.__instances = {};
+		if (sender_or_channel_or_null) {
+			var channel = sender_or_channel_or_null;
+			if (receiver_or_null)
+				channel = this._auto_destroy(new BetaJS.Channels.TransportChannel(sender_or_channel_or_null, receiver_or_null));
+			this.__channel = channel;
+		}
 	},
 	
 	destroy: function () {
@@ -3788,6 +3801,39 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 		delete this.__instances[instance_name];
 	}
 	
+});
+
+
+BetaJS.Class.extend("BetaJS.RMI.Peer", {
+
+	constructor: function (sender, receiver) {
+		this._inherited(BetaJS.RMI.Peer, "constructor");
+		this.__sender = sender;
+		this.__receiver = receiver;
+		this.__client_sender = this._auto_destroy(new BetaJS.Channels.SenderMultiplexer(sender, "client"));
+		this.__server_sender = this._auto_destroy(new BetaJS.Channels.SenderMultiplexer(sender, "server"));
+		this.__client_receiver = this._auto_destroy(new BetaJS.Channels.ReceiverMultiplexer(receiver, "server"));
+		this.__server_receiver = this._auto_destroy(new BetaJS.Channels.ReceiverMultiplexer(receiver, "client"));
+		this.client = this._auto_destroy(new BetaJS.RMI.Client(this.__client_sender, this.__client_receiver));
+		this.server = this._auto_destroy(new BetaJS.RMI.Server(this.__server_sender, this.__server_receiver));
+	},	
+	
+	acquire: function (class_type, instance_name) {
+		return this.client.acquire(class_type, instance_name);
+	},
+	
+	release: function (instance) {
+		this.client.release(instance);
+	},
+
+	registerInstance: function (instance, options) {
+		this.server.registerInstance(instance, options);
+	},
+	
+	unregisterInstance: function (instance) {
+		this.server.unregisterInstance(instance);
+	}
+
 });
 
 /*
@@ -3988,7 +4034,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-06-16
+  betajs - v0.0.2 - 2014-06-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -5828,7 +5874,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-06-16
+  betajs - v0.0.2 - 2014-06-23
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

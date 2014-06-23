@@ -35,7 +35,7 @@ BetaJS.Channels.Sender.extend("BetaJS.Channels.ReveiverSender", {
 	
 });
 
-BetaJS.Class.extend("BetaJS.Channels.SenderMultiplexer", {
+BetaJS.Channels.Sender.extend("BetaJS.Channels.SenderMultiplexer", {
 	
 	constructor: function (sender, prefix) {
 		this._inherited(BetaJS.Channels.SenderMultiplexer, "constructor");
@@ -44,20 +44,21 @@ BetaJS.Class.extend("BetaJS.Channels.SenderMultiplexer", {
 	},
 	
 	_send: function (message, data) {
-		this.__sender.send(prefix + ":" + message, data);
+		this.__sender.send(this.__prefix + ":" + message, data);
 	}
 	
 });
 
-BetaJS.Class.extend("BetaJS.Channels.ReceiverMultiplexer", {
+BetaJS.Channels.Receiver.extend("BetaJS.Channels.ReceiverMultiplexer", {
 
 	constructor: function (receiver, prefix) {
 		this._inherited(BetaJS.Channels.ReceiverMultiplexer, "constructor");
 		this.__receiver = receiver;
 		this.__prefix = prefix;
 		this.__receiver.on("receive", function (message, data) {
-			if (BetaJS.Strings.starts_with(message, this.__prefix + ":"))
+			if (BetaJS.Strings.starts_with(message, this.__prefix + ":")) {
 				this._receive(BetaJS.Strings.strip_start(message, this.__prefix + ":"), data);
+			}
 		}, this);
 	}
 		
