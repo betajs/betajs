@@ -6,8 +6,8 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	
 	_events: function () {
 		return [{
-			'click [data-selector="outer"]': "__unfocus",
-			'touchstart [data-selector="outer"]': "__unfocus"
+			'click [data-selector="outer"]': "unfocus",
+			'touchstart [data-selector="outer"]': "unfocus"
 		}];
 	},
 
@@ -28,8 +28,9 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 	_after_show: function () {	
 		var outer = this.$('[data-selector="outer"]');
 		var inner = this.$('[data-selector="inner"]');
-		inner.removeClass("fullscreen-overlay-float");
-		inner.removeClass("fullscreen-overlay-fit");
+		var container = this.$('[data-selector="container"]');
+		container.removeClass("fullscreen-overlay-float");
+		container.removeClass("fullscreen-overlay-fit");
 		var outer_width = outer.outerWidth();
 		var outer_height = outer.outerHeight();
 		var inner_width = inner.outerWidth();
@@ -37,13 +38,13 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 		var left = Math.floor((outer_width - inner_width) / 2);
 		var top = Math.floor((outer_height - inner_height) / 2);
 		if (left >= 0 && top >= 0) {
-			inner.css("left", left + "px");
-			inner.css("top", top + "px");
-			inner.addClass("fullscreen-overlay-float");
+			container.css("left", left + "px");
+			container.css("top", top + "px");
+			container.addClass("fullscreen-overlay-float");
 		} else {
-			inner.css("left", "0px");
-			inner.css("top", "0px");
-			inner.addClass("fullscreen-overlay-fit");
+			container.css("left", "0px");
+			container.css("top", "0px");
+			container.addClass("fullscreen-overlay-fit");
 		}
 		BetaJS.$("body").addClass("fullscreen-overlay-body");
 	},
@@ -52,7 +53,7 @@ BetaJS.Views.View.extend("BetaJS.Views.FullscreenOverlayView", {
 		BetaJS.$("body").removeClass("fullscreen-overlay-body");
 	},
 	
-	__unfocus: function () {
+	unfocus: function () {
 		if (this.__destroy_on_unfocus)
 			this.destroy();
 		else if (this.__hide_on_unfocus)

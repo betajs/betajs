@@ -24,4 +24,4 @@ BetaJS.Templates.Cached['list-view-item-container-template'] = '   <{%= item_con
 
 BetaJS.Templates.Cached['overlay-view-template'] = '  <div data-selector="container"></div> ';
 
-BetaJS.Templates.Cached['fullscreen-overlay-view-template'] = '  <div class="fullscreen-overlay-background" data-selector="outer"></div>  <div class="fullscreen-overlay" data-selector="inner"></div> ';
+BetaJS.Templates.Cached['fullscreen-overlay-view-template'] = '  <div class="fullscreen-overlay-background" data-selector="outer"></div>  <div class="fullscreen-overlay" data-selector="container">   <div class="fullscreen-overlay-inner" data-selector="inner"></div>  </div> ';
