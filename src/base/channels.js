@@ -22,6 +22,15 @@ BetaJS.Class.extend("BetaJS.Channels.Receiver", [
 	
 }]);
 
+BetaJS.Channels.Sender.extend("BetaJS.Channels.CachedSender", {
+	
+	__cache: [],
+	
+	_send: function (message, data) {}
+	
+});
+
+
 BetaJS.Channels.Sender.extend("BetaJS.Channels.ReveiverSender", {
 	
 	constructor: function (receiver) {

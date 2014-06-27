@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-06-23
+  betajs - v0.0.2 - 2014-06-27
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3410,6 +3410,15 @@ BetaJS.Class.extend("BetaJS.Channels.Receiver", [
 	
 }]);
 
+BetaJS.Channels.Sender.extend("BetaJS.Channels.CachedSender", {
+	
+	__cache: [],
+	
+	_send: function (message, data) {}
+	
+});
+
+
 BetaJS.Channels.Sender.extend("BetaJS.Channels.ReveiverSender", {
 	
 	constructor: function (receiver) {
@@ -3593,6 +3602,7 @@ BetaJS.Class.extend("BetaJS.RMI.Stub", [
 	},
 	
 	destroy: function () {
+		this.invoke("_destroy");
 		this.trigger("destroy");
 		this._inherited(BetaJS.RMI.Stub, "destroy");
 	},
@@ -3637,30 +3647,56 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 	BetaJS.Events.EventsMixin,
 	{
 	
+	_stub: null,
 	intf: [],
+	intfSync: [],
 	_intf: {},
+	_intfSync: {},
+	__superIntf: [],
+	__superIntfSync: ["_destroy"],
 	
-	constructor: function () {
+	constructor: function (options) {
+		this._options = BetaJS.Objs.extend({
+			destroyable: false
+		}, options);
 		this._inherited(BetaJS.RMI.Skeleton, "constructor");
+		this.intf = this.intf.concat(this.__superIntf);
+		this.intfSync = this.intfSync.concat(this.__superIntfSync);
 		for (var i = 0; i < this.intf.length; ++i)
 			this._intf[this.intf[i]] = true;
+		for (i = 0; i < this.intfSync.length; ++i)
+			this._intfSync[this.intfSync[i]] = true;
 	},
-
+	
+	_destroy: function () {
+		if (this._options.destroyable)
+			this.destroy();
+	},
+	
 	destroy: function () {
 		this.trigger("destroy");
 		this._inherited(BetaJS.RMI.Skeleton, "destroy");
 	},
 	
 	invoke: function (message, data, callbacks, caller) {
-		if (!(this._intf[message])) {
+		if (!(this._intf[message] || this._intfSync[message])) {
 			this._failure(callbacks);
 			return;
 		}
-		data.unshift({
+		var ctx = {
 			callbacks: callbacks,
 			caller: caller
-		});
-		this[message].apply(this, data);
+		};
+		if (this._intf[message]) {
+			data.unshift(ctx);
+			this[message].apply(this, data);
+		} else {
+			try {
+				this._success(ctx, this[message].apply(this, data));
+			} catch (e) {
+				this._failure(ctx, e);
+			}
+		}
 	},
 	
 	_success: function (callbacks, result) {
@@ -3671,11 +3707,20 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 	_failure: function (callbacks) {
 		callbacks = callbacks.callbacks ? callbacks.callbacks : callbacks;
 		BetaJS.SyncAsync.callback(callbacks, "failure");
+	},
+	
+	stub: function () {
+		if (this._stub)
+			return this._stub;
+		var stub = this.cls.classname;
+		return stub.indexOf("Skeleton") >= 0 ? stub.replace("Skeleton", "Stub") : stub;
 	}
 	
 }]);
 
-BetaJS.Class.extend("BetaJS.RMI.Server", {
+BetaJS.Class.extend("BetaJS.RMI.Server", [
+	BetaJS.Events.EventsMixin,
+	{
 	
 	constructor: function (sender_or_channel_or_null, receiver_or_null) {
 		this._inherited(BetaJS.RMI.Server, "constructor");
@@ -3731,14 +3776,29 @@ BetaJS.Class.extend("BetaJS.RMI.Server", {
 	_invoke: function (channel, instance_id, method, data, callbacks) {
 		var instance = this.__instances[instance_id];
 		if (!instance) {
+			this.trigger("loadInstance", channel, instance_id);
+			instance = this.__instances[instance_id];
+		}
+		if (!instance) {
 			BetaJS.SyncAsync.callback(callbacks, "failure");
 			return;
 		}
 		instance = instance.instance;
-		instance.invoke(method, data, callbacks, channel);
+		var self = this;
+		instance.invoke(method, data, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+			if (BetaJS.RMI.Skeleton.is_class_instance(result) && result.instance_of(BetaJS.RMI.Skeleton)) {
+				self.registerInstance(result);
+				BetaJS.SyncAsync.callback(callbacks, "success", {
+					__rmi_meta: true,
+					__rmi_stub: result.stub(),
+					__rmi_stub_id: BetaJS.Ids.objectId(result)
+				});
+			} else
+				BetaJS.SyncAsync.callback(callbacks, "success", result);
+		}), channel);
 	}
-	
-});
+		
+}]);
 
 
 BetaJS.Class.extend("BetaJS.RMI.Client", {
@@ -3779,10 +3839,20 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 	acquire: function (class_type, instance_name) {
 		if (this.__instances[instance_name])
 			return this.__instances[instance_name];
+		if (BetaJS.Types.is_string(class_type))
+			class_type = BetaJS.Scopes.resolve(class_type);
+		if (!class_type || !class_type.ancestor_of(BetaJS.RMI.Stub))
+			return null;
 		var instance = new class_type();
 		this.__instances[BetaJS.Ids.objectId(instance, instance_name)] = instance;
+		var self = this;
 		instance.on("send", function (message, data, callbacks) {
-			this.__channel.send(instance_name + ":" + message, data, callbacks);
+			this.__channel.send(instance_name + ":" + message, data, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+				if (BetaJS.Types.is_object(result) && result.__rmi_meta)
+					BetaJS.SyncAsync.callback(callbacks, "success", self.acquire(result.__rmi_stub, result.__rmi_stub_id));
+				else
+					BetaJS.SyncAsync.callback(callbacks, "success", result);
+			}));
 		}, this);
 		return instance;		
 	},
@@ -3908,17 +3978,33 @@ BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
 
 BetaJS.Channels.Sender.extend("BetaJS.Net.SocketSenderChannel", {
 	
-	constructor: function (socket, message) {
+	constructor: function (socket, message, ready) {
 		this._inherited(BetaJS.Net.SocketSenderChannel, "constructor");
 		this.__socket = socket;
 		this.__message = message;
+		this.__ready = BetaJS.Types.is_defined(ready) ? ready : true;
+		this.__cache = [];
 	},
 	
 	_send: function (message, data) {
-		this.__socket.emit(this.__message, {
-			message: message,
-			data: data
-		});
+		if (this.__ready) {
+			this.__socket.emit(this.__message, {
+				message: message,
+				data: data
+			});
+		} else {
+			this.__cache.push({
+				message: message,
+				data: data
+			});
+		}
+	},
+	
+	ready: function () {
+		this.__ready = true;
+		for (var i = 0; i < this.__cache.length; ++i)
+			this._send(this.__cache[i].message, this.__cache[i].data);
+		this.__cache = [];
 	}
 	
 });
