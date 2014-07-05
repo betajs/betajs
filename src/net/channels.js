@@ -27,6 +27,16 @@ BetaJS.Channels.Sender.extend("BetaJS.Net.SocketSenderChannel", {
 		for (var i = 0; i < this.__cache.length; ++i)
 			this._send(this.__cache[i].message, this.__cache[i].data);
 		this.__cache = [];
+	},
+	
+	unready: function () {
+	    this.__ready = false;
+	},
+	
+	socket: function () {
+	    if (arguments.length > 0)
+	        this.__socket = arguments[0];
+	    return this.__socket;
 	}
 	
 });
@@ -36,10 +46,21 @@ BetaJS.Channels.Receiver.extend("BetaJS.Net.SocketReceiverChannel", {
 	
 	constructor: function (socket, message) {
 		this._inherited(BetaJS.Net.SocketReceiverChannel, "constructor");
-		var self = this;
-		socket.on(message, function (data) {
-			self._receive(data.message, data.data);
-		});
-	}
+		this.__message = message;
+		this.socket(socket);
+	},
+	
+    socket: function () {
+        if (arguments.length > 0) {
+            this.__socket = arguments[0];
+            if (this.__socket) {
+                var self = this;
+                this.__socket.on(this.__message, function (data) {
+                    self._receive(data.message, data.data);
+                });
+            }
+        }
+        return this.__socket;
+    }
 	
 });

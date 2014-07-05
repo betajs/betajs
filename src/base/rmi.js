@@ -22,12 +22,21 @@ BetaJS.Class.extend("BetaJS.RMI.Stub", [
 			success: function (f) {
 				this.__success = f;
 				if (this.is_complete && this.is_success)
-					this.__success.call(this, this.result);
+					this.__success.call(this.context, this.result);
+				return this;
 			},
 			failure: function (f) {
 				this.__failure = f;
 				if (this.is_complete && this.is_failure)
-					this.__failure.call(this);
+					this.__failure.call(this.context);
+				return this;
+			},
+			callbacks: function (c) {
+			    this.context = c.context || this;
+			    if (callbacks.success)
+			        this.success(callbacks.success);
+                if (callbacks.failure)
+                    this.failure(callbacks.failure);
 			}
 		};
 		this.trigger("send", message, BetaJS.Functions.getArguments(arguments, 1), {
@@ -37,13 +46,13 @@ BetaJS.Class.extend("BetaJS.RMI.Stub", [
 				promise.is_complete = true;
 				promise.is_success = true;
 				if (promise.__success)
-					promise.__success.call(this, result);
+					promise.__success.call(this.context, result);
 			},
 			failure: function () {
 				promise.is_complete = true;
 				promise.is_failure = true;		
 				if (promise.__failure)
-					promise.__failure.call(this);
+					promise.__failure.call(this.context);
 			}
 		});
 		return promise;
@@ -158,6 +167,7 @@ BetaJS.Class.extend("BetaJS.RMI.Server", [
 			instance: instance,
 			options: options
 		};
+		return instance;
 	},
 	
 	unregisterInstance: function (instance) {
@@ -301,7 +311,7 @@ BetaJS.Class.extend("BetaJS.RMI.Peer", {
 	},
 
 	registerInstance: function (instance, options) {
-		this.server.registerInstance(instance, options);
+		return this.server.registerInstance(instance, options);
 	},
 	
 	unregisterInstance: function (instance) {

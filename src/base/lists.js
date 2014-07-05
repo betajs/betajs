@@ -137,15 +137,24 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
 
 BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
 	
-	constructor: function (objects) {
+	constructor: function (objects, id_generator) {
 		this.__map = {};
+		this.__id_generator = id_generator;
 		this._inherited(BetaJS.Lists.ObjectIdList, "constructor", objects);
 	},
 
 	_add: function (object) {
-		var id = BetaJS.Ids.objectId(object);
-		this.__map[id] = object;
-		return id;
+	    while (true) {
+	        var id = object.__cid;
+	        if (!id) {
+                id = this.__id_generator ? BetaJS.Ids.objectId(object, this.__id_generator()) : BetaJS.Ids.objectId(object);
+        		if (this.__map[id] && this.__id_generator)
+        		  continue;
+            }
+    		this.__map[id] = object;
+    		return id;
+    	}
+    	return null;
 	},
 	
 	_remove: function (ident) {
