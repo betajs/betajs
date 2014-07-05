@@ -32,11 +32,13 @@ BetaJS.Class.extend("BetaJS.RMI.Stub", [
 				return this;
 			},
 			callbacks: function (c) {
+			    c = c.callbacks ? c.callbacks : c;
 			    this.context = c.context || this;
-			    if (callbacks.success)
-			        this.success(callbacks.success);
-                if (callbacks.failure)
-                    this.failure(callbacks.failure);
+			    if (c.success)
+			        this.success(c.success);
+                if (c.failure)
+                    this.failure(c.failure);
+                return this;
 			}
 		};
 		this.trigger("send", message, BetaJS.Functions.getArguments(arguments, 1), {
