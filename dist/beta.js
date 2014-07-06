@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-07-05
+  betajs - v0.0.2 - 2014-07-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-07-05
+  betajs - v0.0.2 - 2014-07-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-07-05
+  betajs - v0.0.2 - 2014-07-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3017,34 +3017,70 @@ BetaJS.Comparators = {
 };
 
 BetaJS.Sort = {
+
+	sort_object : function(object, f) {
+		var a = [];
+		for (var key in object)
+		a.push({
+			key : key,
+			value : object[key]
+		});
+		a.sort(function (x, y) {
+			return f(x.key, y.key, x.value, y.value);
+		});
+		var o = {};
+		for (var i = 0; i < a.length; ++i)
+			o[a[i].key] = a[i].value;
+		return o;
+	},
 	
-	dependency_sort: function (items, identifier, before, after) {
-		var identifierf = BetaJS.Types.is_string(identifier) ? function (obj) { return obj[identifier]; } : identifier;
-		var beforef = BetaJS.Types.is_string(before) ? function (obj) { return obj[before]; } : before;
-		var afterf = BetaJS.Types.is_string(after) ? function (obj) { return obj[after]; } : after;
+	deep_sort: function (object, f) {
+		f = f || BetaJS.Comparators.byValue;
+		if (BetaJS.Types.is_array(object)) {
+			for (var i = 0; i < object.length; ++i)
+				object[i] = this.deep_sort(object[i], f);
+			return object.sort(f);
+		} else if (BetaJS.Types.is_object(object)) {
+			for (var key in object)
+				object[key] = this.deep_sort(object[key], f);
+			return this.sort_object(object, f);
+		} else
+			return f;
+	},
+
+	dependency_sort : function(items, identifier, before, after) {
+		var identifierf = BetaJS.Types.is_string(identifier) ? function(obj) {
+			return obj[identifier];
+		} : identifier;
+		var beforef = BetaJS.Types.is_string(before) ? function(obj) {
+			return obj[before];
+		} : before;
+		var afterf = BetaJS.Types.is_string(after) ? function(obj) {
+			return obj[after];
+		} : after;
 		var n = items.length;
 		var data = [];
 		var identifier_to_index = {};
 		var todo = {};
 		var i = null;
-		for (i = 0; i < n; ++i) {
+		for ( i = 0; i < n; ++i) {
 			todo[i] = true;
 			var ident = identifierf(items[i], i);
 			identifier_to_index[ident] = i;
 			data.push({
-				before: {},
-				after: {}
-			});		
+				before : {},
+				after : {}
+			});
 		}
-		for (i = 0; i < n; ++i) {
-			BetaJS.Objs.iter(beforef(items[i], i) || [], function (before) {
+		for ( i = 0; i < n; ++i) {
+			BetaJS.Objs.iter(beforef(items[i], i) || [], function(before) {
 				var before_index = identifier_to_index[before];
 				if (BetaJS.Types.is_defined(before_index)) {
 					data[i].before[before_index] = true;
 					data[before_index].after[i] = true;
 				}
 			});
-			BetaJS.Objs.iter(afterf(items[i]) || [], function (after) {
+			BetaJS.Objs.iter(afterf(items[i]) || [], function(after) {
 				var after_index = identifier_to_index[after];
 				if (BetaJS.Types.is_defined(after_index)) {
 					data[i].after[after_index] = true;
@@ -3059,13 +3095,12 @@ BetaJS.Sort = {
 					delete todo[i];
 					result.push(items[i]);
 					for (bef in data[i].before)
-						delete data[bef].after[i];
+					delete data[bef].after[i];
 				}
 			}
 		}
 		return result;
 	}
-	
 };
 
 BetaJS.Locales = {
@@ -4159,7 +4194,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-06-23
+  betajs - v0.0.2 - 2014-07-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4186,6 +4221,18 @@ BetaJS.Queries = {
 				return false;
 		}
 		return true;
+	},
+	
+	normalize: function (query) {
+		return BetaJS.Sort.deep_sort(query);
+	},
+	
+	serialize: function (query) {
+		return JSON.stringify(this.normalize(query));
+	},
+	
+	unserialize: function (query) {
+		return JSON.parse(query);
 	},
 	
 	__increase_dependency: function (key, dep) {
@@ -4371,6 +4418,17 @@ BetaJS.Queries.Constrained = {
 		return result;
 	},
 	
+	normalize: function (constrained_query) {
+		return {
+			query: "query" in constrained_query ? BetaJS.Queries.normalize(constrained_query.query) : {},
+			options: {
+				skip: "options" in constrained_query && "skip" in constrained_query.options ? constrained_query.options.skip : null,
+				limit: "limit" in constrained_query && "limit" in constrained_query.options ? constrained_query.options.limit : null,
+				sort: "sort" in constrained_query && "sort" in constrained_query.options ? constrained_query.options.sort : {}
+			}
+		};
+	},
+	
 	emulate: function (constrained_query, query_capabilities, query_function, query_context, callbacks) {
 		var query = constrained_query.query || {};
 		var options = constrained_query.options || {};
@@ -4455,9 +4513,49 @@ BetaJS.Queries.Constrained = {
 			if (qlimit2 + qskip2 > qlimit + qskip)
 				return false;
 		}
-		if ((qskip || qlimit) && (qsort || qsort2) && qsort != qsort2)
+		if ((qskip || qlimit) && (qsort || qsort2) && JSON.stringify(qsort) != JSON.stringify(qsort2))
 			return false;
 		return BetaJS.Queries.subsumizes(query.query, query2.query);
+	},
+	
+	serialize: function (query) {
+		return JSON.stringify(this.normalize(query));
+	},
+	
+	unserialize: function (query) {
+		return JSON.parse(query);
+	},
+	
+	mergeable: function (query, query2) {
+		if (BetaJS.Queries.serialize(query.query) != BetaJS.Queries.serialize(query2.query))
+			return false;
+		var qots = query.options || {};
+		var qopts2 = query2.options || {};
+		if (JSON.stringify(qopts.sort || {}) != JSON.stringify(qopts2.sort || {}))
+			return false;
+		if ("skip" in qopts) {
+			if ("skip" in qopts2) {
+				if (qopts.skip <= qopts2.skip)
+					return !qopts.limit || (qopts.skip + qopts.limit >= qopts2.skip);
+				else
+					return !qopts2.limit || (qopts2.skip + qopts2.limit >= qopts.skip);
+			} else 
+				return (!qopts2.limit || (qopts2.limit >= qopts.skip));
+		} else 
+			return !("skip" in qopts2) || (!qopts.limit || (qopts.limit >= qopts2.skip));
+	},
+	
+	merge: function (query, query2) {
+		var qots = query.options || {};
+		var qopts2 = query2.options || {};
+		return {
+			query: query.query,
+			options: {
+				skip: "skip" in qopts ? ("skip" in qopts2 ? Math.min(qopts.skip, qopts2.skip): null) : null,
+				limit: "limit" in qopts ? ("limit" in qopts2 ? Math.max(qopts.limit, qopts2.limit): null) : null,
+				sort: query.sort
+			}
+		};
 	}
 
 }; 
@@ -4474,11 +4572,26 @@ BetaJS.Class.extend("BetaJS.Queries.AbstractQueryModel", {
 
 
 BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
-	
+
 	__queries: {},
 	
+	constructor: function () {
+		this._inherited(BetaJS.Queries.DefaultQueryModel, "constructor");
+		this._initialize(this.__queries);
+	},
+	
+	_initialize: function (queries) {},
+	
+	_insert: function (query) {
+		this.__queries[BetaJS.Queries.Constrained.serialize(query)] = query;
+	},
+	
+	_remove: function (query) {
+		delete this.__queries[BetaJS.Queries.Constrained.serialize(query)];
+	},
+	
 	exists: function (query) {
-		return BetaJS.Queries.Constrained.format(query) in this.__queries;
+		return BetaJS.Queries.Constrained.serialize(query) in this.__queries;
 	},
 	
 	executable: function (query) {
@@ -4493,13 +4606,59 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 	},
 	
 	register: function (query) {
-		BetaJS.Objs.iter(this.__queries, function (query2) {
-			if (BetaJS.Queries.Constrained.subsumizes(query, query2))
-				delete this.__queries[BetaJS.Queries.Constrained.format(query2)];
-		}, this);
-		this.__queries[BetaJS.Queries.Constrained.format(query)] = query;
+		var changed = true;
+		while (changed) {
+			changed = false;
+			BetaJS.Objs.iter(this.__queries, function (query2) {
+				if (BetaJS.Queries.Constrained.subsumizes(query, query2)) {
+					this._remove(query2);
+					changed = true;
+				} else if (BetaJS.Queries.Constrained.mergable(query, query2)) {
+					this._remove(query2);
+					changed = true;
+					query = BetaJS.Queries.Constrained.merge(query, query2);
+				}
+			}, this);
+		}
+		this._insert(query);
 	}	
 	
+});
+
+
+BetaJS.Queries.DefaultQueryModel.extend("BetaJS.Queries.StoreQueryModel", {
+	
+	constructor: function (store) {
+		this._inherited(BetaJS.Queries.StoreQueryModel, "constructor");
+		this.__store = store;
+	},
+	
+	_initialize: function (queries) {
+		this.__store.query({}, {}, {
+			success: function (result) {
+				while (result.hasNext()) {
+					var query = result.next();
+					queries[BetaJS.Queries.Constrained.serialize(query)] = query;
+				}
+			}
+		});
+	},
+	
+	_insert: function (query) {
+		this._inherited("_insert", query);
+		this.__store.insert(query, {});
+	},
+	
+	_remove: function (query) {
+		delete this.__queries[BetaJS.Queries.Constrained.serialize(query)];
+		this.__store.query({query: query}, {}, {
+			success: function (result) {
+				while (result.hasNext())
+					this.__store.remove(result.next().id, {});
+			}
+		});
+	}
+
 });
 
 BetaJS.Collections.Collection.extend("BetaJS.Collections.QueryCollection", {
@@ -5747,6 +5906,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 		this.__store = store;
 		options = options || {};
 		options.id_key = store.id_key();
+		this._projection = options.projection || {};
 		this._inherited(BetaJS.Stores.PassthroughStore, "constructor", options);
 		this._supportsAsync = store.supportsAsync();
 		this._supportsSync = store.supportsSync();
@@ -5757,7 +5917,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	},
 
 	_insert: function (data, callbacks) {
-		return this.__store.insert(data, callbacks);
+		return this.__store.insert(BetaJS.Objs.extend(data, this._projection), callbacks);
 	},
 	
 	_remove: function (id, callbacks) {
@@ -5773,7 +5933,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	},
 	
 	_query: function (query, options, callbacks) {
-		return this.__store.query(query, options, callbacks);
+		return this.__store.query(BetaJS.Objs.extend(query, this._projection), options, callbacks);
 	},
 	
 	_ensure_index: function (key) {
@@ -5999,7 +6159,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-06-23
+  betajs - v0.0.2 - 2014-07-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7109,7 +7269,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-06-23
+  betajs - v0.0.2 - 2014-07-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8400,7 +8560,7 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 	}
 
 });
-BetaJS.$ = jQuery || null;
+BetaJS.$ = "jQuery" in window ? window.jQuery : null;
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
 

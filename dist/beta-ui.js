@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-06-23
+  betajs - v0.0.2 - 2014-07-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1290,7 +1290,7 @@ BetaJS.Stores.RemoteStore.extend("BetaJS.Stores.QueryGetParamsRemoteStore", {
 	}
 
 });
-BetaJS.$ = jQuery || null;
+BetaJS.$ = "jQuery" in window ? window.jQuery : null;
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
 

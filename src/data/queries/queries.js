@@ -23,6 +23,18 @@ BetaJS.Queries = {
 		return true;
 	},
 	
+	normalize: function (query) {
+		return BetaJS.Sort.deep_sort(query);
+	},
+	
+	serialize: function (query) {
+		return JSON.stringify(this.normalize(query));
+	},
+	
+	unserialize: function (query) {
+		return JSON.parse(query);
+	},
+	
 	__increase_dependency: function (key, dep) {
 		if (key in dep)
 			dep[key]++;

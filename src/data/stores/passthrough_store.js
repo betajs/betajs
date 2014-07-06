@@ -4,6 +4,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 		this.__store = store;
 		options = options || {};
 		options.id_key = store.id_key();
+		this._projection = options.projection || {};
 		this._inherited(BetaJS.Stores.PassthroughStore, "constructor", options);
 		this._supportsAsync = store.supportsAsync();
 		this._supportsSync = store.supportsSync();
@@ -14,7 +15,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	},
 
 	_insert: function (data, callbacks) {
-		return this.__store.insert(data, callbacks);
+		return this.__store.insert(BetaJS.Objs.extend(data, this._projection), callbacks);
 	},
 	
 	_remove: function (id, callbacks) {
@@ -30,7 +31,7 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 	},
 	
 	_query: function (query, options, callbacks) {
-		return this.__store.query(query, options, callbacks);
+		return this.__store.query(BetaJS.Objs.extend(query, this._projection), options, callbacks);
 	},
 	
 	_ensure_index: function (key) {

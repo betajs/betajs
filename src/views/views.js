@@ -1,4 +1,4 @@
-BetaJS.$ = jQuery || null;
+BetaJS.$ = "jQuery" in window ? window.jQuery : null;
 
 BetaJS.Exceptions.Exception.extend("BetaJS.Views.ViewException");
 
