@@ -27,7 +27,8 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 		var obj = BetaJS.Objs.clone(data, 1);
 		if ("id" in data) {
 			delete obj["id"];
-			obj._id = data.id;
+            var objid = this._database.mongo_object_id();
+            obj._id = new objid(data.id);
 		}
 		return obj;
 	},
@@ -74,7 +75,7 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	
 	_updateRow: function (query, row, callbacks) {
 		return this.then(this.table, callbacks, function (table, callbacks) {
-			this.thenSingle(table, table.update, [query, {"$set" : row}, true, false], callbacks, function (result, callbacks) {
+			this.thenSingle(table, table.update, [query, {"$set" : row}], callbacks, function (result, callbacks) {
 				callbacks.success(row);
 			});
 		});

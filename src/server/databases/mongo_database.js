@@ -2,7 +2,7 @@ BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	constructor: function (db, options) {
 		if (BetaJS.Types.is_string(db)) {
-			this.__dbUri = db;
+			this.__dbUri = BetaJS.Strings.strip_start(db, "mongodb://");
 			this.__dbObject = this.cls.uriToObject(db);
 		} else {
 			db = BetaJS.Objs.extend({

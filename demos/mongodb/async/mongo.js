@@ -13,12 +13,16 @@ table.insertRow({"foo": "bar"}, {
 			success: function (rows) {
 				rows = rows.asArray();
 				console.log(rows);
-				table.removeById(row.id, {
-					success: function () {
-						table.destroy();
-						db.destroy();
-					}
-				});	
+				table.findById(row.id, {
+				   success: function (row) {
+                        table.removeById(row.id, {
+                            success: function () {
+                                table.destroy();
+                                db.destroy();
+                            }
+                        });
+				   } 
+				});
 			}
 		});
 	}

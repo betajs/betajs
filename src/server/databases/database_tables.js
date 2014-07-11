@@ -70,7 +70,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	},
 	
 	updateRow: function (query, row, callbacks) {
-		return this.then(this._decode, [this._encode(query), this._encode(row)], callbacks, function (result, callbacks) {
+		return this.then(this._updateRow, [this._encode(query), this._encode(row)], callbacks, function (result, callbacks) {
 			callbacks.success(this._decode(result));
 		});
 	},

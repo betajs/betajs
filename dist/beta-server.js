@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-11
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7664,7 +7664,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	},
 	
 	updateRow: function (query, row, callbacks) {
-		return this.then(this._decode, [this._encode(query), this._encode(row)], callbacks, function (result, callbacks) {
+		return this.then(this._updateRow, [this._encode(query), this._encode(row)], callbacks, function (result, callbacks) {
 			callbacks.success(this._decode(result));
 		});
 	},
@@ -7684,7 +7684,7 @@ BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
 	
 	constructor: function (db, options) {
 		if (BetaJS.Types.is_string(db)) {
-			this.__dbUri = db;
+			this.__dbUri = BetaJS.Strings.strip_start(db, "mongodb://");
 			this.__dbObject = this.cls.uriToObject(db);
 		} else {
 			db = BetaJS.Objs.extend({
@@ -7811,7 +7811,8 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 		var obj = BetaJS.Objs.clone(data, 1);
 		if ("id" in data) {
 			delete obj["id"];
-			obj._id = data.id;
+            var objid = this._database.mongo_object_id();
+            obj._id = new objid(data.id);
 		}
 		return obj;
 	},
@@ -7858,7 +7859,7 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	
 	_updateRow: function (query, row, callbacks) {
 		return this.then(this.table, callbacks, function (table, callbacks) {
-			this.thenSingle(table, table.update, [query, {"$set" : row}, true, false], callbacks, function (result, callbacks) {
+			this.thenSingle(table, table.update, [query, {"$set" : row}], callbacks, function (result, callbacks) {
 				callbacks.success(row);
 			});
 		});
