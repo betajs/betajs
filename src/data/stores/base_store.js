@@ -47,6 +47,12 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 		this._query_model = "query_model" in options ? options.query_model : null;
 	},
 	
+    query_model: function () {
+        if (arguments.length > 0)
+            this._query_model = arguments[0];
+        return this._query_model;
+    },
+    
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -179,14 +185,18 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 			if (options.skip)
 				options.skip = parseInt(options.skip, 10);
 		}
-		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
-			this.trigger("query_miss", {query: query, options: options});
-			var e = new BetaJS.Stores.StoreException("Cannot execute query");
-			if (callbacks)
-				callbacks.exception.call(callbacks.context || this, e);
-			else
-				throw e;
-			return null;
+		if (this._query_model) {
+		    var subsumizer = this._query_model.subsumizer_of({query: query, options: options});
+    		if (!subsumizer) {
+    			this.trigger("query_miss", {query: query, options: options});
+    			var e = new BetaJS.Stores.StoreException("Cannot execute query");
+    			if (callbacks)
+    			    BetaJS.SyncAsync.callback(callbacks, "exception", e);
+    			else
+    				throw e;
+    			return null;
+    		} else
+    		    this.trigger("query_hit", {query: query, options: options}, subsumizer);
 		}
 		var q = function (callbacks) {
 			return BetaJS.Queries.Constrained.emulate(

@@ -1,0 +1,15 @@
+{
+	"name": "Remotely",
+	"version": "0.0.0",
+	"description": "Remotely",
+	"dependencies": {
+		"socket.io": "latest",
+		"express": "latest",
+		"cookie-parser": "latest",
+		"morgan": "latest",
+		"body-parser": "latest",
+		"ejs": "latest",
+		"jade": "latest"
+	},
+	"author": "developer"
+}

@@ -62,7 +62,7 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	_insertRow: function (row, callbacks) {
 		return this.then(this.table, callbacks, function (table, callbacks) {
 			this.thenSingle(table, table.insert, [row], callbacks, function (result, callbacks) {
-				callbacks.success(result[0] ? result[0] : result);
+				BetaJS.SyncAsync.callback(callbacks, "success", result[0] ? result[0] : result);
 			});
 		});
 	},
@@ -76,7 +76,7 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	_updateRow: function (query, row, callbacks) {
 		return this.then(this.table, callbacks, function (table, callbacks) {
 			this.thenSingle(table, table.update, [query, {"$set" : row}], callbacks, function (result, callbacks) {
-				callbacks.success(row);
+				BetaJS.SyncAsync.callback(callbacks, "success", row);
 			});
 		});
 	},

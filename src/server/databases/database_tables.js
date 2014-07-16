@@ -17,7 +17,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	
 	findOne: function (query, options, callbacks) {
 		return this.then(this._findOne, [this._encode(query), options], callbacks, function (result, callbacks) {
-			callbacks.success(!result ? null : this._decode(result));
+			BetaJS.SyncAsync.callback(callbacks, "success", !result ? null : this._decode(result));
 		});
 	},
 	
@@ -25,7 +25,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 		options = options || {};
 		options.limit = 1;
 		return this.then(this._find, [query, options], callbacks, function (result, callbacks) {
-			callbacks.success(result.next());
+			BetaJS.SyncAsync.callback(callbacks, "success", result.next());
 		});
 	},
 	
@@ -42,7 +42,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 
 	find: function (query, options, callbacks) {
 		return this.then(this._find, [this._encode(query), options], callbacks, function (result, callbacks) {
-			callbacks.success(new BetaJS.Iterators.MappedIterator(result, this._decode, this)); 
+			BetaJS.SyncAsync.callback(callbacks, "success", new BetaJS.Iterators.MappedIterator(result, this._decode, this)); 
 		});
 	},
 	
@@ -61,7 +61,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	
 	insertRow: function (row, callbacks) {
 		return this.then(this._insertRow, [this._encode(row)], callbacks, function (result, callbacks) {
-			callbacks.success(this._decode(result));
+			BetaJS.SyncAsync.callback(callbacks, "success", this._decode(result));
 		});
 	},
 	
@@ -71,7 +71,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	
 	updateRow: function (query, row, callbacks) {
 		return this.then(this._updateRow, [this._encode(query), this._encode(row)], callbacks, function (result, callbacks) {
-			callbacks.success(this._decode(result));
+			BetaJS.SyncAsync.callback(callbacks, "success", this._decode(result));
 		});
 	},
 	

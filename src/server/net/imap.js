@@ -46,19 +46,34 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		this.on("error", f);
 		this.__imap.connect();
 		this.__imap.once('ready', function() {
-			this.__connected = true;
-			self.__imap.openBox(self.__options.mailbox || "INBOX", true, function (err, box) {
-				self.off("error", f);
-				if (err) {
-					BetaJS.SyncAsync.callback(callbacks, "exception", err);
-					this.__connected = false;
-					throw err;
-				}
-				self.__imap.on('mail', function (count) {
-					self.trigger("new_mail", count);
-				});
-				BetaJS.SyncAsync.callback(callbacks, "success");
-			});
+			self.__connected = true;
+			var boxes = self.__options.mailbox || "INBOX";
+			if (!BetaJS.Types.is_array(boxes))
+			    boxes = [boxes];
+			boxes = BetaJS.Objs.clone(boxes, 1);
+			var err = null;
+			var worker = function () {
+			    if (boxes.length === 0) {
+                    BetaJS.SyncAsync.callback(callbacks, "exception", err);
+                    self.__connected = false;
+                    throw err;
+                }
+                var box = boxes.shift();
+                self.__imap.openBox(box, true, function (error, box) {
+                    if (error) {
+                        err = error;
+                        worker();
+                        return;
+                    }
+                    self.on("error", f);
+                    self.__imap.on('mail', function (count) {
+                        self.trigger("new_mail", count);
+                    });
+                    BetaJS.SyncAsync.callback(callbacks, "success");
+                });
+			};
+			self.off("error", f);
+			worker();
 		});
 	},
 	

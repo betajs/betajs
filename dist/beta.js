@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -341,6 +341,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_name : function(input) {
+	    input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (!input && temp.length > 1) {
@@ -352,6 +353,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_email : function(input) {
+        input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (temp.length > 1) {
@@ -363,6 +365,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_salutatory_name : function(input) {
+        input = input || "";
 		return (this.email_get_name(input).split(" "))[0];
 	}
 };
@@ -506,9 +509,9 @@ BetaJS.SyncAsync = {
 	toCallbackType: function (callbacks, type) {
 		if (type == this.ASYNCSINGLE)
 			return function (err, result) {
-				if (err)
-					callbacks.exception.call(callbacks.context || this, err);
-				callbacks.success.call(callbacks.context || this, result);
+                var caller = err ? "exception" : "success";
+                if (caller in callbacks)
+                    callbacks[caller].call(callbacks.context || this, err ? err : result);
 			};
 		return callbacks;
 	},
@@ -770,11 +773,11 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 	eitherAsyncFactory: function (property, callbacks, asyncFunc, params) {
 		var ctx = this;
 		return this.either(callbacks, function () {
-			return this[property];				
+			return ctx[property];				
 		}, function () {
-			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+			asyncFunc.call(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 				ctx[property] = result;
-				callbacks.success.call(this, result);
+				ctx.callback(callbacks, "success", result);
 			}));
 		}, property in this, this);
 	},
@@ -786,7 +789,7 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 				this[property] = syncFunc.apply(this, params);
 			return this[property];				
 		}, function () {
-			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+			asyncFunc.call(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 				ctx[property] = result;
 				callbacks.success.call(this, result);
 			}));
@@ -1416,7 +1419,11 @@ BetaJS.Class.prototype.as_method = function (s) {
 BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
-	this.__auto_destroy_list.push(obj);
+	var target = obj;
+	if (!BetaJS.Types.is_array(target))
+	   target = [target];
+	for (var i = 0; i < target.length; ++i)
+	   this.__auto_destroy_list.push(target[i]);
 	return obj;
 };
 
@@ -4194,7 +4201,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4470,12 +4477,12 @@ BetaJS.Queries.Constrained = {
 			if ("limit" in options && !("limit" in execute_options))
 				iter = new BetaJS.Iterators.LimitIterator(iter, options["limit"]);
 			if (callbacks && callbacks.success)
-				callbacks.success(iter);
+				BetaJS.SyncAsync.callback(callbacks, "success", iter);
 			return iter;
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
+				BetaJS.SyncAsync.callback(callbacks, "exception", e);
 			else
 				throw e;
 		};
@@ -4573,14 +4580,10 @@ BetaJS.Class.extend("BetaJS.Queries.AbstractQueryModel", {
 
 BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 
-	__queries: {},
-	
 	constructor: function () {
 		this._inherited(BetaJS.Queries.DefaultQueryModel, "constructor");
-		this._initialize(this.__queries);
+        this.__queries = {};    
 	},
-	
-	_initialize: function (queries) {},
 	
 	_insert: function (query) {
 		this.__queries[BetaJS.Queries.Constrained.serialize(query)] = query;
@@ -4594,15 +4597,20 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 		return BetaJS.Queries.Constrained.serialize(query) in this.__queries;
 	},
 	
+	subsumizer_of: function (query) {
+        if (this.exists(query))
+            return query;
+        var result = null;
+        BetaJS.Objs.iter(this.__queries, function (query2) {
+            if (BetaJS.Queries.Constrained.subsumizes(query2, query))
+                result = query2;
+            return !result;
+        }, this);
+        return result;
+	},
+	
 	executable: function (query) {
-		if (this.exists(query))
-			return true;
-		var result = false;
-		BetaJS.Objs.iter(this.__queries, function (query2) {
-			result = BetaJS.Queries.Constrained.subsumizes(query2, query);
-			return !result;
-		}, this);
-		return result;
+	    return !!this.subsumizer_of(query);
 	},
 	
 	register: function (query) {
@@ -4613,15 +4621,21 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 				if (BetaJS.Queries.Constrained.subsumizes(query, query2)) {
 					this._remove(query2);
 					changed = true;
-				} else if (BetaJS.Queries.Constrained.mergable(query, query2)) {
+				}/* else if (BetaJS.Queries.Constrained.mergable(query, query2)) {
 					this._remove(query2);
 					changed = true;
 					query = BetaJS.Queries.Constrained.merge(query, query2);
-				}
+				} */
 			}, this);
 		}
 		this._insert(query);
-	}	
+	},
+	
+	invalidate: function (query) {
+	    var subsumizer = this.subsumizer_of(query);
+	    if (subsumizer)
+	       this._remove(subsumizer);
+	}
 	
 });
 
@@ -4629,29 +4643,35 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 BetaJS.Queries.DefaultQueryModel.extend("BetaJS.Queries.StoreQueryModel", {
 	
 	constructor: function (store) {
+        this.__store = store;
 		this._inherited(BetaJS.Queries.StoreQueryModel, "constructor");
-		this.__store = store;
 	},
 	
-	_initialize: function (queries) {
+	initialize: function (callbacks) {
 		this.__store.query({}, {}, {
+		    context: this,
 			success: function (result) {
 				while (result.hasNext()) {
 					var query = result.next();
-					queries[BetaJS.Queries.Constrained.serialize(query)] = query;
+					delete query["id"];
+                    this._insert(query);
 				}
+				BetaJS.SyncAsync.callback(callbacks, "success");
+			}, exception: function (err) {
+			    BetaJS.SyncAsync.callback(callbacks, "exception", err);
 			}
 		});
 	},
 	
 	_insert: function (query) {
-		this._inherited("_insert", query);
+		this._inherited(BetaJS.Queries.StoreQueryModel, "_insert", query);
 		this.__store.insert(query, {});
 	},
 	
 	_remove: function (query) {
 		delete this.__queries[BetaJS.Queries.Constrained.serialize(query)];
 		this.__store.query({query: query}, {}, {
+		    context: this,
 			success: function (result) {
 				while (result.hasNext())
 					this.__store.remove(result.next().id, {});
@@ -4903,6 +4923,12 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 		this._query_model = "query_model" in options ? options.query_model : null;
 	},
 	
+    query_model: function () {
+        if (arguments.length > 0)
+            this._query_model = arguments[0];
+        return this._query_model;
+    },
+    
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -5035,14 +5061,18 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 			if (options.skip)
 				options.skip = parseInt(options.skip, 10);
 		}
-		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
-			this.trigger("query_miss", {query: query, options: options});
-			var e = new BetaJS.Stores.StoreException("Cannot execute query");
-			if (callbacks)
-				callbacks.exception.call(callbacks.context || this, e);
-			else
-				throw e;
-			return null;
+		if (this._query_model) {
+		    var subsumizer = this._query_model.subsumizer_of({query: query, options: options});
+    		if (!subsumizer) {
+    			this.trigger("query_miss", {query: query, options: options});
+    			var e = new BetaJS.Stores.StoreException("Cannot execute query");
+    			if (callbacks)
+    			    BetaJS.SyncAsync.callback(callbacks, "exception", e);
+    			else
+    				throw e;
+    			return null;
+    		} else
+    		    this.trigger("query_hit", {query: query, options: options}, subsumizer);
 		}
 		var q = function (callbacks) {
 			return BetaJS.Queries.Constrained.emulate(
@@ -5788,12 +5818,18 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 BetaJS.Stores.DualStore.extend("BetaJS.Stores.CachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
+		var cache_store = options.cache_store;
+		if (!("cache_store" in options)) {
+		    cache_store = this._auto_destroy(new BetaJS.Stores.MemoryStore({
+                id_key: parent.id_key()
+            }));
+        }
+        if (!cache_store.query_model())
+            cache_store.query_model(options.cache_query_model ? options.cache_query_model : this._auto_destroy(new BetaJS.Queries.DefaultQueryModel()));
+        this.__invalidation_options = options.invalidation || {};
 		this._inherited(BetaJS.Stores.CachedStore, "constructor",
 			parent,
-			new BetaJS.Stores.MemoryStore({
-				id_key: parent.id_key(),
-				query_model: new BetaJS.Queries.DefaultQueryModel()
-			}),
+			cache_store,
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
@@ -5806,6 +5842,38 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.CachedStore", {
 					or_on_null: false
 				}
 			}, options));
+	   if (this.__invalidation_options.reload_after_first_hit) {
+	       this.__queries = {};
+	       this.cache().on("query_hit", function (query, subsumizer) {
+	           var s = BetaJS.Queries.Constrained.serialize(subsumizer);
+	           if (!this.__queries[s]) {
+	               this.__queries[s] = true;
+	               BetaJS.SyncAsync.eventually(function () {
+	                   this.invalidate_query(subsumizer, true);	                   
+	               }, [], this);
+	           }
+	       }, this);
+           this.cache().on("query_miss", function (query) {
+               var s = BetaJS.Queries.Constrained.serialize(query);
+               this.__queries[s] = true;
+           }, this);
+	   }
+	},
+	
+	destroy: function () {
+	    this.cache().off(null, null, this);
+	    this._inherited(BetaJS.Stores.CachedStore, "destroy");    
+	},
+	
+	invalidate_query: function (query, reload) {
+	    this.cache().query_model().invalidate(query);
+	    if (reload) {
+	        if (this.supportsAsync())
+	           this.query(query.query, query.options, {});
+	        else
+	           this.query(query.query, query.options);
+	    }
+        this.trigger("invalidate_query", query, reload);
 	},
 	
 	cache: function () {
@@ -5831,15 +5899,21 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	encode_object: function (obj) {
 		var result = {};
-		for (var key in obj)
-			result[this.encode_key(key)] = this.encode_value(key, obj[key]);
+		for (var key in obj) {
+		    var encoded_key = this.encode_key(key);
+		    if (encoded_key)
+			    result[encoded_key] = this.encode_value(key, obj[key]);
+		}
 		return result;
 	},
 	
 	decode_object: function (obj) {
 		var result = {};
-		for (var key in obj)
-			result[this.decode_key(key)] = this.decode_value(key, obj[key]);
+		for (var key in obj) {
+		    var decoded_key = this.decode_key(key);
+		    if (decoded_key)
+			    result[decoded_key] = this.decode_value(key, obj[key]);
+	    }
 		return result;
 	},
 	
@@ -5910,6 +5984,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 		this._inherited(BetaJS.Stores.PassthroughStore, "constructor", options);
 		this._supportsAsync = store.supportsAsync();
 		this._supportsSync = store.supportsSync();
+        if (options.destroy_store)
+            this._auto_destroy(store);
 	},
 	
 	_query_capabilities: function () {
@@ -6159,7 +6235,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7269,7 +7345,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

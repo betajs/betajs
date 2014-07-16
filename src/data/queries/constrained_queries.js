@@ -71,12 +71,12 @@ BetaJS.Queries.Constrained = {
 			if ("limit" in options && !("limit" in execute_options))
 				iter = new BetaJS.Iterators.LimitIterator(iter, options["limit"]);
 			if (callbacks && callbacks.success)
-				callbacks.success(iter);
+				BetaJS.SyncAsync.callback(callbacks, "success", iter);
 			return iter;
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
+				BetaJS.SyncAsync.callback(callbacks, "exception", e);
 			else
 				throw e;
 		};

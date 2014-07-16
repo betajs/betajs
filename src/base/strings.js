@@ -162,6 +162,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_name : function(input) {
+	    input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (!input && temp.length > 1) {
@@ -173,6 +174,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_email : function(input) {
+        input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (temp.length > 1) {
@@ -184,6 +186,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_salutatory_name : function(input) {
+        input = input || "";
 		return (this.email_get_name(input).split(" "))[0];
 	}
 };

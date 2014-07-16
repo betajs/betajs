@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-07-11
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -341,6 +341,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_name : function(input) {
+	    input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (!input && temp.length > 1) {
@@ -352,6 +353,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_email : function(input) {
+        input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (temp.length > 1) {
@@ -363,6 +365,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_salutatory_name : function(input) {
+        input = input || "";
 		return (this.email_get_name(input).split(" "))[0];
 	}
 };
@@ -506,9 +509,9 @@ BetaJS.SyncAsync = {
 	toCallbackType: function (callbacks, type) {
 		if (type == this.ASYNCSINGLE)
 			return function (err, result) {
-				if (err)
-					callbacks.exception.call(callbacks.context || this, err);
-				callbacks.success.call(callbacks.context || this, result);
+                var caller = err ? "exception" : "success";
+                if (caller in callbacks)
+                    callbacks[caller].call(callbacks.context || this, err ? err : result);
 			};
 		return callbacks;
 	},
@@ -770,11 +773,11 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 	eitherAsyncFactory: function (property, callbacks, asyncFunc, params) {
 		var ctx = this;
 		return this.either(callbacks, function () {
-			return this[property];				
+			return ctx[property];				
 		}, function () {
-			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+			asyncFunc.call(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 				ctx[property] = result;
-				callbacks.success.call(this, result);
+				ctx.callback(callbacks, "success", result);
 			}));
 		}, property in this, this);
 	},
@@ -786,7 +789,7 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 				this[property] = syncFunc.apply(this, params);
 			return this[property];				
 		}, function () {
-			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+			asyncFunc.call(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 				ctx[property] = result;
 				callbacks.success.call(this, result);
 			}));
@@ -1416,7 +1419,11 @@ BetaJS.Class.prototype.as_method = function (s) {
 BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
-	this.__auto_destroy_list.push(obj);
+	var target = obj;
+	if (!BetaJS.Types.is_array(target))
+	   target = [target];
+	for (var i = 0; i < target.length; ++i)
+	   this.__auto_destroy_list.push(target[i]);
 	return obj;
 };
 
@@ -4194,7 +4201,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -4470,12 +4477,12 @@ BetaJS.Queries.Constrained = {
 			if ("limit" in options && !("limit" in execute_options))
 				iter = new BetaJS.Iterators.LimitIterator(iter, options["limit"]);
 			if (callbacks && callbacks.success)
-				callbacks.success(iter);
+				BetaJS.SyncAsync.callback(callbacks, "success", iter);
 			return iter;
 		};
 		var exception_call = function (e) {
 			if (callbacks && callbacks.exception)
-				callbacks.exception(e);
+				BetaJS.SyncAsync.callback(callbacks, "exception", e);
 			else
 				throw e;
 		};
@@ -4573,14 +4580,10 @@ BetaJS.Class.extend("BetaJS.Queries.AbstractQueryModel", {
 
 BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 
-	__queries: {},
-	
 	constructor: function () {
 		this._inherited(BetaJS.Queries.DefaultQueryModel, "constructor");
-		this._initialize(this.__queries);
+        this.__queries = {};    
 	},
-	
-	_initialize: function (queries) {},
 	
 	_insert: function (query) {
 		this.__queries[BetaJS.Queries.Constrained.serialize(query)] = query;
@@ -4594,15 +4597,20 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 		return BetaJS.Queries.Constrained.serialize(query) in this.__queries;
 	},
 	
+	subsumizer_of: function (query) {
+        if (this.exists(query))
+            return query;
+        var result = null;
+        BetaJS.Objs.iter(this.__queries, function (query2) {
+            if (BetaJS.Queries.Constrained.subsumizes(query2, query))
+                result = query2;
+            return !result;
+        }, this);
+        return result;
+	},
+	
 	executable: function (query) {
-		if (this.exists(query))
-			return true;
-		var result = false;
-		BetaJS.Objs.iter(this.__queries, function (query2) {
-			result = BetaJS.Queries.Constrained.subsumizes(query2, query);
-			return !result;
-		}, this);
-		return result;
+	    return !!this.subsumizer_of(query);
 	},
 	
 	register: function (query) {
@@ -4613,15 +4621,21 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 				if (BetaJS.Queries.Constrained.subsumizes(query, query2)) {
 					this._remove(query2);
 					changed = true;
-				} else if (BetaJS.Queries.Constrained.mergable(query, query2)) {
+				}/* else if (BetaJS.Queries.Constrained.mergable(query, query2)) {
 					this._remove(query2);
 					changed = true;
 					query = BetaJS.Queries.Constrained.merge(query, query2);
-				}
+				} */
 			}, this);
 		}
 		this._insert(query);
-	}	
+	},
+	
+	invalidate: function (query) {
+	    var subsumizer = this.subsumizer_of(query);
+	    if (subsumizer)
+	       this._remove(subsumizer);
+	}
 	
 });
 
@@ -4629,29 +4643,35 @@ BetaJS.Queries.AbstractQueryModel.extend("BetaJS.Queries.DefaultQueryModel", {
 BetaJS.Queries.DefaultQueryModel.extend("BetaJS.Queries.StoreQueryModel", {
 	
 	constructor: function (store) {
+        this.__store = store;
 		this._inherited(BetaJS.Queries.StoreQueryModel, "constructor");
-		this.__store = store;
 	},
 	
-	_initialize: function (queries) {
+	initialize: function (callbacks) {
 		this.__store.query({}, {}, {
+		    context: this,
 			success: function (result) {
 				while (result.hasNext()) {
 					var query = result.next();
-					queries[BetaJS.Queries.Constrained.serialize(query)] = query;
+					delete query["id"];
+                    this._insert(query);
 				}
+				BetaJS.SyncAsync.callback(callbacks, "success");
+			}, exception: function (err) {
+			    BetaJS.SyncAsync.callback(callbacks, "exception", err);
 			}
 		});
 	},
 	
 	_insert: function (query) {
-		this._inherited("_insert", query);
+		this._inherited(BetaJS.Queries.StoreQueryModel, "_insert", query);
 		this.__store.insert(query, {});
 	},
 	
 	_remove: function (query) {
 		delete this.__queries[BetaJS.Queries.Constrained.serialize(query)];
 		this.__store.query({query: query}, {}, {
+		    context: this,
 			success: function (result) {
 				while (result.hasNext())
 					this.__store.remove(result.next().id, {});
@@ -4903,6 +4923,12 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 		this._query_model = "query_model" in options ? options.query_model : null;
 	},
 	
+    query_model: function () {
+        if (arguments.length > 0)
+            this._query_model = arguments[0];
+        return this._query_model;
+    },
+    
 	/** Insert data to store. Return inserted data with id.
 	 * 
  	 * @param data data to be inserted
@@ -5035,14 +5061,18 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 			if (options.skip)
 				options.skip = parseInt(options.skip, 10);
 		}
-		if (this._query_model && !this._query_model.executable({query: query, options: options})) {
-			this.trigger("query_miss", {query: query, options: options});
-			var e = new BetaJS.Stores.StoreException("Cannot execute query");
-			if (callbacks)
-				callbacks.exception.call(callbacks.context || this, e);
-			else
-				throw e;
-			return null;
+		if (this._query_model) {
+		    var subsumizer = this._query_model.subsumizer_of({query: query, options: options});
+    		if (!subsumizer) {
+    			this.trigger("query_miss", {query: query, options: options});
+    			var e = new BetaJS.Stores.StoreException("Cannot execute query");
+    			if (callbacks)
+    			    BetaJS.SyncAsync.callback(callbacks, "exception", e);
+    			else
+    				throw e;
+    			return null;
+    		} else
+    		    this.trigger("query_hit", {query: query, options: options}, subsumizer);
 		}
 		var q = function (callbacks) {
 			return BetaJS.Queries.Constrained.emulate(
@@ -5788,12 +5818,18 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DualStore", {
 BetaJS.Stores.DualStore.extend("BetaJS.Stores.CachedStore", {
 	constructor: function (parent, options) {
 		options = options || {};
+		var cache_store = options.cache_store;
+		if (!("cache_store" in options)) {
+		    cache_store = this._auto_destroy(new BetaJS.Stores.MemoryStore({
+                id_key: parent.id_key()
+            }));
+        }
+        if (!cache_store.query_model())
+            cache_store.query_model(options.cache_query_model ? options.cache_query_model : this._auto_destroy(new BetaJS.Queries.DefaultQueryModel()));
+        this.__invalidation_options = options.invalidation || {};
 		this._inherited(BetaJS.Stores.CachedStore, "constructor",
 			parent,
-			new BetaJS.Stores.MemoryStore({
-				id_key: parent.id_key(),
-				query_model: new BetaJS.Queries.DefaultQueryModel()
-			}),
+			cache_store,
 			BetaJS.Objs.extend({
 				get_options: {
 					start: "second",
@@ -5806,6 +5842,38 @@ BetaJS.Stores.DualStore.extend("BetaJS.Stores.CachedStore", {
 					or_on_null: false
 				}
 			}, options));
+	   if (this.__invalidation_options.reload_after_first_hit) {
+	       this.__queries = {};
+	       this.cache().on("query_hit", function (query, subsumizer) {
+	           var s = BetaJS.Queries.Constrained.serialize(subsumizer);
+	           if (!this.__queries[s]) {
+	               this.__queries[s] = true;
+	               BetaJS.SyncAsync.eventually(function () {
+	                   this.invalidate_query(subsumizer, true);	                   
+	               }, [], this);
+	           }
+	       }, this);
+           this.cache().on("query_miss", function (query) {
+               var s = BetaJS.Queries.Constrained.serialize(query);
+               this.__queries[s] = true;
+           }, this);
+	   }
+	},
+	
+	destroy: function () {
+	    this.cache().off(null, null, this);
+	    this._inherited(BetaJS.Stores.CachedStore, "destroy");    
+	},
+	
+	invalidate_query: function (query, reload) {
+	    this.cache().query_model().invalidate(query);
+	    if (reload) {
+	        if (this.supportsAsync())
+	           this.query(query.query, query.options, {});
+	        else
+	           this.query(query.query, query.options);
+	    }
+        this.trigger("invalidate_query", query, reload);
 	},
 	
 	cache: function () {
@@ -5831,15 +5899,21 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	encode_object: function (obj) {
 		var result = {};
-		for (var key in obj)
-			result[this.encode_key(key)] = this.encode_value(key, obj[key]);
+		for (var key in obj) {
+		    var encoded_key = this.encode_key(key);
+		    if (encoded_key)
+			    result[encoded_key] = this.encode_value(key, obj[key]);
+		}
 		return result;
 	},
 	
 	decode_object: function (obj) {
 		var result = {};
-		for (var key in obj)
-			result[this.decode_key(key)] = this.decode_value(key, obj[key]);
+		for (var key in obj) {
+		    var decoded_key = this.decode_key(key);
+		    if (decoded_key)
+			    result[decoded_key] = this.decode_value(key, obj[key]);
+	    }
 		return result;
 	},
 	
@@ -5910,6 +5984,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 		this._inherited(BetaJS.Stores.PassthroughStore, "constructor", options);
 		this._supportsAsync = store.supportsAsync();
 		this._supportsSync = store.supportsSync();
+        if (options.destroy_store)
+            this._auto_destroy(store);
 	},
 	
 	_query_capabilities: function () {
@@ -6159,7 +6235,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7379,19 +7455,34 @@ BetaJS.Class.extend("BetaJS.Server.Net.Imap", [
 		this.on("error", f);
 		this.__imap.connect();
 		this.__imap.once('ready', function() {
-			this.__connected = true;
-			self.__imap.openBox(self.__options.mailbox || "INBOX", true, function (err, box) {
-				self.off("error", f);
-				if (err) {
-					BetaJS.SyncAsync.callback(callbacks, "exception", err);
-					this.__connected = false;
-					throw err;
-				}
-				self.__imap.on('mail', function (count) {
-					self.trigger("new_mail", count);
-				});
-				BetaJS.SyncAsync.callback(callbacks, "success");
-			});
+			self.__connected = true;
+			var boxes = self.__options.mailbox || "INBOX";
+			if (!BetaJS.Types.is_array(boxes))
+			    boxes = [boxes];
+			boxes = BetaJS.Objs.clone(boxes, 1);
+			var err = null;
+			var worker = function () {
+			    if (boxes.length === 0) {
+                    BetaJS.SyncAsync.callback(callbacks, "exception", err);
+                    self.__connected = false;
+                    throw err;
+                }
+                var box = boxes.shift();
+                self.__imap.openBox(box, true, function (error, box) {
+                    if (error) {
+                        err = error;
+                        worker();
+                        return;
+                    }
+                    self.on("error", f);
+                    self.__imap.on('mail', function (count) {
+                        self.trigger("new_mail", count);
+                    });
+                    BetaJS.SyncAsync.callback(callbacks, "success");
+                });
+			};
+			self.off("error", f);
+			worker();
 		});
 	},
 	
@@ -7611,7 +7702,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	
 	findOne: function (query, options, callbacks) {
 		return this.then(this._findOne, [this._encode(query), options], callbacks, function (result, callbacks) {
-			callbacks.success(!result ? null : this._decode(result));
+			BetaJS.SyncAsync.callback(callbacks, "success", !result ? null : this._decode(result));
 		});
 	},
 	
@@ -7619,7 +7710,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 		options = options || {};
 		options.limit = 1;
 		return this.then(this._find, [query, options], callbacks, function (result, callbacks) {
-			callbacks.success(result.next());
+			BetaJS.SyncAsync.callback(callbacks, "success", result.next());
 		});
 	},
 	
@@ -7636,7 +7727,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 
 	find: function (query, options, callbacks) {
 		return this.then(this._find, [this._encode(query), options], callbacks, function (result, callbacks) {
-			callbacks.success(new BetaJS.Iterators.MappedIterator(result, this._decode, this)); 
+			BetaJS.SyncAsync.callback(callbacks, "success", new BetaJS.Iterators.MappedIterator(result, this._decode, this)); 
 		});
 	},
 	
@@ -7655,7 +7746,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	
 	insertRow: function (row, callbacks) {
 		return this.then(this._insertRow, [this._encode(row)], callbacks, function (result, callbacks) {
-			callbacks.success(this._decode(result));
+			BetaJS.SyncAsync.callback(callbacks, "success", this._decode(result));
 		});
 	},
 	
@@ -7665,7 +7756,7 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	
 	updateRow: function (query, row, callbacks) {
 		return this.then(this._updateRow, [this._encode(query), this._encode(row)], callbacks, function (result, callbacks) {
-			callbacks.success(this._decode(result));
+			BetaJS.SyncAsync.callback(callbacks, "success", this._decode(result));
 		});
 	},
 	
@@ -7681,107 +7772,93 @@ BetaJS.Class.extend("BetaJS.Databases.DatabaseTable", [
 	
 }]);
 BetaJS.Databases.Database.extend("BetaJS.Databases.MongoDatabase", {
-	
-	constructor: function (db, options) {
-		if (BetaJS.Types.is_string(db)) {
-			this.__dbUri = BetaJS.Strings.strip_start(db, "mongodb://");
-			this.__dbObject = this.cls.uriToObject(db);
-		} else {
-			db = BetaJS.Objs.extend({
-				database: "database",
-				server: "localhost",
-				port: 27017		
-			}, db);
-			this.__dbObject = db;
-			this.__dbUri = this.cls.objectToUri(db);
-		}
-		this._inherited(BetaJS.Databases.MongoDatabase, "constructor");
-		this.__mongodb_sync = null;
-		this.__mongodb_async = null;
-		this.__mongo_module_sync = null;
-		this.__mongo_module_async = null;
-		options = options || {};
-		this._supportsAsync = "async" in options ? options.async : false;
-		this._supportsSync = "sync" in options ? options.sync : !this.__supportsAsync;
-	},
-	
-	_tableClass: function () {
-		return BetaJS.Databases.MongoDatabaseTable;
-	},
-	
-	mongo_module_sync: function () {
-		if (!this.__mongo_module_sync)
-			this.__mongo_module_sync = require("mongo-sync");
-		return this.__mongo_module_sync;
-	},
 
-	mongo_module_async: function () {
-		if (!this.__mongo_module_async)
-			this.__mongo_module_async = require("mongodb");
-		return this.__mongo_module_async;
-	},
-	
-	mongo_object_id: function (id) {
-		return this.supportsSync() ? this.mongo_module_sync().ObjectId : this.mongo_module_async().BSONNative.ObjectID;
-	},
-	
-	mongodb_sync: function (callbacks) {
-		return this.eitherSyncFactory("__mongodb_sync", callbacks, function () {
-			var mod = this.mongo_module_sync();
-			this.__mongo_server_sync = new mod.Server(this.__dbObject.server + ":" + this.__dbObject.port);
-			var db = this.__mongo_server_sync.db(this.__dbObject.database);
-			if (this.__dbObject.username)
-				db.auth(this.__dbObject.username, this.__dbObject.password);
-			return db;
-		});
-	},
-	
-	mongodb_async: function (callbacks) {
-		return this.eitherFactory("__mongodb_async", callbacks, function () {
-			var mod = this.mongo_module_async();
-			this.__mongo_server_async = new mod.Server(this.__dbObject.server + ":" + this.__dbObject.port);
-			var db = this.__mongo_server_async.db(this.__dbObject.database);
-			if (this.__dbObject.username)
-				db.auth(this.__dbObject.username, this.__dbObject.password);
-			return db;
-		}, function () {
-			var MongoClient = this.mongo_module_async().MongoClient;
-			MongoClient.connect('mongodb://' + this.__dbUri, function(err, db) {
-				if (!err) 
-					callbacks.success.call(callbacks.context || this, db);
-				else
-					callbacks.failure.call(callbacks.context || this, err);
-			});
-		});
-	},
+    constructor : function(db, options) {
+        if (BetaJS.Types.is_string(db)) {
+            this.__dbUri = BetaJS.Strings.strip_start(db, "mongodb://");
+            this.__dbObject = this.cls.uriToObject(db);
+        } else {
+            db = BetaJS.Objs.extend({
+                database : "database",
+                server : "localhost",
+                port : 27017
+            }, db);
+            this.__dbObject = db;
+            this.__dbUri = this.cls.objectToUri(db);
+        }
+        this._inherited(BetaJS.Databases.MongoDatabase, "constructor");
+        options = options || {};
+        this._supportsAsync = "async" in options ? options.async : false;
+        this._supportsSync = "sync" in options ? options.sync : !this.__supportsAsync;
+    },
 
-	destroy: function () {
-		if (this.__mongo_server_sync)
-			this.__mongo_server_sync.close();
-		if (this.__mongo_server_async)
-			this.__mongo_server_async.close();
-		this._inherited(BetaJS.Databases.MongoDatabase, "destroy");
-	}
-	
+    _tableClass : function() {
+        return BetaJS.Databases.MongoDatabaseTable;
+    },
+
+    mongo_module_sync : function() {
+        if (!this.__mongo_module_sync)
+            this.__mongo_module_sync = require("mongo-sync");
+        return this.__mongo_module_sync;
+    },
+
+    mongo_module_async : function() {
+        if (!this.__mongo_module_async)
+            this.__mongo_module_async = require("mongodb");
+        return this.__mongo_module_async;
+    },
+
+    mongo_object_id : function(id) {
+        return this.supportsSync() ? this.mongo_module_sync().ObjectId : this.mongo_module_async().BSONNative.ObjectID;
+    },
+
+    mongodb_sync : function(callbacks) {
+        return this.eitherSyncFactory("__mongodb_sync", callbacks, function() {
+            var mod = this.mongo_module_sync();
+            this.__mongo_server_sync = new mod.Server(this.__dbObject.server + ":" + this.__dbObject.port);
+            var db = this.__mongo_server_sync.db(this.__dbObject.database);
+            if (this.__dbObject.username)
+                db.auth(this.__dbObject.username, this.__dbObject.password);
+            return db;
+        });
+    },
+
+    mongodb_async : function(callbacks) {
+        return this.eitherAsyncFactory("__mongodb_async", callbacks, function(callbacks) {
+            var MongoClient = this.mongo_module_async().MongoClient;
+            MongoClient.connect('mongodb://' + this.__dbUri, {
+                server: {
+                    'auto_reconnect': true
+                }
+            }, BetaJS.SyncAsync.toCallbackType(callbacks, BetaJS.SyncAsync.ASYNCSINGLE));
+        });
+    },
+
+    destroy : function() {
+        if (this.__mongo_server_sync)
+            this.__mongo_server_sync.close();
+        if (this.__mongo_server_async)
+            this.__mongo_server_async.close();
+        this._inherited(BetaJS.Databases.MongoDatabase, "destroy");
+    }
 }, {
-	
-	uriToObject: function (uri) {
-		var parsed = BetaJS.Net.Uri.parse(uri);
-		return {
-			database: BetaJS.Strings.strip_start(parsed.path, "/"),
-			server: parsed.host,
-			port: parsed.port,
-			username: parsed.user,
-			password: parsed.password
-		};
-	},
-	
-	objectToUri: function (object) {
-		object["path"] = object["database"];
-		return BetaJS.Net.Uri.build(object);
-	}
-	
-});
+
+    uriToObject : function(uri) {
+        var parsed = BetaJS.Net.Uri.parse(uri);
+        return {
+            database : BetaJS.Strings.strip_start(parsed.path, "/"),
+            server : parsed.host,
+            port : parsed.port,
+            username : parsed.user,
+            password : parsed.password
+        };
+    },
+
+    objectToUri : function(object) {
+        object["path"] = object["database"];
+        return BetaJS.Net.Uri.build(object);
+    }
+}); 
 BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	
 	constructor: function (database, table_name) {
@@ -7846,7 +7923,7 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	_insertRow: function (row, callbacks) {
 		return this.then(this.table, callbacks, function (table, callbacks) {
 			this.thenSingle(table, table.insert, [row], callbacks, function (result, callbacks) {
-				callbacks.success(result[0] ? result[0] : result);
+				BetaJS.SyncAsync.callback(callbacks, "success", result[0] ? result[0] : result);
 			});
 		});
 	},
@@ -7860,7 +7937,7 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 	_updateRow: function (query, row, callbacks) {
 		return this.then(this.table, callbacks, function (table, callbacks) {
 			this.thenSingle(table, table.update, [query, {"$set" : row}], callbacks, function (result, callbacks) {
-				callbacks.success(row);
+				BetaJS.SyncAsync.callback(callbacks, "success", row);
 			});
 		});
 	},
@@ -7880,11 +7957,12 @@ BetaJS.Databases.DatabaseTable.extend("BetaJS.Databases.MongoDatabaseTable", {
 
 BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	
-	constructor: function (database, table_name) {
+	constructor: function (database, table_name, foreign_id) {
 		this._inherited(BetaJS.Stores.DatabaseStore, "constructor");
 		this.__database = database;
 		this.__table_name = table_name;
 		this.__table = null;
+		this.__foreign_id = foreign_id;
 	},
 	
 	table: function () {
@@ -7894,19 +7972,44 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	},
 	
 	_insert: function (data, callbacks) {
-		return this.table().insertRow(data, callbacks);
+	    if (!this.__foreign_id || !data[this.__foreign_id])
+	        return this.table().insertRow(data, callbacks);
+        var query = {};
+        query[this.__foreign_id] = data[this.__foreign_id];
+	    return this.table().findOne(query, {}, {
+	        context: this,
+	        success: function (result) {
+	            if (result)
+	                return BetaJS.SyncAsync.callback(callbacks, "success", result);
+                return this.table().insertRow(data, callbacks);
+	        }, exception: function (e) {
+	            BetaJS.SyncAsync.callback(callbacks, "exception", e);    
+	        }
+	    });
 	},
 	
 	_remove: function (id, callbacks) {
-		return this.table().removeById(id, callbacks);
+	    if (!this.__foreign_id)
+		    return this.table().removeById(id, callbacks);
+		var query = {};
+		query[this.__foreign_id] = id;
+		return this.table().removeRow(query, callbacks);
 	},
 	
 	_get: function (id, callbacks) {
-		return this.table().findById(id, callbacks);
+        if (!this.__foreign_id)
+    		return this.table().findById(id, callbacks);
+        var query = {};
+        query[this.__foreign_id] = id;
+	    return this.table().findOne(query, {}, callbacks);
 	},
 	
 	_update: function (id, data, callbacks) {
-		return this.table().updateById(id, data, callbacks);
+        if (!this.__foreign_id)
+    		return this.table().updateById(id, data, callbacks);
+        var query = {};
+        query[this.__foreign_id] = id;
+        return this.updateRow(query, data, callbacks);
 	},
 	
 	_query_capabilities: function () {
@@ -7930,13 +8033,14 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 
 BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 	
-	constructor: function (database, table_name, types) {
-		var store = new BetaJS.Stores.DatabaseStore(database, table_name);
+	constructor: function (database, table_name, types, foreign_id) {
+		var store = new BetaJS.Stores.DatabaseStore(database, table_name, foreign_id);
 		var encoding = {};
 		var decoding = {};
 		types = types || {};
-		types.id = "id";
-		var ObjectId = database.mongo_object_id();
+        var ObjectId = database.mongo_object_id();
+        if (!foreign_id)
+		    types.id = "id";
 		for (var key in types) {
 			if (types[key] == "id") {
 				encoding[key] = function (value) {
@@ -7947,10 +8051,21 @@ BetaJS.Stores.ConversionStore.extend("BetaJS.Stores.MongoDatabaseStore", {
 				};
 			}
 		}
-		this._inherited(BetaJS.Stores.MongoDatabaseStore, "constructor", store, {
-			value_encoding: encoding,
-			value_decoding: decoding
-		});
+		var opts = {
+            value_encoding: encoding,
+            value_decoding: decoding
+		};
+		if (foreign_id) {
+		    opts.key_encoding = {
+		        "id": foreign_id
+		    };
+		    opts.key_encoding[foreign_id] = null;
+            opts.key_decoding = {
+                "id": null
+            };
+            opts.key_encoding[foreign_id] = "id";
+		}
+		this._inherited(BetaJS.Stores.MongoDatabaseStore, "constructor", store, opts);
 	}
 
 });

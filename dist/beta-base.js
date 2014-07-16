@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-07-06
+  betajs - v0.0.2 - 2014-07-16
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -331,6 +331,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_name : function(input) {
+	    input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (!input && temp.length > 1) {
@@ -342,6 +343,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_email : function(input) {
+        input = input || "";
 		var temp = input.split("<");
 		input = temp[0].trim();
 		if (temp.length > 1) {
@@ -353,6 +355,7 @@ BetaJS.Strings = {
 	},
 
 	email_get_salutatory_name : function(input) {
+        input = input || "";
 		return (this.email_get_name(input).split(" "))[0];
 	}
 };
@@ -496,9 +499,9 @@ BetaJS.SyncAsync = {
 	toCallbackType: function (callbacks, type) {
 		if (type == this.ASYNCSINGLE)
 			return function (err, result) {
-				if (err)
-					callbacks.exception.call(callbacks.context || this, err);
-				callbacks.success.call(callbacks.context || this, result);
+                var caller = err ? "exception" : "success";
+                if (caller in callbacks)
+                    callbacks[caller].call(callbacks.context || this, err ? err : result);
 			};
 		return callbacks;
 	},
@@ -760,11 +763,11 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 	eitherAsyncFactory: function (property, callbacks, asyncFunc, params) {
 		var ctx = this;
 		return this.either(callbacks, function () {
-			return this[property];				
+			return ctx[property];				
 		}, function () {
-			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+			asyncFunc.call(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 				ctx[property] = result;
-				callbacks.success.call(this, result);
+				ctx.callback(callbacks, "success", result);
 			}));
 		}, property in this, this);
 	},
@@ -776,7 +779,7 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 				this[property] = syncFunc.apply(this, params);
 			return this[property];				
 		}, function () {
-			asyncFunc.apply(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+			asyncFunc.call(this, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
 				ctx[property] = result;
 				callbacks.success.call(this, result);
 			}));
@@ -1406,7 +1409,11 @@ BetaJS.Class.prototype.as_method = function (s) {
 BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
-	this.__auto_destroy_list.push(obj);
+	var target = obj;
+	if (!BetaJS.Types.is_array(target))
+	   target = [target];
+	for (var i = 0; i < target.length; ++i)
+	   this.__auto_destroy_list.push(target[i]);
 	return obj;
 };
 

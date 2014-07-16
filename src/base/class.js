@@ -112,7 +112,11 @@ BetaJS.Class.prototype.as_method = function (s) {
 BetaJS.Class.prototype._auto_destroy = function (obj) {
 	if (!this.__auto_destroy_list)
 		this.__auto_destroy_list = [];
-	this.__auto_destroy_list.push(obj);
+	var target = obj;
+	if (!BetaJS.Types.is_array(target))
+	   target = [target];
+	for (var i = 0; i < target.length; ++i)
+	   this.__auto_destroy_list.push(target[i]);
 	return obj;
 };
 

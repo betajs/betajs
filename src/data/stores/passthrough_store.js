@@ -8,6 +8,8 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.PassthroughStore", {
 		this._inherited(BetaJS.Stores.PassthroughStore, "constructor", options);
 		this._supportsAsync = store.supportsAsync();
 		this._supportsSync = store.supportsSync();
+        if (options.destroy_store)
+            this._auto_destroy(store);
 	},
 	
 	_query_capabilities: function () {

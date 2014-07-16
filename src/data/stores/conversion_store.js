@@ -13,15 +13,21 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.ConversionStore", {
 	
 	encode_object: function (obj) {
 		var result = {};
-		for (var key in obj)
-			result[this.encode_key(key)] = this.encode_value(key, obj[key]);
+		for (var key in obj) {
+		    var encoded_key = this.encode_key(key);
+		    if (encoded_key)
+			    result[encoded_key] = this.encode_value(key, obj[key]);
+		}
 		return result;
 	},
 	
 	decode_object: function (obj) {
 		var result = {};
-		for (var key in obj)
-			result[this.decode_key(key)] = this.decode_value(key, obj[key]);
+		for (var key in obj) {
+		    var decoded_key = this.decode_key(key);
+		    if (decoded_key)
+			    result[decoded_key] = this.decode_value(key, obj[key]);
+	    }
 		return result;
 	},
 	

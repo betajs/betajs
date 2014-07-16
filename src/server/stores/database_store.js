@@ -1,10 +1,11 @@
 BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	
-	constructor: function (database, table_name) {
+	constructor: function (database, table_name, foreign_id) {
 		this._inherited(BetaJS.Stores.DatabaseStore, "constructor");
 		this.__database = database;
 		this.__table_name = table_name;
 		this.__table = null;
+		this.__foreign_id = foreign_id;
 	},
 	
 	table: function () {
@@ -14,19 +15,44 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.DatabaseStore", {
 	},
 	
 	_insert: function (data, callbacks) {
-		return this.table().insertRow(data, callbacks);
+	    if (!this.__foreign_id || !data[this.__foreign_id])
+	        return this.table().insertRow(data, callbacks);
+        var query = {};
+        query[this.__foreign_id] = data[this.__foreign_id];
+	    return this.table().findOne(query, {}, {
+	        context: this,
+	        success: function (result) {
+	            if (result)
+	                return BetaJS.SyncAsync.callback(callbacks, "success", result);
+                return this.table().insertRow(data, callbacks);
+	        }, exception: function (e) {
+	            BetaJS.SyncAsync.callback(callbacks, "exception", e);    
+	        }
+	    });
 	},
 	
 	_remove: function (id, callbacks) {
-		return this.table().removeById(id, callbacks);
+	    if (!this.__foreign_id)
+		    return this.table().removeById(id, callbacks);
+		var query = {};
+		query[this.__foreign_id] = id;
+		return this.table().removeRow(query, callbacks);
 	},
 	
 	_get: function (id, callbacks) {
-		return this.table().findById(id, callbacks);
+        if (!this.__foreign_id)
+    		return this.table().findById(id, callbacks);
+        var query = {};
+        query[this.__foreign_id] = id;
+	    return this.table().findOne(query, {}, callbacks);
 	},
 	
 	_update: function (id, data, callbacks) {
-		return this.table().updateById(id, data, callbacks);
+        if (!this.__foreign_id)
+    		return this.table().updateById(id, data, callbacks);
+        var query = {};
+        query[this.__foreign_id] = id;
+        return this.updateRow(query, data, callbacks);
 	},
 	
 	_query_capabilities: function () {
