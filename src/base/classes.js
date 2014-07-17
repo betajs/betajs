@@ -248,3 +248,41 @@ BetaJS.Class.extend("BetaJS.Classes.Module", {
 		return this.__instance;
 	}
 });
+
+
+BetaJS.Classes.ObjectIdMixin = {
+
+    _notifications: {
+        construct: "__register_object_id",
+        destroy: "__unregister_object_id"
+    },
+
+    __object_id_scope: function () {
+        if (this.object_id_scope)
+            return this.object_id_scope;
+        if (!BetaJS.Classes.ObjectIdScope)
+            BetaJS.Classes.ObjectIdScope = BetaJS.Objs.clone(BetaJS.Classes.ObjectIdScopeMixin, 1);
+        return BetaJS.Classes.ObjectIdScope;
+    },
+
+    __register_object_id: function () {
+        var scope = this.__object_id_scope();
+        scope.__objects[BetaJS.Ids.objectId(this)] = this;
+    },
+
+    __unregister_object_id: function () {
+        var scope = this.__object_id_scope();
+        delete scope.__objects[BetaJS.Ids.objectId(this)];
+    }
+
+};
+
+BetaJS.Classes.ObjectIdScopeMixin = {
+
+    __objects: {},
+
+    get: function (id) {
+        return this.__objects[id];
+    }
+
+};

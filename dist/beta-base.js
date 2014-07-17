@@ -875,13 +875,13 @@ BetaJS.Scopes = {
      * @param base a global namespace base (optional, will autodetect the right one if not provided)
      * @return global object (example: BetaJS object)
      */
-	base: function (s, base) {
+	base: function (s, base, initialize) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
 		if (base)
 			return base[s];
 		try {
-			if (window)
+			if (window && window[s])
 				return window[s];
 		} catch (e) {}
 		try {
@@ -892,7 +892,27 @@ BetaJS.Scopes = {
 			if (module && module.exports)
 				return module.exports;
 		} catch (e) {}
-		return null;
+		if (!initialize)
+		    return null;
+        try {
+            if (window) {
+                window[s] = {};
+                return window[s];
+            }
+        } catch (e) {}
+        try {
+            if (global) {
+                global[s] = {};
+                return global[s];
+            }
+        } catch (e) {}
+        try {
+            if (module && module.exports) {
+                module.exports = {};
+                return module.exports;
+            }
+        } catch (e) {}
+        return null;
 	},
 	
 	/** Takes an object address string and returns the object associated with it.
@@ -922,7 +942,7 @@ BetaJS.Scopes = {
 		if (!BetaJS.Types.is_string(s))
 			return s;
 		var a = s.split(".");		
-		var object = this.base(a[0], base);
+		var object = this.base(a[0], base, true);
 		for (var i = 1; i < a.length; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};
@@ -943,7 +963,7 @@ BetaJS.Scopes = {
 		if (!BetaJS.Types.is_string(s))
 			return s;
 		var a = s.split(".");			
-		var object = this.base(a[0], base);
+		var object = this.base(a[0], base, true);
 		for (var i = 1; i < a.length - 1; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};
@@ -2523,6 +2543,43 @@ BetaJS.Class.extend("BetaJS.Classes.Module", {
 	}
 });
 
+
+BetaJS.Classes.ObjectIdMixin = {
+
+    _notifications: {
+        construct: "__register_object_id",
+        destroy: "__unregister_object_id"
+    },
+
+    __object_id_scope: function () {
+        if (this.object_id_scope)
+            return this.object_id_scope;
+        if (!BetaJS.Classes.ObjectIdScope)
+            BetaJS.Classes.ObjectIdScope = BetaJS.Objs.clone(BetaJS.Classes.ObjectIdScopeMixin, 1);
+        return BetaJS.Classes.ObjectIdScope;
+    },
+
+    __register_object_id: function () {
+        var scope = this.__object_id_scope();
+        scope.__objects[BetaJS.Ids.objectId(this)] = this;
+    },
+
+    __unregister_object_id: function () {
+        var scope = this.__object_id_scope();
+        delete scope.__objects[BetaJS.Ids.objectId(this)];
+    }
+
+};
+
+BetaJS.Classes.ObjectIdScopeMixin = {
+
+    __objects: {},
+
+    get: function (id) {
+        return this.__objects[id];
+    }
+
+};
 BetaJS.Properties = {};
 
 
@@ -2533,9 +2590,21 @@ BetaJS.Properties.TYPE_COMPUTED = 2;
 
 
 BetaJS.Properties.PropertiesMixin = {
+    
+    raw_get: function (key) {
+        return key in this.__properties ? this.__properties[key].value : null;    
+    },
 	
 	get: function (key) {
-		return key in this.__properties ? this.__properties[key].value : null;
+	    keys = key.split(".");
+	    var value = this.raw_get(keys[0]);
+	    for (var i = 1; i < keys.length; ++i) {
+	       if (value && BetaJS.Types.is_object(value))
+	           value = value[keys[i]];
+	       else
+	           return null;
+	    }
+		return value;
 	},
 	
 	_canSet: function (key, value) {
@@ -2630,6 +2699,29 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	set: function (key, value, options) {
+	    var keys = key.split(".");
+	    if (keys.length < 2) {
+	        this.raw_set(key, value, options);
+	    } else {
+    	    var obj = this.raw_get(key, obj);
+    	    if (!obj) {
+    	        obj = {};
+    	        this.raw_set(key, obj, options);
+    	    }
+    	    for (var i = 2; i < keys.length - 1; ++i) {
+    	        obj[keys[i]] = obj[keys[i]] || {};
+    	        obj = obj[keys[i]];
+    	    }
+    	    var old_value = obj[keys[keys.length - 1]];
+    	    obj[keys[keys.length - 1]] = value;
+    	    if (old_value != value) {
+                this.trigger("change", key, value, old_value);
+                this.trigger("change:" + key.replace(".", "->"), value, old_value);
+            }
+        }
+	},
+	
+	raw_set: function (key, value, options) {
 		var old = this.get(key);
 		if (old == value)
 			return; 

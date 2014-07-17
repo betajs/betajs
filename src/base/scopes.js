@@ -7,13 +7,13 @@ BetaJS.Scopes = {
      * @param base a global namespace base (optional, will autodetect the right one if not provided)
      * @return global object (example: BetaJS object)
      */
-	base: function (s, base) {
+	base: function (s, base, initialize) {
 		if (!BetaJS.Types.is_string(s))
 			return s;
 		if (base)
 			return base[s];
 		try {
-			if (window)
+			if (window && window[s])
 				return window[s];
 		} catch (e) {}
 		try {
@@ -24,7 +24,27 @@ BetaJS.Scopes = {
 			if (module && module.exports)
 				return module.exports;
 		} catch (e) {}
-		return null;
+		if (!initialize)
+		    return null;
+        try {
+            if (window) {
+                window[s] = {};
+                return window[s];
+            }
+        } catch (e) {}
+        try {
+            if (global) {
+                global[s] = {};
+                return global[s];
+            }
+        } catch (e) {}
+        try {
+            if (module && module.exports) {
+                module.exports = {};
+                return module.exports;
+            }
+        } catch (e) {}
+        return null;
 	},
 	
 	/** Takes an object address string and returns the object associated with it.
@@ -54,7 +74,7 @@ BetaJS.Scopes = {
 		if (!BetaJS.Types.is_string(s))
 			return s;
 		var a = s.split(".");		
-		var object = this.base(a[0], base);
+		var object = this.base(a[0], base, true);
 		for (var i = 1; i < a.length; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};
@@ -75,7 +95,7 @@ BetaJS.Scopes = {
 		if (!BetaJS.Types.is_string(s))
 			return s;
 		var a = s.split(".");			
-		var object = this.base(a[0], base);
+		var object = this.base(a[0], base, true);
 		for (var i = 1; i < a.length - 1; ++i) {
 			if (!(a[i] in object))
 				object[a[i]] = {};

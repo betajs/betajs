@@ -8,9 +8,21 @@ BetaJS.Properties.TYPE_COMPUTED = 2;
 
 
 BetaJS.Properties.PropertiesMixin = {
+    
+    raw_get: function (key) {
+        return key in this.__properties ? this.__properties[key].value : null;    
+    },
 	
 	get: function (key) {
-		return key in this.__properties ? this.__properties[key].value : null;
+	    keys = key.split(".");
+	    var value = this.raw_get(keys[0]);
+	    for (var i = 1; i < keys.length; ++i) {
+	       if (value && BetaJS.Types.is_object(value))
+	           value = value[keys[i]];
+	       else
+	           return null;
+	    }
+		return value;
 	},
 	
 	_canSet: function (key, value) {
@@ -105,6 +117,29 @@ BetaJS.Properties.PropertiesMixin = {
 	},
 	
 	set: function (key, value, options) {
+	    var keys = key.split(".");
+	    if (keys.length < 2) {
+	        this.raw_set(key, value, options);
+	    } else {
+    	    var obj = this.raw_get(key, obj);
+    	    if (!obj) {
+    	        obj = {};
+    	        this.raw_set(key, obj, options);
+    	    }
+    	    for (var i = 2; i < keys.length - 1; ++i) {
+    	        obj[keys[i]] = obj[keys[i]] || {};
+    	        obj = obj[keys[i]];
+    	    }
+    	    var old_value = obj[keys[keys.length - 1]];
+    	    obj[keys[keys.length - 1]] = value;
+    	    if (old_value != value) {
+                this.trigger("change", key, value, old_value);
+                this.trigger("change:" + key.replace(".", "->"), value, old_value);
+            }
+        }
+	},
+	
+	raw_set: function (key, value, options) {
 		var old = this.get(key);
 		if (old == value)
 			return; 
