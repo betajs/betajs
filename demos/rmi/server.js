@@ -15,10 +15,19 @@ App = {};
 
 BetaJS.RMI.Skeleton.extend("App.Skeleton", {
     intfSync : ["test"],
-    
+    intf : ["me"],
+
     test: function (a, b, c) {
         console.log("Adding", a, b, c);
         return a + b + c;
+    },
+
+    me: function (callbacks, a, b, c) {
+        console.log("Testing", a, b, c);
+        var self = this;
+        setTimeout(function () {
+           self._success(callbacks, a + b + c);
+        }, 1000);
     }
 });
 

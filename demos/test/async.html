@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+	<body>
+		<script>
+            function test() {
+                alert("hi");
+                setTimeout(function () {
+                    alert("blabla");
+                }, 100);
+                for (var i = 0; i < 1000000000; ++i ) {}
+                alert("tt");
+            }
+
+            test();
+
+            function sync_blackbox(a, b) {
+                return a + b;
+            }
+            // Before Execution
+            var a = 10;
+            var b = 15;
+            // Execution
+            var result = sync_blackbox(a, b);
+            // After Execution
+            var post_result = 2 * result;
+           // alert("Blackbox * 2 = " + post_result);
+
+
+            function async_blackbox(callback, a, b) {
+                setTimeout(function () {
+                    callback(a + b);
+                }, 1000);
+            }
+
+            // Before Execution
+            var a = 10;
+            var b = 15;
+            // After Execution
+            var after_execution = function (result) {
+                var post_result = 2 * result;
+              //  alert("Blackbox * 2 = " + post_result);
+            };
+            // Execution
+            async_blackbox(after_execution, a, b);
+		</script>
+	</body>
+</html>
