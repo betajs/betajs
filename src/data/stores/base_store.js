@@ -104,9 +104,6 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 		throw new BetaJS.Stores.StoreException("unsupported: query");
 	},
 	
-	_new_id: function (callbacks) {
-	},
-
 	insert: function (data, callbacks) {
 		var event_data = null;
 		if (BetaJS.Types.is_array(data)) {

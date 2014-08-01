@@ -31,7 +31,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	_update: function (id, data) {
 		var row = this._get(id);
 		if (row) {
-			delete data[this._id_key];
+		    if (this._id_key in data) {
+		        this._remove_key(id);
+                id = data[this._id_key];
+                delete data[this._id_key];
+		    }
 			BetaJS.Objs.extend(row, data);
 			this._write_key(id, row);
 		}

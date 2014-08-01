@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-07-16
+  betajs - v0.0.2 - 2014-08-01
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -778,9 +778,6 @@ BetaJS.Stores.BaseStore = BetaJS.Stores.ListenerStore.extend("BetaJS.Stores.Base
 		throw new BetaJS.Stores.StoreException("unsupported: query");
 	},
 	
-	_new_id: function (callbacks) {
-	},
-
 	insert: function (data, callbacks) {
 		var event_data = null;
 		if (BetaJS.Types.is_array(data)) {
@@ -990,7 +987,11 @@ BetaJS.Stores.BaseStore.extend("BetaJS.Stores.AssocStore", {
 	_update: function (id, data) {
 		var row = this._get(id);
 		if (row) {
-			delete data[this._id_key];
+		    if (this._id_key in data) {
+		        this._remove_key(id);
+                id = data[this._id_key];
+                delete data[this._id_key];
+		    }
 			BetaJS.Objs.extend(row, data);
 			this._write_key(id, row);
 		}
