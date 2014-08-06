@@ -286,3 +286,38 @@ BetaJS.Classes.ObjectIdScopeMixin = {
     }
 
 };
+
+
+BetaJS.Classes.HelperClassMixin = {
+	
+	addHelper: function (helper_class, options) {
+		var helper = new helper_class(this, options);
+		this.__helpers = this.__helpers || [];
+		this.__helpers.push(this._auto_destroy(helper));
+	},
+	
+	_helper: function (options) {
+		if (BetaJS.Types.is_string(options)) {
+			options = {
+				method: options
+			};
+		}
+		options = BetaJS.Objs.extend({
+			fold_start: null,
+			fold: function (acc, result) {
+				return acc || result;
+			}
+		}, options);
+		var args = BetaJS.Functions.getArguments(arguments, 1);
+		var acc = options.fold_start;
+		for (var i = 0; i < this.__helpers.length; ++i) {
+			var helper = this.__helpers[i];
+			if (options.method in helper) {
+				var result = helper[options.method].apply(helper, args);
+				acc = options.fold(acc, result);
+			}
+		}
+		return acc;
+	}
+	
+};

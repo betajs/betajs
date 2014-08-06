@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-08-01
+  betajs - v0.0.2 - 2014-08-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-01
+  betajs - v0.0.2 - 2014-08-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-01
+  betajs - v0.0.2 - 2014-08-06
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -1081,6 +1081,19 @@ BetaJS.Objs = {
 		return target;
 	},
 	
+	tree_extend: function (target, source, depth) {
+		target = target || {};
+		if (source) {
+			for (var key in source) {
+				if (key in target && BetaJS.Types.is_object(target[key]) && BetaJS.Types.is_object(source[key]))
+					target[key] = this.tree_extend(target[key], source[key], depth);
+				else
+					target[key] = this.clone(source[key], depth);
+			}
+		}
+		return target;
+	},
+		
 	merge: function (secondary, primary, options) {
 		secondary = secondary || {};
 		primary = primary || {};
@@ -2589,6 +2602,41 @@ BetaJS.Classes.ObjectIdScopeMixin = {
         return this.__objects[id];
     }
 
+};
+
+
+BetaJS.Classes.HelperClassMixin = {
+	
+	addHelper: function (helper_class, options) {
+		var helper = new helper_class(this, options);
+		this.__helpers = this.__helpers || [];
+		this.__helpers.push(this._auto_destroy(helper));
+	},
+	
+	_helper: function (options) {
+		if (BetaJS.Types.is_string(options)) {
+			options = {
+				method: options
+			};
+		}
+		options = BetaJS.Objs.extend({
+			fold_start: null,
+			fold: function (acc, result) {
+				return acc || result;
+			}
+		}, options);
+		var args = BetaJS.Functions.getArguments(arguments, 1);
+		var acc = options.fold_start;
+		for (var i = 0; i < this.__helpers.length; ++i) {
+			var helper = this.__helpers[i];
+			if (options.method in helper) {
+				var result = helper[options.method].apply(helper, args);
+				acc = options.fold(acc, result);
+			}
+		}
+		return acc;
+	}
+	
 };
 BetaJS.Properties = {};
 
@@ -7729,10 +7777,29 @@ BetaJS.Class.extend("BetaJS.Server.Net.Controller", {}, {
 					next();
 			},
 			exception : function(e) {
-				e = BetaJS.Exceptions.Exception.ensure(e);
+				e = BetaJS.Server.Net.ControllerException.ensure(e);
 				response.status(e.code()).send(JSON.stringify(e.data()));
 			}
 		});
+	}
+	
+});
+
+BetaJS.Exceptions.Exception.extend("BetaJS.Server.Net.ControllerException", {
+	
+	constructor: function (code, data) {
+		data = data || {};
+		this.__data = data;
+		this.__code = code;
+		this._inherited(BetaJS.Server.Net.ControllerException, "constructor", BetaJS.Net.HttpHeader.format(code, true));
+	},
+	
+	code: function () {
+		return this.__code;
+	},
+	
+	data: function () {
+		return this.__data;
 	}
 	
 });
@@ -7999,6 +8066,444 @@ BetaJS.Server.Net.Smtp = {
 	}
 	
 };
+BetaJS.Class.extend("BetaJS.Server.Sessions.Manager", [
+	BetaJS.Events.EventsMixin,
+	BetaJS.Classes.HelperClassMixin,
+	{
+		
+	_session_class: "BetaJS.Server.Sessions.Session",
+
+    constructor: function (options) {
+        this._inherited(BetaJS.Server.Sessions.Manager, "constructor");
+        options = BetaJS.Objs.tree_extend({
+        	invalidation: {
+        		// All times are in milliseconds; null to disable
+        		// hard timeout to remove sessions
+        		session_timeout: 1000 * 60 * 60 * 24,
+        		// kill session if there is no active session after time
+        		session_inactivity_timeout: 1000 * 60 * 60,
+        		// invalidate; null to disable
+        		timer: 1000 * 60 
+        	}
+        }, options);
+        this.__options = options;
+        this._session_class = options.session_class || this._session_class;
+        if (BetaJS.Types.is_string(this._session_class))
+        	this._session_class = BetaJS.Scopes.resolve(this._session_class);
+        if (options.invalidation.timer) {
+        	this.__timer = this._auto_destroy(new BetaJS.Timers.Timer({
+			    fire : this.invalidate,
+			    context : this,
+			    delay : options.invalidation.timer
+        	}));
+        }
+        this.__sessions = new BetaJS.Lists.ObjectIdList();
+    },
+    
+    destroy: function () {
+    	this.iterate(function (session) {
+    		session.destroy();
+    	});
+    	this.__sessions.destroy();
+    	this._inherited(BetaJS.Server.Sessions.Manager, "destroy");
+    },
+    
+    iterate: function (cb, ctx) {
+    	this.__sessions.iterate(cb, ctx || this);
+    },
+
+    obtain_session: function (token, options) {
+    	return this.find_session(token) || this.new_session(token, options);
+    },
+    
+    __generate_token: function () {
+    	return BetaJS.Tokens.generate_token();
+    },
+    
+    find_session: function (token) {
+    	return this.__sessions.get(token);
+    },
+    
+    __add_session: function (session) {
+    	this.__sessions.add(session);
+    	this._helper("__add_session", session);
+    },
+    
+    new_session: function (token, options) {
+        session = new this._session_class(this, token || this.__generate_token(), options);
+        this.__add_session(session);
+        return session;
+    },
+    
+    invalidate: function () {
+        this.iterate(function (session) {
+            session.invalidate();
+        });
+    },
+    
+    options: function () {
+    	return this.__options;
+    },
+    
+    __remove_session: function (session) {
+    	if (this.__sessions.exists(session)) {
+	    	this._helper("remove_session", session);
+	    	this.__sessions.remove(session);
+	    }
+    },
+    
+    delete_session: function (session) {
+    	session.destroy();
+    }
+    
+}]);
+
+
+BetaJS.Class.extend("BetaJS.Server.Sessions.Session", [
+	BetaJS.Classes.HelperClassMixin,
+	{
+		
+    constructor: function (manager, token, options) {
+        this._inherited(BetaJS.Server.Sessions.Session, "constructor");
+        this.__manager = manager;
+        this.__options = options;
+        BetaJS.Ids.objectId(this, token);
+        this.initiation_time = BetaJS.Time.now();
+        this.active_time = this.initiation_time;
+    },
+    
+    destroy: function () {
+    	this.__manager.__remove_session(this);
+        this._inherited(BetaJS.Server.Sessions.Session, "destroy");
+    },
+    
+    is_active: function () {
+    	return this._helper({
+    		method: "is_active",
+    		fold_start: false,
+    		fold: function (acc, result) {
+    			return acc || result;
+    		}
+    	});
+    },
+    
+    activity: function () {
+    	this.active_time = BetaJS.Time.now();
+    },
+    
+    invalidate: function () {
+    	this._helper("invalidate");
+    	var opts = this.__manager.options().invalidation;
+    	var now = BetaJS.Time.now();
+    	if ((opts.session_timeout && now > this.initiation_time + opts.session_timeout) ||
+    		(!this.is_active() && opts.session_inactivity_timeout && now > this.active_time + opts.session_inactivity_timeout)) {
+    		this.destroy();
+    	}
+    },
+
+    manager: function () {
+    	return this.__manager;
+    }
+    
+}]);
+
+BetaJS.Class.extend("BetaJS.Server.Session.ActiveSessionManagerHelper", {
+	
+	_active_session_class: "BetaJS.Server.Sessions.ActiveSession",
+
+	constructor: function (manager, options) {
+		this._inherited(BetaJS.Server.Session.ActiveSessionManagerHelper, "constructor");
+        options = BetaJS.Objs.tree_extend({
+        	invalidation: {
+        		// All times are in milliseconds; null to disable
+        		// hard timeout to remove active sessions
+        		active_session_timeout: 1000 * 60 * 60,
+        		// kill active session if there is no active session after time
+        		active_session_inactivity_timeout: 1000 * 60
+        	}
+        }, options);
+        this.__options = options;
+        this._active_session_class = options.active_session_class || this._active_session_class;
+        if (BetaJS.Types.is_string(this._active_session_class))
+        	this._active_session_class = BetaJS.Scopes.resolve(this._active_session_class);
+        manager.__add_active_session = function (session, active_session) {
+        	this._helper("__add_active_session", session, active_session);
+        };
+	},
+	
+	__add_session: function (session) {
+		session.addHelper(BetaJS.Server.Session.ActiveSessionHelper, this);
+	},
+	
+	options: function () {
+		return this.__options;
+	}
+	
+});
+
+BetaJS.Class.extend("BetaJS.Server.Session.ActiveSessionHelper", [
+	BetaJS.Classes.HelperClassMixin,
+	{
+	
+	constructor: function (session, helper) {
+		this._inherited(BetaJS.Server.Session.ActiveSessionHelper, "constructor");
+		this.__helper = helper;
+		this.__session = session;
+		session.active_sessions = this;
+		this.__active_sessions = new BetaJS.Lists.ObjectIdList();
+	},
+	
+	destroy: function () {
+        this.iterate(function (active_session) {
+            active_session.destroy();
+        }, this);
+        this.__active_sessions.destroy();
+		this._inherited(BetaJS.Server.Session.ActiveSessionHelper, "destroy");
+	},
+	
+	session: function () {
+		return this.__session;
+	},
+	
+	helper: function () {
+		return this.__helper;
+	},
+	
+    invalidate: function () {
+        this.iterate(function (active_session) {
+            active_session.invalidate();
+        }, this);
+    },
+
+    iterate: function (cb, ctx) {
+    	this.__active_sessions.iterate(cb, ctx || this);
+    },
+	
+	is_active: function () {
+		return this.__active_sessions.count() > 0;
+	},
+	
+	find_active_session: function (token) {
+	    return this.__active_sessions.get(token);
+	},
+	
+    __generate_token: function () {
+    	return BetaJS.Tokens.generate_token();
+    },
+
+    __remove_active_session: function (active_session) {
+    	if (this.__active_sessions.exists(active_session)) {
+	    	this.__active_sessions.remove(active_session);
+	    	this.__session.activity();
+	    }
+    },
+    
+    delete_active_session: function (active_session) {
+    	active_session.destroy();
+    },
+    
+    obtain_active_session: function (token, options) {
+    	return this.find_active_session(token) || this.new_active_session(token, options);
+    },
+    
+    __add_active_session: function (active_session) {
+        this.__active_sessions.add(active_session);
+    	this.session().manager().__add_active_session(this.session(), active_session);
+    },
+
+    new_active_session: function (token, options) {
+        active_session = new this.__helper._active_session_class(this, token || this.__generate_token(), options);
+        this.__add_active_session(active_session);
+        return active_session;
+    },
+    
+    continue_active_session: function (options) {
+		var active_session = null;
+		this.iterate(function (as) {
+			if (as.suspended() && as.can_continue(options)) {
+				active_session = as;
+				return false; 
+			}
+			return true;
+		});
+		return active_session;
+    },
+    
+    attach_active_session: function (options) {
+    	return this.continue_active_session(options) || this.new_active_session(null, options);
+    }
+	
+}]);
+
+
+BetaJS.Class.extend("BetaJS.Server.Sessions.ActiveSession", [
+	BetaJS.Classes.HelperClassMixin,
+	BetaJS.Events.EventsMixin,
+	{
+
+    constructor: function (helper, token, options) {
+        this._inherited(BetaJS.Server.Sessions.ActiveSession, "constructor");
+        this.__helper = helper;
+        this.__options = options || {};
+        BetaJS.Ids.objectId(this, token);
+        this.initiation_time = BetaJS.Time.now();
+        this.active_time = this.initiation_time;
+    },
+    
+    destroy: function () {
+    	this.trigger("destroy");
+    	this.__helper.__remove_active_session(this);
+        this._inherited(BetaJS.Server.Sessions.ActiveSession, "destroy");
+    },
+    
+    options: function () {
+        return this.__options;
+    },
+    
+    activity: function () {
+    	this.active_time = BetaJS.Time.now();
+    },
+    
+    suspended: function () {
+    	return this._helper({
+    		method: "suspended",
+    		fold_start: false,
+    		fold: function (acc, result) {
+    			return acc || result;
+    		}
+    	});
+    },
+    
+    can_continue: function (options) {
+    	return false;
+    },
+    
+    invalidate: function () {
+    	var opts = this.__helper.helper().options().invalidation;
+    	var now = BetaJS.Time.now();
+    	if ((opts.active_session_timeout && now > this.initiation_time + opts.active_session_timeout) ||
+    		(this.suspended() && opts.active_session_inactivity_timeout && now > this.active_time + opts.active_session_inactivity_timeout)) {
+    		this.destroy();
+    	}
+    }    
+    
+}]);
+BetaJS.Class.extend("BetaJS.Server.Session.RMIManagerHelper", {
+	
+	__add_active_session: function (session, active_session) {
+		active_session.addHelper(BetaJS.Server.Session.RMIHelper);
+	}
+	
+});
+
+BetaJS.Class.extend("BetaJS.Server.Session.RMIHelper", {
+
+    constructor: function (active_session) {
+        this._inherited(BetaJS.Server.Session.RMIHelper, "constructor");
+        this.__active_session = active_session;
+        active_session.rmi = this;
+        this.__rmi_sender = new BetaJS.Net.SocketSenderChannel(null, "rmi", false);
+        this.__rmi_receiver = new BetaJS.Net.SocketReceiverChannel(null, "rmi");
+        this.__rmi_peer = new BetaJS.RMI.Peer(this.__rmi_sender, this.__rmi_receiver);
+        active_session.rmi_peer = this.__rmi_peer;
+        this.stubs = {};
+        this.skeletons = {};
+        active_session.stubs = this.stubs;
+        active_session.skeletons = this.skeletons;
+        active_session.on("bind_socket", function (socket) {
+	        this.__rmi_receiver.socket(socket);
+	        this.__rmi_sender.socket(socket);
+	        this.__rmi_sender.ready();
+        }, this);
+        active_session.on("unbind_socket", function () {
+        	this.__rmi_sender.unready();
+        }, this);
+        if ("initialize_rmi" in active_session)
+        	active_session.initialize_rmi();
+    },
+    
+    destroy: function () {
+        for (var key in this.stubs)
+            this.stubs[key].destroy;
+        for (key in this.skeletons)
+            this.skeletons[key].destroy;
+        this.__rmi_peer.destroy();
+        this.__rmi_receiver.destroy();
+        this.__rmi_sender.destroy();
+        this._inherited(BetaJS.Server.Session.RMIHelper, "destroy");
+    }
+      
+});
+
+BetaJS.Class.extend("BetaJS.Server.Session.SocketsManagerHelper", {
+	
+	constructor: function (manager) {
+		this._inherited(BetaJS.Server.Session.SocketsManagerHelper, "constructor");
+		this.__manager = manager;
+		manager.bind_socket = function (socket, session_cookie, data) {
+			var session_token = BetaJS.Strings.read_cookie_string(socket.handshake.headers.cookie, session_cookie, data);
+	        var session = this.find_session(session_token);
+	        if (!session) {
+	            socket.disconnect();
+	            return null;
+	        }
+	        var active_session = session.active_sessions.find_active_session(data.active_session_token);
+	        if (!active_session) {
+	            socket.disconnect();
+	            return null;
+	        }
+	        active_session.socket.bind(socket);        
+			return active_session;
+		};
+	},
+
+	__add_active_session: function (session, active_session) {
+		active_session.addHelper(BetaJS.Server.Session.SocketsHelper);
+	}
+	
+});
+
+BetaJS.Class.extend("BetaJS.Server.Session.SocketsHelper", {
+
+    constructor: function (active_session) {
+        this._inherited(BetaJS.Server.Session.SocketsHelper, "constructor");
+        this.__active_session = active_session;
+        active_session.socket = this;
+    },
+    
+    destroy: function () {
+        this.unbind_socket();
+        this._inherited(BetaJS.Server.Session.SocketsHelper, "destroy");
+    },    
+
+    suspended: function () {
+    	return !this.socket();
+    },
+    
+    bind: function (socket) {
+        if (socket == this.__socket)
+            return;
+        this.unbind();
+        this.__socket = socket;
+        var self = this;
+        socket.on("disconnect", function() {
+            self.unbind();
+        });
+        this.__active_session.trigger("bind_socket", socket);
+    },
+    
+    unbind: function () {
+        this.__socket = null;
+        this.__active_session.activity();
+        this.__active_session.trigger("unbind_socket");
+    },
+    
+    socket: function () {
+        return this.__socket;
+    }
+      
+});
+
 BetaJS.Class.extend("BetaJS.Databases.Database", [
 	BetaJS.SyncAsync.SyncAsyncMixin, {
 	

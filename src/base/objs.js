@@ -47,6 +47,19 @@ BetaJS.Objs = {
 		return target;
 	},
 	
+	tree_extend: function (target, source, depth) {
+		target = target || {};
+		if (source) {
+			for (var key in source) {
+				if (key in target && BetaJS.Types.is_object(target[key]) && BetaJS.Types.is_object(source[key]))
+					target[key] = this.tree_extend(target[key], source[key], depth);
+				else
+					target[key] = this.clone(source[key], depth);
+			}
+		}
+		return target;
+	},
+		
 	merge: function (secondary, primary, options) {
 		secondary = secondary || {};
 		primary = primary || {};

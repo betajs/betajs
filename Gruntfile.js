@@ -179,6 +179,9 @@ module.exports = function(grunt) {
 					
 					'src/server/net/*.js',
 					
+                    'src/server/sessions/sessions.js',
+                    'src/server/sessions/*.js',
+
 					'src/server/databases/databases.js',
 					'src/server/databases/database_tables.js',
 					'src/server/databases/mongo_database.js',
