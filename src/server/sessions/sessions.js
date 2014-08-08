@@ -44,16 +44,32 @@ BetaJS.Class.extend("BetaJS.Server.Sessions.Manager", [
     	this.__sessions.iterate(cb, ctx || this);
     },
 
-    obtain_session: function (token, options) {
-    	return this.find_session(token) || this.new_session(token, options);
+    obtain_session: function (token, options, callbacks) {
+    	this.find_session(token, {
+    		context: this,
+    		success: function (session) {
+    			BetaJS.SyncAsync.callback(callbacks, "success", session || this.new_session(token, options));
+    		}
+    	});
     },
     
     __generate_token: function () {
     	return BetaJS.Tokens.generate_token();
     },
     
-    find_session: function (token) {
-    	return this.__sessions.get(token);
+    __lookup_session: function (token, callbacks) {
+    	this._helper({
+    		method: "__lookup_session",
+    		callbacks: callbacks
+    	}, token, callbacks);
+    },
+    
+    find_session: function (token, callbacks) {
+    	var session = this.__sessions.get(token);
+    	if (session)
+    		BetaJS.SyncAsync.callback(callbacks, "success", session);
+    	else
+    		this.__lookup_session(token, callbacks);
     },
     
     __add_session: function (session) {
@@ -135,6 +151,10 @@ BetaJS.Class.extend("BetaJS.Server.Sessions.Session", [
 
     manager: function () {
     	return this.__manager;
+    },
+    
+    options: function () {
+    	return this.__options;
     }
     
 }]);

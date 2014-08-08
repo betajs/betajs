@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-08-06
+  betajs - v0.0.2 - 2014-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-06
+  betajs - v0.0.2 - 2014-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-06
+  betajs - v0.0.2 - 2014-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -2627,11 +2627,44 @@ BetaJS.Classes.HelperClassMixin = {
 		}, options);
 		var args = BetaJS.Functions.getArguments(arguments, 1);
 		var acc = options.fold_start;
-		for (var i = 0; i < this.__helpers.length; ++i) {
-			var helper = this.__helpers[i];
-			if (options.method in helper) {
-				var result = helper[options.method].apply(helper, args);
-				acc = options.fold(acc, result);
+		if (options.callbacks) {
+			var self = this;
+			var callback_index = -1;
+			for (j = 0; j < args.length; ++j) {
+				if (args[j] == options.callback)
+					callback_index = j;
+			}
+			function helper_fold(idx) {
+				if (idx >= self.__helpers.length) {
+					BetaJS.SyncAsync.callback(options.callbacks, "success", acc);
+					return;
+				} else if (options.method in self.__helpers[idx]) {
+					var helper = this.__helpers[idx];
+					if (callback_index == -1) {
+						helper[options.method].apply(helper, args);
+						helper_fold(idx + 1);
+					} else {
+						args[callback_index] = {
+							context: options.callbacks.context,
+							success: function (result) {
+								acc = options.fold(acc, result);
+								helper_fold(idx + 1);
+							},
+							failure: options.callbacks.failure
+						};
+						helper[options.method].apply(helper, args);
+					}
+				} else
+					helper_fold(idx + 1);
+			}
+			helper_fold(0);
+		} else {
+			for (var i = 0; i < this.__helpers.length; ++i) {
+				var helper = this.__helpers[i];
+				if (options.method in helper) {
+					var result = helper[options.method].apply(helper, args);
+					acc = options.fold(acc, result);
+				}
 			}
 		}
 		return acc;
@@ -4560,7 +4593,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-08-01
+  betajs - v0.0.2 - 2014-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6595,7 +6628,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-07-14
+  betajs - v0.0.2 - 2014-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -7705,7 +7738,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-07-14
+  betajs - v0.0.2 - 2014-08-08
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

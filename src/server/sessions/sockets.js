@@ -5,18 +5,21 @@ BetaJS.Class.extend("BetaJS.Server.Session.SocketsManagerHelper", {
 		this.__manager = manager;
 		manager.bind_socket = function (socket, session_cookie, data) {
 			var session_token = BetaJS.Strings.read_cookie_string(socket.handshake.headers.cookie, session_cookie, data);
-	        var session = this.find_session(session_token);
-	        if (!session) {
-	            socket.disconnect();
-	            return null;
-	        }
-	        var active_session = session.active_sessions.find_active_session(data.active_session_token);
-	        if (!active_session) {
-	            socket.disconnect();
-	            return null;
-	        }
-	        active_session.socket.bind(socket);        
-			return active_session;
+	        this.find_session(session_token, {
+	        	context: this,
+	        	success: function (session) {
+			        if (!session) {
+			            socket.disconnect();
+			            return;
+			        }
+			        var active_session = session.active_sessions.find_active_session(data.active_session_token);
+			        if (!active_session) {
+			            socket.disconnect();
+			            return;
+			        }
+			        active_session.socket.bind(socket);        
+	        	}
+	        });
 		};
 	},
 
