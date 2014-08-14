@@ -2,7 +2,11 @@ BetaJS.Locales = {
 	
 	__data: {},
 	
+	language: null,
+	
 	get: function (key) {
+	    if (this.language && (this.language + "." + key) in this.__data)
+	        return this.__data[this.language + "." + key];
 		return key in this.__data ? this.__data[key] : key;
 	},
 	

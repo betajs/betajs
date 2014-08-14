@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-08-08
+  betajs - v0.0.2 - 2014-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-08
+  betajs - v0.0.2 - 2014-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-08
+  betajs - v0.0.2 - 2014-08-14
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3287,7 +3287,11 @@ BetaJS.Locales = {
 	
 	__data: {},
 	
+	language: null,
+	
 	get: function (key) {
+	    if (this.language && (this.language + "." + key) in this.__data)
+	        return this.__data[this.language + "." + key];
 		return key in this.__data ? this.__data[key] : key;
 	},
 	
