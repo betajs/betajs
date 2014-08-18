@@ -16,8 +16,8 @@ BetaJS.Class.extend("BetaJS.RMI.Stub", [
 		this._inherited(BetaJS.RMI.Stub, "destroy");
 	},
 	
-	invoke: function (message) {
-		var promise = {
+	_new_promise: function () {
+		return {
 			context: this,
 			success: function (f) {
 				this.__success = f;
@@ -38,26 +38,82 @@ BetaJS.Class.extend("BetaJS.RMI.Stub", [
 			        this.success(c.success);
                 if (c.failure)
                     this.failure(c.failure);
+                if (c.exception)
+                    this.failure(c.exception);
                 return this;
 			}
 		};
+	},
+	
+	_promise_success: function (promise, result) {
+		promise.result = result;
+		promise.is_complete = true;
+		promise.is_success = true;
+		if (promise.__success)
+			promise.__success.call(promise.context, result);
+	},
+	
+	_promise_failure: function (promise) {
+		promise.is_complete = true;
+		promise.is_failure = true;		
+		if (promise.__failure)
+			promise.__failure.call(promise.context);
+	},
+	
+	invoke: function (message) {
+		var promise = this._new_promise();
 		this.trigger("send", message, BetaJS.Functions.getArguments(arguments, 1), {
 			context: this,
 			success: function (result) {
-				promise.result = result;
-				promise.is_complete = true;
-				promise.is_success = true;
-				if (promise.__success)
-					promise.__success.call(this.context, result);
+				return this._promise_success(promise, result);
 			},
 			failure: function () {
-				promise.is_complete = true;
-				promise.is_failure = true;		
-				if (promise.__failure)
-					promise.__failure.call(this.context);
+				return this._promise_failure(promise);
 			}
 		});
 		return promise;
+	}
+	
+}]);
+
+BetaJS.Class.extend("BetaJS.RMI.StubSyncer", [
+	BetaJS.Classes.InvokerMixin,
+	{
+	
+	constructor: function (stub) {
+		this._inherited(BetaJS.RMI.StubSyncer, "constructor");
+		this.__stub = stub;
+		this.__current = null;
+		this.__queue = [];
+		this.invoke_delegate("invoke", this.__stub.intf);
+	},
+	
+	invoke: function () {
+		var object = {
+			args: BetaJS.Functions.getArguments(arguments),
+			promise: this.__stub._new_promise()
+		};
+		this.__queue.push(object);
+		if (!this.__current)
+			this.__next();
+		return object.promise;		
+	},
+	
+	__next: function () {
+		if (this.__queue.length === 0)
+			return;
+		this.__current = this.__queue.shift();
+		this.__stub.invoke.apply(this.__stub, this.__current.args).callbacks({
+			context: this,
+			success: function (result) {
+				this.__stub._promise_success(this.__current.promise, result);
+				this.__next();
+			},
+			failure: function () {
+				this.__stub._promise_failure(this.__current.promise);
+				this.__next();
+			}
+		});
 	}
 	
 }]);
