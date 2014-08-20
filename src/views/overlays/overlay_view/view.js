@@ -78,8 +78,8 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		if (this.__anchor == "relative" || this.__anchor == "element") {
 			element_width = element.outerWidth();
 			element_height = element.outerHeight();
-			left += element.offset().left - $(window).scrollLeft();
-			top += element.offset().top - $(window).scrollTop();
+			left += element.offset().left - BetaJS.$(window).scrollLeft();
+			top += element.offset().top - BetaJS.$(window).scrollTop();
 			if (this.__element_align_vertical == "bottom")
 				top += element_height;
 			else if (this.__element_align_vertical == "center")

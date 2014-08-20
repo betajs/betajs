@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-08-08
+  betajs - v0.0.2 - 2014-08-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -3782,8 +3782,8 @@ BetaJS.Views.View.extend("BetaJS.Views.OverlayView", {
 		if (this.__anchor == "relative" || this.__anchor == "element") {
 			element_width = element.outerWidth();
 			element_height = element.outerHeight();
-			left += element.offset().left - $(window).scrollLeft();
-			top += element.offset().top - $(window).scrollTop();
+			left += element.offset().left - BetaJS.$(window).scrollLeft();
+			top += element.offset().top - BetaJS.$(window).scrollTop();
 			if (this.__element_align_vertical == "bottom")
 				top += element_height;
 			else if (this.__element_align_vertical == "center")
