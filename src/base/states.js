@@ -8,9 +8,14 @@ BetaJS.Class.extend("BetaJS.States.Host", [
         obj.start();
     },
     
-    destroy: function () {
+    finalize: function () {
         if (this._state)
             this._state.destroy();
+		this._state = null;    	
+    },
+    
+    destroy: function () {
+    	this.finalize();
         this._inherited(BetaJS.States.Host, "destroy");
     },
     
@@ -66,7 +71,11 @@ BetaJS.Class.extend("BetaJS.States.State", {
         this._inherited(BetaJS.States.State, "constructor");
         this.host = host;
         this.transitionals = transitionals;
+        this._starting = false;
         this._started = false;
+        this._stopped = false;
+        this.__next_state = null;
+        this.__suspended = 0;
         args = args || {};
         this._locals = BetaJS.Types.is_function(this._locals) ? this._locals() : this._locals;
         for (var i = 0; i < this._locals.length; ++i)
@@ -85,6 +94,9 @@ BetaJS.Class.extend("BetaJS.States.State", {
     },
     
     start: function () {
+    	if (this._starting)
+    		return;
+        this._starting = true;
         this.host._start(this);
         this._start();
         if (this.host) {
@@ -94,6 +106,9 @@ BetaJS.Class.extend("BetaJS.States.State", {
     },
     
     end: function () {
+    	if (this._stopped)
+    		return;
+    	this._stopped = true;
         this.host._end(this);
         this._end();
         this.host._afterEnd(this);
@@ -101,6 +116,8 @@ BetaJS.Class.extend("BetaJS.States.State", {
     },
     
     next: function (state_name, args, transitionals) {
+    	if (!this._starting || this._stopped || this.__next_state)
+    		return;
         var clsname = this.cls.classname;
         var scope = BetaJS.Scopes.resolve(clsname.substring(0, clsname.lastIndexOf(".")));
         var cls = scope[state_name];
@@ -118,11 +135,28 @@ BetaJS.Class.extend("BetaJS.States.State", {
             this.host._afterStart(this);
             this._started = true;
         }
+        this.__next_state = obj;
+        if (this.__suspended <= 0)
+        	this.__next();
+    },
+    
+    __next: function () {
         var host = this.host;
+        var obj = this.__next_state;
         host._next(obj);
         this.end();
         obj.start();
         host._afterNext(obj);
+    },
+    
+    suspend: function () {
+    	this.__suspended++;
+    },
+    
+    resume: function () {
+    	this.__suspended--;
+    	if (this.__suspended === 0 && !this._stopped && this.__next_state)
+    		this.__next();
     },
 
     can_transition_to: function (state) {

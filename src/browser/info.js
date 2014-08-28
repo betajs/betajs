@@ -37,7 +37,13 @@ BetaJS.Browser.Info = {
 	
 	isChrome: function () {
 		return this.__cached("isChrome", function () {
-			return "chrome" in window;
+			return "chrome" in window && !window.opera && navigator.userAgent.indexOf(' OPR/') === -1;
+		});
+	},
+	
+	isOpera: function () {
+		return this.__cached("isOpera", function () {
+			return !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
 		});
 	},
 	

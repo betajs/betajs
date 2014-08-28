@@ -63,6 +63,7 @@ module.exports = function(grunt) {
 					'src/base/states.js', 
 					'src/base/channels.js',
 					'src/base/rmi.js',
+					'src/base/structures.js',
 					'src/net/*.js',
 				]
 			},
