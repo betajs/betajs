@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-08-28
+  betajs - v0.0.2 - 2014-09-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8059,7 +8059,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-08-20
+  betajs - v0.0.2 - 2014-09-02
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8521,7 +8521,13 @@ BetaJS.Browser.Info = {
 	
 	isChrome: function () {
 		return this.__cached("isChrome", function () {
-			return "chrome" in window;
+			return "chrome" in window && !window.opera && navigator.userAgent.indexOf(' OPR/') === -1;
+		});
+	},
+	
+	isOpera: function () {
+		return this.__cached("isOpera", function () {
+			return !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
 		});
 	},
 	
@@ -10208,7 +10214,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			else if (type == "array")
 				return value.split(",");
 			else if (type == "bool")
-				return value === "" || BetaJS.Strings.parseBool(value);
+				return value === "" || BetaJS.Types.parseBool(value);
 			else if (type == "object" || type == "function")
 				return BetaJS.Scopes.resolve(value);
 		}
