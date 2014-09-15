@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-09-02
+  betajs - v0.0.2 - 2014-09-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8059,7 +8059,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-09-02
+  betajs - v0.0.2 - 2014-09-15
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -10795,7 +10795,7 @@ BetaJS.Templates.Cached['list-container-view-item-template'] = '  <{%= container
 
 BetaJS.Templates.Cached['switch-container-view-item-template'] = '  <div data-view-id="{%= cid %}" data-selector="switch-container-item"></div> ';
 
-BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} data-selector="button-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.css_if("selected", "selected") %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
+BetaJS.Templates.Cached['button-view-template'] = '   <{%= button_container_element %} type="button" data-selector="button-inner" class="{%= supp.css("default") %}"    {%= bind.css_if("disabled", "disabled") %}    {%= bind.css_if("selected", "selected") %}    {%= bind.inner("label") %}>   </{%= button_container_element %}>  ';
 
 BetaJS.Templates.Cached['check-box-view-template'] = '  <input type="checkbox" {%= checked ? "checked" : "" %} id="check-{%= supp.view_id %}" />  <label for="check-{%= supp.view_id %}">{%= label %}</label> ';
 
