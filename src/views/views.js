@@ -447,6 +447,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
+		this._notify("preactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});

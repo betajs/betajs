@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-09-15
+  betajs - v0.0.2 - 2014-09-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8059,7 +8059,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-09-15
+  betajs - v0.0.2 - 2014-09-20
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -9805,6 +9805,7 @@ BetaJS.Views.View = BetaJS.Class.extend("BetaJS.Views.View", [
 			this.$el.css("display", this.__visible ? "" : "none");
 		this.__active = true;
 		this.__render();
+		this._notify("preactivate");
 		BetaJS.Objs.iter(this.__children, function (child) {
 			child.view.activate();
 		});
