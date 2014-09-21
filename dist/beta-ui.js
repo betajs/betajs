@@ -1,5 +1,5 @@
 /*!
-  betajs - v0.0.2 - 2014-09-20
+  betajs - v0.0.2 - 2014-09-21
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -461,7 +461,7 @@ BetaJS.Browser.Info = {
 	
 	isChrome: function () {
 		return this.__cached("isChrome", function () {
-			return "chrome" in window && !window.opera && navigator.userAgent.indexOf(' OPR/') === -1;
+			return ("chrome" in window || navigator.userAgent.indexOf('CriOS') != -1)  && !window.opera && navigator.userAgent.indexOf(' OPR/') === -1;
 		});
 	},
 	
