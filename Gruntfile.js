@@ -167,12 +167,6 @@ module.exports = function(grunt) {
 					'dist/beta-ui.js'
 				]
 			},
-			dist_profiler: {
-				dest : 'dist/beta-profiler.js',
-				src : [
-				    'src/tools/profiling/*.js',
-				]
-			},
 			dist_server: {
 				dest: 'dist/beta-server.js',
 				src: [
@@ -254,6 +248,5 @@ module.exports = function(grunt) {
 	
 
 	grunt.registerTask('default', ['newer:betajs_templates', 'newer:concat', 'newer:uglify', 'newer:sass', 'newer:cssmin']);
-	grunt.registerTask('theme', ['newer:concat:dist_theme_minimal_scss', 'newer:sass:dist_themes', 'newer:cssmin:dist_themes']);
 
 };

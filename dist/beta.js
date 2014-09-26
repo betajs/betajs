@@ -1,15 +1,15 @@
 /*!
-  betajs - v0.0.2 - 2014-09-21
+  betajs - v0.0.2 - 2014-09-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-28
+  betajs - v0.0.2 - 2014-09-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
 /*!
-  betajs - v0.0.2 - 2014-08-28
+  betajs - v0.0.2 - 2014-09-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -439,6 +439,10 @@ BetaJS.SyncAsync = {
 	eventually: function (func, params, context) {
 		var timer = setTimeout(function () {
 			clearTimeout(timer);
+			if (!BetaJS.Types.is_array(params)) {
+				context = params;
+				params = [];
+			}
 			func.apply(context || this, params || []);
 		}, 0);
 	},
@@ -3692,6 +3696,8 @@ BetaJS.Class.extend("BetaJS.States.State", {
 
     _locals: [],
     _persistents: [],
+    
+    _white_list: null,
 
     constructor: function (host, args, transitionals) {
         this._inherited(BetaJS.States.State, "constructor");
@@ -3735,8 +3741,8 @@ BetaJS.Class.extend("BetaJS.States.State", {
     	if (this._stopped)
     		return;
     	this._stopped = true;
-        this.host._end(this);
         this._end();
+        this.host._end(this);
         this.host._afterEnd(this);
         this.destroy();
     },
@@ -3794,7 +3800,7 @@ BetaJS.Class.extend("BetaJS.States.State", {
     _end: function () {},
     
     _can_transition_to: function (state) {
-        return true;
+        return !BetaJS.Types.is_array(this._white_list) || BetaJS.Objs.contains_value(this._white_list, state.state_name());
     }
 
 });
@@ -4914,7 +4920,7 @@ BetaJS.Net.Uri = {
 
 };
 /*!
-  betajs - v0.0.2 - 2014-08-08
+  betajs - v0.0.2 - 2014-09-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -6949,7 +6955,7 @@ BetaJS.Class.extend("BetaJS.Stores.StoreHistory", [
 	
 });
 /*!
-  betajs - v0.0.2 - 2014-08-08
+  betajs - v0.0.2 - 2014-09-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */
@@ -8059,7 +8065,7 @@ BetaJS.Modelling.Validators.Validator.extend("BetaJS.Modelling.Validators.Condit
 
 });
 /*!
-  betajs - v0.0.2 - 2014-09-21
+  betajs - v0.0.2 - 2014-09-25
   Copyright (c) Oliver Friedmann & Victor Lingenthal
   MIT Software License.
 */

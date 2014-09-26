@@ -4,6 +4,10 @@ BetaJS.SyncAsync = {
 	eventually: function (func, params, context) {
 		var timer = setTimeout(function () {
 			clearTimeout(timer);
+			if (!BetaJS.Types.is_array(params)) {
+				context = params;
+				params = [];
+			}
 			func.apply(context || this, params || []);
 		}, 0);
 	},
