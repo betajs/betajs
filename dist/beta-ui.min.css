@@ -1,7 +1,0 @@
-/*!
-  betajs - v0.0.2 - 2014-08-08
-  Copyright (c) Oliver Friedmann & Victor Lingenthal
-  MIT Software License.
-*/
-
-.holygrail-view-left-container{float:left}.holygrail-view-right-container{float:right}.holygrail-view-center-container{overflow:hidden}.input-horizontal-fill{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;width:100%}.progress-view-overlay{position:absolute;left:0;right:0;top:0;bottom:0;text-align:center}.text-area-no-resize{resize:none}.text-area-horizontal-fill{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;width:100%}.fullscreen-overlay-background{background-color:#fff;opacity:.85;position:fixed;left:0;top:0;right:0;bottom:0;z-index:10000;cursor:default}.fullscreen-overlay{background-color:#000;opacity:1;z-index:10001;padding:8px;position:relative}.fullscreen-overlay-float{position:fixed!important}.fullscreen-overlay-fit{position:fixed!important;left:0;top:0;right:0;bottom:0}.fullscreen-overlay-body{overflow:hidden}.fullscreen-overlay-inner{width:100%;height:100%}.overlay-container-class{position:absolute;z-index:20000}

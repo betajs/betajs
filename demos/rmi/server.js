@@ -1,4 +1,4 @@
-BetaJS = require("../../dist/beta-server.js");
+BetaJS = require("../../dist/beta.js");
 
 Express = require("express");
 SocketIO = require('socket.io');

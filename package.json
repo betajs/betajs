@@ -1,16 +1,20 @@
 {
   "name": "betajs",
-  "version": "0.0.2",
+  "version": "1.0.0",
+  "description": "BetaJS is a general-purpose JavaScript framework for doing awesome things.",
+  "homepage": "http://betajs.com",
+  "contributors": [
+  	"Oliver Friedmann",
+  	"Victor Lingenthal"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "grunt": "",
     "grunt-contrib-jshint": "",
     "grunt-contrib-nodeunit": "",
     "grunt-contrib-concat": "",
-    "grunt-contrib-sass": "",
-    "grunt-contrib-cssmin": "",
     "grunt-contrib-uglify": "",
-    "grunt-contrib-clean": "",
-    "grunt-betajs-templates": "git://github.com/betajs/grunt-betajs-templates.git",
+    "grunt-shell": "",
     "grunt-newer": ""
   }
 }
