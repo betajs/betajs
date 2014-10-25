@@ -12,6 +12,28 @@ BetaJS.SyncAsync = {
 		}, 0);
 	},
 	
+	eventuallyOnce: function (func, params, context) {
+		var data = {
+			func: func,
+			params: params,
+			context: context
+		};
+		for (var key in this.__eventuallyOnce) {
+			if (BetaJS.Comparators.listEqual(this.__eventuallyOnce[key], data))
+				return;
+		}
+		this.__eventuallyOnceIdx++;
+		var index = this.__eventuallyOnceIdx;
+		this.__eventuallyOnce[index] = data;
+		this.eventually(function () {
+			delete this.__eventuallyOnce[index];
+			func.apply(context || this, params || []);
+		}, this);
+	},
+	
+	__eventuallyOnce: {},
+	__eventuallyOnceIdx: 1,
+	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
      * @param callbacks callbacks object with success and exception

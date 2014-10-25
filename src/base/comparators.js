@@ -23,6 +23,29 @@ BetaJS.Comparators = {
 		if (a > b)
 			return 1;
 		return 0;
+	},
+	
+	listEqual: function (a, b) {
+		if (BetaJS.Types.is_array(a) && BetaJS.Types.is_array(b)) {
+			if (a.length != b.length)
+				return false;
+			for (var i = 0; i < a.length; ++i) {
+				if (a[i] !== b[i])
+					return false;
+			}
+			return true;
+		} else if (BetaJS.Types.is_object(a) && BetaJS.Types.is_object(b)) {
+			for (var key in a) {
+				if (b[key] !== a[key])
+					return false;
+			}
+			for (key in b) {
+				if (!(key in a))
+					return false;
+			}
+			return true;
+		} else
+			return false;
 	}
 		
 };
