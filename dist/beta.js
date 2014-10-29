@@ -3157,6 +3157,7 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		this.__collection = collection;
 		this.__properties_data = {};
 		this.data = {};
+		this.properties = {};
 		this.__collection.iterate(this.__insert, this);
 		this.__collection.on("add", this.__insert, this);
 		this.__collection.on("remove", this.__remove, this);
@@ -3173,6 +3174,7 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		var id = BetaJS.Ids.objectId(property);
 		this.__properties_data[id] = new BetaJS.Properties.PropertiesData(property);
 		this.data[id] = this.__properties_data[id].data;
+		this.properties[id] = property;
 	},
 	
 	__remove: function (property) {
@@ -3180,6 +3182,7 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		this.__properties_data[id].destroy();
 		delete this.__properties_data[id];
 		delete this.data[id];
+		delete this.properties[id];
 	}
 	
 });
