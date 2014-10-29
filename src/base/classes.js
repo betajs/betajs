@@ -354,3 +354,66 @@ BetaJS.Classes.HelperClassMixin = {
 	}
 	
 };
+
+
+BetaJS.Class.extend("BetaJS.Classes.IdGenerator", {
+	
+	generate: function () {}
+	
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.PrefixedIdGenerator", {
+
+	constructor: function (prefix, generator) {
+		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
+		this.__prefix = prefix;
+		this.__generator = generator;
+	},
+	
+	generate: function () {
+		return this.__prefix + this.__generator.generate();
+	}
+	
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.RandomIdGenerator", {
+
+	constructor: function (length) {
+		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
+		this.__length = length || 16;
+	},
+	
+	generate: function () {
+		return BetaJS.Tokens.generate_token(this.__length);
+	}
+
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.ConsecutiveIdGenerator", {
+
+	constructor: function (initial) {
+		this._inherited(BetaJS.Classes.ConsecutiveIdGenerator, "constructor");
+		this.__current = initial || 0;
+	},
+	
+	generate: function () {
+		this.__current++;
+		return this.__current;
+	}
+
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.TimedIdGenerator", {
+
+	constructor: function () {
+		this._inherited(BetaJS.Classes.TimedIdGenerator, "constructor");
+		this.__current = BetaJS.Time.now() - 1;
+	},
+	
+	generate: function () {
+		var now = BetaJS.Time.now();
+		this.__current = now > this.__current ? now : (this.__current + 1); 
+		return this.__current;
+	}
+
+});

@@ -62,6 +62,16 @@ BetaJS.Time = {
 		return this.days(this.ago(t));
 	},
 	
+	inc_day: function (t) {
+		var d = new Date(t);
+		d.setDate(d.getDate() + 1);
+		return d.getTime();
+	},
+	
+	inc_utc_day: function (t) {
+		return t + 24 * 60 * 60 * 1000;
+	},
+	
 	format_ago: function (t) {
 		if (this.days_ago(t) > 1)
 			return this.format(t, {time: false});

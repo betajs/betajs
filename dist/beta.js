@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-10-02
+betajs - v1.0.0 - 2014-10-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -436,6 +436,28 @@ BetaJS.SyncAsync = {
 			func.apply(context || this, params || []);
 		}, 0);
 	},
+	
+	eventuallyOnce: function (func, params, context) {
+		var data = {
+			func: func,
+			params: params,
+			context: context
+		};
+		for (var key in this.__eventuallyOnce) {
+			if (BetaJS.Comparators.listEqual(this.__eventuallyOnce[key], data))
+				return;
+		}
+		this.__eventuallyOnceIdx++;
+		var index = this.__eventuallyOnceIdx;
+		this.__eventuallyOnce[index] = data;
+		this.eventually(function () {
+			delete this.__eventuallyOnce[index];
+			func.apply(context || this, params || []);
+		}, this);
+	},
+	
+	__eventuallyOnce: {},
+	__eventuallyOnceIdx: 1,
 	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
@@ -2665,6 +2687,69 @@ BetaJS.Classes.HelperClassMixin = {
 	}
 	
 };
+
+
+BetaJS.Class.extend("BetaJS.Classes.IdGenerator", {
+	
+	generate: function () {}
+	
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.PrefixedIdGenerator", {
+
+	constructor: function (prefix, generator) {
+		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
+		this.__prefix = prefix;
+		this.__generator = generator;
+	},
+	
+	generate: function () {
+		return this.__prefix + this.__generator.generate();
+	}
+	
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.RandomIdGenerator", {
+
+	constructor: function (length) {
+		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
+		this.__length = length || 16;
+	},
+	
+	generate: function () {
+		return BetaJS.Tokens.generate_token(this.__length);
+	}
+
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.ConsecutiveIdGenerator", {
+
+	constructor: function (initial) {
+		this._inherited(BetaJS.Classes.ConsecutiveIdGenerator, "constructor");
+		this.__current = initial || 0;
+	},
+	
+	generate: function () {
+		this.__current++;
+		return this.__current;
+	}
+
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.TimedIdGenerator", {
+
+	constructor: function () {
+		this._inherited(BetaJS.Classes.TimedIdGenerator, "constructor");
+		this.__current = BetaJS.Time.now() - 1;
+	},
+	
+	generate: function () {
+		var now = BetaJS.Time.now();
+		this.__current = now > this.__current ? now : (this.__current + 1); 
+		return this.__current;
+	}
+
+});
 BetaJS.Properties = {};
 
 
@@ -3186,6 +3271,29 @@ BetaJS.Comparators = {
 		if (a > b)
 			return 1;
 		return 0;
+	},
+	
+	listEqual: function (a, b) {
+		if (BetaJS.Types.is_array(a) && BetaJS.Types.is_array(b)) {
+			if (a.length != b.length)
+				return false;
+			for (var i = 0; i < a.length; ++i) {
+				if (a[i] !== b[i])
+					return false;
+			}
+			return true;
+		} else if (BetaJS.Types.is_object(a) && BetaJS.Types.is_object(b)) {
+			for (var key in a) {
+				if (b[key] !== a[key])
+					return false;
+			}
+			for (key in b) {
+				if (!(key in a))
+					return false;
+			}
+			return true;
+		} else
+			return false;
 	}
 		
 };
@@ -3371,6 +3479,16 @@ BetaJS.Time = {
 	
 	days_ago: function (t) {
 		return this.days(this.ago(t));
+	},
+	
+	inc_day: function (t) {
+		var d = new Date(t);
+		d.setDate(d.getDate() + 1);
+		return d.getTime();
+	},
+	
+	inc_utc_day: function (t) {
+		return t + 24 * 60 * 60 * 1000;
 	},
 	
 	format_ago: function (t) {
