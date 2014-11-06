@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-10-31
+betajs - v1.0.0 - 2014-11-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -3480,18 +3480,28 @@ BetaJS.Time = {
 		return this.now() - t;
 	},
 	
+	floor_day: function (t) {
+		var d = new Date(t);
+		d.setMilliseconds(0);
+		d.setSeconds(0);
+		d.setMinutes(0);
+		d.setHours(0);
+		return d.getTime();
+	},
+	
 	days_ago: function (t) {
 		return this.days(this.ago(t));
 	},
 	
-	inc_day: function (t) {
+	inc_day: function (t, inc) {
+		inc = typeof inc == 'undefined' ? 1 : inc;
 		var d = new Date(t);
-		d.setDate(d.getDate() + 1);
+		d.setDate(d.getDate() + inc);
 		return d.getTime();
 	},
 	
-	inc_utc_day: function (t) {
-		return t + 24 * 60 * 60 * 1000;
+	inc_utc_day: function (t, inc) {
+		return t + (inc || 1) * 24 * 60 * 60 * 1000;
 	},
 	
 	format_ago: function (t) {
