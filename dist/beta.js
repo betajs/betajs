@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-11-05
+betajs - v1.0.0 - 2014-11-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -3827,6 +3827,7 @@ BetaJS.Class.extend("BetaJS.States.State", {
         this._starting = false;
         this._started = false;
         this._stopped = false;
+        this._transitioning = false;
         this.__next_state = null;
         this.__suspended = 0;
         args = args || {};
@@ -3868,6 +3869,12 @@ BetaJS.Class.extend("BetaJS.States.State", {
         this.destroy();
     },
     
+    eventualNext: function (state_name, args, transitionals) {
+    	BetaJS.SyncAsync.eventually(function () {
+    		this.next(state_name, args, transitionals);
+    	}, this);
+    },
+    
     next: function (state_name, args, transitionals) {
     	if (!this._starting || this._stopped || this.__next_state)
     		return;
@@ -3889,6 +3896,8 @@ BetaJS.Class.extend("BetaJS.States.State", {
             this._started = true;
         }
         this.__next_state = obj;
+        this._transitioning = true;
+        this._transition();
         if (this.__suspended <= 0)
         	this.__next();
     },
@@ -3902,8 +3911,17 @@ BetaJS.Class.extend("BetaJS.States.State", {
         host._afterNext(obj);
     },
     
+    _transition: function () {
+    },
+    
     suspend: function () {
     	this.__suspended++;
+    },
+    
+    eventualResumse: function () {
+    	BetaJS.SyncAsync.eventually(function () {
+    		this.resume();
+    	}, this);
     },
     
     resume: function () {
