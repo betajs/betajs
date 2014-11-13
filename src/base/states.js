@@ -167,7 +167,7 @@ BetaJS.Class.extend("BetaJS.States.State", {
     	this.__suspended++;
     },
     
-    eventualResumse: function () {
+    eventualResume: function () {
     	BetaJS.SyncAsync.eventually(function () {
     		this.resume();
     	}, this);

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-11-11
+betajs - v1.0.0 - 2014-11-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -3918,7 +3918,7 @@ BetaJS.Class.extend("BetaJS.States.State", {
     	this.__suspended++;
     },
     
-    eventualResumse: function () {
+    eventualResume: function () {
     	BetaJS.SyncAsync.eventually(function () {
     		this.resume();
     	}, this);
