@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-11-12
+betajs - v1.0.0 - 2014-11-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -3009,6 +3009,11 @@ BetaJS.Class.extend("BetaJS.Properties.PropertiesData", {
 		}, this);
 	},
 	
+	destroy: function () {
+		this.__properties.off(null, null, this);
+		this._inherited(BetaJS.Properties.PropertiesData, "destroy");
+	},
+	
 	properties: function () {
 		return this.__properties;
 	}
@@ -3164,6 +3169,12 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		this.__collection.on("destroy", function () {
 			this.destroy();
 		}, this);
+	},
+	
+	destroy: function () {
+		for (var key in this.__properties_data)
+			this.__properties_data[key].destroy();
+		this._inherited(BetaJS.Collections.CollectionData, "destroy");
 	},
 	
 	collection: function () {

@@ -257,6 +257,11 @@ BetaJS.Class.extend("BetaJS.Properties.PropertiesData", {
 		}, this);
 	},
 	
+	destroy: function () {
+		this.__properties.off(null, null, this);
+		this._inherited(BetaJS.Properties.PropertiesData, "destroy");
+	},
+	
 	properties: function () {
 		return this.__properties;
 	}

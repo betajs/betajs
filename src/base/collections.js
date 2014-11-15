@@ -149,6 +149,12 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		}, this);
 	},
 	
+	destroy: function () {
+		for (var key in this.__properties_data)
+			this.__properties_data[key].destroy();
+		this._inherited(BetaJS.Collections.CollectionData, "destroy");
+	},
+	
 	collection: function () {
 		return this.__collection;
 	},
