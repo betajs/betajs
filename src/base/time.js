@@ -67,6 +67,16 @@ BetaJS.Time = {
 		return d.getTime();
 	},
 	
+	floor_week: function (t) {
+		var d = new Date(t);
+		d.setDate(d.getDate() - d.getDay());
+		d.setMilliseconds(0);
+		d.setSeconds(0);
+		d.setMinutes(0);
+		d.setHours(0);
+		return d.getTime();
+	},
+	
 	days_ago: function (t) {
 		return this.days(this.ago(t));
 	},
@@ -76,6 +86,10 @@ BetaJS.Time = {
 		var d = new Date(t);
 		d.setDate(d.getDate() + inc);
 		return d.getTime();
+	},
+	
+	inc_week: function (t, inc) {
+		return this.inc_day(t, (typeof inc == 'undefined' ? 1 : inc) * 7);
 	},
 	
 	inc_utc_day: function (t, inc) {

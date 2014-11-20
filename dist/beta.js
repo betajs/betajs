@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-11-15
+betajs - v1.0.0 - 2014-11-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -2750,6 +2750,55 @@ BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.TimedIdGenerator", {
 	}
 
 });
+
+
+BetaJS.Class.extend("BetaJS.Classes.PathResolver", {
+	
+	constructor: function (bindings) {
+		this._inherited(BetaJS.Classes.PathResolver, "constructor");
+		this._bindings = bindings || {};
+	},
+	
+	extend: function (bindings, namespace) {
+		if (namespace) {
+			for (var key in bindings) {
+				var value = bindings[key];
+				var regExp = /\{([^}]+)\}/;
+				while (true) {
+					var matches = regExp.exec(value);
+					if (!matches)
+						break;
+					value = value.replace(regExp, namespace + "." + matches[1]);
+				}
+				this._bindings[namespace + "." + key] = value;
+			}
+		} else
+			this._bindings = BetaJS.Objs.extend(this._bindings, bindings);
+	},
+	
+	map: function (arr) {
+		var result = [];
+		for (var i = 0; i < arr.length; ++i)
+			if (arr[i])
+				result.push(this.resolve(arr[i]));
+		return result;
+	},
+	
+	resolve : function(path) {
+		var regExp = /\{([^}]+)\}/;
+		while (true) {
+			var matches = regExp.exec(path);
+			if (!matches)
+				return this.simplify(path);
+			path = path.replace(regExp, this._bindings[matches[1]]);
+		}
+	},
+	
+	simplify: function (path) {
+		return path.replace(/[^\/]+\/\.\.\//, "").replace(/\/[^\/]+\/\.\./, "");
+	}
+	
+});
 BetaJS.Properties = {};
 
 
@@ -3500,6 +3549,16 @@ BetaJS.Time = {
 		return d.getTime();
 	},
 	
+	floor_week: function (t) {
+		var d = new Date(t);
+		d.setDate(d.getDate() - d.getDay());
+		d.setMilliseconds(0);
+		d.setSeconds(0);
+		d.setMinutes(0);
+		d.setHours(0);
+		return d.getTime();
+	},
+	
 	days_ago: function (t) {
 		return this.days(this.ago(t));
 	},
@@ -3509,6 +3568,10 @@ BetaJS.Time = {
 		var d = new Date(t);
 		d.setDate(d.getDate() + inc);
 		return d.getTime();
+	},
+	
+	inc_week: function (t, inc) {
+		return this.inc_day(t, (typeof inc == 'undefined' ? 1 : inc) * 7);
 	},
 	
 	inc_utc_day: function (t, inc) {

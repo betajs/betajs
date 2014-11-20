@@ -417,3 +417,54 @@ BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.TimedIdGenerator", {
 	}
 
 });
+
+
+BetaJS.Class.extend("BetaJS.Classes.PathResolver", {
+	
+	constructor: function (bindings) {
+		this._inherited(BetaJS.Classes.PathResolver, "constructor");
+		this._bindings = bindings || {};
+	},
+	
+	extend: function (bindings, namespace) {
+		if (namespace) {
+			for (var key in bindings) {
+				var value = bindings[key];
+				var regExp = /\{([^}]+)\}/;
+				while (true) {
+					var matches = regExp.exec(value);
+					if (!matches)
+						break;
+					value = value.replace(regExp, namespace + "." + matches[1]);
+				}
+				this._bindings[namespace + "." + key] = value;
+			}
+		} else
+			this._bindings = BetaJS.Objs.extend(this._bindings, bindings);
+	},
+	
+	map: function (arr) {
+		var result = [];
+		for (var i = 0; i < arr.length; ++i) {
+			if (arr[i])
+				result.push(this.resolve(arr[i]));
+		}
+		return result;
+	},
+	
+	resolve : function(path) {
+		var regExp = /\{([^}]+)\}/;
+		while (true) {
+			var matches = regExp.exec(path);
+			if (!matches)
+				return this.simplify(path);
+			path = path.replace(regExp, this._bindings[matches[1]]);
+		}
+		return path;
+	},
+	
+	simplify: function (path) {
+		return path.replace(/[^\/]+\/\.\.\//, "").replace(/\/[^\/]+\/\.\./, "");
+	}
+	
+});
