@@ -119,9 +119,9 @@ BetaJS.Class.extend("BetaJS.States.State", {
     },
     
     eventualNext: function (state_name, args, transitionals) {
-    	BetaJS.SyncAsync.eventually(function () {
-    		this.next(state_name, args, transitionals);
-    	}, this);
+    	this.suspend();
+		this.next(state_name, args, transitionals);
+		this.eventualResume();
     },
     
     next: function (state_name, args, transitionals) {

@@ -2778,9 +2778,10 @@ BetaJS.Class.extend("BetaJS.Classes.PathResolver", {
 	
 	map: function (arr) {
 		var result = [];
-		for (var i = 0; i < arr.length; ++i)
+		for (var i = 0; i < arr.length; ++i) {
 			if (arr[i])
 				result.push(this.resolve(arr[i]));
+		}
 		return result;
 	},
 	
@@ -2792,6 +2793,7 @@ BetaJS.Class.extend("BetaJS.Classes.PathResolver", {
 				return this.simplify(path);
 			path = path.replace(regExp, this._bindings[matches[1]]);
 		}
+		return path;
 	},
 	
 	simplify: function (path) {
@@ -3944,9 +3946,9 @@ BetaJS.Class.extend("BetaJS.States.State", {
     },
     
     eventualNext: function (state_name, args, transitionals) {
-    	BetaJS.SyncAsync.eventually(function () {
-    		this.next(state_name, args, transitionals);
-    	}, this);
+    	this.suspend();
+		this.next(state_name, args, transitionals);
+		this.eventualResume();
     },
     
     next: function (state_name, args, transitionals) {
