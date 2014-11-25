@@ -52,19 +52,19 @@ BetaJS.Time = {
 			"set": function (date, value) { date.setUTCDate(date.getUTCDate() + value - date.getUTCDay()); },
 			"get": function (date) { return date.getUTCDay(); }
 		},
-		"hours": {
+		"hour": {
 			"set": function (date, value) { date.setUTCHours(value); },
 			"get": function (date) { return date.getUTCHours(); }
 		},
-		"minutes": {
+		"minute": {
 			"set": function (date, value) { date.setUTCMinutes(value); },
 			"get": function (date) { return date.getUTCMinutes(); }
 		},
-		"seconds": {
+		"second": {
 			"set": function (date, value) { date.setUTCSeconds(value); },
 			"get": function (date) { return date.getUTCSeconds(); }
 		},
-		"milliseconds": {
+		"millisecond": {
 			"set": function (date, value) { date.setUTCMilliseconds(value); },
 			"get": function (date) { return date.getUTCMilliseconds(); }
 		}
