@@ -39,7 +39,7 @@ BetaJS.Time = {
 			"get": function (date) { return date.getUTCFullYear(); }
 		},
 		"month": {
-			"set": function (date, value) { date.setUTCFullMonth(value); },
+			"set": function (date, value) { date.setUTCMonth(value); },
 			"get": function (date) { return date.getUTCMonth(); }
 		},
 		"day": {
@@ -112,6 +112,10 @@ BetaJS.Time = {
 		return this.timezoneBasedDateToTime(d, timezone);
 	},
 	
+	ago: function (t, timezone) {
+		return this.now(timezone) - t;
+	},
+	
 	
 	/* Legacy Code; please replace over time (no pun intended!) */
 	
@@ -147,10 +151,6 @@ BetaJS.Time = {
 		return Math.floor(t / 24 / 60 / 60 / 1000);
 	},
 
-	ago: function (t) {
-		return this.now() - t;
-	},
-	
 	days_ago: function (t) {
 		return this.days(this.ago(t));
 	},
