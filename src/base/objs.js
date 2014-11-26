@@ -300,6 +300,20 @@ BetaJS.Objs = {
 			idx--;
 		}
 		return null;
+	},
+	
+	pairArrayToObject: function (arr) {
+		var result = {};
+		for (var i = 0; i < arr.length / 2; i += 2)
+			result[arr[i]] = arr[i+1];
+		return result;
+	},
+	
+	pairsToObject: function () {
+		var result = {};
+		for (var i = 0; i < arguments.length; ++i)
+			result[arguments[i][0]] = arguments[i][1];
+		return result;
 	}
 
 };

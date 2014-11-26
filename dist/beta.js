@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-11-25
+betajs - v1.0.0 - 2014-11-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -1350,6 +1350,20 @@ BetaJS.Objs = {
 			idx--;
 		}
 		return null;
+	},
+	
+	pairArrayToObject: function (arr) {
+		var result = {};
+		for (var i = 0; i < arr.length / 2; i += 2)
+			result[arr[i]] = arr[i+1];
+		return result;
+	},
+	
+	pairsToObject: function () {
+		var result = {};
+		for (var i = 0; i < arguments.length; ++i)
+			result[arguments[i][0]] = arguments[i][1];
+		return result;
 	}
 
 };
