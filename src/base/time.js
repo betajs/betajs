@@ -45,7 +45,8 @@ BetaJS.Time = {
 		"day": {
 			"dependencies": {"weekday": true},
 			"set": function (date, value) { date.setUTCDate(value + 1); },
-			"get": function (date) { return date.getUTCDate() - 1; }
+			"get": function (date) { return date.getUTCDate() - 1; },
+			"milliseconds": 24 * 60 * 60 * 1000
 		},
 		"weekday": {
 			"dependencies": {"day": true, "month": true, "year": true},
@@ -54,19 +55,27 @@ BetaJS.Time = {
 		},
 		"hour": {
 			"set": function (date, value) { date.setUTCHours(value); },
-			"get": function (date) { return date.getUTCHours(); }
+			"get": function (date) { return date.getUTCHours(); },
+			"max": 23,
+			"milliseconds": 60 * 60 * 1000
 		},
 		"minute": {
 			"set": function (date, value) { date.setUTCMinutes(value); },
-			"get": function (date) { return date.getUTCMinutes(); }
+			"get": function (date) { return date.getUTCMinutes(); },
+			"max": 59,
+			"milliseconds": 60 * 1000
 		},
 		"second": {
 			"set": function (date, value) { date.setUTCSeconds(value); },
-			"get": function (date) { return date.getUTCSeconds(); }
+			"get": function (date) { return date.getUTCSeconds(); },
+			"max": 59,
+			"milliseconds": 1000
 		},
 		"millisecond": {
 			"set": function (date, value) { date.setUTCMilliseconds(value); },
-			"get": function (date) { return date.getUTCMilliseconds(); }
+			"get": function (date) { return date.getUTCMilliseconds(); },
+			"max": 999,
+			"milliseconds": 1
 		}
 	},
 	
@@ -116,107 +125,42 @@ BetaJS.Time = {
 		return this.now(timezone) - t;
 	},
 	
+	timeComponent: function (t, key, round) {
+		return Math[round || "floor"](t / this.__components[key].milliseconds);
+	},
 	
-	/* Legacy Code; please replace over time (no pun intended!) */
+	timeModulo: function (t, key, round) {
+		return this.timeComponent(t, key, round) % (this.__components[key].max + 1);
+	},
 	
-	make: function (data) {
-		var t = 0;
-		var multipliers = {
-			hours: 60,
-			minutes: 60,
-			seconds: 60,
-			milliseconds: 1000
-		};
-		for (var key in multipliers) {
-			t *= multipliers[key];
-			if (key in data)
-				t += data[key];
+	formatTimePeriod: function (t, options) {
+		options = options || {};
+		var components = options.components || ["day", "hour", "minute", "second"];
+		var component = "";
+		var timeComponent = 0;
+		for (var i = 0; i < components.length; ++i) {
+			component = components[i];
+			timeComponent = this.timeComponent(t, component, options.round || "round");
+			if (timeComponent)
+				break;
 		}
-		return t;
+		return timeComponent + " " + BetaJS.Locales.get(component + (timeComponent == 1 ? "" : "s"));
 	},
 	
-	seconds: function (t) {
-		return Math.floor(t / 1000) % 60;
-	},
-	
-	minutes: function (t) {
-		return Math.floor(t / 60 / 1000) % 60;
-	},
-
-	hours: function (t) {
-		return Math.floor(t / 60 / 60 / 1000) % 24;
-	},
-
-	days: function (t) {
-		return Math.floor(t / 24 / 60 / 60 / 1000);
-	},
-
-	days_ago: function (t) {
-		return this.days(this.ago(t));
-	},
-	
-	format_time: function(t, s) {
-		var seconds = this.seconds(t);
-		var minutes = this.minutes(t);
-		var hours = this.hours(t);
-		var replacers = {
-			"hh": hours < 10 ? "0" + hours : hours, 
-			"h": hours, 
-			"mm": minutes < 10 ? "0" + minutes : minutes, 
-			"m": minutes, 
-			"ss": seconds < 10 ? "0" + seconds : seconds, 
-			"s": seconds
-		};
+	formatTime: function(t, s) {
+		var components = ["hour", "minute", "second"];
+		s = s || "hhh:mm:ss";
+		var replacers = {};
+		for (var i = 0; i < components.length; ++i) {
+			var c = components[i].charAt(0);
+			replacers[c + c + c] = this.timeComponent(t, components[i], "floor");
+			var temp = this.timeModulo(t, components[i], "floor");
+			replacers[c + c] = temp < 10 ? "0" + temp : temp; 
+			replacers[c] = temp;
+		}
 		for (var key in replacers)
 			s = s.replace(key, replacers[key]);
 		return s;
-	},
-	
-	format_ago: function (t) {
-		if (this.days_ago(t) > 1)
-			return this.format(t, {time: false});
-		else
-			return this.format_period(Math.max(this.ago(t), 0)) + " ago";
-	},
-	
-	format_period: function (t) {
-		t = Math.round(t / 1000);
-		if (t < 60)
-			return t + " " + BetaJS.Locales.get(t == 1 ? "second" : "seconds");
-		t = Math.round(t / 60);
-		if (t < 60)
-			return t + " " + BetaJS.Locales.get(t == 1 ? "minute" : "minutes");
-		t = Math.round(t / 60);
-		if (t < 24)
-			return t + " " + BetaJS.Locales.get(t == 1 ? "hour" : "hours");
-		t = Math.round(t / 24);
-		return t + " " + BetaJS.Locales.get(t == 1 ? "day" : "days");
-	},
-	
-	format: function (t, options) {
-		options = BetaJS.Objs.extend({
-			time: true,
-			date: true,
-			locale: true
-		}, options || {});
-		var d = new Date(t);
-		if (options.locale) {
-			if (options.date) {
-				if (options.time)
-					return d.toLocaleString();
-				else
-					return d.toLocaleDateString();
-			} else
-				return d.toLocaleTimeString();
-		} else {
-			if (options.date) {
-				if (options.time) 
-					return d.toString();
-				else
-					return d.toDateString();
-			} else
-				return d.toTimeString();
-		}
 	}
 	
 };
