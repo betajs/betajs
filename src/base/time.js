@@ -91,6 +91,10 @@ BetaJS.Time = {
 		return this.updateTime(this.now(), data, timezone);
 	},
 	
+	encodePeriod: function (data) {
+		return this.incrementTime(0, data);
+	},
+	
 	updateTime: function (t, data, timezone) {
 		var d = this.timeToTimezoneBasedDate(t, timezone);
 		for (var key in data)

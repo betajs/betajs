@@ -294,9 +294,11 @@ BetaJS.Classes.HelperClassMixin = {
 		var helper = new helper_class(this, options);
 		this.__helpers = this.__helpers || [];
 		this.__helpers.push(this._auto_destroy(helper));
+		return helper;
 	},
 	
 	_helper: function (options) {
+		this.__helpers = this.__helpers || [];
 		if (BetaJS.Types.is_string(options)) {
 			options = {
 				method: options
@@ -314,7 +316,7 @@ BetaJS.Classes.HelperClassMixin = {
 			var self = this;
 			var callback_index = -1;
 			for (j = 0; j < args.length; ++j) {
-				if (args[j] == options.callback)
+				if (args[j] == options.callbacks)
 					callback_index = j;
 			}
 			function helper_fold(idx) {
@@ -322,7 +324,7 @@ BetaJS.Classes.HelperClassMixin = {
 					BetaJS.SyncAsync.callback(options.callbacks, "success", acc);
 					return;
 				} else if (options.method in self.__helpers[idx]) {
-					var helper = this.__helpers[idx];
+					var helper = self.__helpers[idx];
 					if (callback_index == -1) {
 						helper[options.method].apply(helper, args);
 						helper_fold(idx + 1);
