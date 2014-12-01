@@ -126,16 +126,19 @@ BetaJS.SyncAsync = {
 		var success_ctx = args.success_ctx || func_ctx;
 		var success = args.success;
 		var exception = args.exception;
-		if (type != this.SYNC) {			
-			params.push(this.toCallbackType({
-				context: callbacks.context,
-				success: success ? function (ret) {
-					success.call(success_ctx, ret, callbacks);
-				} : callbacks.success,
-				exception: exception ? function (error) {
-					exception.call(success_ctx, error, callbacks);
-				} : callbacks.exception
-			}, type));
+		if (type != this.SYNC) {
+			if (callbacks) {
+				params.push(this.toCallbackType({
+					context: callbacks.context,
+					success: success ? function (ret) {
+						success.call(success_ctx, ret, callbacks);
+					} : callbacks.success,
+					exception: exception ? function (error) {
+						exception.call(success_ctx, error, callbacks);
+					} : callbacks.exception
+				}, type));
+			} else
+				params.push({});
 			func.apply(func_ctx, params);
 		} else if (callbacks) {
 			try {
@@ -402,7 +405,7 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 		var func = args.func;
 		var params = args.params || [];
 		var callbacks = args.callbacks;
-		var type = args.type || (!callbacks || !this.supportsAsync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
+		var type = args.type || (!callbacks && !this.supportsAsync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
 		var success_ctx = args.success_ctx || this;
 		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, args.success, args.exception);
 	},
