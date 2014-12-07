@@ -57,6 +57,21 @@ BetaJS.Functions = {
 			}
 		}
 		return result;
+	},
+	
+	newClassFunc: function (cls) {
+		return function () {
+			var args = arguments;
+			function F() {
+				return cls.apply(this, args);
+			}
+			F.prototype = cls.prototype;
+			return new F();
+		};
+	},
+	
+	newClass: function (cls) {
+		return this.newClassFunc(cls).apply(this, BetaJS.Functions.getArguments(arguments, 1));
 	}
 	
 };

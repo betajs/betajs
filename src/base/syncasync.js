@@ -405,7 +405,7 @@ BetaJS.SyncAsync.SyncAsyncMixin = {
 		var func = args.func;
 		var params = args.params || [];
 		var callbacks = args.callbacks;
-		var type = args.type || (!callbacks && !this.supportsAsync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
+		var type = args.type || (!callbacks || !this.supportsAsync() ? BetaJS.SyncAsync.SYNC : BetaJS.SyncAsync.ASYNC);
 		var success_ctx = args.success_ctx || this;
 		return BetaJS.SyncAsync.then(func_ctx, func, params, type, callbacks, success_ctx, args.success, args.exception);
 	},

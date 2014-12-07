@@ -7,6 +7,7 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		var list_options = {};
 		if ("compare" in options)
 			list_options["compare"] = options["compare"];
+		list_options.get_ident = BetaJS.Functions.as_method(this.get_ident, this);
 		this.__data = new BetaJS.Lists.ArrayList([], list_options);
 		var self = this;
 		this.__data._ident_changed = function (object, index) {
@@ -20,6 +21,10 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		};
 		if ("objects" in options)
 			this.add_objects(options["objects"]);
+	},
+	
+	get_ident: function (obj) {
+		return BetaJS.Ids.objectId(obj);
 	},
 	
 	set_compare: function (compare) {

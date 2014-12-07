@@ -189,6 +189,8 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 		options = options || {};
 		if ("compare" in options)
 			this._compare = options["compare"];
+		if ("get_ident" in options)
+			this._get_ident = options["get_ident"];
 		this._inherited(BetaJS.Lists.ArrayList, "constructor", objects);
 	},
 	
@@ -243,11 +245,15 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	
 	_re_indexed: function (object) {},
 	
+	__objectId: function(object) {
+		return this._get_ident ? this._get_ident(object) : BetaJS.Ids.objectId(object);
+	},
+	
 	_add: function (object) {
 		var last = this.__items.length;
 		this.__items.push(object);
 		var i = this.re_index(last);
-		this.__idToIndex[BetaJS.Ids.objectId(object)] = i;
+		this.__idToIndex[this.__objectId(object)] = i;
 		return i;
 	},
 	
@@ -258,7 +264,7 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 			this.__ident_changed(this.__items[i-1], i-1);
 		}
 		this.__items.pop();
-		delete this.__idToIndex[BetaJS.Ids.objectId(obj)];
+		delete this.__idToIndex[this.__objectId(obj)];
 		return obj;
 	},
 	
@@ -273,12 +279,12 @@ BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
 	},
 
 	__ident_changed: function (object, index) {
-		this.__idToIndex[BetaJS.Ids.objectId(object)] = index;
+		this.__idToIndex[this.__objectId(object)] = index;
 		this._ident_changed(object, index);
 	},
 
 	get_ident: function (object) {
-		var id = BetaJS.Ids.objectId(object);
+		var id = this.__objectId(object);
 		return id in this.__idToIndex ? this.__idToIndex[id] : null;
 	},
 	

@@ -37,6 +37,7 @@ module.exports = function(grunt) {
 					'src/base/states.js', 
 					'src/base/channels.js',
 					'src/base/rmi.js',
+					'src/base/promise.js',
 					'src/base/structures.js',
 					'src/base/keyvalue.js',
 					'src/net/*.js',
