@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-12-06
+betajs - v1.0.0 - 2014-12-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -2810,6 +2810,25 @@ BetaJS.Class.extend("BetaJS.Classes.PathResolver", {
 	}
 	
 });
+
+
+BetaJS.Class.extend("BetaJS.Classes.MultiDelegatable", {
+
+	constructor: function (objects, methods) {
+		this._inherited(BetaJS.Classes.MultiDelegatable, "constructor");
+		BetaJS.Objs.iter(methods, function (method) {
+			this[method] = function () {
+				var args = arguments;
+				BetaJS.Objs.iter(objects, function (object) {
+					object[method].apply(object, args);
+				}, this);
+				return this;
+			};
+		}, this);
+	}
+	
+});
+
 BetaJS.Properties = {};
 
 

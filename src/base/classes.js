@@ -439,3 +439,21 @@ BetaJS.Class.extend("BetaJS.Classes.PathResolver", {
 	}
 	
 });
+
+
+BetaJS.Class.extend("BetaJS.Classes.MultiDelegatable", {
+
+	constructor: function (objects, methods) {
+		this._inherited(BetaJS.Classes.MultiDelegatable, "constructor");
+		BetaJS.Objs.iter(methods, function (method) {
+			this[method] = function () {
+				var args = arguments;
+				BetaJS.Objs.iter(objects, function (object) {
+					object[method].apply(object, args);
+				}, this);
+				return this;
+			};
+		}, this);
+	}
+	
+});
