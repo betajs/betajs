@@ -151,6 +151,20 @@ BetaJS.Types = {
 		if (this.is_array(x))
 			return "array";
 		return typeof x;
+	},
+	
+	parseType: function (x, type) {
+		if (!BetaJS.Types.is_string(x))
+			return x;
+		type = type.toLowerCase();
+		if (type == "bool" || type == "boolean")
+			return this.parseBool(x);
+		if (type == "int" || type == "integer")
+			return parseInt(x, 10);
+		if (type == "date" || type == "time" || type == "datetime")
+			return parseInt(x, 10);
+		return x;
 	}
+
 
 };

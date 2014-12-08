@@ -3,10 +3,10 @@ BetaJS.Sort = {
 	sort_object : function(object, f) {
 		var a = [];
 		for (var key in object)
-		a.push({
-			key : key,
-			value : object[key]
-		});
+			a.push({
+				key : key,
+				value : object[key]
+			});
 		a.sort(function (x, y) {
 			return f(x.key, y.key, x.value, y.value);
 		});
@@ -27,7 +27,7 @@ BetaJS.Sort = {
 				object[key] = this.deep_sort(object[key], f);
 			return this.sort_object(object, f);
 		} else
-			return f;
+			return object;
 	},
 
 	dependency_sort : function(items, identifier, before, after) {

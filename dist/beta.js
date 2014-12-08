@@ -163,7 +163,21 @@ BetaJS.Types = {
 		if (this.is_array(x))
 			return "array";
 		return typeof x;
+	},
+	
+	parseType: function (x, type) {
+		if (!BetaJS.Types.is_string(x))
+			return x;
+		type = type.toLowerCase();
+		if (type == "bool" || type == "boolean")
+			return this.parseBool(x);
+		if (type == "int" || type == "integer")
+			return parseInt(x, 10);
+		if (type == "date" || type == "time" || type == "datetime")
+			return parseInt(x, 10);
+		return x;
 	}
+
 
 };
 
@@ -1080,7 +1094,7 @@ BetaJS.Objs = {
 	},
 	
 	clone: function (item, depth) {
-		if (!depth || depth <= 0)
+		if (!depth || depth === 0)
 			return item;
 		if (BetaJS.Types.is_array(item))
 			return item.slice(0);
@@ -3401,10 +3415,10 @@ BetaJS.Sort = {
 	sort_object : function(object, f) {
 		var a = [];
 		for (var key in object)
-		a.push({
-			key : key,
-			value : object[key]
-		});
+			a.push({
+				key : key,
+				value : object[key]
+			});
 		a.sort(function (x, y) {
 			return f(x.key, y.key, x.value, y.value);
 		});
@@ -3425,7 +3439,7 @@ BetaJS.Sort = {
 				object[key] = this.deep_sort(object[key], f);
 			return this.sort_object(object, f);
 		} else
-			return f;
+			return object;
 	},
 
 	dependency_sort : function(items, identifier, before, after) {

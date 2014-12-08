@@ -12,7 +12,7 @@ BetaJS.Objs = {
 	},
 	
 	clone: function (item, depth) {
-		if (!depth || depth <= 0)
+		if (!depth || depth === 0)
 			return item;
 		if (BetaJS.Types.is_array(item))
 			return item.slice(0);
