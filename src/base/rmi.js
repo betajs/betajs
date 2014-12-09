@@ -1,6 +1,5 @@
 BetaJS.Class.extend("BetaJS.RMI.Stub", [
 	BetaJS.Classes.InvokerMixin,
-	BetaJS.Events.EventsMixin,
 	{
 		
 	intf: [],
@@ -12,66 +11,11 @@ BetaJS.Class.extend("BetaJS.RMI.Stub", [
 	
 	destroy: function () {
 		this.invoke("_destroy");
-		this.trigger("destroy");
 		this._inherited(BetaJS.RMI.Stub, "destroy");
 	},
 	
-	_new_promise: function () {
-		return {
-			context: this,
-			success: function (f) {
-				this.__success = f;
-				if (this.is_complete && this.is_success)
-					this.__success.call(this.context, this.result);
-				return this;
-			},
-			failure: function (f) {
-				this.__failure = f;
-				if (this.is_complete && this.is_failure)
-					this.__failure.call(this.context);
-				return this;
-			},
-			callbacks: function (c) {
-			    c = c.callbacks ? c.callbacks : c;
-			    this.context = c.context || this;
-			    if (c.success)
-			        this.success(c.success);
-                if (c.failure)
-                    this.failure(c.failure);
-                if (c.exception)
-                    this.failure(c.exception);
-                return this;
-			}
-		};
-	},
-	
-	_promise_success: function (promise, result) {
-		promise.result = result;
-		promise.is_complete = true;
-		promise.is_success = true;
-		if (promise.__success)
-			promise.__success.call(promise.context, result);
-	},
-	
-	_promise_failure: function (promise) {
-		promise.is_complete = true;
-		promise.is_failure = true;		
-		if (promise.__failure)
-			promise.__failure.call(promise.context);
-	},
-	
 	invoke: function (message) {
-		var promise = this._new_promise();
-		this.trigger("send", message, BetaJS.Functions.getArguments(arguments, 1), {
-			context: this,
-			success: function (result) {
-				return this._promise_success(promise, result);
-			},
-			failure: function () {
-				return this._promise_failure(promise);
-			}
-		});
-		return promise;
+		return this.__send(message, BetaJS.Functions.getArguments(arguments, 1));
 	}
 	
 }]);
@@ -91,7 +35,7 @@ BetaJS.Class.extend("BetaJS.RMI.StubSyncer", [
 	invoke: function () {
 		var object = {
 			args: BetaJS.Functions.getArguments(arguments),
-			promise: this.__stub._new_promise()
+			promise: BetaJS.Promise.create()
 		};
 		this.__queue.push(object);
 		if (!this.__current)
@@ -103,33 +47,18 @@ BetaJS.Class.extend("BetaJS.RMI.StubSyncer", [
 		if (this.__queue.length === 0)
 			return;
 		this.__current = this.__queue.shift();
-		this.__stub.invoke.apply(this.__stub, this.__current.args).callbacks({
-			context: this,
-			success: function (result) {
-				this.__stub._promise_success(this.__current.promise, result);
-				this.__next();
-			},
-			failure: function () {
-				this.__stub._promise_failure(this.__current.promise);
-				this.__next();
-			}
-		});
+		this.__stub.invoke.apply(this.__stub, this.__current.args).forwardCallback(this.__current.promise).callback(this.__next, this);
 	}
 	
 }]);
 
 
-BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
-	BetaJS.Events.EventsMixin,
-	{
+BetaJS.Class.extend("BetaJS.RMI.Skeleton", {
 	
 	_stub: null,
 	intf: [],
-	intfSync: [],
 	_intf: {},
-	_intfSync: {},
-	__superIntf: [],
-	__superIntfSync: ["_destroy"],
+	__superIntf: ["_destroy"],
 	
 	constructor: function (options) {
 		this._options = BetaJS.Objs.extend({
@@ -137,11 +66,8 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 		}, options);
 		this._inherited(BetaJS.RMI.Skeleton, "constructor");
 		this.intf = this.intf.concat(this.__superIntf);
-		this.intfSync = this.intfSync.concat(this.__superIntfSync);
 		for (var i = 0; i < this.intf.length; ++i)
 			this._intf[this.intf[i]] = true;
-		for (i = 0; i < this.intfSync.length; ++i)
-			this._intfSync[this.intfSync[i]] = true;
 	},
 	
 	_destroy: function () {
@@ -149,40 +75,23 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 			this.destroy();
 	},
 	
-	destroy: function () {
-		this.trigger("destroy");
-		this._inherited(BetaJS.RMI.Skeleton, "destroy");
-	},
-	
-	invoke: function (message, data, callbacks, caller) {
-		if (!(this._intf[message] || this._intfSync[message])) {
-			this._failure(callbacks);
-			return;
-		}
-		var ctx = {
-			callbacks: callbacks,
-			caller: caller
-		};
-		if (this._intf[message]) {
-			data.unshift(ctx);
-			this[message].apply(this, data);
-		} else {
-			try {
-				this._success(ctx, this[message].apply(this, data));
-			} catch (e) {
-				this._failure(ctx, e);
-			}
+	invoke: function (message, data) {
+		if (!(this._intf[message] || this._intfSync[message]))
+			return BetaJS.Promise.error(message);
+		try {
+			var result = this[message].apply(this, data);
+			return BetaJS.Promise.is(result) ? result : BetaJS.Promise.value(result);
+		} catch (e) {
+			return BetaJS.Promise.error(e);
 		}
 	},
 	
-	_success: function (callbacks, result) {
-		callbacks = callbacks.callbacks ? callbacks.callbacks : callbacks;
-		BetaJS.SyncAsync.callback(callbacks, "success", result);
+	_success: function (result) {
+		return BetaJS.Promise.value(result);
 	},
 	
-	_failure: function (callbacks) {
-		callbacks = callbacks.callbacks ? callbacks.callbacks : callbacks;
-		BetaJS.SyncAsync.callback(callbacks, "failure");
+	_error: function (callbacks) {
+		return BetaJS.Promise.error(result);
 	},
 	
 	stub: function () {
@@ -192,7 +101,7 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", [
 		return stub.indexOf("Skeleton") >= 0 ? stub.replace("Skeleton", "Stub") : stub;
 	}
 	
-}]);
+});
 
 BetaJS.Class.extend("BetaJS.RMI.Server", [
 	BetaJS.Events.EventsMixin,
@@ -236,12 +145,12 @@ BetaJS.Class.extend("BetaJS.RMI.Server", [
 	registerClient: function (channel) {
 		var self = this;
 		this.__channels.add(channel);
-		channel._reply = function (message, data, callbacks) {
+		channel._reply = function (message, data) {
 			var components = message.split(":");
 			if (components.length == 2)
-				self._invoke(channel, components[0], components[1], data, callbacks);
+				return self._invoke(channel, components[0], components[1], data);
 			else
-				BetaJS.SyncAsync.callback(callbacks, "failure");
+				return BetaJS.Promise.error(true);
 		};
 	},
 	
@@ -250,29 +159,26 @@ BetaJS.Class.extend("BetaJS.RMI.Server", [
 		channel._reply = null;
 	},
 	
-	_invoke: function (channel, instance_id, method, data, callbacks) {
+	_invoke: function (channel, instance_id, method, data) {
 		var instance = this.__instances[instance_id];
 		if (!instance) {
 			this.trigger("loadInstance", channel, instance_id);
 			instance = this.__instances[instance_id];
 		}
-		if (!instance) {
-			BetaJS.SyncAsync.callback(callbacks, "failure");
-			return;
-		}
+		if (!instance)
+			return BetaJS.Promise.error(instance_id);
 		instance = instance.instance;
-		var self = this;
-		instance.invoke(method, data, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
+		return instance.invoke(method, data, channel).mapSuccess(function (result) {
 			if (BetaJS.RMI.Skeleton.is_class_instance(result) && result.instance_of(BetaJS.RMI.Skeleton)) {
-				self.registerInstance(result);
-				BetaJS.SyncAsync.callback(callbacks, "success", {
+				this.registerInstance(result);
+				return {
 					__rmi_meta: true,
 					__rmi_stub: result.stub(),
 					__rmi_stub_id: BetaJS.Ids.objectId(result)
-				});
+				};
 			} else
-				BetaJS.SyncAsync.callback(callbacks, "success", result);
-		}), channel);
+				return result;
+		}, this);
 	}
 		
 }]);
@@ -323,14 +229,11 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 		var instance = new class_type();
 		this.__instances[BetaJS.Ids.objectId(instance, instance_name)] = instance;
 		var self = this;
-		instance.on("send", function (message, data, callbacks) {
-			this.__channel.send(instance_name + ":" + message, data, BetaJS.SyncAsync.mapSuccess(callbacks, function (result) {
-				if (BetaJS.Types.is_object(result) && result.__rmi_meta)
-					BetaJS.SyncAsync.callback(callbacks, "success", self.acquire(result.__rmi_stub, result.__rmi_stub_id));
-				else
-					BetaJS.SyncAsync.callback(callbacks, "success", result);
-			}));
-		}, this);
+		instance.__send = function (message, data) {
+			return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
+				return BetaJS.Types.is_object(result) && result.__rmi_meta ? this.acquire(result.__rmi_stub, result.__rmi_stub_id) : result;
+			}, self);
+		};
 		return instance;		
 	},
 	

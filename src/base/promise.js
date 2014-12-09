@@ -17,6 +17,14 @@ BetaJS.Promise = {
 		return this.is(value) ? value : new this.Promise(value, null, true);
 	},
 	
+	eventualValue: function (value) {
+		var promise = new this.Promise();
+		BetaJS.Async.eventually(function () {
+			promise.asyncSuccess(value);
+		});
+		return promise;
+	},
+
 	error: function (error) {
 		return this.is(error) ? error : new this.Promise(null, error, true);
 	},
@@ -253,13 +261,6 @@ BetaJS.Promise.Promise.prototype.asyncCallbackFunc = function () {
 BetaJS.Promise.Promise.prototype.forwardCallback = function (promise) {
 	this.callback(promise.asyncCallback, promise);
 	return this;
-};
-
-BetaJS.Promise.Promise.prototype.asCallback = function () {
-	return {
-		success: BetaJS.Functions.as_method(this.asyncSuccess, this),
-		exception: BetaJS.Functions.as_method(this.asyncError, this)
-	};
 };
 
 BetaJS.Promise.Promise.prototype.mapSuccess = function (func, ctx) {

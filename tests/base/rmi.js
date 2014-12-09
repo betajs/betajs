@@ -7,8 +7,8 @@ test("test rmi", function() {
 
 		intf : ["test"],
 
-		test : function(callbacks, a, b, c) {
-			this._success(callbacks, a + b + c);
+		test : function(a, b, c) {
+			return this._success(a + b + c);
 		}
 	});
 
@@ -16,10 +16,15 @@ test("test rmi", function() {
 
 	var skeleton = new Skeleton();
 
-	stub.on("send", skeleton.invoke, skeleton);
+	stub.__send = function () {
+		return skeleton.invoke.apply(skeleton, arguments);
+	};
+	
+	stop();
 
 	stub.test(1, 2, 3).success(function(result) {
 		QUnit.equal(result, 6);
+		start();
 	});
 
 });
@@ -38,16 +43,15 @@ test("test rmi client server", function() {
 
 	var Skeleton = BetaJS.RMI.Skeleton.extend("Skeleton", {
 
-		intf : ["test"],
-		intfSync : ["test2"],
+		intf : ["test", "test2"],
 
 		constructor : function(d) {
 			this._inherited(Skeleton, "constructor");
 			this.__d = d;
 		},
 
-		test : function(callbacks, a, b, c) {
-			this._success(callbacks, a + b + c + this.__d);
+		test : function(a, b, c) {
+			return this._success(a + b + c + this.__d);
 		},
 
 		test2 : function(a, b, c) {
@@ -69,17 +73,22 @@ test("test rmi client server", function() {
 
 	var stub_x = client.acquire(Stub, "x");
 	var stub_y = client.acquire(Stub, "y");
+	
+	stop(); stop(); stop();
 
 	stub_x.test(1, 2, 3).success(function(result) {
 		QUnit.equal(result, 106);
+		start();
 	});
 
 	stub_x.test2(1, 2, 3).success(function(result) {
 		QUnit.equal(result, 106);
+		start();
 	});
 
 	stub_y.test(1, 2, 3).success(function(result) {
 		QUnit.equal(result, 1006);
+		start();
 	});
 
 });
@@ -104,7 +113,7 @@ test("test rmi client server create instance", function() {
 
 	var Skeleton = BetaJS.RMI.Skeleton.extend("BetaJS.Test.Skeleton", {
 
-		intfSync : ["generate"],
+		intf : ["generate"],
 
 		generate : function() {
 			return new SkeletonX();
@@ -113,7 +122,7 @@ test("test rmi client server create instance", function() {
 
 	var SkeletonX = BetaJS.RMI.Skeleton.extend("BetaJS.Test.SkeletonX", {
 
-		intfSync : ["foo"],
+		intf : ["foo"],
 
 		foo : function() {
 			return "bar";

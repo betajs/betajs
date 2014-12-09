@@ -15,7 +15,7 @@ module.exports = function(grunt) {
 					'src/base/types.js',
 					'src/base/strings.js',
 					'src/base/functions.js',
-					'src/base/syncasync.js',
+					'src/base/async.js',
 					'src/base/scopes.js', 
 					'src/base/ids.js', 
 					'src/base/tokens.js',
@@ -75,16 +75,6 @@ module.exports = function(grunt) {
             	src: [
             		"src/*/*.js"
             	]
-			},
-			docs: {
-				command: "java -Djsdoc.dir=$JSDOCDIR -Djsdoc.template.dir=$JSDOCTEMPLATEDIR -jar $JSDOCDIR/jsrun.jar $JSDOCDIR/app/run.js ./src -d=./docs -r -p $@",
-		    	options: {
-                	stdout: true,
-                	stderr: true,
-            	},
-            	src: [
-            		"src/*/*.js"
-            	]
 			}
 		},
 	});
@@ -97,7 +87,6 @@ module.exports = function(grunt) {
 	grunt.registerTask('default', ['newer:concat', 'newer:uglify']);
 	grunt.registerTask('qunit', ['shell:qunit']);
 	grunt.registerTask('lint', ['shell:lint']);	
-	grunt.registerTask('docs', ['shell:docs']);
 	grunt.registerTask('check', ['lint', 'qunit']);
 
 };

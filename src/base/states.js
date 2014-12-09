@@ -168,9 +168,7 @@ BetaJS.Class.extend("BetaJS.States.State", {
     },
     
     eventualResume: function () {
-    	BetaJS.SyncAsync.eventually(function () {
-    		this.resume();
-    	}, this);
+    	BetaJS.Async.eventually(this.resume, this);
     },
     
     resume: function () {

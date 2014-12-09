@@ -94,9 +94,11 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 		}));
 	},
 	
-	_reply: function (message, data, callbacks) {},
+	// Returns Promise
+	_reply: function (message, data) {},
 	
-	send: function (message, data, callbacks, options) {
+	send: function (message, data, options) {
+		var promise = BetaJS.Promise.create();
 		options = options || {};
 		if (options.stateless) {
 			this.__sender.send("send", {
@@ -104,6 +106,7 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 				data: data,
 				stateless: true
 			});
+			promise.asyncSuccess(true);
 		} else {
 			this.__sent_id++;
 			this.__sent[this.__sent_id] = {
@@ -112,7 +115,7 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 				tries: 1,
 				time: BetaJS.Time.now(),
 				id: this.__sent_id,
-				callbacks: callbacks
+				promise: promise
 			};
 			this.__sender.send("send", {
 				message: message,
@@ -120,6 +123,7 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 				id: this.__sent_id
 			});
 		}
+		return promise;
 	},
 	
 	__reply: function (data) {
@@ -132,21 +136,17 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 			this.__received[data.id].time = BetaJS.Time.now();
 			this.__received[data.id].returned = false;
 			this.__received[data.id].success = false;
-			this._reply(data.message, data.data, {
-				context: this,
-				success: function (result) {
-					this.__received[data.id].reply = result;
-					this.__received[data.id].success = true;
-				}, complete: function () {
-					this.__received[data.id].returned = true;
-					this.__sender.send("reply", {
-						id: data.id,
-						reply: data.reply,
-						success: data.success
-					});
-				}
-			});
-			  
+			this._reply(data.message, data.data).success(function (result) {
+				this.__received[data.id].reply = result;
+				this.__received[data.id].success = true;
+			}, this).callback(function () {
+				this.__received[data.id].returned = true;
+				this.__sender.send("reply", {
+					id: data.id,
+					reply: data.reply,
+					success: data.success
+				});
+			}, this);			  
 		} else if (this.__received[data.id].returned) {
 			this.__sender.send("reply", {
 				id: data.id,
@@ -158,7 +158,7 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 	
 	__complete: function (data) {
 		if (this.__sent[data.id]) {
-			BetaJS.SyncAsync.callback(this.__sent[data.id].callbacks, "success", data.reply);
+			this.__sent[data.id].promise.asyncSuccess(data.reply);
 			delete this.__sent[data.id];
 		}
 	},
@@ -181,7 +181,7 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 						id: sent.id
 					});
 				} else {
-					BetaJS.SyncAsync.callback(sent.callbacks, "failure", {
+					sent.promise.asyncError({
 						message: sent.message,
 						data: sent.data
 					});

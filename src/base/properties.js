@@ -237,33 +237,3 @@ BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	}
 	
 }]);
-
-
-
-BetaJS.Class.extend("BetaJS.Properties.PropertiesData", {
-	
-	constructor: function (properties) {
-		this._inherited(BetaJS.Properties.PropertiesData, "constructor");
-		this.__properties = properties;
-		this.data = this.__properties.getAll();
-		this.__properties.on("change", function (key, value) {
-			this.data[key] = value;
-		}, this);
-		this.__properties.on("unset", function (key) {
-			delete this.data[key];
-		}, this);
-		this.__properties.on("destroy", function () {
-			this.destroy();
-		}, this);
-	},
-	
-	destroy: function () {
-		this.__properties.off(null, null, this);
-		this._inherited(BetaJS.Properties.PropertiesData, "destroy");
-	},
-	
-	properties: function () {
-		return this.__properties;
-	}
-	
-});

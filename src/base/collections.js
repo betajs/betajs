@@ -138,49 +138,6 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 }]);
 
 
-BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
-	
-	constructor: function (collection) {
-		this._inherited(BetaJS.Collections.CollectionData, "constructor");
-		this.__collection = collection;
-		this.__properties_data = {};
-		this.data = {};
-		this.properties = {};
-		this.__collection.iterate(this.__insert, this);
-		this.__collection.on("add", this.__insert, this);
-		this.__collection.on("remove", this.__remove, this);
-		this.__collection.on("destroy", function () {
-			this.destroy();
-		}, this);
-	},
-	
-	destroy: function () {
-		for (var key in this.__properties_data)
-			this.__properties_data[key].destroy();
-		this._inherited(BetaJS.Collections.CollectionData, "destroy");
-	},
-	
-	collection: function () {
-		return this.__collection;
-	},
-	
-	__insert: function (property) {
-		var id = BetaJS.Ids.objectId(property);
-		this.__properties_data[id] = new BetaJS.Properties.PropertiesData(property);
-		this.data[id] = this.__properties_data[id].data;
-		this.properties[id] = property;
-	},
-	
-	__remove: function (property) {
-		var id = BetaJS.Ids.objectId(property);
-		this.__properties_data[id].destroy();
-		delete this.__properties_data[id];
-		delete this.data[id];
-		delete this.properties[id];
-	}
-	
-});
-
 
 
 BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {

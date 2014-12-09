@@ -53,7 +53,7 @@ BetaJS.Events.EventsMixin = {
 			object.max_delay.start();
 		if (!object.min_delay && !object.max_delay) {
 			if (object.eventually)
-				BetaJS.SyncAsync.eventually(object.callback, params, object.context || this);
+				BetaJS.Async.eventually(object.callback, params, object.context || this);
 			else
 				object.callback.apply(object.context || this, params);
 		} else
