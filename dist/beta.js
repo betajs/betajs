@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-12-09
+betajs - v1.0.0 - 2014-12-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -4786,9 +4786,6 @@ BetaJS.KeyValue.KeyValueStore.extend("BetaJS.KeyValue.DefaultKeyValueStore", {
  *  <li>uri: target uri</li>
  *  <li>method: get, post, ...</li>
  *  <li>data: data as JSON to be passed with the request</li>
- *  <li>success_callback(data): will be called when request was successful</li>
- *  <li>failure_callback(status_code, status_text, data): will be called when request was not successful</li>
- *  <li>complete_callback(): will be called when the request has been made</li>
  * </ul>
  * 
  */
@@ -4812,17 +4809,17 @@ BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
 		}
 	},
 	
-	asyncCall: function (options, callbacks) {
-		this._asyncCall(BetaJS.Objs.extend(BetaJS.Objs.clone(this.__options, 1), options), callbacks);
+	asyncCall: function (options) {
+		return this._asyncCall(BetaJS.Objs.extend(BetaJS.Objs.clone(this.__options, 1), options));
 	},
 	
-	call: function (options, callbacks) {
-		return callbacks ? this.asyncCall(options, callbacks) : this.syncCall(options);
+	_syncCall: function (options) {
+		throw "Unsupported";
 	},
-	
-	_syncCall: function (options) {},
-	
-	_asyncCall: function (options, callbacks) {}
+
+	_asyncCall: function (options) {
+		throw "Unsupported";
+	}
 	
 });
 
