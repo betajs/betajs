@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-01-06
+betajs - v1.0.0 - 2015-01-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -2782,7 +2782,7 @@ BetaJS.Properties.PropertiesMixin = {
 	__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
 	
 	set: function (key, value) {
-		if (BetaJS.Types.is_object(value) && value.guid == this.__properties_guid) {
+		if (BetaJS.Types.is_object(value) && value && value.guid == this.__properties_guid) {
 			if (value.properties)
 				this.bind(key, value.properties, {secondKey: value.key});
 			if (value.func)
