@@ -47,14 +47,25 @@ BetaJS.Functions = {
      * @param pattern typed pattern
      * @return matched arguments as associative array 
      */	
-	matchArgs: function (args, pattern) {
-		var i = 0;
+	matchArgs: function (args, skip, pattern) {
+		if (arguments.length < 3) {
+			pattern = skip;
+			skip = 0;
+		}
+		var i = skip;
 		var result = {};
 		for (var key in pattern) {
-			if (pattern[key] === true || BetaJS.Types.type_of(args[i]) == pattern[key]) {
+			var config = pattern[key];
+			if (config === true)
+				config = {required: true};
+			else if (typeof config == "string")
+				config = {type: config};
+			if (config.required || (config.type && BetaJS.Types.type_of(args[i]) == config.type)) {
 				result[key] = args[i];
 				i++;
-			}
+			} else if (config.def) {
+				result[key] = BetaJS.Types.is_function(config.def) ? config.def(result) : config.def;
+			}				
 		}
 		return result;
 	},

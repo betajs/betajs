@@ -49,7 +49,7 @@ test("test properties computed", function() {
 test("test sub properties", function() {
     var e = new BetaJS.Properties.Properties();
     var z = 0;
-    e.on("change:test->abc", function() {
+    e.on("change:test.abc", function() {
         z++;
     });
     e.set("test.abc", 1);
@@ -62,4 +62,44 @@ test("test sub properties", function() {
     QUnit.equal(z, 2);
     e.set("test.xyz", 4);
     QUnit.equal(z, 2);
+});
+
+test("test properties sub binding", function() {
+    var e = new BetaJS.Properties.Properties();
+    var f = new BetaJS.Properties.Properties();
+    e.set("ebase.test.x", 2);
+    e.bind("ebase", f, {secondKey: "fbase", deep: true});
+    QUnit.equal(f.get("fbase.test.x"), 2);
+    var echange = 0;
+    var fchange = 0;
+    e.on("change:ebase.test.y", function () {
+    	echange++;
+    });
+    f.on("change:fbase.test.y", function () {
+    	fchange++;
+    });
+    f.set("fbase.test.y", 5);
+    QUnit.equal(f.get("fbase.test.y"), 5);
+    QUnit.equal(e.get("ebase.test.y"), 5);
+    QUnit.equal(echange, 1);
+    QUnit.equal(fchange, 1);
+    e.set("ebase.test.y", 10);
+    QUnit.equal(f.get("fbase.test.y"), 10);
+    QUnit.equal(e.get("ebase.test.y"), 10);
+    QUnit.equal(echange, 2);
+    QUnit.equal(fchange, 2);
+});
+
+test("test properties sub binding full", function() {
+    var e = new BetaJS.Properties.Properties();
+    var f = new BetaJS.Properties.Properties();
+    e.bind("", f, {deep: true});
+    e.set("x", 2);
+    f.set("y", 3);
+    e.set("test.abc", 5);
+    f.set("test.xyz", 6);
+    QUnit.equal(e.get("y"), 3);
+    QUnit.equal(f.get("x"), 2);
+    QUnit.equal(e.get("test.xyz"), 6);
+    QUnit.equal(f.get("test.abc"), 5);
 });

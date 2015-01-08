@@ -1,4 +1,4 @@
-test("test 1", function() {
+test("promise test 1", function() {
 	stop();
 	var promise = BetaJS.Promise.create();
 	promise.success(function (value) {
@@ -8,7 +8,7 @@ test("test 1", function() {
 	promise.asyncSuccess(4);
 });
 
-test("test 2", function() {
+test("promise test 2", function() {
 	stop();
 	var promise1 = BetaJS.Promise.create();
 	var promise2 = BetaJS.Promise.create();
@@ -21,7 +21,7 @@ test("test 2", function() {
 	promise2.asyncSuccess(10);
 });
 
-test("test 3", function() {
+test("promise test 3", function() {
 	stop();
 	var promise = BetaJS.Promise.create(5);
 	promise.success(function (value) {
@@ -30,7 +30,7 @@ test("test 3", function() {
 	});
 });
 
-test("test 4", function () {
+test("promise test 4", function () {
 	stop();
 	var promise1 = BetaJS.Promise.create();
 	var promise2 = BetaJS.Promise.create();
@@ -46,7 +46,7 @@ test("test 4", function () {
 	promise2.asyncSuccess(3);
 });
 
-test("test 5", function () {
+test("promise test 5", function () {
 	stop();
 	var promise1 = BetaJS.Promise.create();
 	var promise2 = BetaJS.Promise.create();
@@ -63,9 +63,9 @@ test("test 5", function () {
 	promise2.asyncSuccess(3);
 });
 
-test("test 6", function () {
+test("promise test 6", function () {
 	stop();
-	var Cls = BetaJS.Class.extend("Cls", {
+	var Cls = BetaJS.Class.extend("", {
 		constructor: function (x) {
 			this._inherited(Cls, "constructor");
 			this.x = x;

@@ -86,6 +86,10 @@ BetaJS.Strings = {
 	last_after : function(s, needle) {
 		return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
 	},
+	
+	first_after: function (s, needle) {
+		return s.substring(s.indexOf(needle) + 1, s.length);
+	},
 
 	EMAIL_ADDRESS_REGEX : /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
 

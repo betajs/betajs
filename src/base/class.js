@@ -159,15 +159,19 @@ BetaJS.Class.prototype.instance_of = function (cls) {
 	return this.cls.ancestor_of(cls);
 };
 
+BetaJS.Class.prototype.__clsguid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
+
 BetaJS.Class.ancestor_of = function (cls) {
 	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
+};
+
+BetaJS.Class.is_instance_of = function (instance) {
+	return instance && instance.__clsguid == BetaJS.Class.prototype.__clsguid && instance.instance_of(this);
 };
 
 BetaJS.Class.prototype.cid = function () {
 	return BetaJS.Ids.objectId(this);
 };
-
-
 
 BetaJS.Class.prototype.cls = BetaJS.Class;
 

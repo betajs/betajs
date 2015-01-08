@@ -457,3 +457,26 @@ BetaJS.Class.extend("BetaJS.Classes.MultiDelegatable", {
 	}
 	
 });
+
+
+BetaJS.Class.extend("BetaJS.Classes.ClassRegistry", {
+	
+	constructor: function () {
+		this._inherited(BetaJS.Classes.ClassRegistry, "constructor");
+		this._classes = {};
+	},
+	
+	register: function (key, cls) {
+		this._classes[key] = cls;
+	},
+	
+	get: function (key) {
+		return this._classes[key];
+	},
+	
+	create: function (key) {
+		var cons = BetaJS.Functions.newClassFunc(this.get(key));
+		return cons.apply(this, BetaJS.Functions.getArguments(arguments, 1));
+	}	
+	
+});

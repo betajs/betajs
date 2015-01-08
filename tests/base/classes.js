@@ -1,6 +1,6 @@
 test("test multi delegatable", function() {
 	var sum = 0;
-	var Cls = BetaJS.Class.extend("Cls", {
+	var Cls = BetaJS.Class.extend("", {
 		constructor: function (ident) {
 			this._inherited(Cls, "constructor");
 			this.ident = ident;

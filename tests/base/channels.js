@@ -1,4 +1,4 @@
-test("test channels", function() {
+test("test channels 1", function() {
 	stop();
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
@@ -15,7 +15,7 @@ test("test channels", function() {
 	});
 });
 
-test("test channels", function() {
+test("test channels 2", function() {
 	stop();stop();
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();

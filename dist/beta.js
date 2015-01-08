@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-12-13
+betajs - v1.0.0 - 2015-01-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -269,6 +269,10 @@ BetaJS.Strings = {
 	last_after : function(s, needle) {
 		return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
 	},
+	
+	first_after: function (s, needle) {
+		return s.substring(s.indexOf(needle) + 1, s.length);
+	},
 
 	EMAIL_ADDRESS_REGEX : /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
 
@@ -423,14 +427,25 @@ BetaJS.Functions = {
      * @param pattern typed pattern
      * @return matched arguments as associative array 
      */	
-	matchArgs: function (args, pattern) {
-		var i = 0;
+	matchArgs: function (args, skip, pattern) {
+		if (arguments.length < 3) {
+			pattern = skip;
+			skip = 0;
+		}
+		var i = skip;
 		var result = {};
 		for (var key in pattern) {
-			if (pattern[key] === true || BetaJS.Types.type_of(args[i]) == pattern[key]) {
+			var config = pattern[key];
+			if (config === true)
+				config = {required: true};
+			else if (typeof config == "string")
+				config = {type: config};
+			if (config.required || (config.type && BetaJS.Types.type_of(args[i]) == config.type)) {
 				result[key] = args[i];
 				i++;
-			}
+			} else if (config.def) {
+				result[key] = BetaJS.Types.is_function(config.def) ? config.def(result) : config.def;
+			}				
 		}
 		return result;
 	},
@@ -1127,15 +1142,19 @@ BetaJS.Class.prototype.instance_of = function (cls) {
 	return this.cls.ancestor_of(cls);
 };
 
+BetaJS.Class.prototype.__clsguid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
+
 BetaJS.Class.ancestor_of = function (cls) {
 	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
+};
+
+BetaJS.Class.is_instance_of = function (instance) {
+	return instance && instance.__clsguid == BetaJS.Class.prototype.__clsguid && instance.instance_of(this);
 };
 
 BetaJS.Class.prototype.cid = function () {
 	return BetaJS.Ids.objectId(this);
 };
-
-
 
 BetaJS.Class.prototype.cls = BetaJS.Class;
 
@@ -1798,6 +1817,8 @@ BetaJS.Events.EventsMixin = {
 			event = events.shift();
 			if (!event)
 				break;
+			if (!this.__events_mixin_events[event])
+				this._notify("register_event", event);
 			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
 			this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
 		}
@@ -1823,6 +1844,7 @@ BetaJS.Events.EventsMixin = {
 					if (this.__events_mixin_events[event].count() === 0) {
 						this.__events_mixin_events[event].destroy();
 						delete this.__events_mixin_events[event];
+						this._notify("unregister_event", event);
 					}
 				}
 			}
@@ -1837,6 +1859,7 @@ BetaJS.Events.EventsMixin = {
 				if (this.__events_mixin_events[event].count() === 0) {
 					this.__events_mixin_events[event].destroy();
 					delete this.__events_mixin_events[event];
+					this._notify("unregister_event", event);
 				}
 			}
 		}
@@ -2409,31 +2432,72 @@ BetaJS.Class.extend("BetaJS.Classes.MultiDelegatable", {
 	
 });
 
-BetaJS.Properties = {};
 
-
-BetaJS.Properties.TYPE_VALUE = 0;
-BetaJS.Properties.TYPE_BINDING = 1;
-BetaJS.Properties.TYPE_COMPUTED = 2;
-
-
-
-BetaJS.Properties.PropertiesMixin = {
-    
-    raw_get: function (key) {
-        return key in this.__properties ? this.__properties[key].value : null;    
-    },
+BetaJS.Class.extend("BetaJS.Classes.ClassRegistry", {
+	
+	constructor: function () {
+		this._inherited(BetaJS.Classes.ClassRegistry, "constructor");
+		this._classes = {};
+	},
+	
+	register: function (key, cls) {
+		this._classes[key] = cls;
+	},
 	
 	get: function (key) {
-	    keys = key.split(".");
-	    var value = this.raw_get(keys[0]);
-	    for (var i = 1; i < keys.length; ++i) {
-	       if (value && BetaJS.Types.is_object(value))
-	           value = value[keys[i]];
-	       else
-	           return null;
-	    }
-		return value;
+		return this._classes[key];
+	},
+	
+	create: function (key) {
+		var cons = BetaJS.Functions.newClassFunc(this.get(key));
+		return cons.apply(this, BetaJS.Functions.getArguments(arguments, 1));
+	}	
+	
+});
+BetaJS.Properties = {};
+
+BetaJS.Properties.PropertiesMixin = {
+
+	_notifications: {
+		"construct": function () {
+			this.__properties = {
+				// hierarchical organization
+				data: {},
+				// hierarchical organization
+				watchers: {
+					children: {},
+					eventCount: 0,
+					parent: null,
+					key: null
+				},
+				// flat organization
+				computed: {},
+				// flat organization
+				bindings: {}
+			};
+		},
+		"destroy": function () {
+			BetaJS.Objs.iter(this.__properties.bindings, function (value, key) {
+				this.unbind(key);
+			}, this);
+			this.trigger("destroy");
+		},
+		"register_event": function (event) {
+			BetaJS.Objs.iter(["change", "unset", "deepchange", "deepunset", "strongdeepchange", "strongchange"], function (eventType) {
+				if (BetaJS.Strings.starts_with(event, eventType + ":"))
+					this.__registerWatcher(BetaJS.Strings.strip_start(event, eventType + ":"), eventType);
+			}, this);
+		},
+		"unregister_event": function (event) {
+			BetaJS.Objs.iter(["change", "unset", "deepchange", "deepunset", "strongdeepchange", "strongchange"], function (eventType) {
+				if (BetaJS.Strings.starts_with(event, eventType + ":"))
+					this.__unregisterWatcher(BetaJS.Strings.strip_start(event, eventType + ":"), eventType);
+			}, this);
+		}
+	},
+	
+	get: function (key) {
+		return BetaJS.Properties.Scopes.get(key, this.__properties.data);
 	},
 	
 	_canSet: function (key, value) {
@@ -2444,196 +2508,310 @@ BetaJS.Properties.PropertiesMixin = {
 		return value;
 	},
 	
-	_afterSet: function (key, value, options) {
-	},
+	_afterSet: function (key, value, options) {},
 	
 	has: function (key) {
-		return key in this.__properties;
+		return BetaJS.Properties.Scopes.has(key, this.__properties.data);
 	},
 	
-	setAll: function (obj, options) {
+	setAll: function (obj) {
 		for (var key in obj)
-			this.set(key, obj[key], options);
+			this.set(key, obj[key]);
+		return this;
 	},
 	
 	keys: function (mapped) {
-		return BetaJS.Objs.keys(this.__properties, mapped);
+		return BetaJS.Objs.keys(this.__properties.data, mapped);
+	},
+	
+	data: function () {
+		return this.__properties.data;
+	},
+	
+	getAll: function () {
+		return BetaJS.Objs.clone(this.__properties.data, 1);
+	},
+	
+	__registerWatcher: function (key, event) {
+		var keys = key ? key.split(".") : [];
+		var current = this.__properties.watchers;
+		for (var i = 0; i < keys.length; ++i) {
+			if (!(keys[i] in current.children)) {
+				current.children[keys[i]] = {
+					parent: current,
+					eventCount: 0,
+					children: {},
+					key: keys[i]
+				};
+			}
+			current = current.children[keys[i]];
+		}
+		current.eventCount++;
+	},
+	
+	__unregisterWatcher: function (key, event) {
+		var keys = key ? key.split(".") : [];
+		var current = this.__properties.watchers;
+		for (var i = 0; i < keys.length; ++i) {
+			if (current)
+				current = current.children[keys[i]];
+		}
+		if (!current)
+			return;
+		current.eventCount--;
+		while (current.eventCount <= 0 && BetaJS.Types.is_empty(current.children) && current.parent) {
+			var parent = current.parent;
+			delete parent.children[current.key];
+			current = parent;
+		}
+	},
+	
+	uncompute: function (key) {
+		if (key in this.__properties.computed) {
+			BetaJS.Objs.iter(this.__properties.computed[key].dependencies, function (dependency) {
+				dependency.properties.off("change:" + dependency.key, null, dependency);
+			}, this);
+			delete this.__properties.computed[key];
+		}
+		return this;
+	},
+	
+	compute: function (key, func) {
+		var args = BetaJS.Functions.matchArgs(arguments, 2, {
+			setter: "function",
+			context: {
+				type: "object",
+				def: this
+			},
+			dependencies: true
+		});
+		this.uncompute(key);
+		var deps = [];
+		BetaJS.Objs.iter(args.dependencies, function (dep) {
+			if (BetaJS.Types.is_string(dep))
+				deps.push({properties: this, key: dep});
+			else
+				deps.push({properties: dep[0], key: dep[1]});
+		}, this);
+		var computed = {
+			ignore: 0,
+			func: func,
+			context: args.context,
+			setter: args.setter,
+			dependencies: deps
+		};
+		this.__properties.computed[key] = computed;
+		var self = this;
+		function recompute() {
+			if (computed.ignore > 0)
+				return;
+			var values = BetaJS.Objs.map(deps, function (dep) {
+				return dep.properties.get(dep.key);
+			});
+			self.set(key, func.apply(args.context, values));
+		}
+		for (var i = 0; i < deps.length; ++i) {
+			deps[i].properties.on("change:" + deps[i].key, function () {
+				recompute();
+			}, deps[i]);
+		}
+		recompute();
+		return this;
+	},
+	
+	unbind: function (key, props) {
+		if (key in this.__properties.bindings) {
+			for (i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
+				var binding = this.__properties.bindings[key][i];
+				if (!props || props == binding) {
+					if (binding.left) 
+						binding.properties.off(null, null, binding);
+					if (binding.right)
+						this.off(null, null, binding);
+					this.__properties.bindings[key].splice(i, 1);
+					i--;
+				}
+			}
+			if (this.__properties.bindings[key].length === 0)
+				delete this.__properties.bindings[key];
+		}
+		return this;
+	},
+	
+	bind: function (key, properties, options) {
+		options = BetaJS.Objs.extend({
+			secondKey: key,
+			left: true,
+			right: true,
+			deep: false
+		}, options);
+		var binding = {
+			key: options.secondKey,
+			left: options.left,
+			right: options.right,
+			deep: options.deep,
+			properties: properties
+		};
+		this.__properties.bindings[key] = this.__properties.bindings[key] || [];
+		this.__properties.bindings[key].push(binding);
+		if (binding.left) {
+			var self = this;
+			binding.properties.on("strongchange:" + binding.key, function (value) {
+				self.set(key, value);
+			}, binding);
+			binding.properties.on("unset:" + binding.key, function (value) {
+				self.unset(key);
+			}, binding);
+			if (binding.deep) {
+				binding.properties.on("strongdeepchange:" + binding.key, function (value, oldValue, subKey) {
+					if (self.get(key ? key + "." + subKey : subKey) === value)
+						self.__setChanged(key ? key + "." + subKey : subKey, value, oldValue, true);
+					else
+						self.set(key ? key + "." + subKey : subKey, value);					
+				}, binding);
+				binding.properties.on("deepunset:" + binding.key, function (oldValue, subKey) {
+					if (!self.has(key ? key + "." + subKey : subKey))
+						self.__unsetChanged(key ? key + "." + subKey : subKey, oldValue);
+					else
+						self.unset(key ? key + "." + subKey : subKey);					
+				}, binding);
+			}
+			if (!binding.right || !this.has(key))
+				this.set(key, binding.properties.get(binding.key));
+		}
+		if (binding.right) {
+			this.on("strongchange:" + key, function (value) {
+				binding.properties.set(binding.key, value);
+			}, binding);
+			this.on("unset:" + key, function (value) {
+				binding.properties.unset(binding.key);
+			}, binding);
+			if (binding.deep) {
+				this.on("strongdeepchange:" + key, function (value, oldValue, subKey) {
+					if (binding.properties.get(binding.key ? binding.key + "." + subKey : subKey) === value)
+						binding.properties.__setChanged(binding.key ? binding.key + "." + subKey : subKey, value, oldValue, true);
+					else
+						binding.properties.set(binding.key ? binding.key + "." + subKey : subKey, value);
+				}, binding);
+				this.on("deepunset:" + key, function (oldValue, subKey) {
+					if (!binding.properties.has(binding.key ? binding.key + "." + subKey : subKey))
+						binding.properties.__unsetChanged(binding.key ? binding.key + "." + subKey : subKey, oldValue);
+					else
+						binding.properties.unset(binding.key ? binding.key + "." + subKey : subKey);
+				}, binding);
+			}
+			if (!binding.left || this.has(key))
+				binding.properties.set(binding.key, this.get(key));
+		}
+		binding.properties.on("destroy", function () {
+			this.unbind();
+		}, this);
+		return this;
+	},
+	
+	__unsetChanged: function (key, oldValue) {
+		this.trigger("unset", key, oldValue);
+		var keys = key ? key.split(".") : [];
+		var current = this.__properties.watchers;
+		var head = "";
+		var tail = key;
+		for (var i = 0; i < keys.length; ++i) {
+			if (current.eventCount > 0)
+				this.trigger("deepunset:" + head, oldValue, tail);
+			if (!(keys[i] in current.children))
+				return this;
+			current = current.children[keys[i]];
+			head = head ? (head + "." + keys[i]) : keys[i];
+			tail = BetaJS.Strings.first_after(tail, ".");
+		}
+		function process_unset(current, key, oldValue) {
+			if (BetaJS.Types.is_undefined(oldValue))
+				return;
+			if (current.eventCount > 0)
+				this.trigger("unset:" + key, oldValue);
+			BetaJS.Objs.iter(current.children, function (child, subkey) {
+				process_unset.call(this, child, key ? (key + "." + subkey) : subkey, oldValue[subkey]);
+			}, this);
+		}
+		process_unset.call(this, current, key, oldValue);
+		return this;
+	},
+	
+	__setChanged: function (key, value, oldValue, notStrong) {
+		this.trigger("change", key, value, oldValue);
+		var keys = key ? key.split(".") : [];
+		var current = this.__properties.watchers;
+		var head = "";
+		var tail = key;
+		for (var i = 0; i < keys.length; ++i) {
+			if (current.eventCount > 0) {
+				if (!notStrong)
+					this.trigger("strongdeepchange:" + head, value, oldValue, tail);
+				this.trigger("deepchange:" + head, value, oldValue, tail);
+			}
+			if (!(keys[i] in current.children))
+				return;
+			current = current.children[keys[i]];
+			head = head ? (head + "." + keys[i]) : keys[i];
+			tail = BetaJS.Strings.first_after(tail, ".");
+		}
+		function process_set(current, key, value, oldValue) {
+			if (value == oldValue)
+				return;
+			if (current.eventCount > 0) {
+				if (!notStrong)
+					this.trigger("strongchange:" + key, value, oldValue);
+				this.trigger("change:" + key, value, oldValue);
+			}
+			BetaJS.Objs.iter(current.children, function (child, subkey) {
+				process_set.call(this, child, key ? (key + "." + subkey) : subkey, value[subkey], oldValue[subkey]);
+			}, this);
+		}
+		process_set.call(this, current, key, value, oldValue);
+	},
+	
+	unset: function (key) {
+		if (this.has(key)) {
+			var oldValue = this.get(key);
+			BetaJS.Properties.Scopes.unset(key, this.__properties.data);
+			this.__unsetChanged(key, oldValue);
+		}
+		return this;
+	},
+	
+	__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
+	
+	set: function (key, value) {
+		if (BetaJS.Types.is_object(value) && value.guid == this.__properties_guid) {
+			if (value.properties)
+				this.bind(key, value.properties, {secondKey: value.key});
+			if (value.func)
+				this.compute(key, value.func, value.dependencies);
+			return this;
+		}
+		var oldValue = this.get(key);
+		if (oldValue !== value) {
+			BetaJS.Properties.Scopes.set(key, value, this.__properties.data);
+			this.__setChanged(key, value, oldValue);
+		}
+		return this;
 	},
 	
 	binding: function (key) {
 		return {
-			type: BetaJS.Properties.TYPE_BINDING,
-			bindee: this,
-			property: key
+			guid: this.__properties_guid,
+			properties: this,
+			key: key
 		};
 	},
 	
 	computed : function (f, dependencies) {
 		return {
-			type: BetaJS.Properties.TYPE_COMPUTED,
+			guid: this.__properties_guid,
 			func: f,
-			dependencies: dependencies || []
+			dependencies: dependencies
 		};
-	},
-	
-	_isBinding: function (object) {
-		return BetaJS.Types.is_object(object) && object && object.type && object.type == BetaJS.Properties.TYPE_BINDING && object.bindee && object.property;
-	},
-	
-	_isComputed: function (object) {
-		return BetaJS.Types.is_object(object) && object && object.type && object.type == BetaJS.Properties.TYPE_COMPUTED && object.func && object.dependencies;
-	},
-		
-	getAll: function () {
-		var obj = {};
-		for (var key in this.__properties)
-			obj[key] = this.get(key);
-		return obj;
-	},
-	
-	unset: function (key) {
-		if (key in this.__properties) {
-			var entry = this.__properties[key];
-			if (entry.type == BetaJS.Properties.TYPE_BINDING) {
-				entry.bindee.off("change:" + entry.property, null, this.__properties[key]);
-			} else if (entry.type == BetaJS.Properties.TYPE_COMPUTED) {
-				var self = this;
-				BetaJS.Objs.iter(entry.dependencies, function (dep) {
-					if (this._isBinding(dep))
-						dep.bindee.off("change:" + dep.property, null, this.__properties[key]);
-					else if (this._isTimer(dep))
-						entry.timers[dep].destroy();
-					else
-						self.off("change:" + dep, null, this.__properties[key]);
-				}, this);
-			}
-			this.trigger("unset", key);
-			this.trigger("unset:" + key);
-			delete this.__properties[key];
-		}
-	},
-	
-	_set_changed: function (key, old_value, options) {
-		this._afterSet(key, this.get(key), old_value, options);
-		this.trigger("change", key, this.get(key), old_value, options);
-		this.trigger("change:" + key, this.get(key), old_value, options);
-	},
-	
-	_isTimer: function (dep) {
-		return BetaJS.Strings.starts_with("dep", "timer:");
-	},
-	
-	_parseTimer: function (dep) {
-		return parseInt(BetaJS.Strings.strip_start("timer:"), 10);
-	},
-	
-	set: function (key, value, options) {
-	    var keys = key.split(".");
-	    if (keys.length < 2) {
-	        this.raw_set(key, value, options);
-	    } else {
-    	    var obj = this.raw_get(key, obj);
-    	    if (!obj) {
-    	        obj = {};
-    	        this.raw_set(key, obj, options);
-    	    }
-    	    for (var i = 2; i < keys.length - 1; ++i) {
-    	        obj[keys[i]] = obj[keys[i]] || {};
-    	        obj = obj[keys[i]];
-    	    }
-    	    var old_value = obj[keys[keys.length - 1]];
-    	    obj[keys[keys.length - 1]] = value;
-    	    if (old_value != value) {
-                this.trigger("change", key, value, old_value);
-                this.trigger("change:" + key.replace(".", "->"), value, old_value);
-            }
-        }
-	},
-	
-	raw_set: function (key, value, options) {
-		var old = this.get(key);
-		if (old == value)
-			return; 
-		var self = this;
-		var entry = this.__properties[key];
-		if (this._isBinding(value)) {
-			this.unset(key);
-			this.__properties[key] = {
-				type: BetaJS.Properties.TYPE_BINDING,
-				bindee: value.bindee,
-				property: value.property,
-				value: value.bindee.get(value.property)
-			};
-			value.bindee.on("change:" + value.property, function () {
-				var old = self.__properties[key].value;
-				self.__properties[key].value = value.bindee.get(value.property);
-				self._set_changed(key, old);
-			}, this.__properties[key]);
-			this._set_changed(key, old, options);
-		} else if (this._isComputed(value)) {
-			this.unset(key);
-			this.__properties[key] = {
-				type: BetaJS.Properties.TYPE_COMPUTED,
-				func: value.func,
-				dependencies: value.dependencies,
-				value: value.func.apply(self),
-				timers: {}
-			};
-			BetaJS.Objs.iter(value.dependencies, function (dep) {
-				if (this._isBinding(dep))
-					dep.bindee.on("change:" + dep.property, function () {
-						var old = self.__properties[key].value;
-						self.__properties[key].value = value.func.apply(self);
-						self._set_changed(key, old);
-					}, this.__properties[key]);
-				else if (this._isTimer(dep)) {
-					this.__properties[key].timers[dep] = new BetaJS.Timers.Timer({
-						delay: this._parseTimer(dep),
-						fire: function () {
-							var old = self.__properties[key].value;
-							self.__properties[key].value = value.func.apply(self);
-							self._set_changed(key, old);
-						}
-					});
-				} else
-					self.on("change:" + dep, function () {
-						var old = self.__properties[key].value;
-						self.__properties[key].value = value.func.apply(self);
-						self._set_changed(key, old);
-					}, this.__properties[key]);
-			}, this);
-			this._set_changed(key, old);
-		} else {
-			value = this._beforeSet(key, value);
-			if (this._canSet(key, value)) {
-				if (this.__properties[key] && this.__properties[key].type == BetaJS.Properties.TYPE_BINDING) {
-					this.__properties[key].bindee.set(this.__properties[key].property, value);
-				} else {
-					this.unset(key);
-					this.__properties[key] = {
-						type: BetaJS.Properties.TYPE_VALUE,
-						value: value
-					};
-					this._set_changed(key, old, options);
-				}
-			}
-		}
-	},
-	
-	_notifications: {
-		"construct": "__properties_construct",
-		"destroy": "__properties_destroy"
-	},
-	
-	__properties_construct: function () {
-		this.__properties = {};
-	},
-	
-	__properties_destroy: function () {
-		for (var key in this.__properties) 
-			this.unset(key);
-		this.trigger("destroy");
-	}
+	}	
 	
 };
 
@@ -2648,6 +2826,68 @@ BetaJS.Class.extend("BetaJS.Properties.Properties", [
 	}
 	
 }]);
+
+
+BetaJS.Properties.Scopes = {
+
+	has: function (key, scope) {
+		var keys = key ? key.split(".") : [];
+		for (var i = 0; i < keys.length; ++i) {
+	       if (!scope || !BetaJS.Types.is_object(scope))
+	    	   return false;
+	       scope = scope[keys[i]];
+	    }
+		return BetaJS.Types.is_defined(scope);
+	},
+	
+	get: function (key, scope) {
+		var keys = key ? key.split(".") : [];
+		for (var i = 0; i < keys.length; ++i) {
+	       if (!scope || !BetaJS.Types.is_object(scope))
+	    	   return null;
+	       scope = scope[keys[i]];
+	    }
+		return scope;
+	},
+	
+	set: function (key, value, scope) {
+		if (!key)
+			return;
+		var keys = key.split(".");
+		for (var i = 0; i < keys.length - 1; ++i) {
+			if (!(keys[i] in scope) || !BetaJS.Types.is_object(scope[keys[i]]))
+				scope[keys[i]] = {};
+	       scope = scope[keys[i]];
+	    }
+		scope[keys[keys.length - 1]] = value;
+	},
+	
+	unset: function (key, scope) {
+		if (!key)
+			return;
+		var keys = key.split(".");
+		for (var i = 0; i < keys.length - 1; ++i) {
+	       if (!scope || !BetaJS.Types.is_object(scope))
+	    	   return;
+	       scope = scope[keys[i]];
+	    }
+		delete scope[keys[keys.length - 1]];
+	},
+	
+	touch: function (key, scope) {
+		if (!key)
+			return scope;
+		var keys = key.split(".");
+		for (var i = 0; i < keys.length; ++i) {
+			if (!(keys[i] in scope) || !BetaJS.Types.is_object(scope))
+				scope[keys[i]] = {};
+	       scope = scope[keys[i]];
+	    }
+		return scope[keys[keys.length - 1]];
+	}
+	
+};
+
 BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	BetaJS.Events.EventsMixin, {
 		
@@ -3388,6 +3628,37 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 	}
 	
 });
+BetaJS.JavaScript = {
+	
+	STRING_SINGLE_QUOTATION_REGEX: /'[^']*'/g,
+	STRING_DOUBLE_QUOTATION_REGEX: /"[^"]*"/g,
+	
+	IDENTIFIER_REGEX: /[a-zA-Z_][a-zA-Z_0-9]*/g,
+	IDENTIFIER_SCOPE_REGEX: /[a-zA-Z_][a-zA-Z_0-9\.]*/g,
+
+	RESERVED: BetaJS.Objs.objectify(
+		["if", "then", "else", "return", "var"],
+		true),
+	
+	isReserved: function (key) {
+		return key in this.RESERVED;
+	},
+	
+	isIdentifier: function (key) {
+		return !this.isReserved(key);
+	},
+	
+	removeStrings: function (code) {
+		return code.replace(this.STRING_SINGLE_QUOTATION_REGEX, "").replace(this.STRING_DOUBLE_QUOTATION_REGEX, "");
+	},	
+	
+	extractIdentifiers: function (code, keepScopes) {
+		var regex = keepScopes ? this.IDENTIFIER_SCOPE_REGEX : this.IDENTIFIER_REGEX;
+		code = this.removeStrings(code);
+		return BetaJS.Objs.filter(code.match(regex), this.isIdentifier, this);
+	}
+		
+};
 BetaJS.Class.extend("BetaJS.States.Host", [
     BetaJS.Events.EventsMixin,
     {
@@ -3658,6 +3929,270 @@ BetaJS.States.State.extend("BetaJS.States.CompetingState", {
     }
     
 });
+
+BetaJS.Class.extend("BetaJS.Parser.Lexer", {
+	
+	constructor: function (patterns) {
+		this._inherited(BetaJS.Parser.Lexer, "constructor");
+		this.__patterns = [];
+		BetaJS.Objs.iter(patterns, function (value, key) {
+			this.__patterns.push({
+				regex: new RegExp("^" + key, "m"),
+				data: BetaJS.Types.is_string(value) ? {token: value} : value
+			});
+		}, this);
+	},
+	
+	lex: function (source) {
+		var result = [];
+		var head = "";
+		var tail = source;
+		while (tail) {
+			var match = null;
+			var data = null;
+			for (var i = 0; i < this.__patterns.length; ++i) {
+				match = this.__patterns[i].regex.exec(tail);
+				if (match) { 
+					data = BetaJS.Objs.clone(this.__patterns[i].data, 1);
+					break;
+				}
+			}
+			if (!match)
+				throw new BetaJS.Parser.LexerException(head, tail);
+			head += match[0];
+			tail = tail.substring(match[0].length);
+			if (!data)
+				continue;
+			for (var key in data) {
+				if (BetaJS.Types.is_string(data[key])) {
+					for (var j = 0; j < match.length; ++j)
+						data[key] = data[key].replace("$" + j, match[j]);
+				}
+			}
+			result.push(data);
+		}
+		return result;
+	}
+	
+});
+
+BetaJS.Exceptions.Exception.extend("BetaJS.Parser.LexerException", {
+	
+	constructor: function (head, tail) {
+		this._inherited(BetaJS.Parser.LexerException, "constructor", "Lexer error: Unrecognized identifier at " + head.length + ".");
+		this.__head = head;
+		this.__tail = tail;
+	}
+	
+});
+
+BetaJS.Trees = {};
+
+BetaJS.Trees.TreeNavigator = {
+	
+	nodeRoot: function () {},
+	nodeId: function (node) {},
+	nodeParent: function (node) {},
+	nodeChildren: function (node) {},
+	nodeWatch: function (node, func, context) {},
+	nodeUnwatch: function (node, func, context) {},
+	nodeData: function (node) {}
+		
+};
+
+
+BetaJS.Class.extend("BetaJS.Trees.TreeQueryEngine", {
+	
+	constructor: function (navigator) {
+		this._inherited(BetaJS.Trees.TreeQueryEngine, "constructor");
+		this.__navigator = navigator;
+		this.__lexer = this._auto_destroy(new BetaJS.Parser.Lexer({
+			"<\\+": {token: "Up"},
+			"<": {token: "Up", single: true},
+			">\\+": {token: "Down"},
+			">": {token: "Down", single: true},
+			"\\[\s*([a-zA-Z]+)\s*=\s*\'([^']*)\'\s*\\]": {token: "Selector", key: "$1", value: "$2"},
+			"\s": null
+		}));
+	},
+	
+	query: function (node, query) {
+		return new BetaJS.Trees.TreeQueryObject(this.__navigator, node, this.__lexer.lex(query));
+	}
+	
+});
+
+
+BetaJS.Class.extend("BetaJS.Trees.TreeQueryObject", [
+	BetaJS.Events.EventsMixin, {
+	
+	constructor: function (navigator, node, query) {
+		this._inherited(BetaJS.Trees.TreeQueryObject, "constructor");
+		this.__navigator = navigator;
+		this.__node = node;
+		this.__query = query;
+		this.__result = {};
+		this.__partials = {};
+		this.__register(node, 0, {});
+		this.__ids = 0;
+	},
+	
+	destroy: function () {
+		BetaJS.Objs.iter(this.__partials, function (partials) {
+			BetaJS.Objs.iter(partials.partials, function (partial) {
+				this.__navigator.nodeUnwatch(partials.node, null, partial);
+			}, this);			
+		}, this);
+		this._inherited(BetaJS.Trees.TreeQueryObject, "destroy");
+	},
+	
+	result: function () {
+		var result = [];
+		BetaJS.Objs.iter(this.__result, function (value) {
+			result.push(value.node);
+		});
+		return result;
+	},
+	
+	__register: function (node, index) {
+		var node_id = this.__navigator.nodeId(node);
+		if (!this.__partials[node_id]) {
+			this.__partials[node_id] = {
+				node: node,
+				partials: {}
+			};
+		}
+		var partials = this.__partials[node_id];
+		this.__ids++;
+		var partial = {
+			owner: partials,
+			id: this.__ids,
+			query_index_start: index,
+			query_index_next: index,
+			query_index_last: index,
+			partial_match: false,
+			partial_final: index >= this.__query.length,
+			partial_data: false,
+			partial_children: false,
+			partial_parent: false,
+			partial_star: false,
+			parent: null,
+			deps: {}
+		};
+		partials.partials[partial.id] = partial;
+		for (var i = partial.query_index_start; i < this.__query.length; ++i) {
+			if (this.__query[i].token == "Selector")
+				partial.partial_data = true;
+			else {
+				if (this.__query[i].token == "Up")
+					partial.partial_parent = true;
+				else if (this.__query[i].token == "Down")
+					partial.partial_children = true;
+				partial.partial_star = !this.__query[i].single;
+				if (!partial.partial_star)
+					partial.query_index_next = i + 1;
+				break;
+			}
+			partial.query_index_next = i + 1;
+			partial.partial_final = i + 1 == this.__query.length;
+		}
+		partial.query_index_last = partial.partial_star ? partial.query_index_next + 1 : partial.query_index_next;
+		var self = this;
+		this.__navigator.nodeWatch(node, function (action, node) {
+			if (action == "data" && partial.partial_data)
+				self.__update(partial);
+			if (action == "remove")
+				self.__unregisterPartial(partial);
+			if (action == "addChild" && partial.partial_children && partial.partial_match)
+				self.__addDependentPartial(partial, node);
+		}, partial);
+		this.__update(partial);
+		return partial;
+	},
+	
+	__unregisterPartial: function (partial) {
+		var owner = partial.owner;
+		var node = owner.node;
+		var node_id = this.__navigator.nodeId(node);
+		if (partial.partial_final) {
+			this.__result[node_id].count--;
+			if (this.__result[node_id].count <= 0) {
+				delete this.__result[node_id];
+				this.trigger("remove", node);
+				this.trigger("change");
+			}
+		}
+		BetaJS.Objs.iter(partial.deps, this.__unregisterPartial, this);
+		if (partial.parent)
+			delete partial.parent.deps[partial.id];
+		this.__navigator.nodeUnwatch(node, null, partial);
+		delete owner.partials[partial.id];
+		if (BetaJS.Types.is_empty(owner.partials))
+			delete this.__partials[node_id];
+	},
+	
+	__addDependentPartial: function (partial, node) {
+		var partials = [];
+		partials.push(this.__register(node, partial.query_index_next));
+		if (partial.partial_star)
+			partials.push(this.__register(node, partial.query_index_next + 1));
+		BetaJS.Objs.iter(partials, function (p) {
+			partial.deps[p.id] = p;
+			p.parent = partial;
+		}, this);
+	},
+	
+	__update: function (partial) {
+		var matching = true;
+		var node = partial.owner.node;
+		var node_id = this.__navigator.nodeId(node);
+		var node_data = this.__navigator.nodeData(node);
+		if (!partial.partial_final) {
+			for (var i = partial.query_index_start; i < partial.query_index_last; ++i) {
+				var q = this.__query[i];
+				if (q.token != "Selector")
+					break;
+				if (node_data[q.key] != q.value) {
+					matching = false;
+					break;
+				}
+			}
+		}
+		if (matching == partial.partial_match)
+			return;
+		partial.partial_match = matching;
+		if (matching) {
+			if (partial.partial_final) {
+				if (!this.__result[node_id]) {
+					this.__result[node_id] = {
+						node: node,
+						count: 1
+					};
+					this.trigger("add", node);
+					this.trigger("change");
+				} else
+					this.__result[node_id].count++;
+			} else if (partial.partial_parent) {
+				this.__addDependentPartial(partial, this.__navigator.nodeParent(node));
+			} else if (partial.partial_children) {
+				BetaJS.Objs.iter(this.__navigator.nodeChildren(node), function (child) {
+					this.__addDependentPartial(partial, child);
+				}, this);
+			}
+		} else {
+			if (partial.partial_final) {
+				this.__result[node_id].count--;
+				if (this.__result[node_id].count <= 0) {
+					delete this.__result[node_id];
+					this.trigger("remove", node);
+					this.trigger("change");
+				}
+			}
+			BetaJS.Objs.iter(partial.deps, this.__unregisterPartial, this);
+		}
+	}
+	
+}]);
 
 BetaJS.Class.extend("BetaJS.Channels.Sender", [
 	BetaJS.Events.EventsMixin,

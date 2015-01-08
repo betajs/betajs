@@ -68,6 +68,8 @@ BetaJS.Events.EventsMixin = {
 			event = events.shift();
 			if (!event)
 				break;
+			if (!this.__events_mixin_events[event])
+				this._notify("register_event", event);
 			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
 			this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
 		}
@@ -93,6 +95,7 @@ BetaJS.Events.EventsMixin = {
 					if (this.__events_mixin_events[event].count() === 0) {
 						this.__events_mixin_events[event].destroy();
 						delete this.__events_mixin_events[event];
+						this._notify("unregister_event", event);
 					}
 				}
 			}
@@ -107,6 +110,7 @@ BetaJS.Events.EventsMixin = {
 				if (this.__events_mixin_events[event].count() === 0) {
 					this.__events_mixin_events[event].destroy();
 					delete this.__events_mixin_events[event];
+					this._notify("unregister_event", event);
 				}
 			}
 		}

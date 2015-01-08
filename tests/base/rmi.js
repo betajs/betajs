@@ -1,9 +1,9 @@
 test("test rmi", function() {
-	var Stub = BetaJS.RMI.Stub.extend("Stub", {
+	var Stub = BetaJS.RMI.Stub.extend("", {
 		intf : ["test"]
 	});
 
-	var Skeleton = BetaJS.RMI.Skeleton.extend("Skeleton", {
+	var Skeleton = BetaJS.RMI.Skeleton.extend("", {
 
 		intf : ["test"],
 
@@ -37,11 +37,11 @@ test("test rmi client server", function() {
 	var transport_x = new BetaJS.Channels.TransportChannel(sender_x, receiver_x);
 	var transport_y = new BetaJS.Channels.TransportChannel(sender_y, receiver_y);
 
-	var Stub = BetaJS.RMI.Stub.extend("Stub", {
+	var Stub = BetaJS.RMI.Stub.extend("", {
 		intf : ["test", "test2"]
 	});
 
-	var Skeleton = BetaJS.RMI.Skeleton.extend("Skeleton", {
+	var Skeleton = BetaJS.RMI.Skeleton.extend("", {
 
 		intf : ["test", "test2"],
 
