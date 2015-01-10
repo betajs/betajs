@@ -2,8 +2,8 @@ test("test channels 1", function() {
 	stop();
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
-	var sender_x = new BetaJS.Channels.ReveiverSender(receiver_y);
-	var sender_y = new BetaJS.Channels.ReveiverSender(receiver_x);
+	var sender_x = new BetaJS.Channels.ReceiverSender(receiver_y);
+	var sender_y = new BetaJS.Channels.ReceiverSender(receiver_x);
 	var transport_x = new BetaJS.Channels.TransportChannel(sender_x, receiver_x);
 	var transport_y = new BetaJS.Channels.TransportChannel(sender_y, receiver_y);
 	transport_y._reply = function(message, data) {
@@ -19,8 +19,8 @@ test("test channels 2", function() {
 	stop();stop();
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
-	var sender_x = new BetaJS.Channels.ReveiverSender(receiver_y);
-	var sender_y = new BetaJS.Channels.ReveiverSender(receiver_x);
+	var sender_x = new BetaJS.Channels.ReceiverSender(receiver_y);
+	var sender_y = new BetaJS.Channels.ReceiverSender(receiver_x);
 	var transport_x = new BetaJS.Channels.TransportChannel(new BetaJS.Channels.SenderMultiplexer(sender_x, "x"), new BetaJS.Channels.ReceiverMultiplexer(receiver_x, "y"));
 	var transport_y = new BetaJS.Channels.TransportChannel(new BetaJS.Channels.SenderMultiplexer(sender_y, "y"), new BetaJS.Channels.ReceiverMultiplexer(receiver_y, "x"));
 	var transport_a = new BetaJS.Channels.TransportChannel(new BetaJS.Channels.SenderMultiplexer(sender_x, "a"), new BetaJS.Channels.ReceiverMultiplexer(receiver_x, "b"));
