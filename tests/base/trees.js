@@ -82,4 +82,8 @@ test("test tree query engine", function() {
 	SimpleTree.nodeRemoveNode(leftleft);
 	
 	QUnit.deepEqual(query.result(), [leftright, leftmid]);
+	
+	var leftleft = SimpleTree.nodeAddNode(left, "left", {test: "tester"});
+	
+	QUnit.deepEqual(query.result(), [leftright, leftmid, leftleft]);
 });
