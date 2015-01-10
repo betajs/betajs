@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-01-08
+betajs - v1.0.0 - 2015-01-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -4219,10 +4219,10 @@ BetaJS.Class.extend("BetaJS.Channels.Receiver", [
 }]);
 
 
-BetaJS.Channels.Sender.extend("BetaJS.Channels.ReveiverSender", {
+BetaJS.Channels.Sender.extend("BetaJS.Channels.ReceiverSender", {
 	
 	constructor: function (receiver) {
-		this._inherited(BetaJS.Channels.ReveiverSender, "constructor");
+		this._inherited(BetaJS.Channels.ReceiverSender, "constructor");
 		this.__receiver = receiver;
 	},
 	
@@ -4467,7 +4467,7 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", {
 	},
 	
 	invoke: function (message, data) {
-		if (!(this._intf[message] || this._intfSync[message]))
+		if (!(this._intf[message]))
 			return BetaJS.Promise.error(message);
 		try {
 			var result = this[message].apply(this, data);
@@ -4622,7 +4622,7 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 		var self = this;
 		instance.__send = function (message, data) {
 			return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
-				return BetaJS.Types.is_object(result) && result.__rmi_meta ? this.acquire(result.__rmi_stub, result.__rmi_stub_id) : result;
+				return result && result.__rmi_meta ? this.acquire(result.__rmi_stub, result.__rmi_stub_id) : result;
 			}, self);
 		};
 		return instance;		

@@ -76,7 +76,7 @@ BetaJS.Class.extend("BetaJS.RMI.Skeleton", {
 	},
 	
 	invoke: function (message, data) {
-		if (!(this._intf[message] || this._intfSync[message]))
+		if (!(this._intf[message]))
 			return BetaJS.Promise.error(message);
 		try {
 			var result = this[message].apply(this, data);
@@ -231,7 +231,7 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 		var self = this;
 		instance.__send = function (message, data) {
 			return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
-				return BetaJS.Types.is_object(result) && result.__rmi_meta ? this.acquire(result.__rmi_stub, result.__rmi_stub_id) : result;
+				return result && result.__rmi_meta ? this.acquire(result.__rmi_stub, result.__rmi_stub_id) : result;
 			}, self);
 		};
 		return instance;		

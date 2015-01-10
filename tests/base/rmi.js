@@ -98,8 +98,8 @@ test("test rmi client server", function() {
 test("test rmi client server create instance", function() {
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
-	var sender_x = new BetaJS.Channels.ReveiverSender(receiver_y);
-	var sender_y = new BetaJS.Channels.ReveiverSender(receiver_x);
+	var sender_x = new BetaJS.Channels.ReceiverSender(receiver_y);
+	var sender_y = new BetaJS.Channels.ReceiverSender(receiver_x);
 	var transport_x = new BetaJS.Channels.TransportChannel(sender_x, receiver_x);
 	var transport_y = new BetaJS.Channels.TransportChannel(sender_y, receiver_y);
 

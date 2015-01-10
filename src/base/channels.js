@@ -23,10 +23,10 @@ BetaJS.Class.extend("BetaJS.Channels.Receiver", [
 }]);
 
 
-BetaJS.Channels.Sender.extend("BetaJS.Channels.ReveiverSender", {
+BetaJS.Channels.Sender.extend("BetaJS.Channels.ReceiverSender", {
 	
 	constructor: function (receiver) {
-		this._inherited(BetaJS.Channels.ReveiverSender, "constructor");
+		this._inherited(BetaJS.Channels.ReceiverSender, "constructor");
 		this.__receiver = receiver;
 	},
 	
