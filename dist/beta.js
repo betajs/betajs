@@ -4114,7 +4114,7 @@ BetaJS.Class.extend("BetaJS.Trees.TreeQueryObject", [
 		var owner = partial.owner;
 		var node = owner.node;
 		var node_id = this.__navigator.nodeId(node);
-		if (partial.partial_final) {
+		if (partial.partial_final && this.__result[node_id]) {
 			this.__result[node_id].count--;
 			if (this.__result[node_id].count <= 0) {
 				delete this.__result[node_id];
@@ -4147,15 +4147,13 @@ BetaJS.Class.extend("BetaJS.Trees.TreeQueryObject", [
 		var node = partial.owner.node;
 		var node_id = this.__navigator.nodeId(node);
 		var node_data = this.__navigator.nodeData(node);
-		if (!partial.partial_final) {
-			for (var i = partial.query_index_start; i < partial.query_index_last; ++i) {
-				var q = this.__query[i];
-				if (q.token != "Selector")
-					break;
-				if (node_data[q.key] != q.value) {
-					matching = false;
-					break;
-				}
+		for (var i = partial.query_index_start; i < partial.query_index_last; ++i) {
+			var q = this.__query[i];
+			if (q.token != "Selector")
+				break;
+			if (node_data[q.key] != q.value) {
+				matching = false;
+				break;
 			}
 		}
 		if (matching == partial.partial_match)
