@@ -159,6 +159,27 @@ BetaJS.Class.extend("BetaJS.RMI.Server", [
 		channel._reply = null;
 	},
 	
+	_serializeValue: function (value) {
+		if (BetaJS.RMI.Skeleton.is_class_instance(value) && value.instance_of(BetaJS.RMI.Skeleton)) {
+			var registry = this;
+			registry.registerInstance(value);
+			return {
+				__rmi_meta: true,
+				__rmi_stub: value.stub(),
+				__rmi_stub_id: BetaJS.Ids.objectId(value)
+			};
+		} else
+			return value;		
+	},
+	
+	_unserializeValue: function (value) {
+		if (value && value.__rmi_meta) {
+			var receiver = this.client;
+			return receiver.acquire(value.__rmi_stub, value.__rmi_stub_id);
+		} else
+			return value;		
+	},
+	
 	_invoke: function (channel, instance_id, method, data) {
 		var instance = this.__instances[instance_id];
 		if (!instance) {
@@ -168,16 +189,9 @@ BetaJS.Class.extend("BetaJS.RMI.Server", [
 		if (!instance)
 			return BetaJS.Promise.error(instance_id);
 		instance = instance.instance;
+		data = BetaJS.Objs.map(data, this._unserializeValue, this);
 		return instance.invoke(method, data, channel).mapSuccess(function (result) {
-			if (BetaJS.RMI.Skeleton.is_class_instance(result) && result.instance_of(BetaJS.RMI.Skeleton)) {
-				this.registerInstance(result);
-				return {
-					__rmi_meta: true,
-					__rmi_stub: result.stub(),
-					__rmi_stub_id: BetaJS.Ids.objectId(result)
-				};
-			} else
-				return result;
+			return this._serializeValue(result);
 		}, this);
 	}
 		
@@ -219,6 +233,27 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 		}, this);
 	},
 	
+	_serializeValue: function (value) {
+		if (BetaJS.RMI.Skeleton.is_class_instance(value) && value.instance_of(BetaJS.RMI.Skeleton)) {
+			var registry = this.server;
+			registry.registerInstance(value);
+			return {
+				__rmi_meta: true,
+				__rmi_stub: value.stub(),
+				__rmi_stub_id: BetaJS.Ids.objectId(value)
+			};
+		} else
+			return value;		
+	},
+	
+	_unserializeValue: function (value) {
+		if (value && value.__rmi_meta) {
+			var receiver = this;
+			return receiver.acquire(value.__rmi_stub, value.__rmi_stub_id);
+		} else
+			return value;		
+	},
+	
 	acquire: function (class_type, instance_name) {
 		if (this.__instances[instance_name])
 			return this.__instances[instance_name];
@@ -230,8 +265,9 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 		this.__instances[BetaJS.Ids.objectId(instance, instance_name)] = instance;
 		var self = this;
 		instance.__send = function (message, data) {
+			data = BetaJS.Objs.map(data, self._serializeValue, self);
 			return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
-				return result && result.__rmi_meta ? this.acquire(result.__rmi_stub, result.__rmi_stub_id) : result;
+				return this._unserializeValue(result);
 			}, self);
 		};
 		return instance;		
@@ -261,6 +297,8 @@ BetaJS.Class.extend("BetaJS.RMI.Peer", {
 		this.__server_receiver = this._auto_destroy(new BetaJS.Channels.ReceiverMultiplexer(receiver, "client"));
 		this.client = this._auto_destroy(new BetaJS.RMI.Client(this.__client_sender, this.__client_receiver));
 		this.server = this._auto_destroy(new BetaJS.RMI.Server(this.__server_sender, this.__server_receiver));
+		this.client.server = this.server;
+		this.server.client = this.client;
 	},	
 	
 	acquire: function (class_type, instance_name) {
