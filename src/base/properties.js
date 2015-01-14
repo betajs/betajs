@@ -52,7 +52,7 @@ BetaJS.Properties.PropertiesMixin = {
 		return value;
 	},
 	
-	_afterSet: function (key, value, options) {},
+	_afterSet: function (key, value) {},
 	
 	has: function (key) {
 		return BetaJS.Properties.Scopes.has(key, this.__properties.data);
@@ -283,6 +283,7 @@ BetaJS.Properties.PropertiesMixin = {
 	
 	__setChanged: function (key, value, oldValue, notStrong) {
 		this.trigger("change", key, value, oldValue);
+		this._afterSet(key, value);
 		var keys = key ? key.split(".") : [];
 		var current = this.__properties.watchers;
 		var head = "";
@@ -333,6 +334,7 @@ BetaJS.Properties.PropertiesMixin = {
 				this.compute(key, value.func, value.dependencies);
 			return this;
 		}
+		value = this._beforeSet(key, value);
 		var oldValue = this.get(key);
 		if (oldValue !== value) {
 			BetaJS.Properties.Scopes.set(key, value, this.__properties.data);

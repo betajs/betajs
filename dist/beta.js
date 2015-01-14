@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-01-12
+betajs - v1.0.0 - 2015-01-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -2508,7 +2508,7 @@ BetaJS.Properties.PropertiesMixin = {
 		return value;
 	},
 	
-	_afterSet: function (key, value, options) {},
+	_afterSet: function (key, value) {},
 	
 	has: function (key) {
 		return BetaJS.Properties.Scopes.has(key, this.__properties.data);
@@ -2739,6 +2739,7 @@ BetaJS.Properties.PropertiesMixin = {
 	
 	__setChanged: function (key, value, oldValue, notStrong) {
 		this.trigger("change", key, value, oldValue);
+		this._afterSet(key, value);
 		var keys = key ? key.split(".") : [];
 		var current = this.__properties.watchers;
 		var head = "";
@@ -2789,6 +2790,7 @@ BetaJS.Properties.PropertiesMixin = {
 				this.compute(key, value.func, value.dependencies);
 			return this;
 		}
+		value = this._beforeSet(key, value);
 		var oldValue = this.get(key);
 		if (oldValue !== value) {
 			BetaJS.Properties.Scopes.set(key, value, this.__properties.data);
@@ -4333,6 +4335,8 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 			this._reply(data.message, data.data).success(function (result) {
 				this.__received[data.id].reply = result;
 				this.__received[data.id].success = true;
+			}, this).error(function (error) {
+				this.__received[data.id].reply = error;
 			}, this).callback(function () {
 				this.__received[data.id].returned = true;
 				this.__sender.send("reply", {
@@ -4352,7 +4356,8 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 	
 	__complete: function (data) {
 		if (this.__sent[data.id]) {
-			this.__sent[data.id].promise.asyncSuccess(data.reply);
+			var promise = this.__sent[data.id].promise;
+			promise[data.success ? "asyncSuccess" : "asyncError"](data.reply);
 			delete this.__sent[data.id];
 		}
 	},
@@ -4737,6 +4742,15 @@ BetaJS.Promise = {
 
 	error: function (error) {
 		return this.is(error) ? error : new this.Promise(null, error, true);
+	},
+	
+	box: function (f, ctx, params) {
+		try {
+			var result = f.apply(ctx || this, params || []);
+			return this.is(result) ? result : this.value(result);
+		} catch (e) {
+			return this.error(e);
+		}
 	},
 	
 	tryCatch: function (f, ctx) {

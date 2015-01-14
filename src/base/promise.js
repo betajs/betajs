@@ -29,6 +29,15 @@ BetaJS.Promise = {
 		return this.is(error) ? error : new this.Promise(null, error, true);
 	},
 	
+	box: function (f, ctx, params) {
+		try {
+			var result = f.apply(ctx || this, params || []);
+			return this.is(result) ? result : this.value(result);
+		} catch (e) {
+			return this.error(e);
+		}
+	},
+	
 	tryCatch: function (f, ctx) {
 		try {
 			return this.value(f.apply(ctx || this));

@@ -139,6 +139,8 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 			this._reply(data.message, data.data).success(function (result) {
 				this.__received[data.id].reply = result;
 				this.__received[data.id].success = true;
+			}, this).error(function (error) {
+				this.__received[data.id].reply = error;
 			}, this).callback(function () {
 				this.__received[data.id].returned = true;
 				this.__sender.send("reply", {
@@ -158,7 +160,8 @@ BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
 	
 	__complete: function (data) {
 		if (this.__sent[data.id]) {
-			this.__sent[data.id].promise.asyncSuccess(data.reply);
+			var promise = this.__sent[data.id].promise;
+			promise[data.success ? "asyncSuccess" : "asyncError"](data.reply);
 			delete this.__sent[data.id];
 		}
 	},

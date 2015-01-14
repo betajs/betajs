@@ -1,14 +1,18 @@
 test("test rmi", function() {
 	var Stub = BetaJS.RMI.Stub.extend("", {
-		intf : ["test"]
+		intf : ["test", "failTest"]
 	});
 
 	var Skeleton = BetaJS.RMI.Skeleton.extend("", {
 
-		intf : ["test"],
+		intf : ["test", "failTest"],
 
 		test : function(a, b, c) {
-			return this._success(a + b + c);
+			return a + b + c;
+		},
+		
+		failTest: function () {
+			throw "Failed";
 		}
 	});
 
@@ -26,6 +30,12 @@ test("test rmi", function() {
 		QUnit.equal(result, 6);
 		start();
 	});
+	
+	stop();
+	stub.failTest().error(function (err) {
+		QUnit.equal(err, "Failed");
+		start();
+	});
 
 });
 
@@ -38,12 +48,12 @@ test("test rmi client server", function() {
 	var transport_y = new BetaJS.Channels.TransportChannel(sender_y, receiver_y);
 
 	var Stub = BetaJS.RMI.Stub.extend("", {
-		intf : ["test", "test2"]
+		intf : ["test", "test2", "failTest"]
 	});
 
 	var Skeleton = BetaJS.RMI.Skeleton.extend("", {
 
-		intf : ["test", "test2"],
+		intf : ["test", "test2", "failTest"],
 
 		constructor : function(d) {
 			this._inherited(Skeleton, "constructor");
@@ -56,6 +66,10 @@ test("test rmi client server", function() {
 
 		test2 : function(a, b, c) {
 			return a + b + c + this.__d;
+		},
+		
+		failTest: function () {
+			throw "Failed";
 		}
 	});
 
@@ -74,7 +88,7 @@ test("test rmi client server", function() {
 	var stub_x = client.acquire(Stub, "x");
 	var stub_y = client.acquire(Stub, "y");
 	
-	stop(); stop(); stop();
+	stop(); stop(); stop(); stop();
 
 	stub_x.test(1, 2, 3).success(function(result) {
 		QUnit.equal(result, 106);
@@ -88,6 +102,11 @@ test("test rmi client server", function() {
 
 	stub_y.test(1, 2, 3).success(function(result) {
 		QUnit.equal(result, 1006);
+		start();
+	});
+	
+	stub_x.failTest().error(function (err) {
+		QUnit.equal(err, "Failed");
 		start();
 	});
 
