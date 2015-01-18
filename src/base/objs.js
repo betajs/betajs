@@ -47,6 +47,17 @@ BetaJS.Objs = {
 		return target;
 	},
 	
+	weak_extend: function (target, source, depth) {
+		target = target || {};
+		if (source) {
+			for (var key in source) {
+				if (!(key in target))
+					target[key] = this.clone(source[key], depth);
+			}
+		}
+		return target;
+	},
+	
 	tree_extend: function (target, source, depth) {
 		target = target || {};
 		if (source) {

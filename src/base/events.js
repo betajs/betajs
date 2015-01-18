@@ -213,7 +213,8 @@ BetaJS.Events.ListenMixin = {
 		}
 		else
 			BetaJS.Objs.iter(this.__listen_mixin_listen, function (obj) {
-				obj.off(events, callback, this);
+				if (obj && "off" in obj)
+					obj.off(events, callback, this);
 				if (!events && !callback)
 					delete this.__listen_mixin_listen[BetaJS.Ids.objectId(obj)];
 			}, this);

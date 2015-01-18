@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-01-14
+betajs - v1.0.0 - 2015-01-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -706,6 +706,17 @@ BetaJS.Objs = {
 		if (source) {
 			for (var key in source)
 				target[key] = this.clone(source[key], depth);
+		}
+		return target;
+	},
+	
+	weak_extend: function (target, source, depth) {
+		target = target || {};
+		if (source) {
+			for (var key in source) {
+				if (!(key in target))
+					target[key] = this.clone(source[key], depth);
+			}
 		}
 		return target;
 	},
@@ -1962,7 +1973,8 @@ BetaJS.Events.ListenMixin = {
 		}
 		else
 			BetaJS.Objs.iter(this.__listen_mixin_listen, function (obj) {
-				obj.off(events, callback, this);
+				if (obj && "off" in obj)
+					obj.off(events, callback, this);
 				if (!events && !callback)
 					delete this.__listen_mixin_listen[BetaJS.Ids.objectId(obj)];
 			}, this);
