@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-01-17
+betajs - v1.0.0 - 2015-01-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -2908,6 +2908,9 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	constructor: function (options) {
 		this._inherited(BetaJS.Collections.Collection, "constructor");
 		options = options || {};
+		this.__indices = {};
+		if (options.indices)
+			BetaJS.Objs.iter(options.indices, this.add_secondary_index, this);
 		var list_options = {};
 		if ("compare" in options)
 			list_options["compare"] = options["compare"];
@@ -2925,6 +2928,17 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 		};
 		if ("objects" in options)
 			this.add_objects(options["objects"]);
+	},
+	
+	add_secondary_index: function (key) {
+		this.__indices[key] = {};
+		this.iterate(function (object) {
+			this.__indices[key][object.get(key)] = object;
+		}, this);
+	},
+	
+	get_by_secondary_index: function (key, value) {
+		return this.__indices[key][value];
 	},
 	
 	get_ident: function (obj) {
@@ -2979,11 +2993,14 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 			return null;
 		var ident = this.__data.add(object);
 		if (ident !== null) {
+			BetaJS.Objs.iter(this.__indices, function (entry, key) {
+				entry[object.get(key)] = object;
+			}, this);
 			this.trigger("add", object);
 			this.trigger("update");
 			if ("on" in object)
-				object.on("change", function (key, value) {
-					this._object_changed(object, key, value);
+				object.on("change", function (key, value, oldvalue) {
+					this._object_changed(object, key, value, oldvalue);
 				}, this);
 		}
 		return ident;
@@ -3005,6 +3022,9 @@ BetaJS.Class.extend("BetaJS.Collections.Collection", [
 	remove: function (object) {
 		if (!this.exists(object))
 			return null;
+		BetaJS.Objs.iter(this.__indices, function (entry, key) {
+			delete entry[object.get(key)];
+		}, this);
 		this.trigger("remove", object);
 		this.trigger("update");
 		var result = this.__data.remove(object);
