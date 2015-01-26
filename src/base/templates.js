@@ -113,10 +113,4 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 		return this.__compiled.apply(this, [obj]);
 	}
 	
-}, {
-	
-	bySelector: function (selector) {
-		return new this(BetaJS.$(selector).html());
-	}
-	
 });

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-01-18
+betajs - v1.0.0 - 2015-01-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -3653,12 +3653,6 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 	
 	evaluate: function (obj) {
 		return this.__compiled.apply(this, [obj]);
-	}
-	
-}, {
-	
-	bySelector: function (selector) {
-		return new this(BetaJS.$(selector).html());
 	}
 	
 });
