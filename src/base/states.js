@@ -1,11 +1,29 @@
 BetaJS.Class.extend("BetaJS.States.Host", [
     BetaJS.Events.EventsMixin,
     {
-    
+    	
+    constructor: function (options) {
+    	this._inherited(BetaJS.States.Host, "constructor");
+    	options = options || {};
+    	this._stateRegistry = options.stateRegistry;
+    	this._baseState = options.baseState;
+    },
+    	
     initialize: function (initial_state, initial_args) {
-        var cls = BetaJS.Scopes.resolve(initial_state);
-        var obj = new cls(this, initial_args, {});
-        obj.start();
+    	if (!this._stateRegistry) {
+    		if (BetaJS.Types.is_string(initial_state) && initial_state.indexOf(".") >= 0) {
+    			var split = BetaJS.Strings.splitLast(initial_state, ".");
+        		this._stateRegistry = this._auto_destroy(new BetaJS.Classes.ClassRegistry(BetaJS.Scopes.resolve(split.head)));
+        		initial_state = split.tail;
+    		} else
+    			this._stateRegistry = this._auto_destroy(new BetaJS.Classes.ClassRegistry(BetaJS.Scopes.resolve(BetaJS.Strings.splitLast(this.cls.classname, ".").head)));
+    	}
+    	this._createState(initial_state, initial_args).start();
+		this._baseState = this._baseState || this._state.cls; 
+    },
+    
+    _createState: function (state, args, transitionals) {
+    	return this._stateRegistry.create(state, this, args || {}, transitionals || {});
     },
     
     finalize: function () {
@@ -22,7 +40,15 @@ BetaJS.Class.extend("BetaJS.States.Host", [
     state: function () {
         return this._state;
     },
-
+    
+    state_name: function () {
+    	return this.state().state_name();
+    },
+    
+    next: function () {
+    	return this.state().next.apply(this.state(), arguments);
+    },
+    
     _start: function (state) {
         this._stateEvent(state, "before_start");
         this._state = state;
@@ -57,8 +83,19 @@ BetaJS.Class.extend("BetaJS.States.Host", [
         this.trigger("event", s, state.state_name(), state.description());
         this.trigger(s, state.state_name(), state.description());
         this.trigger(s + ":" + state.state_name(), state.description());
-    }
+    },
 
+	register: function (state_name, extend) {
+		if (!this._stateRegistry)
+			this._stateRegistry = this._auto_destroy(new BetaJS.Classes.ClassRegistry(BetaJS.Strings.splitLast(this.cls.classname).head));
+		var base = this._baseState ? (BetaJS.Strings.splitLast(this._baseState.classname, ".").head + "." + state_name) : (state_name.indexOf(".") >= 0 ? state_name : null);
+		var cls = (this._baseState || BetaJS.States.State).extend(base, extend);
+		if (!base)
+			cls.classname = state_name;
+		this._stateRegistry.register(BetaJS.Strings.last_after(state_name, "."), cls);
+		return this;
+	}
+	
 }]);
 
 
@@ -127,15 +164,12 @@ BetaJS.Class.extend("BetaJS.States.State", {
     next: function (state_name, args, transitionals) {
     	if (!this._starting || this._stopped || this.__next_state)
     		return;
-        var clsname = this.cls.classname;
-        var scope = BetaJS.Scopes.resolve(clsname.substring(0, clsname.lastIndexOf(".")));
-        var cls = scope[state_name];
         args = args || {};
         for (var i = 0; i < this._persistents.length; ++i) {
             if (!(this._persistents[i] in args))
                 args[this._persistents[i]] = this["_" + this._persistents[i]];
         }
-        var obj = new cls(this.host, args, transitionals);
+        var obj = this.host._createState(state_name, args, transitionals);
         if (!this.can_transition_to(obj)) {
             obj.destroy();
             return;

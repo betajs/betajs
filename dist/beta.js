@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-01-26
+betajs - v1.0.0 - 2015-02-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -259,7 +259,7 @@ BetaJS.Strings = {
 	strip_start : function(s, needle) {
 		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
 	},
-
+	
 	/** Returns the complete remaining part of a string after a the last occurrence of a sub string
 	 *
 	 * @param s string in question
@@ -300,6 +300,22 @@ BetaJS.Strings = {
 			result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">", "i"), '');
 		result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
 		return result;
+	},
+	
+	splitFirst: function (s, delimiter) {
+		var i = s.indexOf(delimiter);
+		return {
+			head: i >= 0 ? s.substring(0, i) : s,
+			tail: i >= 0 ? s.substring(i + delimiter.length) : ""
+		};
+	},
+	
+	splitLast: function (s, delimiter) {
+		var i = s.lastIndexOf(delimiter);
+		return {
+			head: i >= 0 ? s.substring(0, i) : "",
+			tail: i >= 0 ? s.substring(i + delimiter.length) : s
+		};
 	},
 
 	/** Trims all trailing and leading whitespace and removes block indentations
@@ -2447,9 +2463,9 @@ BetaJS.Class.extend("BetaJS.Classes.MultiDelegatable", {
 
 BetaJS.Class.extend("BetaJS.Classes.ClassRegistry", {
 	
-	constructor: function () {
+	constructor: function (classes) {
 		this._inherited(BetaJS.Classes.ClassRegistry, "constructor");
-		this._classes = {};
+		this._classes = classes || {};
 	},
 	
 	register: function (key, cls) {
@@ -2457,7 +2473,7 @@ BetaJS.Class.extend("BetaJS.Classes.ClassRegistry", {
 	},
 	
 	get: function (key) {
-		return this._classes[key];
+		return BetaJS.Types.is_object(key) ? key : this._classes[key];
 	},
 	
 	create: function (key) {
@@ -3690,11 +3706,29 @@ BetaJS.JavaScript = {
 BetaJS.Class.extend("BetaJS.States.Host", [
     BetaJS.Events.EventsMixin,
     {
-    
+    	
+    constructor: function (options) {
+    	this._inherited(BetaJS.States.Host, "constructor");
+    	options = options || {};
+    	this._stateRegistry = options.stateRegistry;
+    	this._baseState = options.baseState;
+    },
+    	
     initialize: function (initial_state, initial_args) {
-        var cls = BetaJS.Scopes.resolve(initial_state);
-        var obj = new cls(this, initial_args, {});
-        obj.start();
+    	if (!this._stateRegistry) {
+    		if (BetaJS.Types.is_string(initial_state) && initial_state.indexOf(".") >= 0) {
+    			var split = BetaJS.Strings.splitLast(initial_state, ".");
+        		this._stateRegistry = this._auto_destroy(new BetaJS.Classes.ClassRegistry(BetaJS.Scopes.resolve(split.head)));
+        		initial_state = split.tail;
+    		} else
+    			this._stateRegistry = this._auto_destroy(new BetaJS.Classes.ClassRegistry(BetaJS.Scopes.resolve(BetaJS.Strings.splitLast(this.cls.classname, ".").head)));
+    	}
+    	this._createState(initial_state, initial_args).start();
+		this._baseState = this._baseState || this._state.cls; 
+    },
+    
+    _createState: function (state, args, transitionals) {
+    	return this._stateRegistry.create(state, this, args || {}, transitionals || {});
     },
     
     finalize: function () {
@@ -3711,7 +3745,15 @@ BetaJS.Class.extend("BetaJS.States.Host", [
     state: function () {
         return this._state;
     },
-
+    
+    state_name: function () {
+    	return this.state().state_name();
+    },
+    
+    next: function () {
+    	return this.state().next.apply(this.state(), arguments);
+    },
+    
     _start: function (state) {
         this._stateEvent(state, "before_start");
         this._state = state;
@@ -3746,8 +3788,19 @@ BetaJS.Class.extend("BetaJS.States.Host", [
         this.trigger("event", s, state.state_name(), state.description());
         this.trigger(s, state.state_name(), state.description());
         this.trigger(s + ":" + state.state_name(), state.description());
-    }
+    },
 
+	register: function (state_name, extend) {
+		if (!this._stateRegistry)
+			this._stateRegistry = this._auto_destroy(new BetaJS.Classes.ClassRegistry(BetaJS.Strings.splitLast(this.cls.classname).head));
+		var base = this._baseState ? (BetaJS.Strings.splitLast(this._baseState.classname, ".").head + "." + state_name) : (state_name.indexOf(".") >= 0 ? state_name : null);
+		var cls = (this._baseState || BetaJS.States.State).extend(base, extend);
+		if (!base)
+			cls.classname = state_name;
+		this._stateRegistry.register(BetaJS.Strings.last_after(state_name, "."), cls);
+		return this;
+	}
+	
 }]);
 
 
@@ -3816,15 +3869,12 @@ BetaJS.Class.extend("BetaJS.States.State", {
     next: function (state_name, args, transitionals) {
     	if (!this._starting || this._stopped || this.__next_state)
     		return;
-        var clsname = this.cls.classname;
-        var scope = BetaJS.Scopes.resolve(clsname.substring(0, clsname.lastIndexOf(".")));
-        var cls = scope[state_name];
         args = args || {};
         for (var i = 0; i < this._persistents.length; ++i) {
             if (!(this._persistents[i] in args))
                 args[this._persistents[i]] = this["_" + this._persistents[i]];
         }
-        var obj = new cls(this.host, args, transitionals);
+        var obj = this.host._createState(state_name, args, transitionals);
         if (!this.can_transition_to(obj)) {
             obj.destroy();
             return;

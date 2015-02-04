@@ -461,9 +461,9 @@ BetaJS.Class.extend("BetaJS.Classes.MultiDelegatable", {
 
 BetaJS.Class.extend("BetaJS.Classes.ClassRegistry", {
 	
-	constructor: function () {
+	constructor: function (classes) {
 		this._inherited(BetaJS.Classes.ClassRegistry, "constructor");
-		this._classes = {};
+		this._classes = classes || {};
 	},
 	
 	register: function (key, cls) {
@@ -471,7 +471,7 @@ BetaJS.Class.extend("BetaJS.Classes.ClassRegistry", {
 	},
 	
 	get: function (key) {
-		return this._classes[key];
+		return BetaJS.Types.is_object(key) ? key : this._classes[key];
 	},
 	
 	create: function (key) {

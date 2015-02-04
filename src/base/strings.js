@@ -76,7 +76,7 @@ BetaJS.Strings = {
 	strip_start : function(s, needle) {
 		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
 	},
-
+	
 	/** Returns the complete remaining part of a string after a the last occurrence of a sub string
 	 *
 	 * @param s string in question
@@ -117,6 +117,22 @@ BetaJS.Strings = {
 			result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">", "i"), '');
 		result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
 		return result;
+	},
+	
+	splitFirst: function (s, delimiter) {
+		var i = s.indexOf(delimiter);
+		return {
+			head: i >= 0 ? s.substring(0, i) : s,
+			tail: i >= 0 ? s.substring(i + delimiter.length) : ""
+		};
+	},
+	
+	splitLast: function (s, delimiter) {
+		var i = s.lastIndexOf(delimiter);
+		return {
+			head: i >= 0 ? s.substring(0, i) : "",
+			tail: i >= 0 ? s.substring(i + delimiter.length) : s
+		};
 	},
 
 	/** Trims all trailing and leading whitespace and removes block indentations
