@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-02-04
+betajs - v1.0.0 - 2015-02-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -3790,11 +3790,15 @@ BetaJS.Class.extend("BetaJS.States.Host", [
         this.trigger(s + ":" + state.state_name(), state.description());
     },
 
-	register: function (state_name, extend) {
+	register: function (state_name, parent_state, extend) {
+		if (!BetaJS.Types.is_string(parent_state)) {
+			extend = parent_state;
+			parent_state = null;
+		}
 		if (!this._stateRegistry)
 			this._stateRegistry = this._auto_destroy(new BetaJS.Classes.ClassRegistry(BetaJS.Strings.splitLast(this.cls.classname).head));
 		var base = this._baseState ? (BetaJS.Strings.splitLast(this._baseState.classname, ".").head + "." + state_name) : (state_name.indexOf(".") >= 0 ? state_name : null);
-		var cls = (this._baseState || BetaJS.States.State).extend(base, extend);
+		var cls = (this._stateRegistry.get(parent_state) || this._baseState || BetaJS.States.State).extend(base, extend);
 		if (!base)
 			cls.classname = state_name;
 		this._stateRegistry.register(BetaJS.Strings.last_after(state_name, "."), cls);
@@ -4006,6 +4010,70 @@ BetaJS.States.State.extend("BetaJS.States.CompetingState", {
     retreat_against: function (foreign_state) {
     }
     
+});
+
+
+BetaJS.Class.extend("BetaJS.States.StateRouter", {
+	
+	constructor: function (host) {
+		this._inherited(BetaJS.States.StateRouter, "constructor");
+		this._host = host;
+		this._routes = [];
+		this._states = {};
+	},
+	
+	registerRoute: function (route, state, mapping) {
+		var descriptor = {
+			key: route,
+			route: new RegExp("^" + route + "$"),
+			state: state,
+			mapping: mapping || []
+		};
+		this._routes.push(descriptor);
+		this._states[state] = descriptor;
+		return this;
+	},
+	
+	readRoute: function (stateObject) {
+		var descriptor = this._states[stateObject.state_name()];
+		if (!descriptor)
+			return null;
+		var regex = /\(.*?\)/;
+		var route = descriptor.key;
+		BetaJS.Objs.iter(descriptor.mapping, function (arg) {
+			route = route.replace(regex, stateObject["_" + arg]);
+		}, this);
+		return route;
+	},
+	
+	parseRoute: function (route) {
+		for (var i = 0; i < this._routes.length; ++i) {
+			var descriptor = this._routes[i];
+			var result = descriptor.route.exec(route);
+			if (result === null)
+				continue;
+			var args = {};
+			BetaJS.Objs.iter(descriptor.mapping, function (key, i) {
+				args[key] = result[i + 1];
+			});
+			return {
+				state: descriptor.state,
+				args: args
+			};
+		}
+		return null;
+	},
+	
+	currentRoute: function () {
+		return this.readRoute(this._host.state());
+	},
+	
+	navigateRoute: function (route) {
+		var parsed = this.parseRoute(route);
+		if (parsed)
+			this._host.next(parsed.state, parsed.args);
+	}
+	
 });
 
 BetaJS.Class.extend("BetaJS.Parser.Lexer", {

@@ -18,3 +18,19 @@ test("test states w extend", function() {
 	host.state().next("B");
 	QUnit.equal(host.state().state_name(), "B");
 });
+
+test("test states w router", function () {
+	var host = new BetaJS.States.Host();
+	var S = BetaJS.States.State.extend("BetaJS.Test.S");
+	var A = S.extend("BetaJS.Test.A");
+	var B = S.extend("BetaJS.Test.B");
+	var C = S.extend("BetaJS.Test.C");
+	var router = new BetaJS.States.StateRouter(host);
+	router.registerRoute("a", "A");
+	router.registerRoute("b", "B");
+	router.registerRoute("c", "C");
+	host.initialize("BetaJS.Test.A");
+	QUnit.equal(router.currentRoute(), "a");
+	router.navigateRoute("c");
+	QUnit.equal(host.state().state_name(), "C");
+});
