@@ -124,15 +124,12 @@ BetaJS.Class.prototype._notify = function (name) {
 	if (!this.cls.__notifications)
 		return;
 	var rest = Array.prototype.slice.call(arguments, 1);
-	var table = this.cls.__notifications[name];
-	if (table) {
-		for (var i in table) {
-			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
-			if (!method)
-				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
-			method.apply(this, rest);
-		}
-	}
+	BetaJS.Objs.iter(this.cls.__notifications[name], function (entry) {
+		var method = BetaJS.Types.is_function(entry) ? entry : this[entry];
+		if (!method)
+			throw this.cls.classname  + ": Could not find " + name + " notification handler " + entry;
+		method.apply(this, rest);
+	}, this);
 };
 
 BetaJS.Class.prototype.destroy = function () {
