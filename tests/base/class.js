@@ -25,6 +25,38 @@ test("test object inheritance", function() {
 });
 
 
+test("test object inheritance 2", function() {
+	var A = BetaJS.Class.extend(null, {
+		test: function (x) {
+			return x + "a";
+		},
+		test2: function () {
+			return "z";
+		}
+	});
+	var B = A.extend(null);
+	var C = B.extend(null, function (inherited) {
+		return {
+			test: function (x) {
+				return x + "c" + inherited.test.call(this, "c");
+			}
+		};
+	});
+	var D = C.extend(null);
+	var E = D.extend(null, function (inherited) {
+		return {
+			test: function (x) {
+				return x + "e" + inherited.test.call(this, "e");
+			}
+		};
+	});
+	var e = new E();
+	QUnit.equal(e.test("g"), "geecca");
+	QUnit.equal(e.test2(), "z");
+	ok(e.instance_of(B) && !B.ancestor_of(C));
+});
+
+
 test("test constructor & destructor", function() {
 	var A = BetaJS.Class.extend(null, {
 		_notifications: {

@@ -1,6 +1,9 @@
-var BetaJS = BetaJS || {};
-/*
- * Export for NodeJS
- */
-if (typeof module != "undefined" && "exports" in module)
-	module.exports = BetaJS;
+Scoped.binding("module", "global:BetaJS");
+
+Scoped.define("global:BetaJS", function () {
+	return {};
+});
+
+Scoped.require(["global:BetaJS"], function (mod) {
+	Scoped.exports(mod);
+});

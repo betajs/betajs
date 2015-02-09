@@ -1,7 +1,5 @@
 BetaJS.Class = function () {};
 
-BetaJS.Class.classname = "Class";
-
 BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	objects = objects || [];
 	if (!BetaJS.Types.is_array(objects))
@@ -14,6 +12,12 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		class_statics = [class_statics];
 	
 	var parent = this;
+	
+	objects = BetaJS.Objs.map(objects, function (obj) {
+		if (BetaJS.Types.is_function(obj))
+			obj = obj(parent.prototype);
+		return obj;
+	});
 	
 	var result;
 	
@@ -31,7 +35,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 	// Add External Statics
 	BetaJS.Objs.iter(statics, function (stat) {
-		BetaJS.Objs.extend(result, stat);
+		BetaJS.Objs.extend(result, BetaJS.Types.is_function(stat) ? stat(parent) : stat);
 	});
 	
 	
@@ -100,84 +104,125 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 };
 
 
+/*
+ * 
+ * Extending the Class
+ * 
+ */
 
-BetaJS.Class.prototype.constructor = function () {
-	this._notify("construct");
-};
 
-BetaJS.Class.prototype.as_method = function (s) {
-	return BetaJS.Functions.as_method(this[s], this);
-};
+BetaJS.Objs.extend(BetaJS.Class, {
+	
+	classname: "Class",
+	
+	__class_guid: "0f5499f9-f0d1-4c6c-a561-ef026a1eee05",	
+	
+	__notifications: {},
+	
+	ancestor_of: function (cls) {
+		return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
+	},
+	
+	is_class: function (cls) {
+		return cls && BetaJS.Types.is_object(cls) && ("__class_guid" in cls) && cls.__class_guid == this.__class_guid;
+	},
+	
+	is_class_instance: function (obj) {
+		return obj && BetaJS.Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
+	},
+	
+	is_instance_of: function (obj) {
+		return obj && this.is_class_instance(obj) && obj.instance_of(this);
+	},
+	
+	// Legacy Methods
 
-BetaJS.Class.prototype._auto_destroy = function (obj) {
-	if (!this.__auto_destroy_list)
-		this.__auto_destroy_list = [];
-	var target = obj;
-	if (!BetaJS.Types.is_array(target))
-	   target = [target];
-	for (var i = 0; i < target.length; ++i)
-	   this.__auto_destroy_list.push(target[i]);
-	return obj;
-};
+	_inherited: function (cls, func) {
+		return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
+	}	
+	
+});
 
-BetaJS.Class.prototype._notify = function (name) {
-	if (!this.cls.__notifications)
-		return;
-	var rest = Array.prototype.slice.call(arguments, 1);
-	var table = this.cls.__notifications[name];
-	if (table) {
-		for (var i in table) {
-			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
-			if (!method)
-				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
-			method.apply(this, rest);
+
+
+
+
+
+/*
+ * 
+ * Extending the Object
+ * 
+ */
+
+
+BetaJS.Objs.extend(BetaJS.Class.prototype, {
+	
+	__class_instance_guid: "e6b0ed30-80ee-4b28-af02-7d52430ba45f",
+	
+	constructor: function () {
+		this._notify("construct");
+	},
+	
+	destroy: function () {
+		this._notify("destroy");
+		if (this.__auto_destroy_list) {
+			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
+				if ("destroy" in this.__auto_destroy_list[i])
+					this.__auto_destroy_list[i].destroy();
+			}
 		}
-	}
-};
+		for (var key in this)
+			delete this[key];
+	},
+	
+	cid: function () {
+		return BetaJS.Ids.objectId(this);
+	},
 
-BetaJS.Class.prototype.destroy = function () {
-	this._notify("destroy");
-	if (this.__auto_destroy_list) {
-		for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
-			if ("destroy" in this.__auto_destroy_list[i])
-				this.__auto_destroy_list[i].destroy();
+	cls: BetaJS.Class,
+	
+	as_method: function (s) {
+		return BetaJS.Functions.as_method(this[s], this);
+	},
+	
+	auto_destroy: function (obj) {
+		if (!this.__auto_destroy_list)
+			this.__auto_destroy_list = [];
+		var target = obj;
+		if (!BetaJS.Types.is_array(target))
+		   target = [target];
+		for (var i = 0; i < target.length; ++i)
+		   this.__auto_destroy_list.push(target[i]);
+		return obj;
+	},
+	
+	_notify: function (name) {
+		if (!this.cls.__notifications)
+			return;
+		var rest = Array.prototype.slice.call(arguments, 1);
+		var table = this.cls.__notifications[name];
+		if (table) {
+			for (var i in table) {
+				var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
+				if (!method)
+					throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
+				method.apply(this, rest);
+			}
 		}
+	},
+	
+	instance_of: function (cls) {
+		return this.cls.ancestor_of(cls);
+	},
+	
+	// Legacy Methods
+	
+	_auto_destroy: function(obj) {
+		return this.auto_destroy(obj);
+	},
+	
+	_inherited: function (cls, func) {
+		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 	}
-	for (var key in this)
-		delete this[key];
-};
-
-BetaJS.Class.prototype._inherited = function (cls, func) {
-	return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-};
-
-BetaJS.Class._inherited = function (cls, func) {
-	return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-};
-
-BetaJS.Class.prototype.instance_of = function (cls) {
-	return this.cls.ancestor_of(cls);
-};
-
-BetaJS.Class.prototype.__clsguid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
-
-BetaJS.Class.ancestor_of = function (cls) {
-	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
-};
-
-BetaJS.Class.is_instance_of = function (instance) {
-	return instance && instance.__clsguid == BetaJS.Class.prototype.__clsguid && instance.instance_of(this);
-};
-
-BetaJS.Class.prototype.cid = function () {
-	return BetaJS.Ids.objectId(this);
-};
-
-BetaJS.Class.prototype.cls = BetaJS.Class;
-
-BetaJS.Class.__notifications = {};
-
-BetaJS.Class.is_class_instance = function (object) {
-	return object && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
-};
-
+	
+});

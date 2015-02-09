@@ -160,7 +160,7 @@ BetaJS.Class.extend("BetaJS.RMI.Server", [
 	},
 	
 	_serializeValue: function (value) {
-		if (BetaJS.RMI.Skeleton.is_class_instance(value) && value.instance_of(BetaJS.RMI.Skeleton)) {
+		if (BetaJS.RMI.Skeleton.is_instance_of(value)) {
 			var registry = this;
 			registry.registerInstance(value);
 			return {
@@ -234,7 +234,7 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 	},
 	
 	_serializeValue: function (value) {
-		if (BetaJS.RMI.Skeleton.is_class_instance(value) && value.instance_of(BetaJS.RMI.Skeleton)) {
+		if (BetaJS.RMI.Skeleton.is_instance_of(value)) {
 			var registry = this.server;
 			registry.registerInstance(value);
 			return {

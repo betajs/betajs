@@ -1,526 +1,2158 @@
 /*!
-betajs - v1.0.0 - 2015-02-05
+betajs - v1.0.0 - 2015-02-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
-var BetaJS = BetaJS || {};
-/*
- * Export for NodeJS
- */
-if (typeof module != "undefined" && "exports" in module)
-	module.exports = BetaJS;
+/*!
+betajs-scoped - v0.0.1 - 2014-12-13
+Copyright (c) Oliver Friedmann
+MIT Software License.
+*/
+var Scoped = (function () {
+var Globals = {
 
-/** @class */
-BetaJS.Types = {
-	
-    /** Returns whether argument is an object
-     * 
-     * @param x argument
-     * @return true if x is an object
-     */
-	is_object: function (x) {
-		return typeof x == "object";
-	},
-	
-    /** Returns whether argument is an array
-     * 
-     * @param x argument
-     * @return true if x is an array
-     */
-	is_array: function (x) {
-		return Object.prototype.toString.call(x) === '[object Array]';
-	},
-	
-    /** Returns whether argument is undefined (which is different from being null)
-     * 
-     * @param x argument
-     * @return true if x is undefined
-     */
-	is_undefined: function (x) {
-		return typeof x == "undefined";		
-	},
-	
-    /** Returns whether argument is null (which is different from being undefined)
-     * 
-     * @param x argument
-     * @return true if x is null
-     */
-	is_null: function (x) {
-		return x === null;
-	},
-	
-    /** Returns whether argument is undefined or null
-     * 
-     * @param x argument
-     * @return true if x is undefined or null
-     */
-	is_none: function (x) {
-		return this.is_undefined(x) || this.is_null(x);
-	},
-	
-    /** Returns whether argument is defined (could be null)
-     * 
-     * @param x argument
-     * @return true if x is defined
-     */
-	is_defined: function (x) {
-		return typeof x != "undefined";
-	},
-	
-    /** Returns whether argument is empty (undefined, null, an empty array or an empty object)
-     * 
-     * @param x argument
-     * @return true if x is empty
-     */
-	is_empty: function (x) {
-		if (this.is_none(x)) 
-			return true;
-		if (this.is_array(x))
-			return x.length === 0;
-		if (this.is_object(x)) {
-			for (var key in x)
-				return false;
-			return true;
+	get : function(key) {
+		try {
+			if (window)
+				return window[key];
+		} catch (e) {
 		}
-		return false; 
-	},
-	
-    /** Returns whether argument is a string
-     * 
-     * @param x argument
-     * @return true if x is a a string
-     */
-	is_string: function (x) {
-		return typeof x == "string";
-	},
-	
-    /** Returns whether argument is a function
-     * 
-     * @param x argument
-     * @return true if x is a function
-     */
-	is_function: function (x) {
-		return typeof x == "function";
-	},
-	
-    /** Returns whether argument is boolean
-     * 
-     * @param x argument
-     * @return true if x is boolean
-     */
-	is_boolean: function (x) {
-		return typeof x == "boolean";
-	},
-	
-    /** Compares two values
-     * 
-     * If values are booleans, we compare them directly.
-     * If values are arrays, we compare them recursively by their components.
-     * Otherwise, we use localeCompare which compares strings.
-     * 
-     * @param x left value
-     * @param y right value
-     * @return 1 if x > y, -1 if x < y and 0 if x == y
-     */
-	compare: function (x, y) {
-		if (BetaJS.Types.is_boolean(x) && BetaJS.Types.is_boolean(y))
-			return x == y ? 0 : (x ? 1 : -1);
-		if (BetaJS.Types.is_array(x) && BetaJS.Types.is_array(y)) {
-			var len_x = x.length;
-			var len_y = y.length;
-			var len = Math.min(len_x, len_y);
-			for (var i = 0; i < len; ++i) {
-				var c = this.compare(x[i], y[i]);
-				if (c !== 0)
-					return c;
-			}
-			return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
+		try {
+			if (global)
+				return global[key];
+		} catch (e) {
 		}
-		return x.localeCompare(y);			
-	},
-	
-    /** Parses a boolean string
-     * 
-     * @param x boolean as a string
-     * @return boolean value
-     */	
-	parseBool: function (x) {
-		if (this.is_boolean(x))
-			return x;
-		if (x == "true")
-			return true;
-		if (x == "false")
-			return false;
-		return null;
-	},
-	
-    /** Returns the type of a given expression
-     * 
-     * @param x expression
-     * @return type string
-     */	
-	type_of: function (x) {
-		if (this.is_array(x))
-			return "array";
-		return typeof x;
-	},
-	
-	parseType: function (x, type) {
-		if (!BetaJS.Types.is_string(x))
-			return x;
-		type = type.toLowerCase();
-		if (type == "bool" || type == "boolean")
-			return this.parseBool(x);
-		if (type == "int" || type == "integer")
-			return parseInt(x, 10);
-		if (type == "date" || type == "time" || type == "datetime")
-			return parseInt(x, 10);
-		return x;
-	}
-
-
-};
-
-/** @class */
-BetaJS.Strings = {
-
-	/** Converts a string new lines to html <br /> tags
-	 *
-	 * @param s string
-	 * @return string with new lines replaced by <br />
-	 */
-	nl2br : function(s) {
-		return (s + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1<br />$2');
-	},
-
-	/** Converts special characters in a string to html entitiy symbols
-	 *
-	 * @param s string
-	 * @return converted string
-	 */
-	htmlentities : function(s) {
-		return (s + "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g, '&#x2F;');
-	},
-
-	JS_ESCAPES : {
-		"'" : "'",
-		'\\' : '\\',
-		'\r' : 'r',
-		'\n' : 'n',
-		'\t' : 't',
-		'\u2028' : 'u2028',
-		'\u2029' : 'u2029'
-	},
-
-	JS_ESCAPER_REGEX : function() {
-		if (!this.JS_ESCAPER_REGEX_CACHED)
-			this.JS_ESCAPER_REGEX_CACHED = new RegExp(BetaJS.Objs.keys(this.JS_ESCAPES).join("|"), 'g');
-		return this.JS_ESCAPER_REGEX_CACHED;
-	},
-
-	/** Converts string such that it can be used in javascript by escaping special symbols
-	 *
-	 * @param s string
-	 * @return escaped string
-	 */
-	js_escape : function(s) {
-		var self = this;
-		return s.replace(this.JS_ESCAPER_REGEX(), function(match) {
-			return '\\' + self.JS_ESCAPES[match];
-		});
-	},
-
-	/** Determines whether a string starts with a sub string
-	 *
-	 * @param s string in question
-	 * @param needle sub string
-	 * @return true if string in question starts with sub string
-	 */
-	starts_with : function(s, needle) {
-		return s.substring(0, needle.length) == needle;
-	},
-
-	/** Determines whether a string ends with a sub string
-	 *
-	 * @param s string in question
-	 * @param needle sub string
-	 * @return true if string in question ends with sub string
-	 */
-	ends_with : function(s, needle) {
-		return s.indexOf(needle, s.length - needle.length) !== -1;
-	},
-
-	/** Removes sub string from a string if string starts with sub string
-	 *
-	 * @param s string in question
-	 * @param needle sub string
-	 * @return string without sub string if it starts with sub string otherwise it returns the original string
-	 */
-	strip_start : function(s, needle) {
-		return this.starts_with(s, needle) ? s.substring(needle.length) : s;
-	},
-	
-	/** Returns the complete remaining part of a string after a the last occurrence of a sub string
-	 *
-	 * @param s string in question
-	 * @param needle sub string
-	 * @return remaining part of the string in question after the last occurrence of the sub string
-	 */
-	last_after : function(s, needle) {
-		return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
-	},
-	
-	first_after: function (s, needle) {
-		return s.substring(s.indexOf(needle) + 1, s.length);
-	},
-
-	EMAIL_ADDRESS_REGEX : /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-
-	/** Determines whether a string is a syntactically valid email address
-	 *
-	 * @param s string in question
-	 * @return true if string looks like an email address
-	 */
-	is_email_address : function(s) {
-		return this.EMAIL_ADDRESS_REGEX.test(s);
-	},
-
-	STRIP_HTML_TAGS : ["script", "style", "head"],
-	STRIP_HTML_REGEX : /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
-	STRIP_HTML_COMMENT_REGEX : /<![^>]*>/gi,
-
-	/** Removes all html from data and returns plain text
-	 *
-	 * @param html string containing html
-	 * @return string containing the plain text part of it
-	 */
-	strip_html : function(html) {
-		var result = html;
-		for ( i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
-			result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">", "i"), '');
-		result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
-		return result;
-	},
-	
-	splitFirst: function (s, delimiter) {
-		var i = s.indexOf(delimiter);
-		return {
-			head: i >= 0 ? s.substring(0, i) : s,
-			tail: i >= 0 ? s.substring(i + delimiter.length) : ""
-		};
-	},
-	
-	splitLast: function (s, delimiter) {
-		var i = s.lastIndexOf(delimiter);
-		return {
-			head: i >= 0 ? s.substring(0, i) : "",
-			tail: i >= 0 ? s.substring(i + delimiter.length) : s
-		};
-	},
-
-	/** Trims all trailing and leading whitespace and removes block indentations
-	 *
-	 * @param s string
-	 * @return string with trimmed whitespaces and removed block indentation
-	 */
-	nltrim : function(s) {
-		var a = s.replace(/\t/g, "  ").split("\n");
-		var len = null;
-		var i = 0;
-		for ( i = 0; i < a.length; ++i) {
-			var j = 0;
-			while (j < a[i].length) {
-				if (a[i].charAt(j) != ' ')
-					break;
-				++j;
-			}
-			if (j < a[i].length)
-				len = len === null ? j : Math.min(j, len);
-		}
-		for ( i = 0; i < a.length; ++i)
-			a[i] = a[i].substring(len);
-		return a.join("\n").trim();
-	},
-
-	read_cookie_string : function(raw, key) {
-		var cookie = "; " + raw;
-		var parts = cookie.split("; " + key + "=");
-		if (parts.length == 2)
-			return parts.pop().split(";").shift();
 		return null;
 	},
 
-	write_cookie_string : function(raw, key, value) {
-		var cookie = "; " + raw;
-		var parts = cookie.split("; " + key + "=");
-		if (parts.length == 2)
-			cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
-		return key + "=" + value + cookie;
-	},
-
-	capitalize : function(input) {
-		return input.replace(/\w\S*/g, function(txt) {
-			return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-		});
-	},
-
-	email_get_name : function(input) {
-	    input = input || "";
-		var temp = input.split("<");
-		input = temp[0].trim();
-		if (!input && temp.length > 1) {
-			temp = temp[1].split(">");
-			input = temp[0].trim();
-		}		
-		input = input.replace(/['"]/g, "").replace(/[\\._@]/g, " ");
-		return this.capitalize(input);
-	},
-
-	email_get_email : function(input) {
-        input = input || "";
-		var temp = input.split("<");
-		input = temp[0].trim();
-		if (temp.length > 1) {
-			temp = temp[1].split(">");
-			input = temp[0].trim();
+	set : function(key, value) {
+		try {
+			if (window)
+				window[key] = value;
+		} catch (e) {
 		}
-		input = input.replace(/'/g, "").replace(/"/g, "").trim();
-		return input;
-	},
-
-	email_get_salutatory_name : function(input) {
-        input = input || "";
-		return (this.email_get_name(input).split(" "))[0];
+		try {
+			if (global)
+				global[key] = value;
+		} catch (e) {
+		}
 	}
-};
 
-/** @class */
-BetaJS.Functions = {
-	
-    /** Takes a function and an instance and returns the method call as a function
-     * 
-     * @param func function
-     * @param instance instance
-     * @return method call 
-     */
-	as_method: function (func, instance) {
-		return function() {
-			return func.apply(instance, arguments);
-		};
-	},
-	
-    /** Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call. In other words a lazy function cache.
-     * 
-     * @param func function
-     * @return cached function 
-     */
-	once: function (func) {
-		var result = false;
-		var executed = false;
+};
+var Helper = {
+		
+	method: function (obj, func) {
 		return function () {
-			if (executed)
-				return result;
-			executed = true;
-			result = func.apply(this, arguments);
-			func = null;
-			return result;
+			func.apply(obj, arguments);
 		};
 	},
 	
-    /** Converts some other function's arguments to an array
-     * 
-     * @param func function arguments
-     * @param slice number of arguments to be omitted (default: 0)
-     * @return arguments as array 
-     */	
-	getArguments: function (args, slice) {
-		return Array.prototype.slice.call(args, slice || 0);
+	extend: function (base, overwrite) {
+		base = base || {};
+		overwrite = overwrite || {};
+		for (var key in overwrite)
+			base[key] = overwrite[key];
+		return base;
 	},
 	
-    /** Matches functions arguments against some pattern
-     * 
-     * @param args function arguments
-     * @param pattern typed pattern
-     * @return matched arguments as associative array 
-     */	
-	matchArgs: function (args, skip, pattern) {
-		if (arguments.length < 3) {
-			pattern = skip;
-			skip = 0;
-		}
-		var i = skip;
+	typeOf: function (obj) {
+		return Object.prototype.toString.call(obj) === '[object Array]' ? "array" : typeof obj;
+	},
+	
+	matchArgs: function (args, pattern) {
+		var i = 0;
 		var result = {};
 		for (var key in pattern) {
-			var config = pattern[key];
-			if (config === true)
-				config = {required: true};
-			else if (typeof config == "string")
-				config = {type: config};
-			if (config.required || (config.type && BetaJS.Types.type_of(args[i]) == config.type)) {
+			if (pattern[key] === true || this.typeOf(args[i]) == pattern[key]) {
 				result[key] = args[i];
 				i++;
-			} else if (config.def) {
-				result[key] = BetaJS.Types.is_function(config.def) ? config.def(result) : config.def;
-			}				
+			} else if (this.typeOf(args[i]) == "undefined")
+				i++;
 		}
 		return result;
-	},
-	
-	newClassFunc: function (cls) {
-		return function () {
-			var args = arguments;
-			function F() {
-				return cls.apply(this, args);
-			}
-			F.prototype = cls.prototype;
-			return new F();
-		};
-	},
-	
-	newClass: function (cls) {
-		return this.newClassFunc(cls).apply(this, BetaJS.Functions.getArguments(arguments, 1));
 	}
 	
-};
 
-/** @class */
-BetaJS.Async = {
-	
-	eventually: function (func, params, context) {
-		var timer = setTimeout(function () {
-			clearTimeout(timer);
-			if (!BetaJS.Types.is_array(params)) {
-				context = params;
-				params = [];
-			}
-			func.apply(context || this, params || []);
-		}, 0);
+};
+var Scoped = {
+		
+	__namespace: "Scoped",
+
+	attach : function(namespace) {
+		if (namespace)
+			Scoped.__namespace = namespace;
+		var current = Globals.get(Scoped.__namespace);
+		if (current == this)
+			return this;
+		Scoped.__revert = current;
+		Globals.set(namespace, this);
+		return this;
 	},
 	
-	eventuallyOnce: function (func, params, context) {
-		var data = {
-			func: func,
-			params: params,
-			context: context
-		};
-		for (var key in this.__eventuallyOnce) {
-			if (BetaJS.Comparators.listEqual(this.__eventuallyOnce[key], data))
-				return;
+	detach: function (forceDetach) {
+		if (forceDetach)
+			Globals.set(Scoped.__namespace, null);
+		if (typeof Scoped.__revert != "undefined")
+			Globals.set(Scoped.__namespace, Scoped.__revert);
+		delete Scoped.__revert;
+		return this;
+	},
+	
+	exports: function (object) {
+		if (typeof module != "undefined" && "exports" in module)
+			module.exports = object;
+		return this;
+	}	
+
+};
+function newNamespace (options) {
+	
+	options = Helper.extend({
+		tree: false,
+		global: false
+	}, options);
+	
+	function initNode(options) {
+		return Helper.extend({
+			route: null,
+			parent: null,
+			children: {},
+			watchers: [],
+			data: {},
+			ready: false
+		}, options);
+	}
+	
+	var nsRoot = initNode({ready: true});
+	
+	var treeRoot = null;
+	
+	if (options.tree) {
+		if (options.global) {
+			try {
+				if (window)
+					treeRoot = window;
+			} catch (e) { }
+			try {
+				if (global)
+					treeRoot = global;
+			} catch (e) { }
+		} else
+			treeRoot = {};
+		nsRoot.data = treeRoot;
+	}
+	
+	function nodeDigest(node) {
+		if (node.ready)
+			return;
+		if (node.parent && !node.parent.ready) {
+			nodeDigest(node.parent);
+			return;
 		}
-		this.__eventuallyOnceIdx++;
-		var index = this.__eventuallyOnceIdx;
-		this.__eventuallyOnce[index] = data;
-		this.eventually(function () {
-			delete this.__eventuallyOnce[index];
-			func.apply(context || this, params || []);
-		}, this);
-	},
+		if (node.route in node.parent.data) {
+			node.data = node.parent.data[node.route];
+			node.ready = true;
+			for (var i = 0; i < node.watchers.length; ++i)
+				node.watchers[i].callback.call(node.watchers[i].context || this, node.data);
+			node.watchers = [];
+			for (var key in node.children)
+				nodeDigest(node.children[key]);
+		}
+	}
 	
-	__eventuallyOnce: {},
-	__eventuallyOnceIdx: 1
+	function nodeEnforce(node) {
+		if (node.ready)
+			return;
+		if (node.parent && !node.parent.ready)
+			nodeEnforce(node.parent);
+		node.ready = true;
+		if (options.tree && typeof node.parent.data == "object")
+			node.parent.data[node.route] = node.data;
+		for (var i = 0; i < node.watchers.length; ++i)
+			node.watchers[i].callback.call(node.watchers[i].context || this, node.data);
+		node.watchers = [];
+	}
+	
+	function nodeSetData(node, value) {
+		if (typeof value == "object") {
+			for (var key in value) {
+				node.data[key] = value[key];
+				if (node.children[key])
+					node.children[key].data = value[key];
+			}
+		} else
+			node.data = value;
+		nodeEnforce(node);
+		for (var k in node.children)
+			nodeDigest(node.children[k]);
+	}
+	
+	function nodeClearData(node) {
+		if (node.ready && node.data) {
+			for (var key in node.data)
+				delete node.data[key];
+		}
+	}
+	
+	function nodeNavigate(path) {
+		if (!path)
+			return nsRoot;
+		var routes = path.split(".");
+		var current = nsRoot;
+		for (var i = 0; i < routes.length; ++i) {
+			if (routes[i] in current.children)
+				current = current.children[routes[i]];
+			else {
+				current.children[routes[i]] = initNode({
+					parent: current,
+					route: routes[i]
+				});
+				current = current.children[routes[i]];
+				nodeDigest(current);
+			}
+		}
+		return current;
+	}
+	
+	function nodeAddWatcher(node, callback, context) {
+		if (node.ready)
+			callback.call(context || this, node.data);
+		else {
+			node.watchers.push({
+				callback: callback,
+				context: context
+			});
+		}
+	}
+
+	return {
+		
+		extend: function (path, value) {
+			nodeSetData(nodeNavigate(path), value);
+		},
+		
+		set: function (path, value) {
+			var node = nodeNavigate(path);
+			if (node.data)
+				nodeClearData(node);
+			nodeSetData(node, value);
+		},
+		
+		digest: function (path) {
+			nodeDigest(nodeNavigate(path));
+		},
+		
+		obtain: function (path, callback, context) {
+			nodeAddWatcher(nodeNavigate(path), callback, context);
+		}
+		
+	};
+	
+}
+function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
+	
+	var self = this;
+	var nextScope = null;
+	var childScopes = [];
+	var localNamespace = newNamespace({tree: true});
+	var privateNamespace = newNamespace({tree: false});
+	
+	var bindings = {
+		"global": {
+			namespace: globalNamespace
+		}, "root": {
+			namespace: rootNamespace
+		}, "local": {
+			namespace: localNamespace
+		}, "default": {
+			namespace: privateNamespace
+		}, "parent": {
+			namespace: parentNamespace
+		}, "scope": {
+			namespace: localNamespace,
+			readonly: false
+		}
+	};
+	
+	return {
+		
+		nextScope: function () {
+			if (!nextScope)
+				nextScope = newScope(this, localNamespace, rootNamespace, globalNamespace);
+			return nextScope;
+		},
+		
+		subScope: function () {
+			var sub = this.nextScope();
+			childScopes.push(sub);
+			nextScope = null;
+			return sub;
+		},
+		
+		binding: function (alias, namespaceLocator, options) {
+			if (!bindings[alias] || !bindings[alias].readonly)
+				bindings[alias] = Helper.extend(options, this.resolve(namespaceLocator));
+			return this;
+		},
+		
+		resolve: function (namespaceLocator) {
+			var parts = namespaceLocator.split(":");
+			if (parts.length == 1) {
+				return {
+					namespace: privateNamespace,
+					path: parts[0]
+				};
+			} else {
+				var binding = bindings[parts[0]];
+				return {
+					namespace: binding.namespace,
+					path : binding.path && parts[1] ? binding.path + "." + parts[1] : (binding.path || parts[1])
+				};
+			}
+		},
+		
+		define: function () {
+			var args = Helper.matchArgs(arguments, {
+				namespaceLocator: true,
+				dependencies: "array",
+				hiddenDependencies: "array",
+				callback: true,
+				context: "object"
+			});
+			var ns = this.resolve(args.namespaceLocator);
+			this.require(args.dependencies, args.hiddenDependencies, function () {
+				ns.namespace.set(ns.path, args.callback.apply(args.context || this, arguments));
+			}, this);
+			return this;
+		},
+		
+		extend: function () {
+			var args = Helper.matchArgs(arguments, {
+				namespaceLocator: true,
+				dependencies: "array",
+				hiddenDependencies: "array",
+				callback: true,
+				context: "object"
+			});
+			var ns = this.resolve(args.namespaceLocator);
+			this.require(args.dependencies, args.hiddenDependencies, function () {
+				ns.namespace.extend(ns.path, args.callback.apply(args.context || this, arguments));
+			}, this);
+			return this;
+		},
+		
+		condition: function () {
+			var args = Helper.matchArgs(arguments, {
+				namespaceLocator: true,
+				dependencies: "array",
+				hiddenDependencies: "array",
+				callback: true,
+				context: "object"
+			});
+			var ns = this.resolve(args.namespaceLocator);
+			this.require(args.dependencies, args.hiddenDependencies, function () {
+				var result = args.callback.apply(args.context || this, arguments);
+				if (result)
+					ns.namespace.set(ns.path, result);
+			}, this);
+			return this;
+		},
+		
+		require: function () {
+			var args = Helper.matchArgs(arguments, {
+				dependencies: "array",
+				hiddenDependencies: "array",
+				callback: true,
+				context: "object"
+			});
+			var dependencies = args.dependencies || [];
+			var allDependencies = dependencies.concat(args.hiddenDependencies || []);
+			var count = allDependencies.length;
+			var deps = [];
+			if (count) {
+				for (var i = 0; i < allDependencies.length; ++i) {
+					var ns = this.resolve(allDependencies[i]);
+					if (i < dependencies.length)
+						deps.push(null);
+					ns.namespace.obtain(ns.path, function (value) {
+						if (this.i < deps.length)
+							deps[this.i] = value;
+						count--;
+						if (count === 0)
+							args.callback.apply(args.context || this.ctx, deps);
+					}, {
+						ctx: this,
+						i: i
+					});
+				}
+			} else
+				args.callback.apply(args.context || this, deps);
+			return this;
+		},
+		
+		digest: function (namespaceLocator) {
+			var ns = this.resolve(namespaceLocator);
+			ns.namespace.digest(ns.path);
+			return this;
+		}		
+		
+	};
+	
+}
+var globalNamespace = newNamespace({tree: true, global: true});
+var rootNamespace = newNamespace({tree: true});
+var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
+
+var Public = {
+		
+	attach: Scoped.attach,
+	detach: Scoped.detach,
+	exports: Scoped.exports,
+	
+	nextScope: Helper.method(rootScope, rootScope.nextScope),
+	subScope: Helper.method(rootScope, rootScope.nextScope),
+	binding: Helper.method(rootScope, rootScope.binding),
+	condition: Helper.method(rootScope, rootScope.condition),
+	define: Helper.method(rootScope, rootScope.define),
+	extend: Helper.method(rootScope, rootScope.extend),
+	require: Helper.method(rootScope, rootScope.require),
+	digest: Helper.method(rootScope, rootScope.digest)	
 	
 };
+Public.attach();
+Public.exports(Public);
+	return Public;
+}).call(this);
+Scoped.binding("module", "global:BetaJS");
 
+Scoped.define("global:BetaJS", function () {
+	return {};
+});
+
+Scoped.require(["global:BetaJS"], function (mod) {
+	Scoped.exports(mod);
+});
+
+Scoped.define("module:Types", function () {
+	return {
+		/**
+		 * Returns whether argument is an object
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is an object
+		 */
+		is_object : function(x) {
+			return typeof x == "object";
+		},
+
+		/**
+		 * Returns whether argument is an array
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is an array
+		 */
+		is_array : function(x) {
+			return Object.prototype.toString.call(x) === '[object Array]';
+		},
+
+		/**
+		 * Returns whether argument is undefined (which is different from being
+		 * null)
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is undefined
+		 */
+		is_undefined : function(x) {
+			return typeof x == "undefined";
+		},
+
+		/**
+		 * Returns whether argument is null (which is different from being
+		 * undefined)
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is null
+		 */
+		is_null : function(x) {
+			return x === null;
+		},
+
+		/**
+		 * Returns whether argument is undefined or null
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is undefined or null
+		 */
+		is_none : function(x) {
+			return this.is_undefined(x) || this.is_null(x);
+		},
+
+		/**
+		 * Returns whether argument is defined (could be null)
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is defined
+		 */
+		is_defined : function(x) {
+			return typeof x != "undefined";
+		},
+
+		/**
+		 * Returns whether argument is empty (undefined, null, an empty array or
+		 * an empty object)
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is empty
+		 */
+		is_empty : function(x) {
+			if (this.is_none(x))
+				return true;
+			if (this.is_array(x))
+				return x.length === 0;
+			if (this.is_object(x)) {
+				for ( var key in x)
+					return false;
+				return true;
+			}
+			return false;
+		},
+
+		/**
+		 * Returns whether argument is a string
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is a a string
+		 */
+		is_string : function(x) {
+			return typeof x == "string";
+		},
+
+		/**
+		 * Returns whether argument is a function
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is a function
+		 */
+		is_function : function(x) {
+			return typeof x == "function";
+		},
+
+		/**
+		 * Returns whether argument is boolean
+		 * 
+		 * @param x
+		 *            argument
+		 * @return true if x is boolean
+		 */
+		is_boolean : function(x) {
+			return typeof x == "boolean";
+		},
+
+		/**
+		 * Compares two values
+		 * 
+		 * If values are booleans, we compare them directly. If values are
+		 * arrays, we compare them recursively by their components. Otherwise,
+		 * we use localeCompare which compares strings.
+		 * 
+		 * @param x
+		 *            left value
+		 * @param y
+		 *            right value
+		 * @return 1 if x > y, -1 if x < y and 0 if x == y
+		 */
+		compare : function(x, y) {
+			if (this.is_boolean(x) && this.is_boolean(y))
+				return x == y ? 0 : (x ? 1 : -1);
+			if (this.is_array(x) && this.is_array(y)) {
+				var len_x = x.length;
+				var len_y = y.length;
+				var len = Math.min(len_x, len_y);
+				for (var i = 0; i < len; ++i) {
+					var c = this.compare(x[i], y[i]);
+					if (c !== 0)
+						return c;
+				}
+				return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
+			}
+			return x.localeCompare(y);
+		},
+
+		/**
+		 * Parses a boolean string
+		 * 
+		 * @param x
+		 *            boolean as a string
+		 * @return boolean value
+		 */
+		parseBool : function(x) {
+			if (this.is_boolean(x))
+				return x;
+			if (x == "true")
+				return true;
+			if (x == "false")
+				return false;
+			return null;
+		},
+
+		/**
+		 * Returns the type of a given expression
+		 * 
+		 * @param x
+		 *            expression
+		 * @return type string
+		 */
+		type_of : function(x) {
+			if (this.is_array(x))
+				return "array";
+			return typeof x;
+		},
+
+		parseType : function(x, type) {
+			if (!this.is_string(x))
+				return x;
+			type = type.toLowerCase();
+			if (type == "bool" || type == "boolean")
+				return this.parseBool(x);
+			if (type == "int" || type == "integer")
+				return parseInt(x, 10);
+			if (type == "date" || type == "time" || type == "datetime")
+				return parseInt(x, 10);
+			return x;
+		}
+	};
+});
+
+Scoped.define("module:Functions", ["module:Types"], function (Types) {
+	return {
+	
+	    /** Takes a function and an instance and returns the method call as a function
+	     * 
+	     * @param func function
+	     * @param instance instance
+	     * @return method call 
+	     */
+		as_method: function (func, instance) {
+			return function() {
+				return func.apply(instance, arguments);
+			};
+		},
+		
+	    /** Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call. In other words a lazy function cache.
+	     * 
+	     * @param func function
+	     * @return cached function 
+	     */
+		once: function (func) {
+			var result = false;
+			var executed = false;
+			return function () {
+				if (executed)
+					return result;
+				executed = true;
+				result = func.apply(this, arguments);
+				func = null;
+				return result;
+			};
+		},
+		
+	    /** Converts some other function's arguments to an array
+	     * 
+	     * @param func function arguments
+	     * @param slice number of arguments to be omitted (default: 0)
+	     * @return arguments as array 
+	     */	
+		getArguments: function (args, slice) {
+			return Array.prototype.slice.call(args, slice || 0);
+		},
+		
+	    /** Matches functions arguments against some pattern
+	     * 
+	     * @param args function arguments
+	     * @param pattern typed pattern
+	     * @return matched arguments as associative array 
+	     */	
+		matchArgs: function (args, skip, pattern) {
+			if (arguments.length < 3) {
+				pattern = skip;
+				skip = 0;
+			}
+			var i = skip;
+			var result = {};
+			for (var key in pattern) {
+				var config = pattern[key];
+				if (config === true)
+					config = {required: true};
+				else if (typeof config == "string")
+					config = {type: config};
+				if (config.required || (config.type && Types.type_of(args[i]) == config.type)) {
+					result[key] = args[i];
+					i++;
+				} else if (config.def) {
+					result[key] = Types.is_function(config.def) ? config.def(result) : config.def;
+				}				
+			}
+			return result;
+		},
+		
+		newClassFunc: function (cls) {
+			return function () {
+				var args = arguments;
+				function F() {
+					return cls.apply(this, args);
+				}
+				F.prototype = cls.prototype;
+				return new F();
+			};
+		},
+		
+		newClass: function (cls) {
+			return this.newClassFunc(cls).apply(this, this.getArguments(arguments, 1));
+		}
+	
+	};
+});
+
+Scoped.define("module:Ids", function () {
+	return {
+	
+		__uniqueId: 0,
+		
+	    /** Returns a unique identifier
+	     * 
+	     * @param prefix a prefix string for the identifier (optional)
+	     * @return unique identifier
+	     */
+		uniqueId: function (prefix) {
+			return (prefix || "") + (this.__uniqueId++);
+		},
+		
+	    /** Returns the object's unique identifier or sets it
+	     * 
+	     * @param object the object
+	     * @param id (optional)
+	     * @return object's unique identifier
+	     */
+		objectId: function (object, id) {
+			if (typeof id != "undefined")
+				object.__cid = id;
+			else if (!object.__cid)
+				object.__cid = this.uniqueId("cid_");
+			return object.__cid;
+		}
+	
+	};
+});
+Scoped.define("module:Tokens", function () {
+	return {
+		
+	    /** Returns a new token
+	     * 
+	     * @param length optional length of token, default is 16
+	     * @return token
+	     */
+		generate_token: function (length) {
+			length = length || 16;
+			var s = "";
+			while (s.length < length)
+				s += Math.random().toString(36).substr(2); 
+			return s.substr(0, length);
+		}
+	
+	};
+});
+Scoped.define("module:Objs", ["module:Types"], function (Types) {
+	return {
+		
+		count: function (obj) {
+			if (Types.is_array(obj))
+				return obj.length;
+			else {
+				var c = 0;
+				for (var key in obj)
+					c++;
+				return c;
+			}
+		},
+		
+		clone: function (item, depth) {
+			if (!depth || depth === 0)
+				return item;
+			if (Types.is_array(item))
+				return item.slice(0);
+			else if (Types.is_object(item))
+				return this.extend({}, item, depth-1);
+			else
+				return item;
+		},
+		
+		acyclic_clone: function (object, def) {
+			if (object === null || ! Types.is_object(object))
+				return object;
+			var s = "__acyclic_cloned";
+			if (object[s])
+				return def || "CYCLE";
+			object[s] = true;
+			var result = {};
+			for (var key in object) {
+				if (key != s)
+					result[key] = this.acyclic_clone(object[key], def);
+			}
+			delete object[s];
+			return result;
+		},
+		
+		extend: function (target, source, depth) {
+			target = target || {};
+			if (source) {
+				for (var key in source)
+					target[key] = this.clone(source[key], depth);
+			}
+			return target;
+		},
+		
+		weak_extend: function (target, source, depth) {
+			target = target || {};
+			if (source) {
+				for (var key in source) {
+					if (!(key in target))
+						target[key] = this.clone(source[key], depth);
+				}
+			}
+			return target;
+		},
+		
+		tree_extend: function (target, source, depth) {
+			target = target || {};
+			if (source) {
+				for (var key in source) {
+					if (key in target && Types.is_object(target[key]) && Types.is_object(source[key]))
+						target[key] = this.tree_extend(target[key], source[key], depth);
+					else
+						target[key] = this.clone(source[key], depth);
+				}
+			}
+			return target;
+		},
+			
+		merge: function (secondary, primary, options) {
+			secondary = secondary || {};
+			primary = primary || {};
+			var result = {};
+			var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
+			for (var key in keys) {
+				var opt = key in options ? options[key] : "primary";
+				if (opt == "primary" || opt == "secondary") {
+					if (key in primary || key in secondary) {
+						if (opt == "primary")
+							result[key] = key in primary ? primary[key] : secondary[key];
+						else
+							result[key] = key in secondary ? secondary[key] : primary[key];
+					}			
+				}
+				else if (Types.is_function(opt))
+					result[key] = opt(secondary[key], primary[key]);
+				else if (Types.is_object(opt))
+					result[key] = this.merge(secondary[key], primary[key], opt);
+			}
+			return result;
+		},
+		
+		tree_merge: function (secondary, primary) {
+			secondary = secondary || {};
+			primary = primary || {};
+			var result = {};
+			var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
+			for (var key in keys) {
+				if (Types.is_object(primary[key]) && secondary[key])
+					result[key] = this.tree_merge(secondary[key], primary[key]);
+				else
+					result[key] = key in primary ? primary[key] : secondary[key];
+			}
+			return result;
+		},
+	
+		keys: function(obj, mapped) {
+			var result = null;
+			var key = null;
+			if (Types.is_undefined(mapped)) {
+				result = [];
+				for (key in obj)
+					result.push(key);
+				return result;
+			} else {
+				result = {};
+				for (key in obj)
+					result[key] = mapped;
+				return result;
+			}
+		},
+		
+		map: function (obj, f, context) {
+			var result = null;
+			if (Types.is_array(obj)) {
+				result = [];
+				for (var i = 0; i < obj.length; ++i)
+					result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
+				return result;
+			} else {
+				result = {};
+				for (var key in obj)
+					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+				return result;
+			}
+		},
+		
+		values: function (obj) {
+			var result = [];
+			for (var key in obj)
+				result.push(obj[key]);
+			return result;
+		},
+		
+		filter: function (obj, f, context) {
+			var ret = null;
+			if (Types.is_array(obj)) {
+				ret = [];
+				for (var i = 0; i < obj.length; ++i) {
+					if (context ? f.apply(context, [obj[i], i]) : f(obj[i], i))
+						ret.push(obj[i]);
+				}
+				return ret;
+			} else {
+				ret = {};
+				for (var key in obj) {
+					if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
+						ret[key] = obj[key];
+				}
+				return ret;
+			}
+		},
+		
+		equals: function (obj1, obj2, depth) {
+			var key = null;
+			if (depth && depth > 0) {
+				for (key in obj1) {
+					if (!key in obj2 || !this.equals(obj1[key], obj2[key], depth-1))
+						return false;
+				}
+				for (key in obj2) {
+					if (!key in obj1)
+						return false;
+				}
+				return true;
+			} else
+				return obj1 == obj2;
+		},
+		
+		iter: function (obj, f, context) {
+			var result = null;
+			if (Types.is_array(obj)) {
+				for (var i = 0; i < obj.length; ++i) {
+					result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
+					if (Types.is_defined(result) && !result)
+						return false;
+				}
+			} else {
+				for (var key in obj) {
+					result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+					if (Types.is_defined(result) && !result)
+						return false;
+				}
+			}
+			return true;
+		},
+		
+		intersect: function (a, b) {
+			var c = {};
+			for (var key in a) {
+				if (key in b)
+					c[key] = a[key];
+			}
+			return c;
+		},
+		
+		contains_key: function (obj, key) {
+			if (Types.is_array(obj))
+				return Types.is_defined(obj[key]);
+			else
+				return key in obj;
+		},
+		
+		contains_value: function (obj, value) {
+			if (Types.is_array(obj)) {
+				for (var i = 0; i < obj.length; ++i) {
+					if (obj[i] === value)
+						return true;
+				}
+			} else {
+				for (var key in obj) {
+					if (obj[key] === value)
+						return true;
+				}
+			}
+			return false;
+		},
+		
+		exists: function (obj, f, context) {
+			var success = false;
+			this.iter(obj, function () {
+				success = success || f.apply(this, arguments);
+				return !success;
+			}, context);
+			return success;
+		},
+		
+		all: function (obj, f, context) {
+			var success = true;
+			this.iter(obj, function () {
+				success = success && f.apply(this, arguments);
+				return success;
+			}, context);
+			return success;
+		},
+		
+		objectify: function (arr, f, context) {
+			var result = {};
+			var is_function = Types.is_function(f);
+			if (Types.is_undefined(f))
+				f = true;
+			for (var i = 0; i < arr.length; ++i)
+				result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
+			return result;
+		},
+		
+		peek: function (obj) {
+			if (Types.is_array(obj))
+				return obj.length > 0 ? obj[0] : null;
+			else {
+				for (var key in obj)
+					return obj[key];
+				return null;
+			} 
+		},
+		
+		poll: function (obj) {
+			if (Types.is_array(obj))
+				return obj.shift();
+			else {
+				for (var key in obj) {
+					var item = obj[key];
+					delete obj[key];
+					return item;
+				}
+				return null;
+			} 
+		},
+		
+		objectBy: function () {
+			var obj = {};
+			var count = arguments.length / 2;
+			for (var i = 0; i < count; ++i)
+				obj[arguments[2 * i]] = arguments[2 * i + 1];
+			return obj;
+		},
+		
+		valueByIndex: function (obj, idx) {
+			idx = idx || 0;
+			if (Types.is_array(obj))
+				return obj[idx];
+			for (var key in obj) {
+				if (idx === 0)
+					return obj[key];
+				idx--;
+			}
+			return null;
+		},
+		
+		keyByIndex: function (obj, idx) {
+			idx = idx || 0;
+			if (Types.is_array(obj))
+				return idx;
+			for (var key in obj) {
+				if (idx === 0)
+					return key;
+				idx--;
+			}
+			return null;
+		},
+		
+		pairArrayToObject: function (arr) {
+			var result = {};
+			for (var i = 0; i < arr.length / 2; i += 2)
+				result[arr[i]] = arr[i+1];
+			return result;
+		},
+		
+		pairsToObject: function () {
+			var result = {};
+			for (var i = 0; i < arguments.length; ++i)
+				result[arguments[i][0]] = arguments[i][1];
+			return result;
+		}
+	
+	};
+});
+Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
+	return {
+		
+		/** Converts a string new lines to html <br /> tags
+		 *
+		 * @param s string
+		 * @return string with new lines replaced by <br />
+		 */
+		nl2br : function(s) {
+			return (s + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1<br />$2');
+		},
+	
+		/** Converts special characters in a string to html entitiy symbols
+		 *
+		 * @param s string
+		 * @return converted string
+		 */
+		htmlentities : function(s) {
+			return (s + "").replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g, '&#x2F;');
+		},
+	
+		JS_ESCAPES : {
+			"'" : "'",
+			'\\' : '\\',
+			'\r' : 'r',
+			'\n' : 'n',
+			'\t' : 't',
+			'\u2028' : 'u2028',
+			'\u2029' : 'u2029'
+		},
+	
+		JS_ESCAPER_REGEX : function() {
+			if (!this.JS_ESCAPER_REGEX_CACHED)
+				this.JS_ESCAPER_REGEX_CACHED = new RegExp(Objs.keys(this.JS_ESCAPES).join("|"), 'g');
+			return this.JS_ESCAPER_REGEX_CACHED;
+		},
+	
+		/** Converts string such that it can be used in javascript by escaping special symbols
+		 *
+		 * @param s string
+		 * @return escaped string
+		 */
+		js_escape : function(s) {
+			var self = this;
+			return s.replace(this.JS_ESCAPER_REGEX(), function(match) {
+				return '\\' + self.JS_ESCAPES[match];
+			});
+		},
+	
+		/** Determines whether a string starts with a sub string
+		 *
+		 * @param s string in question
+		 * @param needle sub string
+		 * @return true if string in question starts with sub string
+		 */
+		starts_with : function(s, needle) {
+			return s.substring(0, needle.length) == needle;
+		},
+	
+		/** Determines whether a string ends with a sub string
+		 *
+		 * @param s string in question
+		 * @param needle sub string
+		 * @return true if string in question ends with sub string
+		 */
+		ends_with : function(s, needle) {
+			return s.indexOf(needle, s.length - needle.length) !== -1;
+		},
+	
+		/** Removes sub string from a string if string starts with sub string
+		 *
+		 * @param s string in question
+		 * @param needle sub string
+		 * @return string without sub string if it starts with sub string otherwise it returns the original string
+		 */
+		strip_start : function(s, needle) {
+			return this.starts_with(s, needle) ? s.substring(needle.length) : s;
+		},
+		
+		/** Returns the complete remaining part of a string after a the last occurrence of a sub string
+		 *
+		 * @param s string in question
+		 * @param needle sub string
+		 * @return remaining part of the string in question after the last occurrence of the sub string
+		 */
+		last_after : function(s, needle) {
+			return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
+		},
+		
+		first_after: function (s, needle) {
+			return s.substring(s.indexOf(needle) + 1, s.length);
+		},
+	
+		EMAIL_ADDRESS_REGEX : /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+	
+		/** Determines whether a string is a syntactically valid email address
+		 *
+		 * @param s string in question
+		 * @return true if string looks like an email address
+		 */
+		is_email_address : function(s) {
+			return this.EMAIL_ADDRESS_REGEX.test(s);
+		},
+	
+		STRIP_HTML_TAGS : ["script", "style", "head"],
+		STRIP_HTML_REGEX : /<\/?([a-z][a-z0-9]*)\b[^>]*>?/gi,
+		STRIP_HTML_COMMENT_REGEX : /<![^>]*>/gi,
+	
+		/** Removes all html from data and returns plain text
+		 *
+		 * @param html string containing html
+		 * @return string containing the plain text part of it
+		 */
+		strip_html : function(html) {
+			var result = html;
+			for ( i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
+				result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">", "i"), '');
+			result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
+			return result;
+		},
+		
+		splitFirst: function (s, delimiter) {
+			var i = s.indexOf(delimiter);
+			return {
+				head: i >= 0 ? s.substring(0, i) : s,
+				tail: i >= 0 ? s.substring(i + delimiter.length) : ""
+			};
+		},
+		
+		splitLast: function (s, delimiter) {
+			var i = s.lastIndexOf(delimiter);
+			return {
+				head: i >= 0 ? s.substring(0, i) : "",
+				tail: i >= 0 ? s.substring(i + delimiter.length) : s
+			};
+		},
+	
+		/** Trims all trailing and leading whitespace and removes block indentations
+		 *
+		 * @param s string
+		 * @return string with trimmed whitespaces and removed block indentation
+		 */
+		nltrim : function(s) {
+			var a = s.replace(/\t/g, "  ").split("\n");
+			var len = null;
+			var i = 0;
+			for ( i = 0; i < a.length; ++i) {
+				var j = 0;
+				while (j < a[i].length) {
+					if (a[i].charAt(j) != ' ')
+						break;
+					++j;
+				}
+				if (j < a[i].length)
+					len = len === null ? j : Math.min(j, len);
+			}
+			for ( i = 0; i < a.length; ++i)
+				a[i] = a[i].substring(len);
+			return a.join("\n").trim();
+		},
+	
+		read_cookie_string : function(raw, key) {
+			var cookie = "; " + raw;
+			var parts = cookie.split("; " + key + "=");
+			if (parts.length == 2)
+				return parts.pop().split(";").shift();
+			return null;
+		},
+	
+		write_cookie_string : function(raw, key, value) {
+			var cookie = "; " + raw;
+			var parts = cookie.split("; " + key + "=");
+			if (parts.length == 2)
+				cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
+			return key + "=" + value + cookie;
+		},
+	
+		capitalize : function(input) {
+			return input.replace(/\w\S*/g, function(txt) {
+				return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+			});
+		},
+	
+		email_get_name : function(input) {
+		    input = input || "";
+			var temp = input.split("<");
+			input = temp[0].trim();
+			if (!input && temp.length > 1) {
+				temp = temp[1].split(">");
+				input = temp[0].trim();
+			}		
+			input = input.replace(/['"]/g, "").replace(/[\\._@]/g, " ");
+			return this.capitalize(input);
+		},
+	
+		email_get_email : function(input) {
+	        input = input || "";
+			var temp = input.split("<");
+			input = temp[0].trim();
+			if (temp.length > 1) {
+				temp = temp[1].split(">");
+				input = temp[0].trim();
+			}
+			input = input.replace(/'/g, "").replace(/"/g, "").trim();
+			return input;
+		},
+	
+		email_get_salutatory_name : function(input) {
+	        input = input || "";
+			return (this.email_get_name(input).split(" "))[0];
+		}
+	};
+
+});
+Scoped.define("module:Locales", function () {
+	return {
+		
+		__data: {},
+		
+		language: null,
+		
+		get: function (key) {
+		    if (this.language && (this.language + "." + key) in this.__data)
+		        return this.__data[this.language + "." + key];
+			return key in this.__data ? this.__data[key] : key;
+		},
+		
+		register: function (strings, prefix) {
+			prefix = prefix ? prefix + "." : "";
+			for (var key in strings)
+				this.__data[prefix + key] = strings[key];
+		},
+		
+		view: function (base) {
+			return {
+				context: this,
+				base: base,
+				get: function (key) {
+					return this.context.get(this.base + "." + key);
+				},
+				base: function (base) {
+					return this.context.base(this.base + "." + base);
+				}
+			};
+		}
+		
+	};
+	
+});	
+Scoped.define("module:Structures.AvlTree", function () {
+	return {
+	
+		empty : function() {
+			return null;
+		},
+	
+		singleton : function(data) {
+			return {
+				data : data,
+				left : null,
+				right : null,
+				height : 1
+			};
+		},
+	
+		min : function(root) {
+			return root.left ? this.min(root.left) : root.data;
+		},
+	
+		max : function(root) {
+			return root.right ? this.max(root.right) : root.data;
+		},
+	
+		height : function(node) {
+			return node ? node.height : 0;
+		},
+	
+		height_join : function(left, right) {
+			return 1 + Math.max(this.height(left), this.height(right));
+		},
+	
+		create : function(data, left, right) {
+			return {
+				data : data,
+				left : left,
+				right : right,
+				height : this.height_join(left, right)
+			};
+		},
+	
+		balance : function(data, left, right) {
+			if (this.height(left) > this.height(right) + 2) {
+				if (this.height(left.left) >= this.height(left.right))
+					return this.create(left.data, left.left, this.create(data,
+							left.right, right));
+				else
+					return this.create(left.right.data, this.create(left.data,
+							left.left, left.right.left), this.create(data,
+							left.right.right, right));
+			} else if (this.height(right) > this.height(left) + 2) {
+				if (this.height(right.right) >= this.height(right.left))
+					return this.create(right.data, this.create(data, left,
+							right.left), right.right);
+				else
+					return this.create(right.left.data, this.create(data, left,
+							right.left.left), this.create(right.data,
+							right.left.right, right.right));
+			} else
+				return this.create(data, left, right);
+		},
+	
+		__add_left : function(data, left) {
+			return left ? this.balance(left.data, this.__add_left(data, left.left),
+					left.right) : this.singleton(data);
+		},
+	
+		__add_right : function(data, right) {
+			return right ? this.balance(right.data, right.data, this.__add_right(
+					data, right.right)) : this.singleton(data);
+		},
+	
+		join : function(data, left, right) {
+			if (!left)
+				return this.__add_left(data, right);
+			else if (!right)
+				return this.__add_right(data, left);
+			else if (this.height(left) > this.height(right) + 2)
+				return this.balance(left.data, left.left, this.join(data,
+						left.right, right));
+			else if (this.height(right) > this.height(left) + 2)
+				return this.balance(right.data, this.join(data, left, right.left),
+						right.right);
+			else
+				return this.create(data, left, right);
+		},
+	
+		take_min : function(root) {
+			if (!root.left)
+				return [ root.data, root.right ];
+			var result = this.take_min(root.left);
+			return [ result[0], this.join(root.data, result[1], root.right) ];
+		},
+	
+		take_max : function(root) {
+			if (!root.right)
+				return [ root.data, root.left ];
+			var result = this.take_max(root.right);
+			return [ result[0], this.join(root.data, root.left, result[1]) ];
+		},
+	
+		rereoot : function(left, right) {
+			if (!left || !right)
+				return left || right;
+			if (this.height(left) > this.height(right)) {
+				var max = this.take_max(left);
+				return this.join(max[0], max[1], right);
+			}
+			var min = this.take_min(right);
+			return this.join(min[0], left, min[1]);
+	
+		},
+	
+		take_min_iter : function(root) {
+			if (!root)
+				return null;
+			if (!root.left)
+				return [ root.data, root.left ];
+			return this.take_min_iter(this.create(root.left.data, root.left.left,
+					this.create(root.data, root.left.right, root.right)));
+		},
+	
+		take_max_iter : function(root) {
+			if (!root)
+				return null;
+			if (!root.right)
+				return [ root.data, root.right ];
+			return this.take_max_iter(this.create(root.right.data, this.create(
+					root.data, root.left, root.right.left), root.right.right));
+		}
+	
+	};
+	
+});
+
+
+Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], function (AvlTree) {
+	return {
+	
+		empty : function(compare) {
+			return {
+				root : null,
+				length : 0,
+				compare : compare || function(x, y) {
+					return x > y ? 1 : x < y ? -1 : 0;
+				}
+			};
+		},
+	
+		is_empty : function(t) {
+			return !t.root;
+		},
+	
+		length : function(t) {
+			return t.length;
+		},
+	
+		__add : function(key, value, t, node) {
+			var kv = {
+				key : key,
+				value : value
+			};
+			if (!node) {
+				t.length++;
+				return AvlTree.singleton(kv);
+			}
+			var c = t.compare(key, node.data.key);
+			if (c === 0) {
+				node.data = kv;
+				return node;
+			} else if (c < 0)
+				return AvlTree.balance(node.data, this.__add(key, value, t, node.left), node.right);
+			else
+				return AvlTree.balance(node.data, node.left, this.__add(key, value, t, node.right));
+		},
+	
+		add : function(key, value, t) {
+			t.root = this.__add(key, value, t, t.root);
+			return t;
+		},
+	
+		singleton : function(key, value, compare) {
+			return this.add(key, value, this.empty(compare));
+		},
+	
+		__find : function(key, t, root) {
+			if (!root)
+				return null;
+			var c = t.compare(key, root.data.key);
+			return c === 0 ? root.data.value : this.__find(key, t, c < 0 ? root.left : root.right);
+		},
+	
+		find : function(key, t) {
+			return this.__find(key, t, t.root);
+		},
+	
+		__iterate : function(t, node, callback, context) {
+			if (!node)
+				return true;
+			return this.__iterate(t, node.left, callback, context) && (callback.call(context, node.data.key, node.data.value) !== false) && this.__iterate(t, node.right, callback, context);
+		},
+	
+		iterate : function(t, callback, context) {
+			this.__iterate(t, t.root, callback, context);
+		},
+	
+		__iterate_from : function(key, t, node, callback, context) {
+			if (!node)
+				return true;
+			var c = t.compare(key, node.data.key);
+			if (c < 0 && !this.__iterate_from(key, t, node.left, callback, context))
+				return false;
+			if (c <= 0 && callback.call(context, node.data.key, node.data.value) === false)
+				return false;
+			return this.__iterate_from(key, t, node.right, callback, context);
+		},
+	
+		iterate_from : function(key, t, callback, context) {
+			this.__iterate_from(key, t, t.root, callback, context);
+		},
+	
+		iterate_range : function(from_key, to_key, t, callback, context) {
+			this.iterate_from(from_key, t, function(key, value) {
+				return t.compare(key, to_key) <= 0 && callback.call(context, key, value) !== false;
+			}, this);
+		}
+	
+	};
+
+});
+Scoped.define("module:Time", ["module:Locales"], function (Locales) {
+	return {
+			
+		/*
+		 * All time routines are based on UTC time.
+		 * The optional timezone parameter should be used as follows:
+		 *    - undefined or false: UTC
+		 *    - true: user's local time zone
+		 *    - int value: actual time zone bias in minutes
+		 */
+			
+		
+		timezoneBias: function (timezone) {
+			if (timezone === true)
+				timezone = (new Date()).getTimezoneOffset();
+			if (typeof timezone == "undefined" || timezone === null || timezone === false)
+				timezone = 0;
+			return timezone * 60 * 1000;
+		},
+			
+		timeToDate: function (t, timezone) {
+			return new Date(t + this.timezoneBias(timezone));
+		},
+		
+		dateToTime: function (d, timezone) {
+			return d.getTime() - this.timezoneBias(timezone);
+		},
+		
+		timeToTimezoneBasedDate: function (t, timezone) {
+			return new Date(t - this.timezoneBias(timezone));
+		},
+		
+		timezoneBasedDateToTime: function (d, timezone) {
+			return d.getTime() + this.timezoneBias(timezone);
+		},
+	
+		__components: {
+			"year": {
+				"set": function (date, value) { date.setUTCFullYear(value); },
+				"get": function (date) { return date.getUTCFullYear(); }
+			},
+			"month": {
+				"set": function (date, value) { date.setUTCMonth(value); },
+				"get": function (date) { return date.getUTCMonth(); }
+			},
+			"day": {
+				"dependencies": {"weekday": true},
+				"set": function (date, value) { date.setUTCDate(value + 1); },
+				"get": function (date) { return date.getUTCDate() - 1; },
+				"milliseconds": 24 * 60 * 60 * 1000
+			},
+			"weekday": {
+				"dependencies": {"day": true, "month": true, "year": true},
+				"set": function (date, value) { date.setUTCDate(date.getUTCDate() + value - date.getUTCDay()); },
+				"get": function (date) { return date.getUTCDay(); }
+			},
+			"hour": {
+				"set": function (date, value) { date.setUTCHours(value); },
+				"get": function (date) { return date.getUTCHours(); },
+				"max": 23,
+				"milliseconds": 60 * 60 * 1000
+			},
+			"minute": {
+				"set": function (date, value) { date.setUTCMinutes(value); },
+				"get": function (date) { return date.getUTCMinutes(); },
+				"max": 59,
+				"milliseconds": 60 * 1000
+			},
+			"second": {
+				"set": function (date, value) { date.setUTCSeconds(value); },
+				"get": function (date) { return date.getUTCSeconds(); },
+				"max": 59,
+				"milliseconds": 1000
+			},
+			"millisecond": {
+				"set": function (date, value) { date.setUTCMilliseconds(value); },
+				"get": function (date) { return date.getUTCMilliseconds(); },
+				"max": 999,
+				"milliseconds": 1
+			}
+		},
+		
+		decodeTime: function (t, timezone) {
+			var d = this.timeToTimezoneBasedDate(t, timezone);
+			var result = {};
+			for (var key in this.__components)
+				result[key] = this.__components[key].get(d);
+			return result;
+		},
+	
+		encodeTime: function (data, timezone) {
+			return this.updateTime(this.now(), data, timezone);
+		},
+		
+		encodePeriod: function (data) {
+			return this.incrementTime(0, data);
+		},
+		
+		updateTime: function (t, data, timezone) {
+			var d = this.timeToTimezoneBasedDate(t, timezone);
+			for (var key in data)
+				this.__components[key].set(d, data[key]);
+			return this.timezoneBasedDateToTime(d, timezone);
+		},
+		
+		now: function (timezone) {
+			return this.dateToTime(new Date(), timezone);
+		},
+		
+		incrementTime: function (t, data) {
+			var d = this.timeToDate(t);
+			for (var key in data) 
+				this.__components[key].set(d, this.__components[key].get(d) + data[key]);
+			return this.dateToTime(d);
+		},
+		
+		floorTime: function (t, key, timezone) {
+			var d = this.timeToTimezoneBasedDate(t, timezone);
+			var found = false;
+			for (var comp in this.__components) {
+				var c = this.__components[comp];
+				found = found || comp == key;
+				if (found && (!c.dependencies || !c.dependencies[key]))
+					c.set(d, 0);
+			}
+			return this.timezoneBasedDateToTime(d, timezone);
+		},
+		
+		ago: function (t, timezone) {
+			return this.now(timezone) - t;
+		},
+		
+		timeComponent: function (t, key, round) {
+			return Math[round || "floor"](t / this.__components[key].milliseconds);
+		},
+		
+		timeModulo: function (t, key, round) {
+			return this.timeComponent(t, key, round) % (this.__components[key].max + 1);
+		},
+		
+		formatTimePeriod: function (t, options) {
+			options = options || {};
+			var components = options.components || ["day", "hour", "minute", "second"];
+			var component = "";
+			var timeComponent = 0;
+			for (var i = 0; i < components.length; ++i) {
+				component = components[i];
+				timeComponent = this.timeComponent(t, component, options.round || "round");
+				if (timeComponent)
+					break;
+			}
+			return timeComponent + " " + Locales.get(component + (timeComponent == 1 ? "" : "s"));
+		},
+		
+		formatTime: function(t, s) {
+			var components = ["hour", "minute", "second"];
+			s = s || "hhh:mm:ss";
+			var replacers = {};
+			for (var i = 0; i < components.length; ++i) {
+				var c = components[i].charAt(0);
+				replacers[c + c + c] = this.timeComponent(t, components[i], "floor");
+				var temp = this.timeModulo(t, components[i], "floor");
+				replacers[c + c] = temp < 10 ? "0" + temp : temp; 
+				replacers[c] = temp;
+			}
+			for (var key in replacers)
+				s = s.replace(key, replacers[key]);
+			return s;
+		}
+		
+	};
+
+});
+Scoped.define("module:Async", ["module:Types"], function (Types) {
+	return {		
+		
+		eventually: function (func, params, context) {
+			var timer = setTimeout(function () {
+				clearTimeout(timer);
+				if (!Types.is_array(params)) {
+					context = params;
+					params = [];
+				}
+				func.apply(context || this, params || []);
+			}, 0);
+		},
+		
+		eventuallyOnce: function (func, params, context) {
+			var data = {
+				func: func,
+				params: params,
+				context: context
+			};
+			for (var key in this.__eventuallyOnce) {
+				var record = this.__eventuallyOnce[key];
+				if (record.func == func && record.params == params && record.context == context)
+					return;
+			}
+			this.__eventuallyOnceIdx++;
+			var index = this.__eventuallyOnceIdx;
+			this.__eventuallyOnce[index] = data;
+			this.eventually(function () {
+				delete this.__eventuallyOnce[index];
+				func.apply(context || this, params || []);
+			}, this);
+		},
+		
+		__eventuallyOnce: {},
+		__eventuallyOnceIdx: 1
+		
+	};
+
+});
+Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Async"], function (Types, Functions, Async) {
+	return {		
+			
+		Promise: function (value, error, finished) {
+			this.__value = error ? null : (value || null);
+			this.__error = error ? error : null;
+			this.__isFinished = finished;
+			this.__hasError = !!error;
+			this.__resultPromise = null;
+			this.__callbacks = [];
+		},
+		
+		create: function (value, error) {
+			return new this.Promise(value, error, arguments.length > 0);
+		},
+		
+		value: function (value) {
+			return this.is(value) ? value : new this.Promise(value, null, true);
+		},
+		
+		eventualValue: function (value) {
+			var promise = new this.Promise();
+			Async.eventually(function () {
+				promise.asyncSuccess(value);
+			});
+			return promise;
+		},
+	
+		error: function (error) {
+			return this.is(error) ? error : new this.Promise(null, error, true);
+		},
+		
+		box: function (f, ctx, params) {
+			try {
+				var result = f.apply(ctx || this, params || []);
+				return this.is(result) ? result : this.value(result);
+			} catch (e) {
+				return this.error(e);
+			}
+		},
+		
+		tryCatch: function (f, ctx) {
+			try {
+				return this.value(f.apply(ctx || this));
+			} catch (e) {
+				return this.error(e);
+			}
+		},
+		
+		funcCallback: function (ctx, func) {
+			var args  = Functions.getArguments(arguments, 1);
+			if (Types.is_function(ctx)) {
+				args = Functions.getArguments(arguments, 1);
+				func = ctx;
+				ctx = this;
+			} else
+				args = Functions.getArguments(arguments, 2);
+			var promise = this.create();
+			args.push(promise.asyncCallbackFunc());
+			func.apply(ctx, args);
+			return promise;
+		},
+		
+		and: function (promises) {
+			var promise = this.create();
+			promise.__promises = [];
+			promise.__successCount = 0;
+			promise.__values = [];
+			promise.__errorPromise = null;
+			promise.and = function (promises) {
+				promises = promises || [];
+				if (this.__ended)
+					return this;
+				if (!Types.is_array(promises))
+					promises = [promises];	
+				for (var i = 0; i < promises.length; ++i) {
+					var last = this.__promises.length;
+					this.__promises.push(promises[i]);
+					this.__values.push(null);
+					if (promises[i].isFinished()) {
+						if (promises[i].hasValue()) {
+							this.__successCount++;
+							this.__values[last] = promises[i].value();
+						} else
+							this.__errorPromise = promises[i];
+					} else {
+						promises[i].callback(function (error, value) {
+							if (error)
+								this.__errorPromise = promises[this.idx];
+							else {
+								this.promise.__successCount++;
+								this.promise.__values[this.idx] = value;
+							}
+							this.promise.results();
+						}, {promise: this, idx: last});					
+					}
+				}
+				return this;
+			};
+			promise.end = function () {
+				this.__ended = true;
+				this.results();
+				return this;
+			};
+			promise.results = function () {
+				if (this.__ended && this.__errorPromise)
+					this.asyncError(this.__errorPromise.err(), this.__errorPromise);
+				else if (this.__ended && this.__successCount == this.__promises.length)
+					this.asyncSuccess(this.__values);
+				return this;
+			};
+			promise.successUnfold = function (f, context, options) {
+				return this.success(function () {
+					return f.apply(context, arguments);
+				}, context, options);
+			};
+			promise.and(promises);
+			return promise;
+		},
+		
+		func: function (func) {
+			var args = Functions.getArguments(arguments, 1);
+			var promises = [];
+			for (var i = 0; i < args.length; ++i) {
+				if (this.is(args[i]))
+					promises.push(args[i]);
+			}
+			var promise = this.create();
+			this.and(promises).end().success(function (values) {
+				var params = [];
+				for (var i = 0; i < args.length; ++i)
+					params[i] = this.is(args[i]) ? args[i].value() : args[i];
+				var result = func.apply(this, params);
+				if (this.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncSuccess(result);
+			}, this).forwardError(promise);
+			return promise;
+		},
+		
+		methodArgs: function (ctx, func, params) {
+			params.unshift(function () {
+				return func.apply(ctx, arguments);
+			});
+			return this.func.apply(this, params);
+		},
+		
+		method: function (ctx, func) {
+			return this.methodArgs(ctx, func, Functions.getArguments(arguments, 2));
+		},
+	
+		newClass: function (cls) {
+			var params = Functions.getArguments(arguments, 1);
+			params.unshift(Functions.newClassFunc(cls));
+			return this.func.apply(this, params);
+		},
+		
+		is: function (obj) {
+			return obj && Types.is_object(obj) && obj.classGuid == this.Promise.prototype.classGuid;
+		} 
+		
+	};
+});
+
+
+Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Functions"], function (Promise, Functions) {
+	
+	return {
+		
+		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
+		
+		success: function (f, context, options) {
+			return this.callback(f, context, options, "success");
+		},
+		
+		error: function (f, context, options) {
+			return this.callback(f, context, options, "error");
+		},
+		
+		callback: function (f, context, options, type) {
+			var record = {
+				type: type || "callback",
+				func: f,
+				options: options || {},
+				context: context
+			};
+			if (this.__isFinished)
+				this.triggerResult(record);
+			else
+				this.__callbacks.push(record);
+			return this;
+		},
+		
+		triggerResult: function (record) {
+			if (!this.__isFinished)
+				return this;
+			if (record) {
+				if (record.type == "success" && !this.__hasError)
+					record.func.call(record.context || this, this.__value, this.__resultPromise || this);
+				else if (record.type == "error" && this.__hasError)
+					record.func.call(record.context || this, this.__error, this.__resultPromise || this);
+				else if (record.type == "callback")
+					record.func.call(record.context || this, this.__error, this.__value, this.__resultPromise || this);
+			} else {
+				var records = this.__callbacks;
+				this.__callbacks = [];
+				for (var i = 0; i < records.length; ++i)
+					this.triggerResult(records[i]);
+			}
+			return this;
+		},
+		
+		value: function () {
+			return this.__value;
+		},
+
+		err: function () {
+			return this.__error;
+		},
+
+		isFinished: function () {
+			return this.__isFinished;
+		},
+
+		hasValue: function () {
+			return this.__isFinished && !this.__hasError;
+		},
+
+		hasError: function () {
+			return this.__isFinished && this.__hasError;
+		},
+
+		asyncSuccess: function (value, promise) {
+			if (this.__isFinished) 
+				return this;
+			this.__resultPromise = promise;
+			this.__error = null;
+			this.__isFinished = true;
+			this.__hasError = false;
+			this.__value = value;
+			return this.triggerResult();
+		},
+
+		forwardSuccess: function (promise) {
+			this.success(promise.asyncSuccess, promise);
+			return this;
+		},
+
+		asyncError: function (error, promise) {
+			if (this.__isFinished) 
+				return this;
+			this.__resultPromise = promise;
+			this.__isFinished = true;
+			this.__hasError = true;
+			this.__error = error;
+			this.__value = null;
+			return this.triggerResult();
+		},
+
+		forwardError: function (promise) {
+			this.error(promise.asyncError, promise);
+			return this;
+		},
+
+		asyncCallback: function (error, value, promise) {
+			if (error)
+				return this.asyncError(error, promise);
+			else
+				return this.asyncSuccess(value, promise);
+		},
+
+		asyncCallbackFunc: function () {
+			return Functions.as_method(this.asyncCallback, this);
+		},
+
+		forwardCallback: function (promise) {
+			this.callback(promise.asyncCallback, promise);
+			return this;
+		},
+
+		mapSuccess: function (func, ctx) {
+			var promise = Promise.create();
+			this.forwardError(promise).success(function (value, pr) {
+				var result = func.call(ctx || promise, value, pr);
+				if (Promise.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncSuccess(result);
+			});
+			return promise;
+		},
+		
+		mapError: function (func, ctx) {
+			var promise = Promise.create();
+			this.forwardSuccess(promise).error(function (err, pr) {
+				var result = func.call(ctx || promise, err, pr);
+				if (Promise.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncError(result);
+			});
+			return promise;
+		},
+
+		mapCallback: function (func, ctx) {
+			var promise = Promise.create();
+			this.callback(function (err, value, pr) {
+				var result = func.call(ctx || promise, err, value, pr);
+				if (Promise.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncCallback(err ? result : err, err ? value : result, pr);
+			});
+			return promise;
+		},
+
+		and: function (promises) {
+			var result = Promise.and(this);
+			return result.and(promises);
+		}
+			
+	};
+	
+});
+Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
+	return {
+		
+		STRING_SINGLE_QUOTATION_REGEX: /'[^']*'/g,
+		STRING_DOUBLE_QUOTATION_REGEX: /"[^"]*"/g,
+		
+		IDENTIFIER_REGEX: /[a-zA-Z_][a-zA-Z_0-9]*/g,
+		IDENTIFIER_SCOPE_REGEX: /[a-zA-Z_][a-zA-Z_0-9\.]*/g,
+	
+		RESERVED: Objs.objectify(
+			["if", "then", "else", "return", "var"],
+			true),
+		
+		isReserved: function (key) {
+			return key in this.RESERVED;
+		},
+		
+		isIdentifier: function (key) {
+			return !this.isReserved(key);
+		},
+		
+		removeStrings: function (code) {
+			return code.replace(this.STRING_SINGLE_QUOTATION_REGEX, "").replace(this.STRING_DOUBLE_QUOTATION_REGEX, "");
+		},	
+		
+		extractIdentifiers: function (code, keepScopes) {
+			var regex = keepScopes ? this.IDENTIFIER_SCOPE_REGEX : this.IDENTIFIER_REGEX;
+			code = this.removeStrings(code);
+			return Objs.filter(code.match(regex), this.isIdentifier, this);
+		}
+			
+	};
+
+});
 /** @class */
 BetaJS.Scopes = {
 	
@@ -631,386 +2263,7 @@ BetaJS.Scopes = {
 	
 };
 
-/** @class */
-BetaJS.Ids = {
-	
-	__uniqueId: 0,
-	
-    /** Returns a unique identifier
-     * 
-     * @param prefix a prefix string for the identifier (optional)
-     * @return unique identifier
-     */
-	uniqueId: function (prefix) {
-		return (prefix || "") + (this.__uniqueId++);
-	},
-	
-    /** Returns the object's unique identifier or sets it
-     * 
-     * @param object the object
-     * @param id (optional)
-     * @return object's unique identifier
-     */
-	objectId: function (object, id) {
-		if (typeof id != "undefined")
-			object.__cid = id;
-		else if (!object.__cid)
-			object.__cid = this.uniqueId("cid_");
-		return object.__cid;
-	}
-	
-};
-/** @class */
-BetaJS.Tokens = {
-	
-    /** Returns a new token
-     * 
-     * @param length optional length of token, default is 16
-     * @return token
-     */
-	generate_token: function (length) {
-		length = length || 16;
-		var s = "";
-		while (s.length < length)
-			s += Math.random().toString(36).substr(2); 
-		return s.substr(0, length);
-	}
-	
-};
-BetaJS.Objs = {
-	
-	count: function (obj) {
-		if (BetaJS.Types.is_array(obj))
-			return obj.length;
-		else {
-			var c = 0;
-			for (var key in obj)
-				c++;
-			return c;
-		}
-	},
-	
-	clone: function (item, depth) {
-		if (!depth || depth === 0)
-			return item;
-		if (BetaJS.Types.is_array(item))
-			return item.slice(0);
-		else if (BetaJS.Types.is_object(item))
-			return this.extend({}, item, depth-1);
-		else
-			return item;
-	},
-	
-	acyclic_clone: function (object, def) {
-		if (object === null || ! BetaJS.Types.is_object(object))
-			return object;
-		var s = "__acyclic_cloned";
-		if (object[s])
-			return def || "CYCLE";
-		object[s] = true;
-		var result = {};
-		for (var key in object) {
-			if (key != s)
-				result[key] = this.acyclic_clone(object[key], def);
-		}
-		delete object[s];
-		return result;
-	},
-	
-	extend: function (target, source, depth) {
-		target = target || {};
-		if (source) {
-			for (var key in source)
-				target[key] = this.clone(source[key], depth);
-		}
-		return target;
-	},
-	
-	weak_extend: function (target, source, depth) {
-		target = target || {};
-		if (source) {
-			for (var key in source) {
-				if (!(key in target))
-					target[key] = this.clone(source[key], depth);
-			}
-		}
-		return target;
-	},
-	
-	tree_extend: function (target, source, depth) {
-		target = target || {};
-		if (source) {
-			for (var key in source) {
-				if (key in target && BetaJS.Types.is_object(target[key]) && BetaJS.Types.is_object(source[key]))
-					target[key] = this.tree_extend(target[key], source[key], depth);
-				else
-					target[key] = this.clone(source[key], depth);
-			}
-		}
-		return target;
-	},
-		
-	merge: function (secondary, primary, options) {
-		secondary = secondary || {};
-		primary = primary || {};
-		var result = {};
-		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
-		for (var key in keys) {
-			var opt = key in options ? options[key] : "primary";
-			if (opt == "primary" || opt == "secondary") {
-				if (key in primary || key in secondary) {
-					if (opt == "primary")
-						result[key] = key in primary ? primary[key] : secondary[key];
-					else
-						result[key] = key in secondary ? secondary[key] : primary[key];
-				}			
-			}
-			else if (BetaJS.Types.is_function(opt))
-				result[key] = opt(secondary[key], primary[key]);
-			else if (BetaJS.Types.is_object(opt))
-				result[key] = BetaJS.Objs.merge(secondary[key], primary[key], opt);
-		}
-		return result;
-	},
-	
-	tree_merge: function (secondary, primary) {
-		secondary = secondary || {};
-		primary = primary || {};
-		var result = {};
-		var keys = BetaJS.Objs.extend(BetaJS.Objs.keys(secondary, true), BetaJS.Objs.keys(primary, true));
-		for (var key in keys) {
-			if (BetaJS.Types.is_object(primary[key]) && secondary[key])
-				result[key] = BetaJS.Objs.tree_merge(secondary[key], primary[key]);
-			else
-				result[key] = key in primary ? primary[key] : secondary[key];
-		}
-		return result;
-	},
-
-	keys: function(obj, mapped) {
-		var result = null;
-		var key = null;
-		if (BetaJS.Types.is_undefined(mapped)) {
-			result = [];
-			for (key in obj)
-				result.push(key);
-			return result;
-		} else {
-			result = {};
-			for (key in obj)
-				result[key] = mapped;
-			return result;
-		}
-	},
-	
-	map: function (obj, f, context) {
-		var result = null;
-		if (BetaJS.Types.is_array(obj)) {
-			result = [];
-			for (var i = 0; i < obj.length; ++i)
-				result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
-			return result;
-		} else {
-			result = {};
-			for (var key in obj)
-				result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-			return result;
-		}
-	},
-	
-	values: function (obj) {
-		var result = [];
-		for (var key in obj)
-			result.push(obj[key]);
-		return result;
-	},
-	
-	filter: function (obj, f, context) {
-		var ret = null;
-		if (BetaJS.Types.is_array(obj)) {
-			ret = [];
-			for (var i = 0; i < obj.length; ++i) {
-				if (context ? f.apply(context, [obj[i], i]) : f(obj[i], i))
-					ret.push(obj[i]);
-			}
-			return ret;
-		} else {
-			ret = {};
-			for (var key in obj) {
-				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
-					ret[key] = obj[key];
-			}
-			return ret;
-		}
-	},
-	
-	equals: function (obj1, obj2, depth) {
-		var key = null;
-		if (depth && depth > 0) {
-			for (key in obj1) {
-				if (!key in obj2 || !this.equals(obj1[key], obj2[key], depth-1))
-					return false;
-			}
-			for (key in obj2) {
-				if (!key in obj1)
-					return false;
-			}
-			return true;
-		} else
-			return obj1 == obj2;
-	},
-	
-	iter: function (obj, f, context) {
-		var result = null;
-		if (BetaJS.Types.is_array(obj)) {
-			for (var i = 0; i < obj.length; ++i) {
-				result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
-				if (BetaJS.Types.is_defined(result) && !result)
-					return false;
-			}
-		} else {
-			for (var key in obj) {
-				result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-				if (BetaJS.Types.is_defined(result) && !result)
-					return false;
-			}
-		}
-		return true;
-	},
-	
-	intersect: function (a, b) {
-		var c = {};
-		for (var key in a) {
-			if (key in b)
-				c[key] = a[key];
-		}
-		return c;
-	},
-	
-	contains_key: function (obj, key) {
-		if (BetaJS.Types.is_array(obj))
-			return BetaJS.Types.is_defined(obj[key]);
-		else
-			return key in obj;
-	},
-	
-	contains_value: function (obj, value) {
-		if (BetaJS.Types.is_array(obj)) {
-			for (var i = 0; i < obj.length; ++i) {
-				if (obj[i] === value)
-					return true;
-			}
-		} else {
-			for (var key in obj) {
-				if (obj[key] === value)
-					return true;
-			}
-		}
-		return false;
-	},
-	
-	exists: function (obj, f, context) {
-		var success = false;
-		BetaJS.Objs.iter(obj, function () {
-			success = success || f.apply(this, arguments);
-			return !success;
-		}, context);
-		return success;
-	},
-	
-	all: function (obj, f, context) {
-		var success = true;
-		BetaJS.Objs.iter(obj, function () {
-			success = success && f.apply(this, arguments);
-			return success;
-		}, context);
-		return success;
-	},
-	
-	objectify: function (arr, f, context) {
-		var result = {};
-		var is_function = BetaJS.Types.is_function(f);
-		if (BetaJS.Types.is_undefined(f))
-			f = true;
-		for (var i = 0; i < arr.length; ++i)
-			result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
-		return result;
-	},
-	
-	peek: function (obj) {
-		if (BetaJS.Types.is_array(obj))
-			return obj.length > 0 ? obj[0] : null;
-		else {
-			for (var key in obj)
-				return obj[key];
-			return null;
-		} 
-	},
-	
-	poll: function (obj) {
-		if (BetaJS.Types.is_array(obj))
-			return obj.shift();
-		else {
-			for (var key in obj) {
-				var item = obj[key];
-				delete obj[key];
-				return item;
-			}
-			return null;
-		} 
-	},
-	
-	objectBy: function () {
-		var obj = {};
-		var count = arguments.length / 2;
-		for (var i = 0; i < count; ++i)
-			obj[arguments[2 * i]] = arguments[2 * i + 1];
-		return obj;
-	},
-	
-	valueByIndex: function (obj, idx) {
-		idx = idx || 0;
-		if (BetaJS.Types.is_array(obj))
-			return obj[idx];
-		for (var key in obj) {
-			if (idx === 0)
-				return obj[key];
-			idx--;
-		}
-		return null;
-	},
-	
-	keyByIndex: function (obj, idx) {
-		idx = idx || 0;
-		if (BetaJS.Types.is_array(obj))
-			return idx;
-		for (var key in obj) {
-			if (idx === 0)
-				return key;
-			idx--;
-		}
-		return null;
-	},
-	
-	pairArrayToObject: function (arr) {
-		var result = {};
-		for (var i = 0; i < arr.length / 2; i += 2)
-			result[arr[i]] = arr[i+1];
-		return result;
-	},
-	
-	pairsToObject: function () {
-		var result = {};
-		for (var i = 0; i < arguments.length; ++i)
-			result[arguments[i][0]] = arguments[i][1];
-		return result;
-	}
-
-};
-
 BetaJS.Class = function () {};
-
-BetaJS.Class.classname = "Class";
 
 BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 	objects = objects || [];
@@ -1024,6 +2277,12 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 		class_statics = [class_statics];
 	
 	var parent = this;
+	
+	objects = BetaJS.Objs.map(objects, function (obj) {
+		if (BetaJS.Types.is_function(obj))
+			obj = obj(parent.prototype);
+		return obj;
+	});
 	
 	var result;
 	
@@ -1041,7 +2300,7 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 
 	// Add External Statics
 	BetaJS.Objs.iter(statics, function (stat) {
-		BetaJS.Objs.extend(result, stat);
+		BetaJS.Objs.extend(result, BetaJS.Types.is_function(stat) ? stat(parent) : stat);
 	});
 	
 	
@@ -1110,87 +2369,128 @@ BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
 };
 
 
+/*
+ * 
+ * Extending the Class
+ * 
+ */
 
-BetaJS.Class.prototype.constructor = function () {
-	this._notify("construct");
-};
 
-BetaJS.Class.prototype.as_method = function (s) {
-	return BetaJS.Functions.as_method(this[s], this);
-};
+BetaJS.Objs.extend(BetaJS.Class, {
+	
+	classname: "Class",
+	
+	__class_guid: "0f5499f9-f0d1-4c6c-a561-ef026a1eee05",	
+	
+	__notifications: {},
+	
+	ancestor_of: function (cls) {
+		return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
+	},
+	
+	is_class: function (cls) {
+		return cls && BetaJS.Types.is_object(cls) && ("__class_guid" in cls) && cls.__class_guid == this.__class_guid;
+	},
+	
+	is_class_instance: function (obj) {
+		return obj && BetaJS.Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
+	},
+	
+	is_instance_of: function (obj) {
+		return obj && this.is_class_instance(obj) && obj.instance_of(this);
+	},
+	
+	// Legacy Methods
 
-BetaJS.Class.prototype._auto_destroy = function (obj) {
-	if (!this.__auto_destroy_list)
-		this.__auto_destroy_list = [];
-	var target = obj;
-	if (!BetaJS.Types.is_array(target))
-	   target = [target];
-	for (var i = 0; i < target.length; ++i)
-	   this.__auto_destroy_list.push(target[i]);
-	return obj;
-};
+	_inherited: function (cls, func) {
+		return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
+	}	
+	
+});
 
-BetaJS.Class.prototype._notify = function (name) {
-	if (!this.cls.__notifications)
-		return;
-	var rest = Array.prototype.slice.call(arguments, 1);
-	var table = this.cls.__notifications[name];
-	if (table) {
-		for (var i in table) {
-			var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
-			if (!method)
-				throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
-			method.apply(this, rest);
+
+
+
+
+
+/*
+ * 
+ * Extending the Object
+ * 
+ */
+
+
+BetaJS.Objs.extend(BetaJS.Class.prototype, {
+	
+	__class_instance_guid: "e6b0ed30-80ee-4b28-af02-7d52430ba45f",
+	
+	constructor: function () {
+		this._notify("construct");
+	},
+	
+	destroy: function () {
+		this._notify("destroy");
+		if (this.__auto_destroy_list) {
+			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
+				if ("destroy" in this.__auto_destroy_list[i])
+					this.__auto_destroy_list[i].destroy();
+			}
 		}
-	}
-};
+		for (var key in this)
+			delete this[key];
+	},
+	
+	cid: function () {
+		return BetaJS.Ids.objectId(this);
+	},
 
-BetaJS.Class.prototype.destroy = function () {
-	this._notify("destroy");
-	if (this.__auto_destroy_list) {
-		for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
-			if ("destroy" in this.__auto_destroy_list[i])
-				this.__auto_destroy_list[i].destroy();
+	cls: BetaJS.Class,
+	
+	as_method: function (s) {
+		return BetaJS.Functions.as_method(this[s], this);
+	},
+	
+	auto_destroy: function (obj) {
+		if (!this.__auto_destroy_list)
+			this.__auto_destroy_list = [];
+		var target = obj;
+		if (!BetaJS.Types.is_array(target))
+		   target = [target];
+		for (var i = 0; i < target.length; ++i)
+		   this.__auto_destroy_list.push(target[i]);
+		return obj;
+	},
+	
+	_notify: function (name) {
+		if (!this.cls.__notifications)
+			return;
+		var rest = Array.prototype.slice.call(arguments, 1);
+		var table = this.cls.__notifications[name];
+		if (table) {
+			for (var i in table) {
+				var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
+				if (!method)
+					throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
+				method.apply(this, rest);
+			}
 		}
+	},
+	
+	instance_of: function (cls) {
+		return this.cls.ancestor_of(cls);
+	},
+	
+	// Legacy Methods
+	
+	_auto_destroy: function(obj) {
+		return this.auto_destroy(obj);
+	},
+	
+	_inherited: function (cls, func) {
+		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 	}
-	for (var key in this)
-		delete this[key];
-};
-
-BetaJS.Class.prototype._inherited = function (cls, func) {
-	return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-};
-
-BetaJS.Class._inherited = function (cls, func) {
-	return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-};
-
-BetaJS.Class.prototype.instance_of = function (cls) {
-	return this.cls.ancestor_of(cls);
-};
-
-BetaJS.Class.prototype.__clsguid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
-
-BetaJS.Class.ancestor_of = function (cls) {
-	return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
-};
-
-BetaJS.Class.is_instance_of = function (instance) {
-	return instance && instance.__clsguid == BetaJS.Class.prototype.__clsguid && instance.instance_of(this);
-};
-
-BetaJS.Class.prototype.cid = function () {
-	return BetaJS.Ids.objectId(this);
-};
-
-BetaJS.Class.prototype.cls = BetaJS.Class;
-
-BetaJS.Class.__notifications = {};
-
-BetaJS.Class.is_class_instance = function (object) {
-	return object && BetaJS.Types.is_object(object) && ("_inherited" in object) && ("cls" in object);
-};
-
+	
+});
 
 BetaJS.Exceptions = {
 	
@@ -3279,209 +4579,6 @@ BetaJS.Sort = {
 	}
 };
 
-BetaJS.Locales = {
-	
-	__data: {},
-	
-	language: null,
-	
-	get: function (key) {
-	    if (this.language && (this.language + "." + key) in this.__data)
-	        return this.__data[this.language + "." + key];
-		return key in this.__data ? this.__data[key] : key;
-	},
-	
-	register: function (strings, prefix) {
-		prefix = prefix ? prefix + "." : "";
-		for (var key in strings)
-			this.__data[prefix + key] = strings[key];
-	},
-	
-	view: function (base) {
-		return {
-			context: this,
-			base: base,
-			get: function (key) {
-				return this.context.get(this.base + "." + key);
-			},
-			base: function (base) {
-				return this.context.base(this.base + "." + base);
-			}
-		};
-	}
-	
-};
-BetaJS.Time = {
-		
-	/*
-	 * All time routines are based on UTC time.
-	 * The optional timezone parameter should be used as follows:
-	 *    - undefined or false: UTC
-	 *    - true: user's local time zone
-	 *    - int value: actual time zone bias in minutes
-	 */
-		
-	
-	timezoneBias: function (timezone) {
-		if (timezone === true)
-			timezone = (new Date()).getTimezoneOffset();
-		if (typeof timezone == "undefined" || timezone === null || timezone === false)
-			timezone = 0;
-		return timezone * 60 * 1000;
-	},
-		
-	timeToDate: function (t, timezone) {
-		return new Date(t + this.timezoneBias(timezone));
-	},
-	
-	dateToTime: function (d, timezone) {
-		return d.getTime() - this.timezoneBias(timezone);
-	},
-	
-	timeToTimezoneBasedDate: function (t, timezone) {
-		return new Date(t - this.timezoneBias(timezone));
-	},
-	
-	timezoneBasedDateToTime: function (d, timezone) {
-		return d.getTime() + this.timezoneBias(timezone);
-	},
-
-	__components: {
-		"year": {
-			"set": function (date, value) { date.setUTCFullYear(value); },
-			"get": function (date) { return date.getUTCFullYear(); }
-		},
-		"month": {
-			"set": function (date, value) { date.setUTCMonth(value); },
-			"get": function (date) { return date.getUTCMonth(); }
-		},
-		"day": {
-			"dependencies": {"weekday": true},
-			"set": function (date, value) { date.setUTCDate(value + 1); },
-			"get": function (date) { return date.getUTCDate() - 1; },
-			"milliseconds": 24 * 60 * 60 * 1000
-		},
-		"weekday": {
-			"dependencies": {"day": true, "month": true, "year": true},
-			"set": function (date, value) { date.setUTCDate(date.getUTCDate() + value - date.getUTCDay()); },
-			"get": function (date) { return date.getUTCDay(); }
-		},
-		"hour": {
-			"set": function (date, value) { date.setUTCHours(value); },
-			"get": function (date) { return date.getUTCHours(); },
-			"max": 23,
-			"milliseconds": 60 * 60 * 1000
-		},
-		"minute": {
-			"set": function (date, value) { date.setUTCMinutes(value); },
-			"get": function (date) { return date.getUTCMinutes(); },
-			"max": 59,
-			"milliseconds": 60 * 1000
-		},
-		"second": {
-			"set": function (date, value) { date.setUTCSeconds(value); },
-			"get": function (date) { return date.getUTCSeconds(); },
-			"max": 59,
-			"milliseconds": 1000
-		},
-		"millisecond": {
-			"set": function (date, value) { date.setUTCMilliseconds(value); },
-			"get": function (date) { return date.getUTCMilliseconds(); },
-			"max": 999,
-			"milliseconds": 1
-		}
-	},
-	
-	decodeTime: function (t, timezone) {
-		var d = this.timeToTimezoneBasedDate(t, timezone);
-		var result = {};
-		for (var key in this.__components)
-			result[key] = this.__components[key].get(d);
-		return result;
-	},
-
-	encodeTime: function (data, timezone) {
-		return this.updateTime(this.now(), data, timezone);
-	},
-	
-	encodePeriod: function (data) {
-		return this.incrementTime(0, data);
-	},
-	
-	updateTime: function (t, data, timezone) {
-		var d = this.timeToTimezoneBasedDate(t, timezone);
-		for (var key in data)
-			this.__components[key].set(d, data[key]);
-		return this.timezoneBasedDateToTime(d, timezone);
-	},
-	
-	now: function (timezone) {
-		return this.dateToTime(new Date(), timezone);
-	},
-	
-	incrementTime: function (t, data) {
-		var d = this.timeToDate(t);
-		for (var key in data) 
-			this.__components[key].set(d, this.__components[key].get(d) + data[key]);
-		return this.dateToTime(d);
-	},
-	
-	floorTime: function (t, key, timezone) {
-		var d = this.timeToTimezoneBasedDate(t, timezone);
-		var found = false;
-		for (var comp in this.__components) {
-			var c = this.__components[comp];
-			found = found || comp == key;
-			if (found && (!c.dependencies || !c.dependencies[key]))
-				c.set(d, 0);
-		}
-		return this.timezoneBasedDateToTime(d, timezone);
-	},
-	
-	ago: function (t, timezone) {
-		return this.now(timezone) - t;
-	},
-	
-	timeComponent: function (t, key, round) {
-		return Math[round || "floor"](t / this.__components[key].milliseconds);
-	},
-	
-	timeModulo: function (t, key, round) {
-		return this.timeComponent(t, key, round) % (this.__components[key].max + 1);
-	},
-	
-	formatTimePeriod: function (t, options) {
-		options = options || {};
-		var components = options.components || ["day", "hour", "minute", "second"];
-		var component = "";
-		var timeComponent = 0;
-		for (var i = 0; i < components.length; ++i) {
-			component = components[i];
-			timeComponent = this.timeComponent(t, component, options.round || "round");
-			if (timeComponent)
-				break;
-		}
-		return timeComponent + " " + BetaJS.Locales.get(component + (timeComponent == 1 ? "" : "s"));
-	},
-	
-	formatTime: function(t, s) {
-		var components = ["hour", "minute", "second"];
-		s = s || "hhh:mm:ss";
-		var replacers = {};
-		for (var i = 0; i < components.length; ++i) {
-			var c = components[i].charAt(0);
-			replacers[c + c + c] = this.timeComponent(t, components[i], "floor");
-			var temp = this.timeModulo(t, components[i], "floor");
-			replacers[c + c] = temp < 10 ? "0" + temp : temp; 
-			replacers[c] = temp;
-		}
-		for (var key in replacers)
-			s = s.replace(key, replacers[key]);
-		return s;
-	}
-	
-};
-
 BetaJS.Class.extend("BetaJS.Timers.Timer", {
 	
 	/*
@@ -3672,37 +4769,6 @@ BetaJS.Class.extend("BetaJS.Templates.Template", {
 	}
 	
 });
-BetaJS.JavaScript = {
-	
-	STRING_SINGLE_QUOTATION_REGEX: /'[^']*'/g,
-	STRING_DOUBLE_QUOTATION_REGEX: /"[^"]*"/g,
-	
-	IDENTIFIER_REGEX: /[a-zA-Z_][a-zA-Z_0-9]*/g,
-	IDENTIFIER_SCOPE_REGEX: /[a-zA-Z_][a-zA-Z_0-9\.]*/g,
-
-	RESERVED: BetaJS.Objs.objectify(
-		["if", "then", "else", "return", "var"],
-		true),
-	
-	isReserved: function (key) {
-		return key in this.RESERVED;
-	},
-	
-	isIdentifier: function (key) {
-		return !this.isReserved(key);
-	},
-	
-	removeStrings: function (code) {
-		return code.replace(this.STRING_SINGLE_QUOTATION_REGEX, "").replace(this.STRING_DOUBLE_QUOTATION_REGEX, "");
-	},	
-	
-	extractIdentifiers: function (code, keepScopes) {
-		var regex = keepScopes ? this.IDENTIFIER_SCOPE_REGEX : this.IDENTIFIER_REGEX;
-		code = this.removeStrings(code);
-		return BetaJS.Objs.filter(code.match(regex), this.isIdentifier, this);
-	}
-		
-};
 BetaJS.Class.extend("BetaJS.States.Host", [
     BetaJS.Events.EventsMixin,
     {
@@ -4698,7 +5764,7 @@ BetaJS.Class.extend("BetaJS.RMI.Server", [
 	},
 	
 	_serializeValue: function (value) {
-		if (BetaJS.RMI.Skeleton.is_class_instance(value) && value.instance_of(BetaJS.RMI.Skeleton)) {
+		if (BetaJS.RMI.Skeleton.is_instance_of(value)) {
 			var registry = this;
 			registry.registerInstance(value);
 			return {
@@ -4772,7 +5838,7 @@ BetaJS.Class.extend("BetaJS.RMI.Client", {
 	},
 	
 	_serializeValue: function (value) {
-		if (BetaJS.RMI.Skeleton.is_class_instance(value) && value.instance_of(BetaJS.RMI.Skeleton)) {
+		if (BetaJS.RMI.Skeleton.is_instance_of(value)) {
 			var registry = this.server;
 			registry.registerInstance(value);
 			return {
@@ -4856,547 +5922,6 @@ BetaJS.Class.extend("BetaJS.RMI.Peer", {
 	}
 
 });
-
-BetaJS.Promise = {
-		
-	Promise: function (value, error, finished) {
-		this.__value = error ? null : (value || null);
-		this.__error = error ? error : null;
-		this.__isFinished = finished;
-		this.__hasError = !!error;
-		this.__resultPromise = null;
-		this.__callbacks = [];
-	},
-	
-	create: function (value, error) {
-		return new this.Promise(value, error, arguments.length > 0);
-	},
-	
-	value: function (value) {
-		return this.is(value) ? value : new this.Promise(value, null, true);
-	},
-	
-	eventualValue: function (value) {
-		var promise = new this.Promise();
-		BetaJS.Async.eventually(function () {
-			promise.asyncSuccess(value);
-		});
-		return promise;
-	},
-
-	error: function (error) {
-		return this.is(error) ? error : new this.Promise(null, error, true);
-	},
-	
-	box: function (f, ctx, params) {
-		try {
-			var result = f.apply(ctx || this, params || []);
-			return this.is(result) ? result : this.value(result);
-		} catch (e) {
-			return this.error(e);
-		}
-	},
-	
-	tryCatch: function (f, ctx) {
-		try {
-			return this.value(f.apply(ctx || this));
-		} catch (e) {
-			return this.error(e);
-		}
-	},
-	
-	funcCallback: function (ctx, func) {
-		var args  = BetaJS.Functions.getArguments(arguments, 1);
-		if (BetaJS.Types.is_function(ctx)) {
-			args = BetaJS.Functions.getArguments(arguments, 1);
-			func = ctx;
-			ctx = this;
-		} else
-			args = BetaJS.Functions.getArguments(arguments, 2);
-		var promise = this.create();
-		args.push(promise.asyncCallbackFunc());
-		func.apply(ctx, args);
-		return promise;
-	},
-	
-	and: function (promises) {
-		var promise = this.create();
-		promise.__promises = [];
-		promise.__successCount = 0;
-		promise.__values = [];
-		promise.__errorPromise = null;
-		promise.and = function (promises) {
-			promises = promises || [];
-			if (this.__ended)
-				return this;
-			if (!BetaJS.Types.is_array(promises))
-				promises = [promises];	
-			for (var i = 0; i < promises.length; ++i) {
-				var last = this.__promises.length;
-				this.__promises.push(promises[i]);
-				this.__values.push(null);
-				if (promises[i].isFinished()) {
-					if (promises[i].hasValue()) {
-						this.__successCount++;
-						this.__values[last] = promises[i].value();
-					} else
-						this.__errorPromise = promises[i];
-				} else {
-					promises[i].callback(function (error, value) {
-						if (error)
-							this.__errorPromise = promises[this.idx];
-						else {
-							this.promise.__successCount++;
-							this.promise.__values[this.idx] = value;
-						}
-						this.promise.results();
-					}, {promise: this, idx: last});					
-				}
-			}
-			return this;
-		};
-		promise.end = function () {
-			this.__ended = true;
-			this.results();
-			return this;
-		};
-		promise.results = function () {
-			if (this.__ended && this.__errorPromise)
-				this.asyncError(this.__errorPromise.err(), this.__errorPromise);
-			else if (this.__ended && this.__successCount == this.__promises.length)
-				this.asyncSuccess(this.__values);
-			return this;
-		};
-		promise.successUnfold = function (f, context, options) {
-			return this.success(function () {
-				return f.apply(context, arguments);
-			}, context, options);
-		};
-		promise.and(promises);
-		return promise;
-	},
-	
-	func: function (func) {
-		var args = BetaJS.Functions.getArguments(arguments, 1);
-		var promises = [];
-		for (var i = 0; i < args.length; ++i) {
-			if (this.is(args[i]))
-				promises.push(args[i]);
-		}
-		var promise = this.create();
-		this.and(promises).end().success(function (values) {
-			var params = [];
-			for (var i = 0; i < args.length; ++i)
-				params[i] = this.is(args[i]) ? args[i].value() : args[i];
-			var result = func.apply(this, params);
-			if (this.is(result))
-				result.forwardCallback(promise);
-			else
-				promise.asyncSuccess(result);
-		}, this).forwardError(promise);
-		return promise;
-	},
-	
-	methodArgs: function (ctx, func, params) {
-		params.unshift(function () {
-			return func.apply(ctx, arguments);
-		});
-		return this.func.apply(this, params);
-	},
-	
-	method: function (ctx, func) {
-		return this.methodArgs(ctx, func, BetaJS.Functions.getArguments(arguments, 2));
-	},
-
-	newClass: function (cls) {
-		var params = BetaJS.Functions.getArguments(arguments, 1);
-		params.unshift(BetaJS.Functions.newClassFunc(cls));
-		return this.func.apply(this, params);
-	},
-	
-	is: function (obj) {
-		return obj && BetaJS.Types.is_object(obj) && obj.classGuid == BetaJS.Promise.Promise.prototype.classGuid;
-	} 
-	
-};
-
-BetaJS.Promise.Promise.prototype.classGuid = "7e3ed52f-22da-4e9c-95a4-e9bb877a3935"; 
-
-BetaJS.Promise.Promise.prototype.success = function (f, context, options) {
-	return this.callback(f, context, options, "success");
-};
-
-BetaJS.Promise.Promise.prototype.error = function (f, context, options) {
-	return this.callback(f, context, options, "error");
-};
-
-BetaJS.Promise.Promise.prototype.callback = function (f, context, options, type) {
-	var record = {
-		type: type || "callback",
-		func: f,
-		options: options || {},
-		context: context
-	};
-	if (this.__isFinished)
-		this.triggerResult(record);
-	else
-		this.__callbacks.push(record);
-	return this;
-};
-
-BetaJS.Promise.Promise.prototype.triggerResult = function (record) {
-	if (!this.__isFinished)
-		return this;
-	if (record) {
-		if (record.type == "success" && !this.__hasError)
-			record.func.call(record.context || this, this.__value, this.__resultPromise || this);
-		else if (record.type == "error" && this.__hasError)
-			record.func.call(record.context || this, this.__error, this.__resultPromise || this);
-		else if (record.type == "callback")
-			record.func.call(record.context || this, this.__error, this.__value, this.__resultPromise || this);
-	} else {
-		var records = this.__callbacks;
-		this.__callbacks = [];
-		for (var i = 0; i < records.length; ++i)
-			this.triggerResult(records[i]);
-	}
-	return this;
-};
-
-BetaJS.Promise.Promise.prototype.value = function () {
-	return this.__value;
-};
-
-BetaJS.Promise.Promise.prototype.err = function () {
-	return this.__error;
-};
-
-BetaJS.Promise.Promise.prototype.isFinished = function () {
-	return this.__isFinished;
-};
-
-BetaJS.Promise.Promise.prototype.hasValue = function () {
-	return this.__isFinished && !this.__hasError;
-};
-
-BetaJS.Promise.Promise.prototype.hasError = function () {
-	return this.__isFinished && this.__hasError;
-};
-
-BetaJS.Promise.Promise.prototype.asyncSuccess = function (value, promise) {
-	if (this.__isFinished) 
-		return this;
-	this.__resultPromise = promise;
-	this.__error = null;
-	this.__isFinished = true;
-	this.__hasError = false;
-	this.__value = value;
-	return this.triggerResult();
-};
-
-BetaJS.Promise.Promise.prototype.forwardSuccess = function (promise) {
-	this.success(promise.asyncSuccess, promise);
-	return this;
-};
-
-BetaJS.Promise.Promise.prototype.asyncError = function (error, promise) {
-	if (this.__isFinished) 
-		return this;
-	this.__resultPromise = promise;
-	this.__isFinished = true;
-	this.__hasError = true;
-	this.__error = error;
-	this.__value = null;
-	return this.triggerResult();
-};
-
-BetaJS.Promise.Promise.prototype.forwardError = function (promise) {
-	this.error(promise.asyncError, promise);
-	return this;
-};
-
-BetaJS.Promise.Promise.prototype.asyncCallback = function (error, value, promise) {
-	if (error)
-		return this.asyncError(error, promise);
-	else
-		return this.asyncSuccess(value, promise);
-};
-
-BetaJS.Promise.Promise.prototype.asyncCallbackFunc = function () {
-	return BetaJS.Functions.as_method(BetaJS.Promise.Promise.prototype.asyncCallback, this);
-};
-
-BetaJS.Promise.Promise.prototype.forwardCallback = function (promise) {
-	this.callback(promise.asyncCallback, promise);
-	return this;
-};
-
-BetaJS.Promise.Promise.prototype.mapSuccess = function (func, ctx) {
-	var promise = BetaJS.Promise.create();
-	this.forwardError(promise).success(function (value, pr) {
-		var result = func.call(ctx || promise, value, pr);
-		if (BetaJS.Promise.is(result))
-			result.forwardCallback(promise);
-		else
-			promise.asyncSuccess(result);
-	});
-	return promise;
-};
-
-BetaJS.Promise.Promise.prototype.mapError = function (func, ctx) {
-	var promise = BetaJS.Promise.create();
-	this.forwardSuccess(promise).error(function (err, pr) {
-		var result = func.call(ctx || promise, err, pr);
-		if (BetaJS.Promise.is(result))
-			result.forwardCallback(promise);
-		else
-			promise.asyncError(result);
-	});
-	return promise;
-};
-
-BetaJS.Promise.Promise.prototype.mapCallback = function (func, ctx) {
-	var promise = BetaJS.Promise.create();
-	this.callback(function (err, value, pr) {
-		var result = func.call(ctx || promise, err, value, pr);
-		if (BetaJS.Promise.is(result))
-			result.forwardCallback(promise);
-		else
-			promise.asyncCallback(err ? result : err, err ? value : result, pr);
-	});
-	return promise;
-};
-
-BetaJS.Promise.Promise.prototype.and = function (promises) {
-	var result = BetaJS.Promise.and(this);
-	return result.and(promises);
-};
-BetaJS.Structures = {};
-
-BetaJS.Structures.AvlTree = {
-
-	empty : function() {
-		return null;
-	},
-
-	singleton : function(data) {
-		return {
-			data : data,
-			left : null,
-			right : null,
-			height : 1
-		};
-	},
-
-	min : function(root) {
-		return root.left ? this.min(root.left) : root.data;
-	},
-
-	max : function(root) {
-		return root.right ? this.max(root.right) : root.data;
-	},
-
-	height : function(node) {
-		return node ? node.height : 0;
-	},
-
-	height_join : function(left, right) {
-		return 1 + Math.max(this.height(left), this.height(right));
-	},
-
-	create : function(data, left, right) {
-		return {
-			data : data,
-			left : left,
-			right : right,
-			height : this.height_join(left, right)
-		};
-	},
-
-	balance : function(data, left, right) {
-		if (this.height(left) > this.height(right) + 2) {
-			if (this.height(left.left) >= this.height(left.right))
-				return this.create(left.data, left.left, this.create(data,
-						left.right, right));
-			else
-				return this.create(left.right.data, this.create(left.data,
-						left.left, left.right.left), this.create(data,
-						left.right.right, right));
-		} else if (this.height(right) > this.height(left) + 2) {
-			if (this.height(right.right) >= this.height(right.left))
-				return this.create(right.data, this.create(data, left,
-						right.left), right.right);
-			else
-				return this.create(right.left.data, this.create(data, left,
-						right.left.left), this.create(right.data,
-						right.left.right, right.right));
-		} else
-			return this.create(data, left, right);
-	},
-
-	__add_left : function(data, left) {
-		return left ? this.balance(left.data, this.__add_left(data, left.left),
-				left.right) : this.singleton(data);
-	},
-
-	__add_right : function(data, right) {
-		return right ? this.balance(right.data, right.data, this.__add_right(
-				data, right.right)) : this.singleton(data);
-	},
-
-	join : function(data, left, right) {
-		if (!left)
-			return this.__add_left(data, right);
-		else if (!right)
-			return this.__add_right(data, left);
-		else if (this.height(left) > this.height(right) + 2)
-			return this.balance(left.data, left.left, this.join(data,
-					left.right, right));
-		else if (this.height(right) > this.height(left) + 2)
-			return this.balance(right.data, this.join(data, left, right.left),
-					right.right);
-		else
-			return this.create(data, left, right);
-	},
-
-	take_min : function(root) {
-		if (!root.left)
-			return [ root.data, root.right ];
-		var result = this.take_min(root.left);
-		return [ result[0], this.join(root.data, result[1], root.right) ];
-	},
-
-	take_max : function(root) {
-		if (!root.right)
-			return [ root.data, root.left ];
-		var result = this.take_max(root.right);
-		return [ result[0], this.join(root.data, root.left, result[1]) ];
-	},
-
-	rereoot : function(left, right) {
-		if (!left || !right)
-			return left || right;
-		if (this.height(left) > this.height(right)) {
-			var max = this.take_max(left);
-			return this.join(max[0], max[1], right);
-		}
-		var min = this.take_min(right);
-		return this.join(min[0], left, min[1]);
-
-	},
-
-	take_min_iter : function(root) {
-		if (!root)
-			return null;
-		if (!root.left)
-			return [ root.data, root.left ];
-		return this.take_min_iter(this.create(root.left.data, root.left.left,
-				this.create(root.data, root.left.right, root.right)));
-	},
-
-	take_max_iter : function(root) {
-		if (!root)
-			return null;
-		if (!root.right)
-			return [ root.data, root.right ];
-		return this.take_max_iter(this.create(root.right.data, this.create(
-				root.data, root.left, root.right.left), root.right.right));
-	}
-
-};
-
-BetaJS.Structures.TreeMap = {
-
-	empty : function(compare) {
-		return {
-			root : null,
-			length : 0,
-			compare : compare || function(x, y) {
-				return x > y ? 1 : x < y ? -1 : 0;
-			}
-		};
-	},
-
-	is_empty : function(t) {
-		return !t.root;
-	},
-
-	length : function(t) {
-		return t.length;
-	},
-
-	__add : function(key, value, t, node) {
-		var kv = {
-			key : key,
-			value : value
-		};
-		if (!node) {
-			t.length++;
-			return BetaJS.Data.AvlTree.singleton(kv);
-		}
-		var c = t.compare(key, node.data.key);
-		if (c === 0) {
-			node.data = kv;
-			return node;
-		} else if (c < 0)
-			return BetaJS.Data.AvlTree.balance(node.data, this.__add(key,
-					value, t, node.left), node.right);
-		else
-			return BetaJS.Data.AvlTree.balance(node.data, node.left, this.__add(key, value, t, node.right));
-	},
-
-	add : function(key, value, t) {
-		t.root = this.__add(key, value, t, t.root);
-		return t;
-	},
-
-	singleton : function(key, value, compare) {
-		return this.add(key, value, this.empty(compare));
-	},
-
-	__find : function(key, t, root) {
-		if (!root)
-			return null;
-		var c = t.compare(key, root.data.key);
-		return c === 0 ? root.data.value : this.__find(key, t, c < 0 ? root.left : root.right);
-	},
-
-	find : function(key, t) {
-		return this.__find(key, t, t.root);
-	},
-
-	__iterate : function(t, node, callback, context) {
-		if (!node)
-			return true;
-		return this.__iterate(t, node.left, callback, context) && (callback.call(context, node.data.key, node.data.value) !== false) && this.__iterate(t, node.right, callback, context);
-	},
-
-	iterate : function(t, callback, context) {
-		this.__iterate(t, t.root, callback, context);
-	},
-
-	__iterate_from : function(key, t, node, callback, context) {
-		if (!node)
-			return true;
-		var c = t.compare(key, node.data.key);
-		if (c < 0 && !this.__iterate_from(key, t, node.left, callback, context))
-			return false;
-		if (c <= 0 && callback.call(context, node.data.key, node.data.value) === false)
-			return false;
-		return this.__iterate_from(key, t, node.right, callback, context);
-	},
-
-	iterate_from : function(key, t, callback, context) {
-		this.__iterate_from(key, t, t.root, callback, context);
-	},
-
-	iterate_range : function(from_key, to_key, t, callback, context) {
-		this.iterate_from(from_key, t, function(key, value) {
-			return t.compare(key, to_key) <= 0 && callback.call(context, key, value) !== false;
-		}, this);
-	}
-
-};
 
 BetaJS.Class.extend("BetaJS.KeyValue.KeyValueStore", [
 	BetaJS.Events.EventsMixin,
