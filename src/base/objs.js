@@ -330,3 +330,66 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 	
 	};
 });
+
+
+Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
+	return {
+		
+		has: function (key, scope) {
+			var keys = key ? key.split(".") : [];
+			for (var i = 0; i < keys.length; ++i) {
+		       if (!scope || !Types.is_object(scope))
+		    	   return false;
+		       scope = scope[keys[i]];
+		    }
+			return Types.is_defined(scope);
+		},
+		
+		get: function (key, scope) {
+			var keys = key ? key.split(".") : [];
+			for (var i = 0; i < keys.length; ++i) {
+		       if (!scope || !Types.is_object(scope))
+		    	   return null;
+		       scope = scope[keys[i]];
+		    }
+			return scope;
+		},
+		
+		set: function (key, value, scope) {
+			if (!key)
+				return;
+			var keys = key.split(".");
+			for (var i = 0; i < keys.length - 1; ++i) {
+				if (!(keys[i] in scope) || !Types.is_object(scope[keys[i]]))
+					scope[keys[i]] = {};
+		       scope = scope[keys[i]];
+		    }
+			scope[keys[keys.length - 1]] = value;
+		},
+		
+		unset: function (key, scope) {
+			if (!key)
+				return;
+			var keys = key.split(".");
+			for (var i = 0; i < keys.length - 1; ++i) {
+		       if (!scope || !Types.is_object(scope))
+		    	   return;
+		       scope = scope[keys[i]];
+		    }
+			delete scope[keys[keys.length - 1]];
+		},
+		
+		touch: function (key, scope) {
+			if (!key)
+				return scope;
+			var keys = key.split(".");
+			for (var i = 0; i < keys.length; ++i) {
+				if (!(keys[i] in scope) || !Types.is_object(scope))
+					scope[keys[i]] = {};
+		       scope = scope[keys[i]];
+		    }
+			return scope[keys[keys.length - 1]];
+		}
+
+	};
+});

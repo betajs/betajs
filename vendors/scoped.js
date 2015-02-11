@@ -1,5 +1,5 @@
 /*!
-betajs-scoped - v0.0.1 - 2014-12-13
+betajs-scoped - v0.0.1 - 2015-02-09
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -31,6 +31,21 @@ var Globals = {
 				global[key] = value;
 		} catch (e) {
 		}
+		return value;
+	},
+	
+	setPath: function (path, value) {
+		var args = path.split(".");
+		if (args.length == 1)
+			return this.set(path, value);		
+		var current = this.get(args[0]) || this.set(args[0], {});
+		for (var i = 1; i < args.length - 1; ++i) {
+			if (!(args[i] in current))
+				current[args[i]] = {};
+			current = current[args[i]];
+		}
+		current[args[args.length - 1]] = value;
+		return value;
 	}
 
 };
@@ -316,6 +331,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			});
 			var ns = this.resolve(args.namespaceLocator);
 			this.require(args.dependencies, args.hiddenDependencies, function () {
+				arguments[arguments.length - 1].ns = ns;
 				ns.namespace.set(ns.path, args.callback.apply(args.context || this, arguments));
 			}, this);
 			return this;
@@ -331,6 +347,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			});
 			var ns = this.resolve(args.namespaceLocator);
 			this.require(args.dependencies, args.hiddenDependencies, function () {
+				arguments[arguments.length - 1].ns = ns;
 				ns.namespace.extend(ns.path, args.callback.apply(args.context || this, arguments));
 			}, this);
 			return this;
@@ -346,6 +363,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			});
 			var ns = this.resolve(args.namespaceLocator);
 			this.require(args.dependencies, args.hiddenDependencies, function () {
+				arguments[arguments.length - 1].ns = ns;
 				var result = args.callback.apply(args.context || this, arguments);
 				if (result)
 					ns.namespace.set(ns.path, result);
@@ -364,6 +382,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			var allDependencies = dependencies.concat(args.hiddenDependencies || []);
 			var count = allDependencies.length;
 			var deps = [];
+			var environment = {};
 			if (count) {
 				for (var i = 0; i < allDependencies.length; ++i) {
 					var ns = this.resolve(allDependencies[i]);
@@ -373,15 +392,19 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 						if (this.i < deps.length)
 							deps[this.i] = value;
 						count--;
-						if (count === 0)
+						if (count === 0) {
+							deps.push(environment);
 							args.callback.apply(args.context || this.ctx, deps);
+						}
 					}, {
 						ctx: this,
 						i: i
 					});
 				}
-			} else
+			} else {
+				deps.push(environment);
 				args.callback.apply(args.context || this, deps);
+			}
 			return this;
 		},
 		
@@ -411,7 +434,9 @@ var Public = {
 	define: Helper.method(rootScope, rootScope.define),
 	extend: Helper.method(rootScope, rootScope.extend),
 	require: Helper.method(rootScope, rootScope.require),
-	digest: Helper.method(rootScope, rootScope.digest)	
+	digest: Helper.method(rootScope, rootScope.digest),
+	
+	setGlobal: Helper.method(Globals, Globals.setPath)
 	
 };
 Public.attach();

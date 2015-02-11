@@ -1,10 +1,10 @@
 /*!
-betajs - v1.0.0 - 2015-02-07
+betajs - v1.0.0 - 2015-02-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
 /*!
-betajs-scoped - v0.0.1 - 2014-12-13
+betajs-scoped - v0.0.1 - 2015-02-09
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -36,6 +36,21 @@ var Globals = {
 				global[key] = value;
 		} catch (e) {
 		}
+		return value;
+	},
+	
+	setPath: function (path, value) {
+		var args = path.split(".");
+		if (args.length == 1)
+			return this.set(path, value);		
+		var current = this.get(args[0]) || this.set(args[0], {});
+		for (var i = 1; i < args.length - 1; ++i) {
+			if (!(args[i] in current))
+				current[args[i]] = {};
+			current = current[args[i]];
+		}
+		current[args[args.length - 1]] = value;
+		return value;
 	}
 
 };
@@ -321,6 +336,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			});
 			var ns = this.resolve(args.namespaceLocator);
 			this.require(args.dependencies, args.hiddenDependencies, function () {
+				arguments[arguments.length - 1].ns = ns;
 				ns.namespace.set(ns.path, args.callback.apply(args.context || this, arguments));
 			}, this);
 			return this;
@@ -336,6 +352,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			});
 			var ns = this.resolve(args.namespaceLocator);
 			this.require(args.dependencies, args.hiddenDependencies, function () {
+				arguments[arguments.length - 1].ns = ns;
 				ns.namespace.extend(ns.path, args.callback.apply(args.context || this, arguments));
 			}, this);
 			return this;
@@ -351,6 +368,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			});
 			var ns = this.resolve(args.namespaceLocator);
 			this.require(args.dependencies, args.hiddenDependencies, function () {
+				arguments[arguments.length - 1].ns = ns;
 				var result = args.callback.apply(args.context || this, arguments);
 				if (result)
 					ns.namespace.set(ns.path, result);
@@ -369,6 +387,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			var allDependencies = dependencies.concat(args.hiddenDependencies || []);
 			var count = allDependencies.length;
 			var deps = [];
+			var environment = {};
 			if (count) {
 				for (var i = 0; i < allDependencies.length; ++i) {
 					var ns = this.resolve(allDependencies[i]);
@@ -378,15 +397,19 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 						if (this.i < deps.length)
 							deps[this.i] = value;
 						count--;
-						if (count === 0)
+						if (count === 0) {
+							deps.push(environment);
 							args.callback.apply(args.context || this.ctx, deps);
+						}
 					}, {
 						ctx: this,
 						i: i
 					});
 				}
-			} else
+			} else {
+				deps.push(environment);
 				args.callback.apply(args.context || this, deps);
+			}
 			return this;
 		},
 		
@@ -416,7 +439,9 @@ var Public = {
 	define: Helper.method(rootScope, rootScope.define),
 	extend: Helper.method(rootScope, rootScope.extend),
 	require: Helper.method(rootScope, rootScope.require),
-	digest: Helper.method(rootScope, rootScope.digest)	
+	digest: Helper.method(rootScope, rootScope.digest),
+	
+	setGlobal: Helper.method(Globals, Globals.setPath)
 	
 };
 Public.attach();
@@ -1102,6 +1127,70 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 	
 	};
 });
+
+
+Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
+	return {
+		
+		has: function (key, scope) {
+			var keys = key ? key.split(".") : [];
+			for (var i = 0; i < keys.length; ++i) {
+		       if (!scope || !Types.is_object(scope))
+		    	   return false;
+		       scope = scope[keys[i]];
+		    }
+			return Types.is_defined(scope);
+		},
+		
+		get: function (key, scope) {
+			var keys = key ? key.split(".") : [];
+			for (var i = 0; i < keys.length; ++i) {
+		       if (!scope || !Types.is_object(scope))
+		    	   return null;
+		       scope = scope[keys[i]];
+		    }
+			return scope;
+		},
+		
+		set: function (key, value, scope) {
+			if (!key)
+				return;
+			var keys = key.split(".");
+			for (var i = 0; i < keys.length - 1; ++i) {
+				if (!(keys[i] in scope) || !Types.is_object(scope[keys[i]]))
+					scope[keys[i]] = {};
+		       scope = scope[keys[i]];
+		    }
+			scope[keys[keys.length - 1]] = value;
+		},
+		
+		unset: function (key, scope) {
+			if (!key)
+				return;
+			var keys = key.split(".");
+			for (var i = 0; i < keys.length - 1; ++i) {
+		       if (!scope || !Types.is_object(scope))
+		    	   return;
+		       scope = scope[keys[i]];
+		    }
+			delete scope[keys[keys.length - 1]];
+		},
+		
+		touch: function (key, scope) {
+			if (!key)
+				return scope;
+			var keys = key.split(".");
+			for (var i = 0; i < keys.length; ++i) {
+				if (!(keys[i] in scope) || !Types.is_object(scope))
+					scope[keys[i]] = {};
+		       scope = scope[keys[i]];
+		    }
+			return scope[keys[keys.length - 1]];
+		}
+
+	};
+});
+
 Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 	return {
 		
@@ -2153,1015 +2242,1275 @@ Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
 	};
 
 });
-/** @class */
-BetaJS.Scopes = {
-	
-	/** Takes a string and returns the global object associated with it by name.
-     * 
-     * @param s string (example: "BetaJS")
-     * @param base a global namespace base (optional, will autodetect the right one if not provided)
-     * @return global object (example: BetaJS object)
-     */
-	base: function (s, base, initialize) {
-		if (!BetaJS.Types.is_string(s))
-			return s;
-		if (base)
-			return base[s];
-		try {
-			if (window && window[s])
-				return window[s];
-		} catch (e) {}
-		try {
-			if (global && global[s])
-				return global[s];
-		} catch (e) {}
-		try {
-			if (module && module.exports)
-				return module.exports;
-		} catch (e) {}
-		if (!initialize)
-		    return null;
-        try {
-            if (window) {
-                window[s] = {};
-                return window[s];
-            }
-        } catch (e) {}
-        try {
-            if (global) {
-                global[s] = {};
-                return global[s];
-            }
-        } catch (e) {}
-        try {
-            if (module && module.exports) {
-                module.exports = {};
-                return module.exports;
-            }
-        } catch (e) {}
-        return null;
-	},
-	
-	/** Takes an object address string and returns the object associated with it.
-     * 
-     * @param s string (example: "BetaJS.Strings")
-     * @param base a global namespace base (optional, will autodetect the right one if not provided)
-     * @return global object (example BetaJS.Strings object)
-     */
-	resolve: function (s, base) {
-		if (!BetaJS.Types.is_string(s))
-			return s;
-		var a = s.split(".");			
-		var object = this.base(a[0], base);
-		for (var i = 1; i < a.length; ++i)
-			object = object[a[i]];
-		return object;
-	},
-	
-	/** Takes an object address string and returns the object associated with it.
-	 *  If the address does not exist, it will be created.
-     * 
-     * @param s string (example: "BetaJS.Strings.FooBar")
-     * @param base a global namespace base (optional, will autodetect the right one if not provided)
-     * @return global object (example BetaJS.Strings.FooBar object)
-     */
-	touch: function (s, base) {
-		if (!BetaJS.Types.is_string(s))
-			return s;
-		var a = s.split(".");		
-		var object = this.base(a[0], base, true);
-		for (var i = 1; i < a.length; ++i) {
-			if (!(a[i] in object))
-				object[a[i]] = {};
-			object = object[a[i]];
-		}
-		return object;
-	},
-	
-	/** Takes an object address string and overwrites it by a given object.
-	 *  If the address does not exist, it will be created.
-     * 
-     * @param obj object (example: {test: "foobar"})
-     * @param s string (example: "BetaJS.Strings.FooBar")
-     * @param base a global namespace base (optional, will autodetect the right one if not provided)
-     * @return global object (example BetaJS.Strings.FooBar object)
-     */
-	set: function (obj, s, base) {
-		if (!BetaJS.Types.is_string(s))
-			return s;
-		var a = s.split(".");			
-		var object = this.base(a[0], base, true);
-		for (var i = 1; i < a.length - 1; ++i) {
-			if (!(a[i] in object))
-				object[a[i]] = {};
-			object = object[a[i]];
-		}
-		if (a.length > 1)
-			object[a[a.length - 1]] = obj;
-		return obj;
-	}
-	
-};
+Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions", "module:Ids"], function (Types, Objs, Functions, Ids) {
+	var Class = function () {};
 
-BetaJS.Class = function () {};
-
-BetaJS.Class.extend = function (classname, objects, statics, class_statics) {
-	objects = objects || [];
-	if (!BetaJS.Types.is_array(objects))
-		objects = [objects];
-	statics = statics || [];
-	if (!BetaJS.Types.is_array(statics))
-		statics = [statics];
-	class_statics = class_statics || [];
-	if (!BetaJS.Types.is_array(class_statics))
-		class_statics = [class_statics];
-	
-	var parent = this;
-	
-	objects = BetaJS.Objs.map(objects, function (obj) {
-		if (BetaJS.Types.is_function(obj))
-			obj = obj(parent.prototype);
-		return obj;
-	});
-	
-	var result;
-	
-	// Setup JavaScript Constructor
-	BetaJS.Objs.iter(objects, function (obj) {
-		if (obj.hasOwnProperty("constructor"))
-			result = obj.constructor;
-	});
-	var has_constructor = BetaJS.Types.is_defined(result);
-	if (!BetaJS.Types.is_defined(result))
-		result = function () { parent.apply(this, arguments); };
-
-	// Add Parent Statics
-	BetaJS.Objs.extend(result, parent);
-
-	// Add External Statics
-	BetaJS.Objs.iter(statics, function (stat) {
-		BetaJS.Objs.extend(result, BetaJS.Types.is_function(stat) ? stat(parent) : stat);
-	});
-	
-	
-	// Add Class Statics
-	var class_statics_keys = {};
-	if (parent.__class_statics_keys) {
-		for (var key in parent.__class_statics_keys) 
-			result[key] = BetaJS.Objs.clone(parent[key], 1);
-	}
-	BetaJS.Objs.iter(class_statics, function (stat) {
-		BetaJS.Objs.extend(result, stat);
-		BetaJS.Objs.extend(class_statics_keys, BetaJS.Objs.keys(stat, true));
-	});
-	if (parent.__class_statics_keys)
-		BetaJS.Objs.extend(class_statics_keys, parent.__class_statics_keys);
-	result.__class_statics_keys = class_statics_keys;
-	
-	// Parent & Children Hierarchy
-	result.parent = parent;
-	result.children = [];
-	result.extend = this.extend;
-	if (!parent.children)
-		parent.children = [];
-	parent.children.push(result);
-	
-	// Setup Prototype
-	var ctor = function () {};
-	ctor.prototype = parent.prototype;
-	result.prototype = new ctor();
-
-	// ClassNames
-	result.prototype.cls = result;
-	result.classname = classname;
-	
-	// Enforce ClassName in namespace
-	if (classname)
-		BetaJS.Scopes.set(result, classname);
-	
-	// Setup Prototype
-	result.__notifications = {};
-	
-	if (parent.__notifications)
-		BetaJS.Objs.extend(result.__notifications, parent.__notifications, 1);		
-
-	BetaJS.Objs.iter(objects, function (object) {
-		BetaJS.Objs.extend(result.prototype, object);
-
-		// Note: Required for Internet Explorer
-		if ("constructor" in object)
-			result.prototype.constructor = object.constructor;
-
-		if (object._notifications) {
-			for (var key in object._notifications) {
-				if (!result.__notifications[key])
-					result.__notifications[key] = [];
-				result.__notifications[key].push(object._notifications[key]);
-			}
-		}
-	});	
-	delete result.prototype._notifications;
-
-	if (!has_constructor)
-		result.prototype.constructor = parent.prototype.constructor;
+	Class.extend = function (options, objects, statics, class_statics) {
+		objects = objects || [];
+		if (!Types.is_array(objects))
+			objects = [objects];
+		statics = statics || [];
+		if (!Types.is_array(statics))
+			statics = [statics];
+		class_statics = class_statics || [];
+		if (!Types.is_array(class_statics))
+			class_statics = [class_statics];
 		
-	return result; 
-};
-
-
-/*
- * 
- * Extending the Class
- * 
- */
-
-
-BetaJS.Objs.extend(BetaJS.Class, {
-	
-	classname: "Class",
-	
-	__class_guid: "0f5499f9-f0d1-4c6c-a561-ef026a1eee05",	
-	
-	__notifications: {},
-	
-	ancestor_of: function (cls) {
-		return (this == cls) || (this != BetaJS.Class && this.parent.ancestor_of(cls));
-	},
-	
-	is_class: function (cls) {
-		return cls && BetaJS.Types.is_object(cls) && ("__class_guid" in cls) && cls.__class_guid == this.__class_guid;
-	},
-	
-	is_class_instance: function (obj) {
-		return obj && BetaJS.Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
-	},
-	
-	is_instance_of: function (obj) {
-		return obj && this.is_class_instance(obj) && obj.instance_of(this);
-	},
-	
-	// Legacy Methods
-
-	_inherited: function (cls, func) {
-		return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-	}	
-	
-});
-
-
-
-
-
-
-/*
- * 
- * Extending the Object
- * 
- */
-
-
-BetaJS.Objs.extend(BetaJS.Class.prototype, {
-	
-	__class_instance_guid: "e6b0ed30-80ee-4b28-af02-7d52430ba45f",
-	
-	constructor: function () {
-		this._notify("construct");
-	},
-	
-	destroy: function () {
-		this._notify("destroy");
-		if (this.__auto_destroy_list) {
-			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
-				if ("destroy" in this.__auto_destroy_list[i])
-					this.__auto_destroy_list[i].destroy();
-			}
-		}
-		for (var key in this)
-			delete this[key];
-	},
-	
-	cid: function () {
-		return BetaJS.Ids.objectId(this);
-	},
-
-	cls: BetaJS.Class,
-	
-	as_method: function (s) {
-		return BetaJS.Functions.as_method(this[s], this);
-	},
-	
-	auto_destroy: function (obj) {
-		if (!this.__auto_destroy_list)
-			this.__auto_destroy_list = [];
-		var target = obj;
-		if (!BetaJS.Types.is_array(target))
-		   target = [target];
-		for (var i = 0; i < target.length; ++i)
-		   this.__auto_destroy_list.push(target[i]);
-		return obj;
-	},
-	
-	_notify: function (name) {
-		if (!this.cls.__notifications)
-			return;
-		var rest = Array.prototype.slice.call(arguments, 1);
-		var table = this.cls.__notifications[name];
-		if (table) {
-			for (var i in table) {
-				var method = BetaJS.Types.is_function(table[i]) ? table[i] : this[table[i]];
-				if (!method)
-					throw this.cls.classname  + ": Could not find " + name + " notification handler " + table[i];
-				method.apply(this, rest);
-			}
-		}
-	},
-	
-	instance_of: function (cls) {
-		return this.cls.ancestor_of(cls);
-	},
-	
-	// Legacy Methods
-	
-	_auto_destroy: function(obj) {
-		return this.auto_destroy(obj);
-	},
-	
-	_inherited: function (cls, func) {
-		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
-	}
-	
-});
-
-BetaJS.Exceptions = {
-	
-	ensure: function (e) {
-		if (e && BetaJS.Types.is_object(e) && ("instance_of" in e) && (e.instance_of(BetaJS.Exceptions.Exception)))
-			return e;
-		return new BetaJS.Exceptions.NativeException(e);
-	}
-	
-};
-
-
-BetaJS.Class.extend("BetaJS.Exceptions.Exception", {
-	
-	constructor: function (message) {
-		this._inherited(BetaJS.Exceptions.Exception, "constructor");
-		this.__message = message;
-	},
-	
-	assert: function (exception_class) {
-		if (!this.instance_of(exception_class))
-			throw this;
-		return this;
-	},
-	
-	callstack: function () {
-		var callstack = [];
-		var current = arguments.callee.caller;
-		while (current) {
-			callstack.push(current.toString());
-			current = current.caller;
-		}
-		return callstack;
-	},
-	
-	callstack_to_string: function () {
-		return this.callstack().join("\n");
-	},
-	
-	message: function () {
-		return this.__message;
-	},
-	
-	toString: function () {
-		return this.message();
-	},
-	
-	format: function () {
-		return this.cls.classname + ": " + this.toString() + "\n\nCall Stack:\n" + this.callstack_to_string();
-	},
-	
-	json: function () {
-		return {
-			classname: this.cls.classname,
-			message: this.message()
-		};
-	}
-	
-}, {
-	
-	ensure: function (e) {
-		e = BetaJS.Exceptions.ensure(e);
-		e.assert(this);
-		return e;
-	}
-	
-});
-
-
-BetaJS.Exceptions.Exception.extend("BetaJS.Exceptions.NativeException", {
-	
-	constructor: function (object) {
-		this._inherited(BetaJS.Exceptions.NativeException, "constructor", object ? ("toString" in object ? object.toString() : object) : "null");
-		this.__object = object;
-	},
-	
-	object: function () {
-		return this.__object;
-	}
-	
-});
-
-BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
-	
-	_add: function (object) {},
-	_remove: function (ident) {},
-	_get: function (ident) {},
-	_iterate: function (callback, context) {},
-	
-	get_ident: function (object) {
-		var ident = null;
-		this._iterate(function (obj, id) {
-			if (obj == object) {
-				ident = id;
-				return false;
-			}
-			return true;	
+		var parent = this;
+		
+		objects = Objs.map(objects, function (obj) {
+			if (Types.is_function(obj))
+				obj = obj(parent.prototype);
+			return obj;
 		});
-		return ident;
-	},
-	
-	exists: function (object) {
-		return object && this.get_ident(object) !== null;
-	},
-	
-	_ident_changed: function (object, new_ident) {},
-	
-	constructor: function (objects) {
-		this._inherited(BetaJS.Lists.AbstractList, "constructor");
-		this.__count = 0;
-		if (objects)
-			BetaJS.Objs.iter(objects, function (object) {
-				this.add(object);
-			}, this);
-	},
-	
-	add: function (object) {
-		var ident = this._add(object);
-		if (BetaJS.Types.is_defined(ident))
-			this.__count++;
-		return ident;
-	},
-	
-	count: function () {
-		return this.__count;
-	},
-	
-	clear: function () {
-		this._iterate(function (object, ident) {
-			this.remove_by_ident(ident);
-			return true;
-		}, this);
-	},
-	
-	remove_by_ident: function (ident) {
-		var ret = this._remove(ident);
-		if (BetaJS.Types.is_defined(ret))
-			this.__count--;
-		return ret;
-	},
-	
-	remove: function (object) {
-		return this.remove_by_ident(this.get_ident(object));
-	},
-	
-	remove_by_filter: function (filter) {
-		this._iterate(function (object, ident) {
-			if (filter(object))
-				this.remove_by_ident(ident);
-			return true;
-		}, this);
-	},
-	
-	get: function (ident) {
-		return this._get(ident);
-	},
-	
-	iterate: function (cb, context) {
-		this._iterate(function (object, ident) {
-			var ret = cb.apply(this, [object, ident]);
-			return BetaJS.Types.is_defined(ret) ? ret : true;
-		}, context);
-	},
-	
-	iterator: function () {
-		return BetaJS.Iterators.ArrayIterator.byIterate(this.iterate, this);
-	}
-
-});
-
-BetaJS.Lists.AbstractList.extend("BetaJS.Lists.LinkedList", {
-	
-	constructor: function (objects) {
-		this.__first = null;
-		this.__last = null;
-		this._inherited(BetaJS.Lists.LinkedList, "constructor", objects);
-	},
-	
-	_add: function (obj) {
-		this.__last = {
-			obj: obj,
-			prev: this.__last,
-			next: null
-		};
-		if (this.__first)
-			this.__last.prev.next = this.__last;
-		else
-			this.__first = this.__last;
-		return this.__last;
-	},
-	
-	_remove: function (container) {
-		if (container.next)
-			container.next.prev = container.prev;
-		else
-			this.__last = container.prev;
-		if (container.prev)
-			container.prev.next = container.next;
-		else
-			this.__first = container.next;
-		return container.obj;
-	},
-	
-	_get: function (container) {
-		return container.obj;
-	},
-	
-	_iterate: function (cb, context) {
-		var current = this.__first;
-		while (current) {
-			var prev = current;
-			current = current.next;
-			if (!cb.apply(context || this, [prev.obj, prev]))
-				return;
-		}
-	}
-});
-
-
-BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ObjectIdList",  {
-	
-	constructor: function (objects, id_generator) {
-		this.__map = {};
-		this.__id_generator = id_generator;
-		this._inherited(BetaJS.Lists.ObjectIdList, "constructor", objects);
-	},
-
-	_add: function (object) {
-	    while (true) {
-	        var id = object.__cid;
-	        if (!id) {
-                id = this.__id_generator ? BetaJS.Ids.objectId(object, this.__id_generator()) : BetaJS.Ids.objectId(object);
-        		if (this.__map[id] && this.__id_generator)
-        		  continue;
-            }
-    		this.__map[id] = object;
-    		return id;
-    	}
-    	return null;
-	},
-	
-	_remove: function (ident) {
-		var obj = this.__map[ident];
-		delete this.__map[ident];
-		return obj;
-	},
-	
-	_get: function (ident) {
-		return this.__map[ident];
-	},
-	
-	_iterate: function (callback, context) {
-		for (var key in this.__map)
-			callback.apply(context || this, [this.__map[key], key]);
-	},
-	
-	get_ident: function (object) {
-		var ident = BetaJS.Ids.objectId(object);
-		return this.__map[ident] ? ident : null;
-	}
-	
-});
-
-
-
-BetaJS.Lists.AbstractList.extend("BetaJS.Lists.ArrayList", {
-	
-	constructor: function (objects, options) {
-		this.__idToIndex = {};
-		this.__items = [];
-		options = options || {};
-		if ("compare" in options)
-			this._compare = options["compare"];
-		if ("get_ident" in options)
-			this._get_ident = options["get_ident"];
-		this._inherited(BetaJS.Lists.ArrayList, "constructor", objects);
-	},
-	
-	set_compare: function (compare) {
-		this._compare = compare;
-		if (compare)
-			this.sort();
-	},
-	
-	get_compare: function () {
-		return this._compare;
-	},
-	
-	sort: function (compare) {
-		compare = compare || this._compare;
-		if (!compare)
-			return;
-		this.__items.sort(compare);
-		for (var i = 0; i < this.__items.length; ++i)
-			this.__ident_changed(this.__items[i], i);
-		this._sorted();
-	},
-	
-	_sorted: function () {},
 		
-	re_index: function (index) {
-		if (!this._compare)
-			return index;
-		var last = this.__items.length - 1;
-		var object = this.__items[index];
-		var i = index;	
-		while (i < last && this._compare(this.__items[i], this.__items[i + 1]) > 0) {
-			this.__items[i] = this.__items[i + 1];
-			this.__ident_changed(this.__items[i], i);
-			this.__items[i + 1] = object;
-			++i;
+		var result;
+		
+		// Setup JavaScript Constructor
+		Objs.iter(objects, function (obj) {
+			if (obj.hasOwnProperty("constructor"))
+				result = obj.constructor;
+		});
+		var has_constructor = Types.is_defined(result);
+		if (!Types.is_defined(result))
+			result = function () { parent.apply(this, arguments); };
+	
+		// Add Parent Statics
+		Objs.extend(result, parent);
+	
+		// Add External Statics
+		Objs.iter(statics, function (stat) {
+			Objs.extend(result, Types.is_function(stat) ? stat(parent) : stat);
+		});
+		
+		
+		// Add Class Statics
+		var class_statics_keys = {};
+		if (parent.__class_statics_keys) {
+			for (var key in parent.__class_statics_keys) 
+				result[key] = Objs.clone(parent[key], 1);
 		}
-		if (i == index) {
-			while (i > 0 && this._compare(this.__items[i], this.__items[i - 1]) < 0) {
-				this.__items[i] = this.__items[i - 1];
-				this.__ident_changed(this.__items[i], i);
-				this.__items[i - 1] = object;
-				--i;
+		Objs.iter(class_statics, function (stat) {
+			Objs.extend(result, stat);
+			Objs.extend(class_statics_keys, Objs.keys(stat, true));
+		});
+		if (parent.__class_statics_keys)
+			Objs.extend(class_statics_keys, parent.__class_statics_keys);
+		result.__class_statics_keys = class_statics_keys;
+		
+		// Parent & Children Hierarchy
+		result.parent = parent;
+		result.children = [];
+		result.extend = this.extend;
+		if (!parent.children)
+			parent.children = [];
+		parent.children.push(result);
+		
+		// Setup Prototype
+		var ctor = function () {};
+		ctor.prototype = parent.prototype;
+		result.prototype = new ctor();
+	
+		result.prototype.cls = result;
+	
+		
+		options = Objs.extend({
+		}, Types.is_string(options) ? {
+			classname: options,
+			register: true
+		} : options);
+		
+		var classname = options.classname;
+		if (options.scoped)
+			classname = options.scoped.ns.path;
+		
+		result.classname = classname;
+		if (classname && options.register)
+			Scoped.setGlobal(classname, result);
+		
+		// Setup Prototype
+		result.__notifications = {};
+		
+		if (parent.__notifications)
+			Objs.extend(result.__notifications, parent.__notifications, 1);		
+	
+		Objs.iter(objects, function (object) {
+			Objs.extend(result.prototype, object);
+	
+			// Note: Required for Internet Explorer
+			if ("constructor" in object)
+				result.prototype.constructor = object.constructor;
+	
+			if (object._notifications) {
+				for (var key in object._notifications) {
+					if (!result.__notifications[key])
+						result.__notifications[key] = [];
+					result.__notifications[key].push(object._notifications[key]);
+				}
+			}
+		});	
+		delete result.prototype._notifications;
+	
+		if (!has_constructor)
+			result.prototype.constructor = parent.prototype.constructor;
+			
+		return result; 
+	};
+	
+	
+	/*
+	 * 
+	 * Extending the Class
+	 * 
+	 */
+	
+	Objs.extend(Class, {
+		
+		classname: "Class",
+		
+		__class_guid: "0f5499f9-f0d1-4c6c-a561-ef026a1eee05",	
+		
+		__notifications: {},
+		
+		ancestor_of: function (cls) {
+			return (this == cls) || (this != Class && this.parent.ancestor_of(cls));
+		},
+		
+		is_class: function (cls) {
+			return cls && Types.is_object(cls) && ("__class_guid" in cls) && cls.__class_guid == this.__class_guid;
+		},
+		
+		is_class_instance: function (obj) {
+			return obj && Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
+		},
+		
+		is_instance_of: function (obj) {
+			return obj && this.is_class_instance(obj) && obj.instance_of(this);
+		},
+		
+		// Legacy Methods
+	
+		_inherited: function (cls, func) {
+			return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
+		}	
+		
+	});
+	
+	
+	
+	
+	
+	
+	/*
+	 * 
+	 * Extending the Object
+	 * 
+	 */
+	
+	
+	Objs.extend(Class.prototype, {
+		
+		__class_instance_guid: "e6b0ed30-80ee-4b28-af02-7d52430ba45f",
+		
+		constructor: function () {
+			this._notify("construct");
+		},
+		
+		destroy: function () {
+			this._notify("destroy");
+			if (this.__auto_destroy_list) {
+				for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
+					if ("destroy" in this.__auto_destroy_list[i])
+						this.__auto_destroy_list[i].destroy();
+				}
+			}
+			for (var key in this)
+				delete this[key];
+		},
+		
+		cid: function () {
+			return Ids.objectId(this);
+		},
+	
+		cls: Class,
+		
+		as_method: function (s) {
+			return Functions.as_method(this[s], this);
+		},
+		
+		auto_destroy: function (obj) {
+			if (!this.__auto_destroy_list)
+				this.__auto_destroy_list = [];
+			var target = obj;
+			if (!Types.is_array(target))
+			   target = [target];
+			for (var i = 0; i < target.length; ++i)
+			   this.__auto_destroy_list.push(target[i]);
+			return obj;
+		},
+		
+		_notify: function (name) {
+			if (!this.cls.__notifications)
+				return;
+			var rest = Array.prototype.slice.call(arguments, 1);
+			Objs.iter(this.cls.__notifications[name], function (entry) {
+				var method = Types.is_function(entry) ? entry : this[entry];
+				if (!method)
+					throw this.cls.classname  + ": Could not find " + name + " notification handler " + entry;
+				method.apply(this, rest);
+			}, this);
+		},
+		
+		instance_of: function (cls) {
+			return this.cls.ancestor_of(cls);
+		},
+		
+		// Legacy Methods
+		
+		_auto_destroy: function(obj) {
+			return this.auto_destroy(obj);
+		},
+		
+		_inherited: function (cls, func) {
+			return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
+		}
+		
+	});
+
+	return Class;
+
+});
+	
+Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (message) {
+				inherited.constructor.call(this);
+				this.__message = message;
+			},
+			
+			assert: function (exception_class) {
+				if (!this.instance_of(exception_class))
+					throw this;
+				return this;
+			},
+			
+			callstack: function () {
+				var callstack = [];
+				var current = arguments.callee.caller;
+				while (current) {
+					callstack.push(current.toString());
+					current = current.caller;
+				}
+				return callstack;
+			},
+			
+			callstack_to_string: function () {
+				return this.callstack().join("\n");
+			},
+			
+			message: function () {
+				return this.__message;
+			},
+			
+			toString: function () {
+				return this.message();
+			},
+			
+			format: function () {
+				return this.cls.classname + ": " + this.toString() + "\n\nCall Stack:\n" + this.callstack_to_string();
+			},
+			
+			json: function () {
+				return {
+					classname: this.cls.classname,
+					message: this.message()
+				};
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Exceptions.NativeException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+	return Exception.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (object) {
+				inherited.constructor.call(this, object ? ("toString" in object ? object.toString() : object) : "null");
+				this.__object = object;
+			},
+			
+			object: function () {
+				return this.__object;
+			}
+
+		};
+	});
+});
+
+
+Scoped.extend("module:Exceptions", ["module:Types", "module:Exceptions.Exception", "module:Exceptions.NativeException"], function (Types, Exception, NativeException) {
+	return {
+		
+		ensure: function (e) {
+			return Exception.is_instance_of(e) ? e : new NativeException(e);
+		}
+
+	};
+});
+
+Scoped.extend("module:Exceptions.Exception", ["module:Exceptions"], ["module:Exceptions.ensure"], function (Exceptions) {
+	
+	return {
+		
+		ensure: function (e) {
+			return Exceptions.ensure(e).assert(this);
+		}
+		
+	};
+});
+
+/*
+ * Inspired by Underscore's Templating Engine
+ * (which itself is inspired by John Resig's implementation)
+ */
+
+Scoped.define("module:Templates", ["module:Types", "module:Strings"], function (Types, Strings) {
+	return {
+		
+		tokenize: function (s) {
+			// Already tokenized?
+			if (Types.is_array(s))
+				return s;
+			var tokens = [];
+			var index = 0;
+			var self = this;
+			s.replace(self.SYNTAX_REGEX(), function(match, expr, esc, code, offset) {
+				if (index < offset) 
+					tokens.push({
+						type: self.TOKEN_STRING,
+						data: Strings.js_escape(s.slice(index, offset))
+					});
+				if (code)
+					tokens.push({type: self.TOKEN_CODE, data: code});
+				if (expr)
+					tokens.push({type: self.TOKEN_EXPR, data: expr});
+				if (esc)
+					tokens.push({type: self.TOKEN_ESC, data: esc});
+			    index = offset + match.length;
+			    return match;
+			});
+			return tokens;
+		},
+		
+		/*
+		 * options
+		 *  - start_index: token start index
+		 *  - end_index: token end index
+		 */
+		compile: function(source, options) {
+			if (Types.is_string(source))
+				source = this.tokenize(source);
+			options = options || {};
+			var start_index = options.start_index || 0;
+			var end_index = options.end_index || source.length;
+			var result = "__p+='";
+			for (var i = start_index; i < end_index; ++i) {
+				switch (source[i].type) {
+					case this.TOKEN_STRING:
+						result += source[i].data;
+						break;
+					case this.TOKEN_CODE:
+						result += "';\n" + source[i].data + "\n__p+='";
+						break;
+					case this.TOKEN_EXPR:
+						result += "'+\n((__t=(" + source[i].data + "))==null?'':__t)+\n'";
+						break;
+					case this.TOKEN_ESC:
+						result += "'+\n((__t=(" + source[i].data + "))==null?'':Helpers.Strings.htmlentities(__t))+\n'";
+						break;
+					default:
+						break;
+				}	
+			}
+			result += "';\n";
+			result = 'with(obj||{}){\n' + result + '}\n';
+			result = "var __t,__p='',__j=Array.prototype.join," +
+			  "echo=function(){__p+=__j.call(arguments,'');};\n" +
+			  result + "return __p;\n";
+			var func = new Function('obj', 'Helpers', result);
+			var func_call = function(data) {
+				return func.call(this, data, {Strings: Strings});
+			};
+			func_call.source = 'function(obj, Helpers){\n' + result + '}';
+			return func_call;
+		},
+		
+		SYNTAX: {
+			OPEN: "{%",
+			CLOSE: "%}",
+			MODIFIER_CODE: "",
+			MODIFIER_EXPR: "=",
+			MODIFIER_ESC: "-"
+		},
+		
+		SYNTAX_REGEX: function () {
+			var syntax = this.SYNTAX;
+			if (!this.SYNTAX_REGEX_CACHED) {
+				this.SYNTAX_REGEX_CACHED = new RegExp(
+					syntax.OPEN + syntax.MODIFIER_EXPR + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
+					syntax.OPEN + syntax.MODIFIER_ESC + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
+					syntax.OPEN + syntax.MODIFIER_CODE + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
+					"$",
+				'g');
+			}
+			return this.SYNTAX_REGEX_CACHED;
+		},
+		
+		TOKEN_STRING: 1,
+		TOKEN_CODE: 2,
+		TOKEN_EXPR: 3,
+		TOKEN_ESC: 4
+	
+	};
+});
+
+
+Scoped.define("module:Templates.Template", ["module:Class", "module:Templates"], function (Class, Templates, scoped) {	
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (template_string) {
+				inherited.constructor.call(this);
+				this.__tokens = Templates.tokenize(template_string);
+				this.__compiled = Templates.compile(this.__tokens);
+			},
+			
+			evaluate: function (obj) {
+				return this.__compiled.apply(this, [obj]);
+			}
+			
+		};
+	});	
+});
+
+
+Scoped.define("module:Parser.LexerException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+	return Exception.extend({scoped: scoped}, function (inherited) {
+		return {
+			constructor: function (head, tail) {
+				inherited.constructor.call(this, "Lexer error: Unrecognized identifier at " + head.length + ".");
+				this.__head = head;
+				this.__tail = tail;
+			}
+		};
+	});
+});
+
+
+Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Objs", "module:Parser.LexerException"], function (Class, Types, Objs, LexerException, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (patterns) {
+				inherited.constructor.call(this);
+				this.__patterns = [];
+				BetaJS.Objs.iter(patterns, function (value, key) {
+					this.__patterns.push({
+						regex: new RegExp("^" + key, "m"),
+						data: Types.is_string(value) ? {token: value} : value
+					});
+				}, this);
+			},
+			
+			lex: function (source) {
+				var result = [];
+				var head = "";
+				var tail = source;
+				while (tail) {
+					var match = null;
+					var data = null;
+					for (var i = 0; i < this.__patterns.length; ++i) {
+						match = this.__patterns[i].regex.exec(tail);
+						if (match) { 
+							data = Objs.clone(this.__patterns[i].data, 1);
+							break;
+						}
+					}
+					if (!match)
+						throw new LexerException(head, tail);
+					head += match[0];
+					tail = tail.substring(match[0].length);
+					if (!data)
+						continue;
+					for (var key in data) {
+						if (Types.is_string(data[key])) {
+							for (var j = 0; j < match.length; ++j)
+								data[key] = data[key].replace("$" + j, match[j]);
+						}
+					}
+					result.push(data);
+				}
+				return result;
+			}			
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Timers.Timer", ["module:Class", "module:Objs"], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			/*
+			 * int delay (mandatory): number of milliseconds until it fires
+			 * bool once (optional, default false): should it fire infinitely often
+			 * func fire (optional): will be fired
+			 * object context (optional): for fire
+			 * bool start (optional, default true): should it start immediately
+			 * 
+			 */
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				options = Objs.extend({
+					once: false,
+					start: true,
+					fire: null,
+					context: this,
+					destroy_on_fire: false
+				}, options);
+				this.__delay = options.delay;
+				this.__destroy_on_fire = options.destroy_on_fire;
+				this.__once = options.once;
+				this.__fire = options.fire;
+				this.__context = options.context;
+				this.__started = false;
+				if (options.start)
+					this.start();
+			},
+			
+			destroy: function () {
+				this.stop();
+				inherited.destroy.call(this);
+			},
+			
+			fire: function () {
+				if (this.__once)
+					this.__started = false;
+				if (this.__fire)
+					this.__fire.apply(this.__context, [this]);
+				if (this.__destroy_on_fire)
+					this.destroy();
+			},
+			
+			stop: function () {
+				if (!this.__started)
+					return;
+				if (this.__once)
+					clearTimeout(this.__timer);
+				else
+					clearInterval(this.__timer);
+				this.__started = false;
+			},
+			
+			start: function () {
+				if (this.__started)
+					return;
+				var self = this;
+				if (this.__once)
+					this.__timer = setTimeout(function () {
+						self.fire();
+					}, this.__delay);
+				else
+					this.__timer = setInterval(function () {
+						self.fire();
+					}, this.__delay);
+				this.__started = true;
+			},
+			
+			restart: function () {
+				this.stop();
+				this.start();
+			}
+			
+			
+		};
+	});
+});
+
+Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", "module:Iterators.ArrayIterator"], function (Types, Iterator, ArrayIterator) {
+	return {
+		ensure: function (mixed) {
+			if (mixed === null)
+				return new ArrayIterator([]);
+			if (mixed.instance_of(Iterator))
+				return mixed;
+			if (Types.is_array(mixed))
+				return new ArrayIterator(mixed);
+			return new ArrayIterator([mixed]);
+		}		
+	};
+});
+
+
+Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"], function (Class, Functions, scoped) {
+	return Class.extend({scoped: scoped}, {
+
+		asArray: function () {
+			var arr = [];
+			while (this.hasNext())
+				arr.push(this.next());
+			return arr;
+		},
+		
+		asArrayDelegate: function (f) {
+			var arr = [];
+			while (this.hasNext()) {
+				var obj = this.next();			
+				arr.push(obj[f].apply(obj, BetaJS.Functions.getArguments(arguments, 1)));
+			}
+			return arr;
+		},
+		
+		iterate: function (callback, context) {
+			while (this.hasNext())
+				callback.call(context || this, this.next());
+		}
+		
+	});
+});
+
+
+Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (arr) {
+				inherited.constructor.call(this);
+				this.__array = arr;
+				this.__i = 0;
+			},
+			
+			hasNext: function () {
+				return this.__i < this.__array.length;
+			},
+			
+			next: function () {
+				var ret = this.__array[this.__i];
+				this.__i++;
+				return ret;
+			}
+		};
+	}, {
+		
+		byIterate: function (iterate_func, iterate_func_ctx) {
+			var result = [];
+			iterate_func.call(iterate_func_ctx || this, function (item) {
+				result.push(item);
+			}, this);
+			return new this(result);
+		}
+	});
+});
+
+
+Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
+	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (obj) {
+				inherited.constructor.call(this, Objs.keys(obj));
+			}
+	
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.ObjectValuesIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
+	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (obj) {
+				inherited.constructor.call(this, Objs.values(obj));
+			}
+	
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.MappedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+		
+			constructor: function (iterator, map, context) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				this.__map = map;
+				this.__context = context || this;
+			},
+			
+			hasNext: function () {
+				return this.__iterator.hasNext();
+			},
+			
+			next: function () {
+				return this.hasNext() ? this.__map.call(this.__context, this.__iterator.next()) : null;
+			}
+	
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.FilteredIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (iterator, filter, context) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				this.__filter = filter;
+				this.__context = context || this;
+				this.__next = null;
+			},
+			
+			hasNext: function () {
+				this.__crawl();
+				return this.__next !== null;
+			},
+			
+			next: function () {
+				this.__crawl();
+				var item = this.__next;
+				this.__next = null;
+				return item;
+			},
+			
+			__crawl: function () {
+				while (!this.__next && this.__iterator.hasNext()) {
+					var item = this.__iterator.next();
+					if (this.__filter_func(item))
+						this.__next = item;
+				}
+			},
+			
+			__filter_func: function (item) {
+				return this.__filter.apply(this.__context, [item]);
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.SkipIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, skip) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				while (skip > 0) {
+					iterator.next();
+					skip--;
+				}
+			},
+			
+			hasNext: function () {
+				return this.__iterator.hasNext();
+			},
+			
+			next: function () {
+				return this.__iterator.next();
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.LimitIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function (iterator, limit) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				this.__limit = limit;
+			},
+			
+			hasNext: function () {
+				return this.__limit > 0 && this.__iterator.hasNext();
+			},
+			
+			next: function () {
+				if (this.__limit <= 0)
+					return null;
+				this.__limit--;
+				return this.__iterator.next();
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function (iterator, compare) {
+				inherited.constructor.call(this);
+				this.__array = iterator.asArray();
+				this.__array.sort(compare);
+				this.__i = 0;
+			},
+			
+			hasNext: function () {
+				return this.__i < this.__array.length;
+			},
+			
+			next: function () {
+				var ret = this.__array[this.__i];
+				this.__i++;
+				return ret;
+			}
+	
+		};
+	});
+});
+
+Scoped.define("module:Lists.AbstractList", [
+		"module:Class",
+		"module:Objs",
+		"module:Types",
+		"module:Iterators.ArrayIterator"
+	], function (Class, Objs, Types, ArrayIterator, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			_add: function (object) {},
+			_remove: function (ident) {},
+			_get: function (ident) {},
+			_iterate: function (callback, context) {},
+			
+			get_ident: function (object) {
+				var ident = null;
+				this._iterate(function (obj, id) {
+					if (obj == object) {
+						ident = id;
+						return false;
+					}
+					return true;	
+				});
+				return ident;
+			},
+			
+			exists: function (object) {
+				return object && this.get_ident(object) !== null;
+			},
+			
+			_ident_changed: function (object, new_ident) {},
+			
+			constructor: function (objects) {
+				inherited.constructor.call(this);
+				this.__count = 0;
+				if (objects) {
+					Objs.iter(objects, function (object) {
+						this.add(object);
+					}, this);
+				}
+			},
+			
+			add: function (object) {
+				var ident = this._add(object);
+				if (Types.is_defined(ident))
+					this.__count++;
+				return ident;
+			},
+			
+			count: function () {
+				return this.__count;
+			},
+			
+			clear: function () {
+				this._iterate(function (object, ident) {
+					this.remove_by_ident(ident);
+					return true;
+				}, this);
+			},
+			
+			remove_by_ident: function (ident) {
+				var ret = this._remove(ident);
+				if (Types.is_defined(ret))
+					this.__count--;
+				return ret;
+			},
+			
+			remove: function (object) {
+				return this.remove_by_ident(this.get_ident(object));
+			},
+			
+			remove_by_filter: function (filter) {
+				this._iterate(function (object, ident) {
+					if (filter(object))
+						this.remove_by_ident(ident);
+					return true;
+				}, this);
+			},
+			
+			get: function (ident) {
+				return this._get(ident);
+			},
+			
+			iterate: function (cb, context) {
+				this._iterate(function (object, ident) {
+					var ret = cb.apply(this, [object, ident]);
+					return Types.is_defined(ret) ? ret : true;
+				}, context);
+			},
+			
+			iterator: function () {
+				return ArrayIterator.byIterate(this.iterate, this);
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Lists.LinkedList", ["module:Lists.AbstractList"], function (AbstractList, scoped) {
+	return AbstractList.extend({scoped: scoped},  {
+		
+		__first: null,
+		__last: null,
+		
+		_add: function (obj) {
+			this.__last = {
+				obj: obj,
+				prev: this.__last,
+				next: null
+			};
+			if (this.__first)
+				this.__last.prev.next = this.__last;
+			else
+				this.__first = this.__last;
+			return this.__last;
+		},
+		
+		_remove: function (container) {
+			if (container.next)
+				container.next.prev = container.prev;
+			else
+				this.__last = container.prev;
+			if (container.prev)
+				container.prev.next = container.next;
+			else
+				this.__first = container.next;
+			return container.obj;
+		},
+		
+		_get: function (container) {
+			return container.obj;
+		},
+		
+		_iterate: function (cb, context) {
+			var current = this.__first;
+			while (current) {
+				var prev = current;
+				current = current.next;
+				if (!cb.apply(context || this, [prev.obj, prev]))
+					return;
 			}
 		}
-		if (i != index) {
-			this.__ident_changed(object, i);
-			this._re_indexed(object);
-		}
-		return i;
-	},
-	
-	_re_indexed: function (object) {},
-	
-	__objectId: function(object) {
-		return this._get_ident ? this._get_ident(object) : BetaJS.Ids.objectId(object);
-	},
-	
-	_add: function (object) {
-		var last = this.__items.length;
-		this.__items.push(object);
-		var i = this.re_index(last);
-		this.__idToIndex[this.__objectId(object)] = i;
-		return i;
-	},
-	
-	_remove: function (ident) {
-		var obj = this.__items[ident];
-		for (var i = ident + 1; i < this.__items.length; ++i) {
-			this.__items[i-1] = this.__items[i];
-			this.__ident_changed(this.__items[i-1], i-1);
-		}
-		this.__items.pop();
-		delete this.__idToIndex[this.__objectId(obj)];
-		return obj;
-	},
-	
-	_get: function (ident) {
-		return this.__items[ident];
-	},
-	
-	_iterate: function (callback, context) {
-		var items = BetaJS.Objs.clone(this.__items, 1);
-		for (var i = 0; i < items.length; ++i)
-			callback.apply(context || this, [items[i], this.get_ident(items[i])]);
-	},
-
-	__ident_changed: function (object, index) {
-		this.__idToIndex[this.__objectId(object)] = index;
-		this._ident_changed(object, index);
-	},
-
-	get_ident: function (object) {
-		var id = this.__objectId(object);
-		return id in this.__idToIndex ? this.__idToIndex[id] : null;
-	},
-	
-	ident_by_id: function (id) {
-		return this.__idToIndex[id];
-	}
-
-});
-BetaJS.Iterators = {
-	
-	ensure: function (mixed) {
-		if (mixed === null)
-			return new BetaJS.Iterators.ArrayIterator([]);
-		if (mixed.instance_of(BetaJS.Iterators.Iterator))
-			return mixed;
-		if (BetaJS.Types.is_array(mixed))
-			return new BetaJS.Iterators.ArrayIterator(mixed);
-		return new BetaJS.Iterators.ArrayIterator([mixed]);
-	}
-	
-};
-
-BetaJS.Class.extend("BetaJS.Iterators.Iterator", {
-	
-	asArray: function () {
-		var arr = [];
-		while (this.hasNext())
-			arr.push(this.next());
-		return arr;
-	},
-	
-	asArrayDelegate: function (f) {
-		var arr = [];
-		while (this.hasNext()) {
-			var obj = this.next();			
-			arr.push(obj[f].apply(obj, BetaJS.Functions.getArguments(arguments, 1)));
-		}
-		return arr;
-	},
-	
-	iterate: function (callback, context) {
-		while (this.hasNext())
-			callback.call(context || this, this.next());
-	}
-	
-});
-
-BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.ArrayIterator", {
-	
-	constructor: function (arr) {
-		this._inherited(BetaJS.Iterators.ArrayIterator, "constructor");
-		this.__array = arr;
-		this.__i = 0;
-	},
-	
-	hasNext: function () {
-		return this.__i < this.__array.length;
-	},
-	
-	next: function () {
-		var ret = this.__array[this.__i];
-		this.__i++;
-		return ret;
-	}
-	
-}, {
-	
-	byIterate: function (iterate_func, iterate_func_ctx) {
-		var result = [];
-		iterate_func.call(iterate_func_ctx || this, function (item) {
-			result.push(item);
-		}, this);
-		return new this(result);
-	}
-	
-});
-
-BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectKeysIterator", {
-	
-	constructor: function (obj) {
-		this._inherited(BetaJS.Iterators.ObjectKeysIterator, "constructor", BetaJS.Objs.keys(obj));
-	}
-	
-});
-
-BetaJS.Iterators.ArrayIterator.extend("BetaJS.Iterators.ObjectValuesIterator", {
-	
-	constructor: function (obj) {
-		this._inherited(BetaJS.Iterators.ObjectValuesIterator, "constructor", BetaJS.Objs.values(obj));
-	}
-	
-});
-
-BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.MappedIterator", {
-	
-	constructor: function (iterator, map, context) {
-		this._inherited(BetaJS.Iterators.MappedIterator, "constructor");
-		this.__iterator = iterator;
-		this.__map = map;
-		this.__context = context || this;
-	},
-	
-	hasNext: function () {
-		return this.__iterator.hasNext();
-	},
-	
-	next: function () {
-		return this.hasNext() ? this.__map.call(this.__context, this.__iterator.next()) : null;
-	}
-	
-});
-
-BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.FilteredIterator", {
-	
-	constructor: function (iterator, filter, context) {
-		this._inherited(BetaJS.Iterators.FilteredIterator, "constructor");
-		this.__iterator = iterator;
-		this.__filter = filter;
-		this.__context = context || this;
-		this.__next = null;
-	},
-	
-	hasNext: function () {
-		this.__crawl();
-		return this.__next !== null;
-	},
-	
-	next: function () {
-		this.__crawl();
-		var item = this.__next;
-		this.__next = null;
-		return item;
-	},
-	
-	__crawl: function () {
-		while (!this.__next && this.__iterator.hasNext()) {
-			var item = this.__iterator.next();
-			if (this.__filter_func(item))
-				this.__next = item;
-		}
-	},
-	
-	__filter_func: function (item) {
-		return this.__filter.apply(this.__context, [item]);
-	}
-
+		
+	});
 });
 
 
-BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SkipIterator", {
-	
-	constructor: function (iterator, skip) {
-		this._inherited(BetaJS.Iterators.SkipIterator, "constructor");
-		this.__iterator = iterator;
-		while (skip > 0) {
-			iterator.next();
-			skip--;
-		}
-	},
-	
-	hasNext: function () {
-		return this.__iterator.hasNext();
-	},
-	
-	next: function () {
-		return this.__iterator.next();
-	}
-
-});
-
-
-BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.LimitIterator", {
-	
-	constructor: function (iterator, limit) {
-		this._inherited(BetaJS.Iterators.LimitIterator, "constructor");
-		this.__iterator = iterator;
-		this.__limit = limit;
-	},
-	
-	hasNext: function () {
-		return this.__limit > 0 && this.__iterator.hasNext();
-	},
-	
-	next: function () {
-		if (this.__limit <= 0)
-			return null;
-		this.__limit--;
-		return this.__iterator.next();
-	}
-
-});
-
-
-BetaJS.Iterators.Iterator.extend("BetaJS.Iterators.SortedIterator", {
-	
-	constructor: function (iterator, compare) {
-		this._inherited(BetaJS.Iterators.SortedIterator, "constructor");
-		this.__array = iterator.asArray();
-		this.__array.sort(compare);
-		this.__i = 0;
-	},
-	
-	hasNext: function () {
-		return this.__i < this.__array.length;
-	},
-	
-	next: function () {
-		var ret = this.__array[this.__i];
-		this.__i++;
-		return ret;
-	}
-	
-});
-
-BetaJS.Events = {};
-
-BetaJS.Events.EVENT_SPLITTER = /\s+/;
-
-BetaJS.Events.EventsMixin = {
-	
-	__create_event_object: function (callback, context, options) {
-		options = options || {};
-		var obj = {
-			callback: callback,
-			context: context
+Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module:Ids"], function (AbstractList, Ids, scoped) {
+	return AbstractList.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (objects, id_generator) {
+				this.__map = {};
+				this.__id_generator = id_generator;
+				inherited.constructor.call(this, objects);
+			},
+		
+			_add: function (object) {
+			    while (true) {
+			        var id = object.__cid;
+			        if (!id) {
+		                id = this.__id_generator ? Ids.objectId(object, this.__id_generator()) : Ids.objectId(object);
+		        		if (this.__map[id] && this.__id_generator)
+		        		  continue;
+		            }
+		    		this.__map[id] = object;
+		    		return id;
+		    	}
+		    	return null;
+			},
+			
+			_remove: function (ident) {
+				var obj = this.__map[ident];
+				delete this.__map[ident];
+				return obj;
+			},
+			
+			_get: function (ident) {
+				return this.__map[ident];
+			},
+			
+			_iterate: function (callback, context) {
+				for (var key in this.__map)
+					callback.apply(context || this, [this.__map[key], key]);
+			},
+			
+			get_ident: function (object) {
+				var ident = Ids.objectId(object);
+				return this.__map[ident] ? ident : null;
+			}
+			
 		};
-		if (options.eventually)
-			obj.eventually = options.eventually;
-		if (options.min_delay)
-			obj.min_delay = new BetaJS.Timers.Timer({
-				delay: options.min_delay,
-				once: true,
-				start: false,
-				context: this,
-				fire: function () {
-					if (obj.max_delay)
-						obj.max_delay.stop();
-					obj.callback.apply(obj.context || this, obj.params);
+	});
+});
+
+
+
+Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Ids", "module:Objs"], function (AbstractList, Ids, Objs, scoped) {
+	return AbstractList.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function (objects, options) {
+				this.__idToIndex = {};
+				this.__items = [];
+				options = options || {};
+				if ("compare" in options)
+					this._compare = options["compare"];
+				if ("get_ident" in options)
+					this._get_ident = options["get_ident"];
+				inherited.constructor.call(this, objects);
+			},
+			
+			set_compare: function (compare) {
+				this._compare = compare;
+				if (compare)
+					this.sort();
+			},
+			
+			get_compare: function () {
+				return this._compare;
+			},
+			
+			sort: function (compare) {
+				compare = compare || this._compare;
+				if (!compare)
+					return;
+				this.__items.sort(compare);
+				for (var i = 0; i < this.__items.length; ++i)
+					this.__ident_changed(this.__items[i], i);
+				this._sorted();
+			},
+			
+			_sorted: function () {},
+				
+			re_index: function (index) {
+				if (!this._compare)
+					return index;
+				var last = this.__items.length - 1;
+				var object = this.__items[index];
+				var i = index;	
+				while (i < last && this._compare(this.__items[i], this.__items[i + 1]) > 0) {
+					this.__items[i] = this.__items[i + 1];
+					this.__ident_changed(this.__items[i], i);
+					this.__items[i + 1] = object;
+					++i;
 				}
-			});
-		if (options.max_delay)
-			obj.max_delay = new BetaJS.Timers.Timer({
-				delay: options.max_delay,
-				once: true,
-				start: false,
-				context: this,
-				fire: function () {
-					if (obj.min_delay)
-						obj.min_delay.stop();
-					obj.callback.apply(obj.context || this, obj.params);
+				if (i == index) {
+					while (i > 0 && this._compare(this.__items[i], this.__items[i - 1]) < 0) {
+						this.__items[i] = this.__items[i - 1];
+						this.__ident_changed(this.__items[i], i);
+						this.__items[i - 1] = object;
+						--i;
+					}
 				}
-			});
-		return obj;
-	},
+				if (i != index) {
+					this.__ident_changed(object, i);
+					this._re_indexed(object);
+				}
+				return i;
+			},
+			
+			_re_indexed: function (object) {},
+			
+			__objectId: function(object) {
+				return this._get_ident ? this._get_ident(object) : Ids.objectId(object);
+			},
+			
+			_add: function (object) {
+				var last = this.__items.length;
+				this.__items.push(object);
+				var i = this.re_index(last);
+				this.__idToIndex[this.__objectId(object)] = i;
+				return i;
+			},
+			
+			_remove: function (ident) {
+				var obj = this.__items[ident];
+				for (var i = ident + 1; i < this.__items.length; ++i) {
+					this.__items[i-1] = this.__items[i];
+					this.__ident_changed(this.__items[i-1], i-1);
+				}
+				this.__items.pop();
+				delete this.__idToIndex[this.__objectId(obj)];
+				return obj;
+			},
+			
+			_get: function (ident) {
+				return this.__items[ident];
+			},
+			
+			_iterate: function (callback, context) {
+				var items = Objs.clone(this.__items, 1);
+				for (var i = 0; i < items.length; ++i)
+					callback.apply(context || this, [items[i], this.get_ident(items[i])]);
+			},
+		
+			__ident_changed: function (object, index) {
+				this.__idToIndex[this.__objectId(object)] = index;
+				this._ident_changed(object, index);
+			},
+		
+			get_ident: function (object) {
+				var id = this.__objectId(object);
+				return id in this.__idToIndex ? this.__idToIndex[id] : null;
+			},
+			
+			ident_by_id: function (id) {
+				return this.__idToIndex[id];
+			}
+
+		};
+	});
+});
+
+Scoped.define("module:Events.EventsMixin", [
+	"module:Timers.Timer",
+	"module:Async",
+	"module:Lists.LinkedList",
+	"module:Functions",
+	"module:Types",
+	"module:Objs"
+	], function (Timer, Async, LinkedList, Functions, Types, Objs) {
 	
-	__destroy_event_object: function (object) {
-		if (object.min_delay)
-			object.min_delay.destroy();
-		if (object.max_delay)
-			object.max_delay.destroy();
-	},
-	
-	__call_event_object: function (object, params) {
-		if (object.min_delay)
-			object.min_delay.restart();
-		if (object.max_delay)
-			object.max_delay.start();
-		if (!object.min_delay && !object.max_delay) {
-			if (object.eventually)
-				BetaJS.Async.eventually(object.callback, params, object.context || this);
-			else
-				object.callback.apply(object.context || this, params);
-		} else
-			object.params = params;
-	},
-	
-	on: function(events, callback, context, options) {
-		this.__events_mixin_events = this.__events_mixin_events || {};
-		events = events.split(BetaJS.Events.EVENT_SPLITTER);
-		var event;
-		while (true) {
-			event = events.shift();
-			if (!event)
-				break;
-			if (!this.__events_mixin_events[event])
-				this._notify("register_event", event);
-			this.__events_mixin_events[event] = this.__events_mixin_events[event] || new BetaJS.Lists.LinkedList();
-			this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
-		}
-		return this;
-	},
-	
-	off: function(events, callback, context) {
-		this.__events_mixin_events = this.__events_mixin_events || {};
-		if (events) {
-			events = events.split(BetaJS.Events.EVENT_SPLITTER);
+	return {
+			
+		EVENT_SPLITTER: /\s+/,
+		
+		__create_event_object: function (callback, context, options) {
+			options = options || {};
+			var obj = {
+				callback: callback,
+				context: context
+			};
+			if (options.eventually)
+				obj.eventually = options.eventually;
+			if (options.min_delay)
+				obj.min_delay = new Timer({
+					delay: options.min_delay,
+					once: true,
+					start: false,
+					context: this,
+					fire: function () {
+						if (obj.max_delay)
+							obj.max_delay.stop();
+						obj.callback.apply(obj.context || this, obj.params);
+					}
+				});
+			if (options.max_delay)
+				obj.max_delay = new Timer({
+					delay: options.max_delay,
+					once: true,
+					start: false,
+					context: this,
+					fire: function () {
+						if (obj.min_delay)
+							obj.min_delay.stop();
+						obj.callback.apply(obj.context || this, obj.params);
+					}
+				});
+			return obj;
+		},
+		
+		__destroy_event_object: function (object) {
+			if (object.min_delay)
+				object.min_delay.destroy();
+			if (object.max_delay)
+				object.max_delay.destroy();
+		},
+		
+		__call_event_object: function (object, params) {
+			if (object.min_delay)
+				object.min_delay.restart();
+			if (object.max_delay)
+				object.max_delay.start();
+			if (!object.min_delay && !object.max_delay) {
+				if (object.eventually)
+					Async.eventually(object.callback, params, object.context || this);
+				else
+					object.callback.apply(object.context || this, params);
+			} else
+				object.params = params;
+		},
+		
+		on: function(events, callback, context, options) {
+			this.__events_mixin_events = this.__events_mixin_events || {};
+			events = events.split(this.EVENT_SPLITTER);
 			var event;
 			while (true) {
 				event = events.shift();
 				if (!event)
 					break;
-				if (this.__events_mixin_events[event]) {
+				if (!this.__events_mixin_events[event])
+					this._notify("register_event", event);
+				this.__events_mixin_events[event] = this.__events_mixin_events[event] || new LinkedList();
+				this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
+			}
+			return this;
+		},
+		
+		off: function(events, callback, context) {
+			this.__events_mixin_events = this.__events_mixin_events || {};
+			if (events) {
+				events = events.split(this.EVENT_SPLITTER);
+				var event;
+				while (true) {
+					event = events.shift();
+					if (!event)
+						break;
+					if (this.__events_mixin_events[event]) {
+						this.__events_mixin_events[event].remove_by_filter(function (object) {
+							var result = (!callback || object.callback == callback) && (!context || object.context == context);
+							if (result && this.__destroy_event_object)
+								this.__destroy_event_object(object);
+							return result;
+						});
+						if (this.__events_mixin_events[event].count() === 0) {
+							this.__events_mixin_events[event].destroy();
+							delete this.__events_mixin_events[event];
+							this._notify("unregister_event", event);
+						}
+					}
+				}
+			} else {
+				for (event in this.__events_mixin_events) {
 					this.__events_mixin_events[event].remove_by_filter(function (object) {
 						var result = (!callback || object.callback == callback) && (!context || object.context == context);
 						if (result && this.__destroy_event_object)
@@ -3175,1600 +3524,2108 @@ BetaJS.Events.EventsMixin = {
 					}
 				}
 			}
-		} else {
-			for (event in this.__events_mixin_events) {
-				this.__events_mixin_events[event].remove_by_filter(function (object) {
-					var result = (!callback || object.callback == callback) && (!context || object.context == context);
-					if (result && this.__destroy_event_object)
-						this.__destroy_event_object(object);
-					return result;
+			return this;
+		},
+		
+		triggerAsync: function () {
+			var self = this;
+			var args = Functions.getArguments(arguments);
+			var timeout = setTimeout(function () {
+				clearTimeout(timeout);
+				self.trigger.apply(self, args);
+			}, 0);
+		},
+	
+	    trigger: function(events) {
+	    	var self = this;
+	    	events = events.split(this.EVENT_SPLITTER);
+	    	var rest = Functions.getArguments(arguments, 1);
+			var event;
+			if (!this.__events_mixin_events)
+				return this;
+			while (true) {
+				event = events.shift();
+				if (!event)
+					break;
+	    		if (this.__events_mixin_events[event])
+	    			this.__events_mixin_events[event].iterate(function (object) {
+	    				self.__call_event_object(object, rest);
+	    			});
+				if (this.__events_mixin_events && "all" in this.__events_mixin_events)
+					this.__events_mixin_events["all"].iterate(function (object) {
+						self.__call_event_object(object, [event].concat(rest));
+					});
+			}
+	    	return this;
+	    },
+	    
+	    once: function (events, callback, context, options) {
+	        var self = this;
+	        var once = Functions.once(function() {
+	          self.off(events, once);
+	          callback.apply(this, arguments);
+	        });
+	        once._callback = callback;
+	        return this.on(name, once, context, options);
+	    },
+	    
+	    delegateEvents: function (events, source, prefix, params) {
+	    	params = params || []; 
+	    	prefix = prefix ? prefix + ":" : "";
+	    	if (events === null) {
+	    		source.on("all", function (event) {
+					var rest = Functions.getArguments(arguments, 1);
+					this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+	    		}, this);
+	    	} else {
+	    		if (!Types.is_array(events))
+	    			events = [events];
+		   		Objs.iter(events, function (event) {
+					source.on(event, function () {
+						var rest = Functions.getArguments(arguments);
+						this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+					}, this);
+				}, this);
+			}
+	    }
+		
+	};
+});
+	
+
+Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixin"], function (Class, Mixin, scoped) {
+	return Class.extend({scoped: scoped}, Mixin);
+});
+
+
+Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], function (Ids, Objs) {
+	return {
+		
+		_notifications: {
+			"destroy": "listenOff" 
+		},
+			
+		listenOn: function (target, events, callback, options) {
+			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
+			this.__listen_mixin_listen[Ids.objectId(target)] = target;
+			target.on(events, callback, this, options);
+		},
+		
+		listenOnce: function (target, events, callback, options) {
+			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
+			this.__listen_mixin_listen[Ids.objectId(target)] = target;
+			target.once(events, callback, this, options);
+		},
+		
+		listenOff: function (target, events, callback) {
+			if (!this.__listen_mixin_listen)
+				return;
+			if (target) {
+				target.off(events, callback, this);
+				if (!events && !callback)
+					delete this.__listen_mixin_listen[Ids.objectId(target)];
+			}
+			else
+				Objs.iter(this.__listen_mixin_listen, function (obj) {
+					if (obj && "off" in obj)
+						obj.off(events, callback, this);
+					if (!events && !callback)
+						delete this.__listen_mixin_listen[Ids.objectId(obj)];
+				}, this);
+		}		
+		
+	};
+});
+
+
+Scoped.define("module:Events.Listen", ["module:Class", "module:Events.ListenMixin"], function (Class, Mixin, scoped) {
+	return Class.extend({scoped: scoped}, Mixin);
+});
+Scoped.define("module:Properties.PropertiesMixin", [
+    "module:Objs.Scopes",
+    "module:Objs",
+	"module:Strings",
+	"module:Types",
+	"module:Functions"
+	], function (Scopes, Objs, Strings, Types, Functions) {
+	
+	return {
+			
+		_notifications: {
+			"construct": function () {
+				this.__properties = {
+					// hierarchical organization
+					data: {},
+					// hierarchical organization
+					watchers: {
+						children: {},
+						eventCount: 0,
+						parent: null,
+						key: null
+					},
+					// flat organization
+					computed: {},
+					// flat organization
+					bindings: {}
+				};
+			},
+			"destroy": function () {
+				Objs.iter(this.__properties.bindings, function (value, key) {
+					this.unbind(key);
+				}, this);
+				this.trigger("destroy");
+			},
+			"register_event": function (event) {
+				Objs.iter(["change", "unset", "deepchange", "deepunset", "strongdeepchange", "strongchange"], function (eventType) {
+					if (Strings.starts_with(event, eventType + ":"))
+						this.__registerWatcher(Strings.strip_start(event, eventType + ":"), eventType);
+				}, this);
+			},
+			"unregister_event": function (event) {
+				Objs.iter(["change", "unset", "deepchange", "deepunset", "strongdeepchange", "strongchange"], function (eventType) {
+					if (Strings.starts_with(event, eventType + ":"))
+						this.__unregisterWatcher(Strings.strip_start(event, eventType + ":"), eventType);
+				}, this);
+			}
+		},
+		
+		get: function (key) {
+			return Scopes.get(key, this.__properties.data);
+		},
+		
+		_canSet: function (key, value) {
+			return true;
+		},
+		
+		_beforeSet: function (key, value) {
+			return value;
+		},
+		
+		_afterSet: function (key, value) {},
+		
+		has: function (key) {
+			return Scopes.has(key, this.__properties.data);
+		},
+		
+		setAll: function (obj) {
+			for (var key in obj)
+				this.set(key, obj[key]);
+			return this;
+		},
+		
+		keys: function (mapped) {
+			return Objs.keys(this.__properties.data, mapped);
+		},
+		
+		data: function () {
+			return this.__properties.data;
+		},
+		
+		getAll: function () {
+			return Objs.clone(this.__properties.data, 1);
+		},
+		
+		__registerWatcher: function (key, event) {
+			var keys = key ? key.split(".") : [];
+			var current = this.__properties.watchers;
+			for (var i = 0; i < keys.length; ++i) {
+				if (!(keys[i] in current.children)) {
+					current.children[keys[i]] = {
+						parent: current,
+						eventCount: 0,
+						children: {},
+						key: keys[i]
+					};
+				}
+				current = current.children[keys[i]];
+			}
+			current.eventCount++;
+		},
+		
+		__unregisterWatcher: function (key, event) {
+			var keys = key ? key.split(".") : [];
+			var current = this.__properties.watchers;
+			for (var i = 0; i < keys.length; ++i) {
+				if (current)
+					current = current.children[keys[i]];
+			}
+			if (!current)
+				return;
+			current.eventCount--;
+			while (current.eventCount <= 0 && Types.is_empty(current.children) && current.parent) {
+				var parent = current.parent;
+				delete parent.children[current.key];
+				current = parent;
+			}
+		},
+		
+		uncompute: function (key) {
+			if (key in this.__properties.computed) {
+				Objs.iter(this.__properties.computed[key].dependencies, function (dependency) {
+					dependency.properties.off("change:" + dependency.key, null, dependency);
+				}, this);
+				delete this.__properties.computed[key];
+			}
+			return this;
+		},
+		
+		compute: function (key, func) {
+			var args = Functions.matchArgs(arguments, 2, {
+				setter: "function",
+				context: {
+					type: "object",
+					def: this
+				},
+				dependencies: true
+			});
+			this.uncompute(key);
+			var deps = [];
+			Objs.iter(args.dependencies, function (dep) {
+				if (Types.is_string(dep))
+					deps.push({properties: this, key: dep});
+				else
+					deps.push({properties: dep[0], key: dep[1]});
+			}, this);
+			var computed = {
+				ignore: 0,
+				func: func,
+				context: args.context,
+				setter: args.setter,
+				dependencies: deps
+			};
+			this.__properties.computed[key] = computed;
+			var self = this;
+			function recompute() {
+				if (computed.ignore > 0)
+					return;
+				var values = Objs.map(deps, function (dep) {
+					return dep.properties.get(dep.key);
 				});
-				if (this.__events_mixin_events[event].count() === 0) {
-					this.__events_mixin_events[event].destroy();
-					delete this.__events_mixin_events[event];
-					this._notify("unregister_event", event);
+				self.set(key, func.apply(args.context, values));
+			}
+			for (var i = 0; i < deps.length; ++i) {
+				deps[i].properties.on("change:" + deps[i].key, function () {
+					recompute();
+				}, deps[i]);
+			}
+			recompute();
+			return this;
+		},
+		
+		unbind: function (key, props) {
+			if (key in this.__properties.bindings) {
+				for (i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
+					var binding = this.__properties.bindings[key][i];
+					if (!props || props == binding) {
+						if (binding.left) 
+							binding.properties.off(null, null, binding);
+						if (binding.right)
+							this.off(null, null, binding);
+						this.__properties.bindings[key].splice(i, 1);
+						i--;
+					}
+				}
+				if (this.__properties.bindings[key].length === 0)
+					delete this.__properties.bindings[key];
+			}
+			return this;
+		},
+		
+		bind: function (key, properties, options) {
+			options = Objs.extend({
+				secondKey: key,
+				left: true,
+				right: true,
+				deep: false
+			}, options);
+			var binding = {
+				key: options.secondKey,
+				left: options.left,
+				right: options.right,
+				deep: options.deep,
+				properties: properties
+			};
+			this.__properties.bindings[key] = this.__properties.bindings[key] || [];
+			this.__properties.bindings[key].push(binding);
+			if (binding.left) {
+				var self = this;
+				binding.properties.on("strongchange:" + binding.key, function (value) {
+					self.set(key, value);
+				}, binding);
+				binding.properties.on("unset:" + binding.key, function (value) {
+					self.unset(key);
+				}, binding);
+				if (binding.deep) {
+					binding.properties.on("strongdeepchange:" + binding.key, function (value, oldValue, subKey) {
+						if (self.get(key ? key + "." + subKey : subKey) === value)
+							self.__setChanged(key ? key + "." + subKey : subKey, value, oldValue, true);
+						else
+							self.set(key ? key + "." + subKey : subKey, value);					
+					}, binding);
+					binding.properties.on("deepunset:" + binding.key, function (oldValue, subKey) {
+						if (!self.has(key ? key + "." + subKey : subKey))
+							self.__unsetChanged(key ? key + "." + subKey : subKey, oldValue);
+						else
+							self.unset(key ? key + "." + subKey : subKey);					
+					}, binding);
+				}
+				if (!binding.right || !this.has(key))
+					this.set(key, binding.properties.get(binding.key));
+			}
+			if (binding.right) {
+				this.on("strongchange:" + key, function (value) {
+					binding.properties.set(binding.key, value);
+				}, binding);
+				this.on("unset:" + key, function (value) {
+					binding.properties.unset(binding.key);
+				}, binding);
+				if (binding.deep) {
+					this.on("strongdeepchange:" + key, function (value, oldValue, subKey) {
+						if (binding.properties.get(binding.key ? binding.key + "." + subKey : subKey) === value)
+							binding.properties.__setChanged(binding.key ? binding.key + "." + subKey : subKey, value, oldValue, true);
+						else
+							binding.properties.set(binding.key ? binding.key + "." + subKey : subKey, value);
+					}, binding);
+					this.on("deepunset:" + key, function (oldValue, subKey) {
+						if (!binding.properties.has(binding.key ? binding.key + "." + subKey : subKey))
+							binding.properties.__unsetChanged(binding.key ? binding.key + "." + subKey : subKey, oldValue);
+						else
+							binding.properties.unset(binding.key ? binding.key + "." + subKey : subKey);
+					}, binding);
+				}
+				if (!binding.left || this.has(key))
+					binding.properties.set(binding.key, this.get(key));
+			}
+			binding.properties.on("destroy", function () {
+				this.unbind();
+			}, this);
+			return this;
+		},
+		
+		__unsetChanged: function (key, oldValue) {
+			this.trigger("unset", key, oldValue);
+			var keys = key ? key.split(".") : [];
+			var current = this.__properties.watchers;
+			var head = "";
+			var tail = key;
+			for (var i = 0; i < keys.length; ++i) {
+				if (current.eventCount > 0)
+					this.trigger("deepunset:" + head, oldValue, tail);
+				if (!(keys[i] in current.children))
+					return this;
+				current = current.children[keys[i]];
+				head = head ? (head + "." + keys[i]) : keys[i];
+				tail = Strings.first_after(tail, ".");
+			}
+			function process_unset(current, key, oldValue) {
+				if (Types.is_undefined(oldValue))
+					return;
+				if (current.eventCount > 0)
+					this.trigger("unset:" + key, oldValue);
+				Objs.iter(current.children, function (child, subkey) {
+					process_unset.call(this, child, key ? (key + "." + subkey) : subkey, oldValue[subkey]);
+				}, this);
+			}
+			process_unset.call(this, current, key, oldValue);
+			return this;
+		},
+		
+		__setChanged: function (key, value, oldValue, notStrong) {
+			this.trigger("change", key, value, oldValue);
+			this._afterSet(key, value);
+			var keys = key ? key.split(".") : [];
+			var current = this.__properties.watchers;
+			var head = "";
+			var tail = key;
+			for (var i = 0; i < keys.length; ++i) {
+				if (current.eventCount > 0) {
+					if (!notStrong)
+						this.trigger("strongdeepchange:" + head, value, oldValue, tail);
+					this.trigger("deepchange:" + head, value, oldValue, tail);
+				}
+				if (!(keys[i] in current.children))
+					return;
+				current = current.children[keys[i]];
+				head = head ? (head + "." + keys[i]) : keys[i];
+				tail = Strings.first_after(tail, ".");
+			}
+			function process_set(current, key, value, oldValue) {
+				if (value == oldValue)
+					return;
+				if (current.eventCount > 0) {
+					if (!notStrong)
+						this.trigger("strongchange:" + key, value, oldValue);
+					this.trigger("change:" + key, value, oldValue);
+				}
+				Objs.iter(current.children, function (child, subkey) {
+					process_set.call(this, child, key ? (key + "." + subkey) : subkey, value[subkey], oldValue[subkey]);
+				}, this);
+			}
+			process_set.call(this, current, key, value, oldValue);
+		},
+		
+		unset: function (key) {
+			if (this.has(key)) {
+				var oldValue = this.get(key);
+				Scopes.unset(key, this.__properties.data);
+				this.__unsetChanged(key, oldValue);
+			}
+			return this;
+		},
+		
+		__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
+		
+		set: function (key, value) {
+			if (Types.is_object(value) && value && value.guid == this.__properties_guid) {
+				if (value.properties)
+					this.bind(key, value.properties, {secondKey: value.key});
+				if (value.func)
+					this.compute(key, value.func, value.dependencies);
+				return this;
+			}
+			value = this._beforeSet(key, value);
+			var oldValue = this.get(key);
+			if (oldValue !== value) {
+				Scopes.set(key, value, this.__properties.data);
+				this.__setChanged(key, value, oldValue);
+			}
+			return this;
+		},
+		
+		binding: function (key) {
+			return {
+				guid: this.__properties_guid,
+				properties: this,
+				key: key
+			};
+		},
+		
+		computed : function (f, dependencies) {
+			return {
+				guid: this.__properties_guid,
+				func: f,
+				dependencies: dependencies
+			};
+		}	
+		
+	};
+});
+
+
+Scoped.define("module:Properties.Properties", [
+	    "module:Class",
+	    "module:Events.EventsMixin",
+	    "module:Properties.PropertiesMixin"
+	], function (Class, EventsMixin, PropertiesMixin, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, function (inherited) {
+		return {
+			constructor: function (obj) {
+				inherited.constructor.call(this);
+				if (obj)
+					this.setAll(obj);
+			}
+		};
+	}]);
+});
+Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properties"], function (Types, Properties) {
+	return {		
+		
+		byObject: function (object) {
+			var self = this;
+			return function (left, right) {
+				for (key in object) {
+					var c = 0;
+					if (Properties.is_class_instance(left) && Properties.is_class_instance(right))
+						c = self.byValue(left.get(key) || null, right.get(key) || null);
+					else
+						c = self.byValue(left[key] || null, right[key] || null);
+					if (c !== 0)
+						return c * object[key];
+				}
+				return 0;
+			};
+		},
+		
+		byValue: function (a, b) {
+			if (Types.is_string(a))
+				return a.localeCompare(b);
+			if (a < b)
+				return -1;
+			if (a > b)
+				return 1;
+			return 0;
+		},
+		
+		listEqual: function (a, b) {
+			if (Types.is_array(a) && Types.is_array(b)) {
+				if (a.length != b.length)
+					return false;
+				for (var i = 0; i < a.length; ++i) {
+					if (a[i] !== b[i])
+						return false;
+				}
+				return true;
+			} else if (Types.is_object(a) && Types.is_object(b)) {
+				for (var key in a) {
+					if (b[key] !== a[key])
+						return false;
+				}
+				for (key in b) {
+					if (!(key in a))
+						return false;
+				}
+				return true;
+			} else
+				return false;
+		}
+			
+	};
+});
+Scoped.define("module:Sort", [
+	    "module:Comparators",	    
+	    "module:Types",
+	    "module:Objs"
+	], function (Comparators, Types, Objs) {
+	return {		
+	
+		sort_object : function(object, f) {
+			var a = [];
+			for (var key in object)
+				a.push({
+					key : key,
+					value : object[key]
+				});
+			a.sort(function (x, y) {
+				return f(x.key, y.key, x.value, y.value);
+			});
+			var o = {};
+			for (var i = 0; i < a.length; ++i)
+				o[a[i].key] = a[i].value;
+			return o;
+		},
+		
+		deep_sort: function (object, f) {
+			f = f || Comparators.byValue;
+			if (Types.is_array(object)) {
+				for (var i = 0; i < object.length; ++i)
+					object[i] = this.deep_sort(object[i], f);
+				return object.sort(f);
+			} else if (Types.is_object(object)) {
+				for (var key in object)
+					object[key] = this.deep_sort(object[key], f);
+				return this.sort_object(object, f);
+			} else
+				return object;
+		},
+	
+		dependency_sort : function(items, identifier, before, after) {
+			var identifierf = Types.is_string(identifier) ? function(obj) {
+				return obj[identifier];
+			} : identifier;
+			var beforef = Types.is_string(before) ? function(obj) {
+				return obj[before];
+			} : before;
+			var afterf = Types.is_string(after) ? function(obj) {
+				return obj[after];
+			} : after;
+			var n = items.length;
+			var data = [];
+			var identifier_to_index = {};
+			var todo = {};
+			var i = null;
+			for ( i = 0; i < n; ++i) {
+				todo[i] = true;
+				var ident = identifierf(items[i], i);
+				identifier_to_index[ident] = i;
+				data.push({
+					before : {},
+					after : {}
+				});
+			}
+			for ( i = 0; i < n; ++i) {
+				Objs.iter(beforef(items[i], i) || [], function(before) {
+					var before_index = identifier_to_index[before];
+					if (Types.is_defined(before_index)) {
+						data[i].before[before_index] = true;
+						data[before_index].after[i] = true;
+					}
+				});
+				Objs.iter(afterf(items[i]) || [], function(after) {
+					var after_index = identifier_to_index[after];
+					if (Types.is_defined(after_index)) {
+						data[i].after[after_index] = true;
+						data[after_index].before[i] = true;
+					}
+				});
+			}
+			var result = [];
+			while (!Types.is_empty(todo)) {
+				for (i in todo) {
+					if (Types.is_empty(data[i].after)) {
+						delete todo[i];
+						result.push(items[i]);
+						for (bef in data[i].before)
+						delete data[bef].after[i];
+					}
 				}
 			}
+			return result;
 		}
-		return this;
-	},
-	
-	triggerAsync: function () {
-		var self = this;
-		var args = BetaJS.Functions.getArguments(arguments);
-		var timeout = setTimeout(function () {
-			clearTimeout(timeout);
-			self.trigger.apply(self, args);
-		}, 0);
-	},
+		
+	};
+});
 
-    trigger: function(events) {
-    	var self = this;
-    	events = events.split(BetaJS.Events.EVENT_SPLITTER);
-    	var rest = BetaJS.Functions.getArguments(arguments, 1);
-		var event;
-		if (!this.__events_mixin_events)
-			return this;
-		while (true) {
-			event = events.shift();
-			if (!event)
-				break;
-    		if (this.__events_mixin_events[event])
-    			this.__events_mixin_events[event].iterate(function (object) {
-    				self.__call_event_object(object, rest);
-    			});
-			if (this.__events_mixin_events && "all" in this.__events_mixin_events)
-				this.__events_mixin_events["all"].iterate(function (object) {
-					self.__call_event_object(object, [event].concat(rest));
-				});
-		}
-    	return this;
-    },
-    
-    once: function (events, callback, context, options) {
-        var self = this;
-        var once = BetaJS.Functions.once(function() {
-          self.off(events, once);
-          callback.apply(this, arguments);
-        });
-        once._callback = callback;
-        return this.on(name, once, context, options);
-    },
-    
-    delegateEvents: function (events, source, prefix, params) {
-    	params = params || []; 
-    	prefix = prefix ? prefix + ":" : "";
-    	if (events === null) {
-    		source.on("all", function (event) {
-				var rest = BetaJS.Functions.getArguments(arguments, 1);
-				this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
-    		}, this);
-    	} else {
-    		if (!BetaJS.Types.is_array(events))
-    			events = [events];
-	   		BetaJS.Objs.iter(events, function (event) {
-				source.on(event, function () {
-					var rest = BetaJS.Functions.getArguments(arguments);
-					this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
+Scoped.define("module:Trees.TreeNavigator", function () {
+	return {		
+		
+		nodeRoot: function () {},
+		nodeId: function (node) {},
+		nodeParent: function (node) {},
+		nodeChildren: function (node) {},
+		nodeWatch: function (node, func, context) {},
+		nodeUnwatch: function (node, func, context) {},
+		nodeData: function (node) {}
+			
+	};
+});
+
+
+Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Lexer", "module:Trees.TreeQueryObject"], function (Class, Lexer, TreeQueryObject, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (navigator) {
+				inherited.constructor.call(this);
+				this.__navigator = navigator;
+				this.__lexer = this._auto_destroy(new Lexer({
+					"<\\+": {token: "Up"},
+					"<": {token: "Up", single: true},
+					">\\+": {token: "Down"},
+					">": {token: "Down", single: true},
+					"\\[\s*([a-zA-Z]+)\s*=\s*\'([^']*)\'\s*\\]": {token: "Selector", key: "$1", value: "$2"},
+					"\s": null
+				}));
+			},
+			
+			query: function (node, query) {
+				return new TreeQueryObject(this.__navigator, node, this.__lexer.lex(query));
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.EventsMixin", "module:Objs", "module:Types"], function (Class, EventsMixin, Objs, Types, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		return {
+			
+			constructor: function (navigator, node, query) {
+				inherited.constructor.call(this);
+				this.__navigator = navigator;
+				this.__node = node;
+				this.__query = query;
+				this.__result = {};
+				this.__partials = {};
+				this.__register(node, 0, {});
+				this.__ids = 0;
+			},
+			
+			destroy: function () {
+				Objs.iter(this.__partials, function (partials) {
+					Objs.iter(partials.partials, function (partial) {
+						this.__navigator.nodeUnwatch(partials.node, null, partial);
+					}, this);			
 				}, this);
-			}, this);
-		}
-    }
-	
-};
-
-BetaJS.Class.extend("BetaJS.Events.Events", BetaJS.Events.EventsMixin);
-
-
-
-BetaJS.Events.ListenMixin = {
-		
-	_notifications: {
-		"destroy": "listenOff" 
-	},
-		
-	listenOn: function (target, events, callback, options) {
-		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
-		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
-		target.on(events, callback, this, options);
-	},
-	
-	listenOnce: function (target, events, callback, options) {
-		if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
-		this.__listen_mixin_listen[BetaJS.Ids.objectId(target)] = target;
-		target.once(events, callback, this, options);
-	},
-	
-	listenOff: function (target, events, callback) {
-		if (!this.__listen_mixin_listen)
-			return;
-		if (target) {
-			target.off(events, callback, this);
-			if (!events && !callback)
-				delete this.__listen_mixin_listen[BetaJS.Ids.objectId(target)];
-		}
-		else
-			BetaJS.Objs.iter(this.__listen_mixin_listen, function (obj) {
-				if (obj && "off" in obj)
-					obj.off(events, callback, this);
-				if (!events && !callback)
-					delete this.__listen_mixin_listen[BetaJS.Ids.objectId(obj)];
-			}, this);
-	}
-	
-};
-
-BetaJS.Class.extend("BetaJS.Events.Listen", BetaJS.Events.ListenMixin);
-
-BetaJS.Classes = {};
-
-BetaJS.Classes.InvokerMixin = {
-
-	invoke_delegate : function(invoker, members) {
-		if (!BetaJS.Types.is_array(members))
-			members = [members];
-		invoker = this[invoker];
-		var self = this;
-		for (var i = 0; i < members.length; ++i) {
-			var member = members[i];
-			this[member] = function(member) {
-				return function() {
-					var args = BetaJS.Functions.getArguments(arguments);
-					args.unshift(member);
-					return invoker.apply(self, args);
+				inherited.destroy.call(this);
+			},
+			
+			result: function () {
+				var result = [];
+				Objs.iter(this.__result, function (value) {
+					result.push(value.node);
+				});
+				return result;
+			},
+			
+			__register: function (node, index) {
+				var node_id = this.__navigator.nodeId(node);
+				if (!this.__partials[node_id]) {
+					this.__partials[node_id] = {
+						node: node,
+						partials: {}
+					};
+				}
+				var partials = this.__partials[node_id];
+				this.__ids++;
+				var partial = {
+					owner: partials,
+					id: this.__ids,
+					query_index_start: index,
+					query_index_next: index,
+					query_index_last: index,
+					partial_match: false,
+					partial_final: index >= this.__query.length,
+					partial_data: false,
+					partial_children: false,
+					partial_parent: false,
+					partial_star: false,
+					parent: null,
+					deps: {}
 				};
-			}.call(self, member);
-		}
-	}
-};
-
-BetaJS.Classes.AutoDestroyMixin = {
-
-	_notifications : {
-		construct : "__initialize_auto_destroy",
-		destroy : "__finalize_auto_destroy"
-	},
-
-	__initialize_auto_destroy : function() {
-		this.__auto_destroy = {};
-	},
-
-	__finalize_auto_destroy : function() {
-		var copy = this.__auto_destroy;
-		this.__auto_destroy = {};
-		BetaJS.Objs.iter(copy, function(object) {
-			object.unregister(this);
-		}, this);
-	},
-
-	register_auto_destroy : function(object) {
-		if (object.cid() in this.__auto_destroy)
-			return;
-		this.__auto_destroy[object.cid()] = object;
-		object.register(this);
-		this._notify("register_auto_destroy", object);
-	},
-
-	unregister_auto_destroy : function(object) {
-		if (!(object.cid() in this.__auto_destroy))
-			return;
-		this._notify("unregister_auto_destroy", object);
-		delete this.__auto_destroy[object.cid()];
-		object.unregister(this);
-		if (BetaJS.Types.is_empty(this.__auto_destroy))
-			this.destroy();
-	}
-};
-
-BetaJS.Class.extend("BetaJS.Classes.AutoDestroyObject", {
-
-	constructor : function() {
-		this._inherited(BetaJS.Classes.AutoDestroyObject, "constructor");
-		this.__objects = {};
-	},
-
-	register : function(object) {
-		var id = BetaJS.Ids.objectId(object);
-		if ( id in this.__objects)
-			return;
-		this.__objects[id] = object;
-		object.register_auto_destroy(this);
-	},
-
-	unregister : function(object) {
-		var id = BetaJS.Ids.objectId(object);
-		if (!( id in this.__objects))
-			return;
-		delete this.__objects[id];
-		object.unregister_auto_destroy(this);
-	},
-
-	clear : function() {
-		BetaJS.Objs.iter(this.__objects, function(object) {
-			this.unregister(object);
-		}, this);
-	}
+				partials.partials[partial.id] = partial;
+				for (var i = partial.query_index_start; i < this.__query.length; ++i) {
+					if (this.__query[i].token == "Selector")
+						partial.partial_data = true;
+					else {
+						if (this.__query[i].token == "Up")
+							partial.partial_parent = true;
+						else if (this.__query[i].token == "Down")
+							partial.partial_children = true;
+						partial.partial_star = !this.__query[i].single;
+						if (!partial.partial_star)
+							partial.query_index_next = i + 1;
+						break;
+					}
+					partial.query_index_next = i + 1;
+					partial.partial_final = i + 1 == this.__query.length;
+				}
+				partial.query_index_last = partial.partial_star ? partial.query_index_next + 1 : partial.query_index_next;
+				var self = this;
+				this.__navigator.nodeWatch(node, function (action, node) {
+					if (action == "data" && partial.partial_data)
+						self.__update(partial);
+					if (action == "remove")
+						self.__unregisterPartial(partial);
+					if (action == "addChild" && partial.partial_children && partial.partial_match)
+						self.__addDependentPartial(partial, node);
+				}, partial);
+				this.__update(partial);
+				return partial;
+			},
+			
+			__unregisterPartial: function (partial) {
+				var owner = partial.owner;
+				var node = owner.node;
+				var node_id = this.__navigator.nodeId(node);
+				if (partial.partial_final && this.__result[node_id]) {
+					this.__result[node_id].count--;
+					if (this.__result[node_id].count <= 0) {
+						delete this.__result[node_id];
+						this.trigger("remove", node);
+						this.trigger("change");
+					}
+				}
+				Objs.iter(partial.deps, this.__unregisterPartial, this);
+				if (partial.parent)
+					delete partial.parent.deps[partial.id];
+				this.__navigator.nodeUnwatch(node, null, partial);
+				delete owner.partials[partial.id];
+				if (Types.is_empty(owner.partials))
+					delete this.__partials[node_id];
+			},
+			
+			__addDependentPartial: function (partial, node) {
+				var partials = [];
+				partials.push(this.__register(node, partial.query_index_next));
+				if (partial.partial_star)
+					partials.push(this.__register(node, partial.query_index_next + 1));
+				Objs.iter(partials, function (p) {
+					partial.deps[p.id] = p;
+					p.parent = partial;
+				}, this);
+			},
+			
+			__update: function (partial) {
+				var matching = true;
+				var node = partial.owner.node;
+				var node_id = this.__navigator.nodeId(node);
+				var node_data = this.__navigator.nodeData(node);
+				for (var i = partial.query_index_start; i < partial.query_index_last; ++i) {
+					var q = this.__query[i];
+					if (q.token != "Selector")
+						break;
+					if (node_data[q.key] != q.value) {
+						matching = false;
+						break;
+					}
+				}
+				if (matching == partial.partial_match)
+					return;
+				partial.partial_match = matching;
+				if (matching) {
+					if (partial.partial_final) {
+						if (!this.__result[node_id]) {
+							this.__result[node_id] = {
+								node: node,
+								count: 1
+							};
+							this.trigger("add", node);
+							this.trigger("change");
+						} else
+							this.__result[node_id].count++;
+					} else if (partial.partial_parent) {
+						this.__addDependentPartial(partial, this.__navigator.nodeParent(node));
+					} else if (partial.partial_children) {
+						Objs.iter(this.__navigator.nodeChildren(node), function (child) {
+							this.__addDependentPartial(partial, child);
+						}, this);
+					}
+				} else {
+					if (partial.partial_final) {
+						this.__result[node_id].count--;
+						if (this.__result[node_id].count <= 0) {
+							delete this.__result[node_id];
+							this.trigger("remove", node);
+							this.trigger("change");
+						}
+					}
+					Objs.iter(partial.deps, this.__unregisterPartial, this);
+				}
+			}
+		};
+	}]);
 });
 
-BetaJS.Class.extend("BetaJS.Classes.ObjectCache", [BetaJS.Events.EventsMixin, {
+Scoped.define("module:Classes.InvokerMixin", ["module:Types", "module:Functions"], function (Types, Functions) {
+	return {
+		
+		invoke_delegate : function(invoker, members) {
+			if (!Types.is_array(members))
+				members = [members];
+			invoker = this[invoker];
+			var self = this;
+			for (var i = 0; i < members.length; ++i) {
+				var member = members[i];
+				this[member] = function(member) {
+					return function() {
+						var args = Functions.getArguments(arguments);
+						args.unshift(member);
+						return invoker.apply(self, args);
+					};
+				}.call(self, member);
+			}
+		
+		}
+	};
+});
 
-	constructor : function(options) {
-		this._inherited(BetaJS.Classes.ObjectCache, "constructor");
-		this.__size = "size" in options ? options.size : null;
-		this.__destroy_on_remove = "destroy_on_remove" in options ? options.destroy_on_remove : true;
-		this.__id_to_container = {};
-		this.__first = null;
-		this.__last = null;
-		this.__count = 0;
-	},
 
-	destroy : function() {
-		this.clear();
-		this._inherited(BetaJS.Classes.ObjectCache, "destroy");
-	},
-
-	add : function(object) {
-		if (this.get(object))
-			return;
-		if (this.__size !== null && this.__count >= this.__size && this.__first)
-			this.remove(this.__first.object);
-		var container = {
-			object : object,
-			prev : this.__last,
-			next : null
-		};
-		this.__id_to_container[BetaJS.Ids.objectId(object)] = container;
-		if (this.__first)
-			this.__last.next = container;
-		else
-			this.__first = container;
-		this.__last = container;
-		this.__count++;
-		this.trigger("cache", object);
-	},
-
-	remove : function(id) {
-		if (BetaJS.Class.is_class_instance(id))
-			id = BetaJS.Ids.objectId(id);
-		var container = this.__id_to_container[id];
-		if (!container)
-			return;
-		delete this.__id_to_container[id];
-		if (container.next)
-			container.next.prev = container.prev;
-		else
-			this.__last = container.prev;
-		if (container.prev)
-			container.prev.next = container.next;
-		else
-			this.__first = container.next;
-		this.__count--;
-		this.trigger("release", container.object);
-		if (this.__destroy_on_remove)
-			container.object.destroy();
-	},
-
-	get : function(id) {
-		if (BetaJS.Class.is_class_instance(id))
-			id = BetaJS.Ids.objectId(id);
-		return this.__id_to_container[id] ? this.__id_to_container[id].object : null;
-	},
-
-	clear : function() {
-		BetaJS.Objs.iter(this.__id_to_container, function(container) {
-			this.remove(container.object);
-		}, this);
-	}
-}]);
-
-BetaJS.Classes.ModuleMixin = {
-
-	_notifications : {
-		construct : function() {
-			this.__modules = {};
+Scoped.define("module:Classes.ModuleMixin", ["module:Objs"], function (Objs) {
+	return {
+	
+		_notifications : {
+			construct : function() {
+				this.__modules = {};
+			},
+			destroy : function() {
+				Objs.iter(this.__modules, this.remove_module, this);
+			}
 		},
-		destroy : function() {
-			BetaJS.Objs.iter(this.__modules, this.remove_module, this);
+	
+		add_module : function(module) {
+			if (module.cid() in this.__modules)
+				return;
+			this.__modules[module.cid()] = module;
+			module.register(this);
+			this._notify("add_module", module);
+		},
+	
+		remove_module : function(module) {
+			if (!(module.cid() in this.__modules))
+				return;
+			delete this.__modules[module.cid()];
+			module.unregister(this);
+			this._notify("remove_module", module);
 		}
-	},
+		
+	};
+});
 
-	add_module : function(module) {
-		if (module.cid() in this.__modules)
-			return;
-		this.__modules[module.cid()] = module;
-		module.register(this);
-		this._notify("add_module", module);
-	},
 
-	remove_module : function(module) {
-		if (!(module.cid() in this.__modules))
-			return;
-		delete this.__modules[module.cid()];
-		module.unregister(this);
-		this._notify("remove_module", module);
-	}
-};
+Scoped.define("module:Classes.Module", ["module:Class", "module:Objs", "module:Ids", "module:Types"], function (Class, Objs, Ids, Types, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
 
-BetaJS.Class.extend("BetaJS.Classes.Module", {
-
-	constructor : function(options) {
-		this._inherited(BetaJS.Classes.Module, "constructor");
-		this._objects = {};
-		this.__auto_destroy = "auto_destroy" in options ? options.auto_destroy : true;
-	},
-
-	destroy : function() {
-		BetaJS.Objs.iter(this._objects, this.unregister, this);
-		this._inherited(BetaJS.Classes.Module, "destroy");
-	},
-
-	register : function(object) {
-		var id = BetaJS.Ids.objectId(object);
-		if ( id in this._objects)
-			return;
-		var data = {};
-		this._objects[id] = {
-			object : object,
-			data : data
+			constructor : function(options) {
+				inherited.constructor.call(this);
+				this._objects = {};
+				this.__auto_destroy = "auto_destroy" in options ? options.auto_destroy : true;
+			},
+		
+			destroy : function() {
+				Objs.iter(this._objects, this.unregister, this);
+				inherited.destroy.call(this);
+			},
+		
+			register : function(object) {
+				var id = Ids.objectId(object);
+				if ( id in this._objects)
+					return;
+				var data = {};
+				this._objects[id] = {
+					object : object,
+					data : data
+				};
+				object.add_module(this);
+				this._register(object, data);
+			},
+		
+			_register : function(object) {
+			},
+		
+			unregister : function(object) {
+				var id = Ids.objectId(object);
+				if (!( id in this._objects))
+					return;
+				var data = this._objects[id].data;
+				this._unregister(object, data);
+				delete this._objects[id];
+				object.remove_module(this);
+				if ("off" in object)
+					object.off(null, null, this);
+				if (this.__auto_destroy && Types.is_empty(this._objects))
+					this.destroy();
+			},
+		
+			_unregister : function(object) {
+			},
+		
+			_data : function(object) {
+				return this._objects[Ids.objectId(object)].data;
+			}
+			
 		};
-		object.add_module(this);
-		this._register(object, data);
-	},
-
-	_register : function(object) {
-	},
-
-	unregister : function(object) {
-		var id = BetaJS.Ids.objectId(object);
-		if (!( id in this._objects))
-			return;
-		var data = this._objects[id].data;
-		this._unregister(object, data);
-		delete this._objects[id];
-		object.remove_module(this);
-		if ("off" in object)
-			object.off(null, null, this);
-		if (this.__auto_destroy && BetaJS.Types.is_empty(this._objects))
-			this.destroy();
-	},
-
-	_unregister : function(object) {
-	},
-
-	_data : function(object) {
-		return this._objects[BetaJS.Ids.objectId(object)].data;
-	}
-}, {
-
-	__instance : null,
-
-	singleton : function() {
-		if (!this.__instance)
-			this.__instance = new this({
-				auto_destroy : false
-			});
-		return this.__instance;
-	}
-});
-
-
-BetaJS.Classes.ObjectIdMixin = {
-
-    _notifications: {
-        construct: "__register_object_id",
-        destroy: "__unregister_object_id"
-    },
-
-    __object_id_scope: function () {
-        if (this.object_id_scope)
-            return this.object_id_scope;
-        if (!BetaJS.Classes.ObjectIdScope)
-            BetaJS.Classes.ObjectIdScope = BetaJS.Objs.clone(BetaJS.Classes.ObjectIdScopeMixin, 1);
-        return BetaJS.Classes.ObjectIdScope;
-    },
-
-    __register_object_id: function () {
-        var scope = this.__object_id_scope();
-        scope.__objects[BetaJS.Ids.objectId(this)] = this;
-    },
-
-    __unregister_object_id: function () {
-        var scope = this.__object_id_scope();
-        delete scope.__objects[BetaJS.Ids.objectId(this)];
-    }
-
-};
-
-BetaJS.Classes.ObjectIdScopeMixin = {
-
-    __objects: {},
-
-    get: function (id) {
-        return this.__objects[id];
-    }
-
-};
-
-
-BetaJS.Classes.HelperClassMixin = {
+	}, {
 	
-	addHelper: function (helper_class, options) {
-		var helper = new helper_class(this, options);
-		this.__helpers = this.__helpers || [];
-		this.__helpers.push(this._auto_destroy(helper));
-		return helper;
-	},
+		__instance : null,
 	
-	_helper: function (options) {
-		this.__helpers = this.__helpers || [];
-		if (BetaJS.Types.is_string(options)) {
-			options = {
-				method: options
-			};
+		singleton : function() {
+			if (!this.__instance)
+				this.__instance = new this({
+					auto_destroy : false
+				});
+			return this.__instance;
 		}
-		options = BetaJS.Objs.extend({
-			fold_start: null,
-			fold: function (acc, result) {
-				return acc || result;
+	
+	});
+});
+
+
+Scoped.define("module:Classes.HelperClassMixin", ["module:Objs", "module:Types", "module:Functions", "module:Promise"], function (Objs, Types, Functions, Promise) {
+	return {
+	
+		addHelper: function (helper_class, options) {
+			var helper = new helper_class(this, options);
+			this.__helpers = this.__helpers || [];
+			this.__helpers.push(this._auto_destroy(helper));
+			return helper;
+		},
+		
+		_helper: function (options) {
+			this.__helpers = this.__helpers || [];
+			if (Types.is_string(options)) {
+				options = {
+					method: options
+				};
 			}
-		}, options);
-		var args = BetaJS.Functions.getArguments(arguments, 1);
-		var acc = options.async ? BetaJS.Promise.create(options.fold_start) : options.fold_start;
-		for (var i = 0; i < this.__helpers.length; ++i) {
-			var helper = this.__helpers[i];
-			if (options.method in helper) {
-				if (options.async)
-					acc = BetaJS.Promise.func(options.fold, acc, BetaJS.Promise.methodArgs(helper, helper[options.method], args));
-				else
-					acc = options.fold(acc, helper[options.method].apply(helper, args));
+			options = Objs.extend({
+				fold_start: null,
+				fold: function (acc, result) {
+					return acc || result;
+				}
+			}, options);
+			var args = Functions.getArguments(arguments, 1);
+			var acc = options.async ? Promise.create(options.fold_start) : options.fold_start;
+			for (var i = 0; i < this.__helpers.length; ++i) {
+				var helper = this.__helpers[i];
+				if (options.method in helper) {
+					if (options.async)
+						acc = Promise.func(options.fold, acc, Promise.methodArgs(helper, helper[options.method], args));
+					else
+						acc = options.fold(acc, helper[options.method].apply(helper, args));
+				}
 			}
+			return acc;
 		}
-		return acc;
-	}
-	
-};
-
-
-BetaJS.Class.extend("BetaJS.Classes.IdGenerator", {
-	
-	generate: function () {}
-	
-});
-
-BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.PrefixedIdGenerator", {
-
-	constructor: function (prefix, generator) {
-		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
-		this.__prefix = prefix;
-		this.__generator = generator;
-	},
-	
-	generate: function () {
-		return this.__prefix + this.__generator.generate();
-	}
-	
-});
-
-BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.RandomIdGenerator", {
-
-	constructor: function (length) {
-		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
-		this.__length = length || 16;
-	},
-	
-	generate: function () {
-		return BetaJS.Tokens.generate_token(this.__length);
-	}
-
-});
-
-BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.ConsecutiveIdGenerator", {
-
-	constructor: function (initial) {
-		this._inherited(BetaJS.Classes.ConsecutiveIdGenerator, "constructor");
-		this.__current = initial || 0;
-	},
-	
-	generate: function () {
-		this.__current++;
-		return this.__current;
-	}
-
-});
-
-BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.TimedIdGenerator", {
-
-	constructor: function () {
-		this._inherited(BetaJS.Classes.TimedIdGenerator, "constructor");
-		this.__current = BetaJS.Time.now() - 1;
-	},
-	
-	generate: function () {
-		var now = BetaJS.Time.now();
-		this.__current = now > this.__current ? now : (this.__current + 1); 
-		return this.__current;
-	}
-
+		
+	};
 });
 
 
-BetaJS.Class.extend("BetaJS.Classes.PathResolver", {
+Scoped.define("module:Classes.IdGenerator", ["module:Class"], function (Class, scoped) {
+	return Class.extend({scoped: scoped}, {
 	
-	constructor: function (bindings) {
-		this._inherited(BetaJS.Classes.PathResolver, "constructor");
-		this._bindings = bindings || {};
-	},
+		generate: function () {}
 	
-	extend: function (bindings, namespace) {
-		if (namespace) {
-			for (var key in bindings) {
-				var value = bindings[key];
+	});
+});	
+
+
+Scoped.define("module:Classes.PrefixedIdGenerator", ["module:Classes.IdGenerator"], function (IdGenerator, scoped) {
+	return IdGenerator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (prefix, generator) {
+				inherited.constructor.call(this);
+				this.__prefix = prefix;
+				this.__generator = generator;
+			},
+			
+			generate: function () {
+				return this.__prefix + this.__generator.generate();
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Classes.RandomIdGenerator", ["module:Classes.IdGenerator", "module:Tokens"], function (IdGenerator, Tokens, scoped) {
+	return IdGenerator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (length) {
+				inherited.constructor.call(this);
+				this.__length = length || 16;
+			},
+			
+			generate: function () {
+				return Tokens.generate_token(this.__length);
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Classes.ConsecutiveIdGenerator", ["module:Classes.IdGenerator"], function (IdGenerator, scoped) {
+	return IdGenerator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (initial) {
+				inherited.constructor.call(this);
+				this.__current = initial || 0;
+			},
+			
+			generate: function () {
+				this.__current++;
+				return this.__current;
+			}
+
+		};
+	});
+});
+
+	
+Scoped.define("module:Classes.TimedIdGenerator", ["module:Classes.IdGenerator", "module:Time"], function (IdGenerator, Time, scoped) {
+	return IdGenerator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__current = Time.now() - 1;
+			},
+			
+			generate: function () {
+				var now = Time.now();
+				this.__current = now > this.__current ? now : (this.__current + 1); 
+				return this.__current;
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Classes.PathResolver", ["module:Class", "module:Objs"], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (bindings) {
+				inherited.constructor.call(this);
+				this._bindings = bindings || {};
+			},
+			
+			extend: function (bindings, namespace) {
+				if (namespace) {
+					for (var key in bindings) {
+						var value = bindings[key];
+						var regExp = /\{([^}]+)\}/;
+						while (true) {
+							var matches = regExp.exec(value);
+							if (!matches)
+								break;
+							value = value.replace(regExp, namespace + "." + matches[1]);
+						}
+						this._bindings[namespace + "." + key] = value;
+					}
+				} else
+					this._bindings = Objs.extend(this._bindings, bindings);
+			},
+			
+			map: function (arr) {
+				var result = [];
+				for (var i = 0; i < arr.length; ++i) {
+					if (arr[i])
+						result.push(this.resolve(arr[i]));
+				}
+				return result;
+			},
+			
+			resolve : function(path) {
 				var regExp = /\{([^}]+)\}/;
 				while (true) {
-					var matches = regExp.exec(value);
+					var matches = regExp.exec(path);
 					if (!matches)
-						break;
-					value = value.replace(regExp, namespace + "." + matches[1]);
+						return this.simplify(path);
+					path = path.replace(regExp, this._bindings[matches[1]]);
 				}
-				this._bindings[namespace + "." + key] = value;
-			}
-		} else
-			this._bindings = BetaJS.Objs.extend(this._bindings, bindings);
-	},
-	
-	map: function (arr) {
-		var result = [];
-		for (var i = 0; i < arr.length; ++i) {
-			if (arr[i])
-				result.push(this.resolve(arr[i]));
-		}
-		return result;
-	},
-	
-	resolve : function(path) {
-		var regExp = /\{([^}]+)\}/;
-		while (true) {
-			var matches = regExp.exec(path);
-			if (!matches)
-				return this.simplify(path);
-			path = path.replace(regExp, this._bindings[matches[1]]);
-		}
-		return path;
-	},
-	
-	simplify: function (path) {
-		return path.replace(/[^\/]+\/\.\.\//, "").replace(/\/[^\/]+\/\.\./, "");
-	}
-	
-});
-
-
-BetaJS.Class.extend("BetaJS.Classes.MultiDelegatable", {
-
-	constructor: function (objects, methods) {
-		this._inherited(BetaJS.Classes.MultiDelegatable, "constructor");
-		BetaJS.Objs.iter(methods, function (method) {
-			this[method] = function () {
-				var args = arguments;
-				BetaJS.Objs.iter(objects, function (object) {
-					object[method].apply(object, args);
-				}, this);
-				return this;
-			};
-		}, this);
-	}
-	
-});
-
-
-BetaJS.Class.extend("BetaJS.Classes.ClassRegistry", {
-	
-	constructor: function (classes) {
-		this._inherited(BetaJS.Classes.ClassRegistry, "constructor");
-		this._classes = classes || {};
-	},
-	
-	register: function (key, cls) {
-		this._classes[key] = cls;
-	},
-	
-	get: function (key) {
-		return BetaJS.Types.is_object(key) ? key : this._classes[key];
-	},
-	
-	create: function (key) {
-		var cons = BetaJS.Functions.newClassFunc(this.get(key));
-		return cons.apply(this, BetaJS.Functions.getArguments(arguments, 1));
-	}	
-	
-});
-BetaJS.Properties = {};
-
-BetaJS.Properties.PropertiesMixin = {
-
-	_notifications: {
-		"construct": function () {
-			this.__properties = {
-				// hierarchical organization
-				data: {},
-				// hierarchical organization
-				watchers: {
-					children: {},
-					eventCount: 0,
-					parent: null,
-					key: null
-				},
-				// flat organization
-				computed: {},
-				// flat organization
-				bindings: {}
-			};
-		},
-		"destroy": function () {
-			BetaJS.Objs.iter(this.__properties.bindings, function (value, key) {
-				this.unbind(key);
-			}, this);
-			this.trigger("destroy");
-		},
-		"register_event": function (event) {
-			BetaJS.Objs.iter(["change", "unset", "deepchange", "deepunset", "strongdeepchange", "strongchange"], function (eventType) {
-				if (BetaJS.Strings.starts_with(event, eventType + ":"))
-					this.__registerWatcher(BetaJS.Strings.strip_start(event, eventType + ":"), eventType);
-			}, this);
-		},
-		"unregister_event": function (event) {
-			BetaJS.Objs.iter(["change", "unset", "deepchange", "deepunset", "strongdeepchange", "strongchange"], function (eventType) {
-				if (BetaJS.Strings.starts_with(event, eventType + ":"))
-					this.__unregisterWatcher(BetaJS.Strings.strip_start(event, eventType + ":"), eventType);
-			}, this);
-		}
-	},
-	
-	get: function (key) {
-		return BetaJS.Properties.Scopes.get(key, this.__properties.data);
-	},
-	
-	_canSet: function (key, value) {
-		return true;
-	},
-	
-	_beforeSet: function (key, value) {
-		return value;
-	},
-	
-	_afterSet: function (key, value) {},
-	
-	has: function (key) {
-		return BetaJS.Properties.Scopes.has(key, this.__properties.data);
-	},
-	
-	setAll: function (obj) {
-		for (var key in obj)
-			this.set(key, obj[key]);
-		return this;
-	},
-	
-	keys: function (mapped) {
-		return BetaJS.Objs.keys(this.__properties.data, mapped);
-	},
-	
-	data: function () {
-		return this.__properties.data;
-	},
-	
-	getAll: function () {
-		return BetaJS.Objs.clone(this.__properties.data, 1);
-	},
-	
-	__registerWatcher: function (key, event) {
-		var keys = key ? key.split(".") : [];
-		var current = this.__properties.watchers;
-		for (var i = 0; i < keys.length; ++i) {
-			if (!(keys[i] in current.children)) {
-				current.children[keys[i]] = {
-					parent: current,
-					eventCount: 0,
-					children: {},
-					key: keys[i]
-				};
-			}
-			current = current.children[keys[i]];
-		}
-		current.eventCount++;
-	},
-	
-	__unregisterWatcher: function (key, event) {
-		var keys = key ? key.split(".") : [];
-		var current = this.__properties.watchers;
-		for (var i = 0; i < keys.length; ++i) {
-			if (current)
-				current = current.children[keys[i]];
-		}
-		if (!current)
-			return;
-		current.eventCount--;
-		while (current.eventCount <= 0 && BetaJS.Types.is_empty(current.children) && current.parent) {
-			var parent = current.parent;
-			delete parent.children[current.key];
-			current = parent;
-		}
-	},
-	
-	uncompute: function (key) {
-		if (key in this.__properties.computed) {
-			BetaJS.Objs.iter(this.__properties.computed[key].dependencies, function (dependency) {
-				dependency.properties.off("change:" + dependency.key, null, dependency);
-			}, this);
-			delete this.__properties.computed[key];
-		}
-		return this;
-	},
-	
-	compute: function (key, func) {
-		var args = BetaJS.Functions.matchArgs(arguments, 2, {
-			setter: "function",
-			context: {
-				type: "object",
-				def: this
+				return path;
 			},
-			dependencies: true
-		});
-		this.uncompute(key);
-		var deps = [];
-		BetaJS.Objs.iter(args.dependencies, function (dep) {
-			if (BetaJS.Types.is_string(dep))
-				deps.push({properties: this, key: dep});
-			else
-				deps.push({properties: dep[0], key: dep[1]});
-		}, this);
-		var computed = {
-			ignore: 0,
-			func: func,
-			context: args.context,
-			setter: args.setter,
-			dependencies: deps
+			
+			simplify: function (path) {
+				return path.replace(/[^\/]+\/\.\.\//, "").replace(/\/[^\/]+\/\.\./, "");
+			}
+	
 		};
-		this.__properties.computed[key] = computed;
-		var self = this;
-		function recompute() {
-			if (computed.ignore > 0)
-				return;
-			var values = BetaJS.Objs.map(deps, function (dep) {
-				return dep.properties.get(dep.key);
-			});
-			self.set(key, func.apply(args.context, values));
-		}
-		for (var i = 0; i < deps.length; ++i) {
-			deps[i].properties.on("change:" + deps[i].key, function () {
-				recompute();
-			}, deps[i]);
-		}
-		recompute();
-		return this;
-	},
-	
-	unbind: function (key, props) {
-		if (key in this.__properties.bindings) {
-			for (i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
-				var binding = this.__properties.bindings[key][i];
-				if (!props || props == binding) {
-					if (binding.left) 
-						binding.properties.off(null, null, binding);
-					if (binding.right)
-						this.off(null, null, binding);
-					this.__properties.bindings[key].splice(i, 1);
-					i--;
-				}
-			}
-			if (this.__properties.bindings[key].length === 0)
-				delete this.__properties.bindings[key];
-		}
-		return this;
-	},
-	
-	bind: function (key, properties, options) {
-		options = BetaJS.Objs.extend({
-			secondKey: key,
-			left: true,
-			right: true,
-			deep: false
-		}, options);
-		var binding = {
-			key: options.secondKey,
-			left: options.left,
-			right: options.right,
-			deep: options.deep,
-			properties: properties
-		};
-		this.__properties.bindings[key] = this.__properties.bindings[key] || [];
-		this.__properties.bindings[key].push(binding);
-		if (binding.left) {
-			var self = this;
-			binding.properties.on("strongchange:" + binding.key, function (value) {
-				self.set(key, value);
-			}, binding);
-			binding.properties.on("unset:" + binding.key, function (value) {
-				self.unset(key);
-			}, binding);
-			if (binding.deep) {
-				binding.properties.on("strongdeepchange:" + binding.key, function (value, oldValue, subKey) {
-					if (self.get(key ? key + "." + subKey : subKey) === value)
-						self.__setChanged(key ? key + "." + subKey : subKey, value, oldValue, true);
-					else
-						self.set(key ? key + "." + subKey : subKey, value);					
-				}, binding);
-				binding.properties.on("deepunset:" + binding.key, function (oldValue, subKey) {
-					if (!self.has(key ? key + "." + subKey : subKey))
-						self.__unsetChanged(key ? key + "." + subKey : subKey, oldValue);
-					else
-						self.unset(key ? key + "." + subKey : subKey);					
-				}, binding);
-			}
-			if (!binding.right || !this.has(key))
-				this.set(key, binding.properties.get(binding.key));
-		}
-		if (binding.right) {
-			this.on("strongchange:" + key, function (value) {
-				binding.properties.set(binding.key, value);
-			}, binding);
-			this.on("unset:" + key, function (value) {
-				binding.properties.unset(binding.key);
-			}, binding);
-			if (binding.deep) {
-				this.on("strongdeepchange:" + key, function (value, oldValue, subKey) {
-					if (binding.properties.get(binding.key ? binding.key + "." + subKey : subKey) === value)
-						binding.properties.__setChanged(binding.key ? binding.key + "." + subKey : subKey, value, oldValue, true);
-					else
-						binding.properties.set(binding.key ? binding.key + "." + subKey : subKey, value);
-				}, binding);
-				this.on("deepunset:" + key, function (oldValue, subKey) {
-					if (!binding.properties.has(binding.key ? binding.key + "." + subKey : subKey))
-						binding.properties.__unsetChanged(binding.key ? binding.key + "." + subKey : subKey, oldValue);
-					else
-						binding.properties.unset(binding.key ? binding.key + "." + subKey : subKey);
-				}, binding);
-			}
-			if (!binding.left || this.has(key))
-				binding.properties.set(binding.key, this.get(key));
-		}
-		binding.properties.on("destroy", function () {
-			this.unbind();
-		}, this);
-		return this;
-	},
-	
-	__unsetChanged: function (key, oldValue) {
-		this.trigger("unset", key, oldValue);
-		var keys = key ? key.split(".") : [];
-		var current = this.__properties.watchers;
-		var head = "";
-		var tail = key;
-		for (var i = 0; i < keys.length; ++i) {
-			if (current.eventCount > 0)
-				this.trigger("deepunset:" + head, oldValue, tail);
-			if (!(keys[i] in current.children))
-				return this;
-			current = current.children[keys[i]];
-			head = head ? (head + "." + keys[i]) : keys[i];
-			tail = BetaJS.Strings.first_after(tail, ".");
-		}
-		function process_unset(current, key, oldValue) {
-			if (BetaJS.Types.is_undefined(oldValue))
-				return;
-			if (current.eventCount > 0)
-				this.trigger("unset:" + key, oldValue);
-			BetaJS.Objs.iter(current.children, function (child, subkey) {
-				process_unset.call(this, child, key ? (key + "." + subkey) : subkey, oldValue[subkey]);
-			}, this);
-		}
-		process_unset.call(this, current, key, oldValue);
-		return this;
-	},
-	
-	__setChanged: function (key, value, oldValue, notStrong) {
-		this.trigger("change", key, value, oldValue);
-		this._afterSet(key, value);
-		var keys = key ? key.split(".") : [];
-		var current = this.__properties.watchers;
-		var head = "";
-		var tail = key;
-		for (var i = 0; i < keys.length; ++i) {
-			if (current.eventCount > 0) {
-				if (!notStrong)
-					this.trigger("strongdeepchange:" + head, value, oldValue, tail);
-				this.trigger("deepchange:" + head, value, oldValue, tail);
-			}
-			if (!(keys[i] in current.children))
-				return;
-			current = current.children[keys[i]];
-			head = head ? (head + "." + keys[i]) : keys[i];
-			tail = BetaJS.Strings.first_after(tail, ".");
-		}
-		function process_set(current, key, value, oldValue) {
-			if (value == oldValue)
-				return;
-			if (current.eventCount > 0) {
-				if (!notStrong)
-					this.trigger("strongchange:" + key, value, oldValue);
-				this.trigger("change:" + key, value, oldValue);
-			}
-			BetaJS.Objs.iter(current.children, function (child, subkey) {
-				process_set.call(this, child, key ? (key + "." + subkey) : subkey, value[subkey], oldValue[subkey]);
-			}, this);
-		}
-		process_set.call(this, current, key, value, oldValue);
-	},
-	
-	unset: function (key) {
-		if (this.has(key)) {
-			var oldValue = this.get(key);
-			BetaJS.Properties.Scopes.unset(key, this.__properties.data);
-			this.__unsetChanged(key, oldValue);
-		}
-		return this;
-	},
-	
-	__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
-	
-	set: function (key, value) {
-		if (BetaJS.Types.is_object(value) && value && value.guid == this.__properties_guid) {
-			if (value.properties)
-				this.bind(key, value.properties, {secondKey: value.key});
-			if (value.func)
-				this.compute(key, value.func, value.dependencies);
-			return this;
-		}
-		value = this._beforeSet(key, value);
-		var oldValue = this.get(key);
-		if (oldValue !== value) {
-			BetaJS.Properties.Scopes.set(key, value, this.__properties.data);
-			this.__setChanged(key, value, oldValue);
-		}
-		return this;
-	},
-	
-	binding: function (key) {
+	});
+});
+
+
+Scoped.define("module:Classes.MultiDelegatable", ["module:Class", "module:Objs"], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
-			guid: this.__properties_guid,
-			properties: this,
-			key: key
-		};
-	},
-	
-	computed : function (f, dependencies) {
-		return {
-			guid: this.__properties_guid,
-			func: f,
-			dependencies: dependencies
-		};
-	}	
-	
-};
 
-BetaJS.Class.extend("BetaJS.Properties.Properties", [
-	BetaJS.Events.EventsMixin,
-	BetaJS.Properties.PropertiesMixin, {
-	
-	constructor: function (obj) {
-		this._inherited(BetaJS.Properties.Properties, "constructor");
-		if (obj)
-			this.setAll(obj);
-	}
-	
-}]);
-
-
-BetaJS.Properties.Scopes = {
-
-	has: function (key, scope) {
-		var keys = key ? key.split(".") : [];
-		for (var i = 0; i < keys.length; ++i) {
-	       if (!scope || !BetaJS.Types.is_object(scope))
-	    	   return false;
-	       scope = scope[keys[i]];
-	    }
-		return BetaJS.Types.is_defined(scope);
-	},
-	
-	get: function (key, scope) {
-		var keys = key ? key.split(".") : [];
-		for (var i = 0; i < keys.length; ++i) {
-	       if (!scope || !BetaJS.Types.is_object(scope))
-	    	   return null;
-	       scope = scope[keys[i]];
-	    }
-		return scope;
-	},
-	
-	set: function (key, value, scope) {
-		if (!key)
-			return;
-		var keys = key.split(".");
-		for (var i = 0; i < keys.length - 1; ++i) {
-			if (!(keys[i] in scope) || !BetaJS.Types.is_object(scope[keys[i]]))
-				scope[keys[i]] = {};
-	       scope = scope[keys[i]];
-	    }
-		scope[keys[keys.length - 1]] = value;
-	},
-	
-	unset: function (key, scope) {
-		if (!key)
-			return;
-		var keys = key.split(".");
-		for (var i = 0; i < keys.length - 1; ++i) {
-	       if (!scope || !BetaJS.Types.is_object(scope))
-	    	   return;
-	       scope = scope[keys[i]];
-	    }
-		delete scope[keys[keys.length - 1]];
-	},
-	
-	touch: function (key, scope) {
-		if (!key)
-			return scope;
-		var keys = key.split(".");
-		for (var i = 0; i < keys.length; ++i) {
-			if (!(keys[i] in scope) || !BetaJS.Types.is_object(scope))
-				scope[keys[i]] = {};
-	       scope = scope[keys[i]];
-	    }
-		return scope[keys[keys.length - 1]];
-	}
-	
-};
-
-BetaJS.Class.extend("BetaJS.Collections.Collection", [
-	BetaJS.Events.EventsMixin, {
-		
-	constructor: function (options) {
-		this._inherited(BetaJS.Collections.Collection, "constructor");
-		options = options || {};
-		this.__indices = {};
-		if (options.indices)
-			BetaJS.Objs.iter(options.indices, this.add_secondary_index, this);
-		var list_options = {};
-		if ("compare" in options)
-			list_options["compare"] = options["compare"];
-		list_options.get_ident = BetaJS.Functions.as_method(this.get_ident, this);
-		this.__data = new BetaJS.Lists.ArrayList([], list_options);
-		var self = this;
-		this.__data._ident_changed = function (object, index) {
-			self._index_changed(object, index);
-		};
-		this.__data._re_indexed = function (object) {
-			self._re_indexed(object);
-		};
-		this.__data._sorted = function () {
-			self._sorted();
-		};
-		if ("objects" in options)
-			this.add_objects(options["objects"]);
-	},
-	
-	add_secondary_index: function (key) {
-		this.__indices[key] = {};
-		this.iterate(function (object) {
-			this.__indices[key][object.get(key)] = object;
-		}, this);
-	},
-	
-	get_by_secondary_index: function (key, value) {
-		return this.__indices[key][value];
-	},
-	
-	get_ident: function (obj) {
-		return BetaJS.Ids.objectId(obj);
-	},
-	
-	set_compare: function (compare) {
-		this.__data.set_compare(compare);
-	},
-	
-	get_compare: function () {
-		this.__data.get_compare();
-	},
-
-	destroy: function () {
-		this.__data.iterate(function (object) {
-			if ("off" in object)
-				object.off(null, null, this);
-		}, this);
-		this.__data.destroy();
-		this.trigger("destroy");
-		this._inherited(BetaJS.Collections.Collection, "destroy");
-	},
-	
-	count: function () {
-		return this.__data.count();
-	},
-	
-	_index_changed: function (object, index) {
-		this.trigger("index", object, index);
-	},
-	
-	_re_indexed: function (object) {
-		this.trigger("reindexed", object);
-	},
-	
-	_sorted: function () {
-		this.trigger("sorted");
-	},
-	
-	_object_changed: function (object, key, value) {
-		this.trigger("update");
-		this.trigger("change", object, key, value);
-		this.trigger("change:" + key, object, value);
-		this.__data.re_index(this.getIndex(object));
-	},
-	
-	add: function (object) {
-		if (!BetaJS.Class.is_class_instance(object))
-			object = new BetaJS.Properties.Properties(object);
-		if (this.exists(object))
-			return null;
-		var ident = this.__data.add(object);
-		if (ident !== null) {
-			BetaJS.Objs.iter(this.__indices, function (entry, key) {
-				entry[object.get(key)] = object;
-			}, this);
-			this.trigger("add", object);
-			this.trigger("update");
-			if ("on" in object)
-				object.on("change", function (key, value, oldvalue) {
-					this._object_changed(object, key, value, oldvalue);
+			constructor: function (objects, methods) {
+				inherited.constructor.call(this);
+				Objs.iter(methods, function (method) {
+					this[method] = function () {
+						var args = arguments;
+						Objs.iter(objects, function (object) {
+							object[method].apply(object, args);
+						}, this);
+						return this;
+					};
 				}, this);
-		}
-		return ident;
-	},
-	
-	add_objects: function (objects) {
-		var count = 0;
-		BetaJS.Objs.iter(objects, function (object) {
-			if (this.add(object))
-				count++;
-		}, this);		
-		return count;
-	},
-	
-	exists: function (object) {
-		return this.__data.exists(object);
-	},
-	
-	remove: function (object) {
-		if (!this.exists(object))
-			return null;
-		BetaJS.Objs.iter(this.__indices, function (entry, key) {
-			delete entry[object.get(key)];
-		}, this);
-		this.trigger("remove", object);
-		this.trigger("update");
-		var result = this.__data.remove(object);
-		if ("off" in object)
-			object.off(null, null, this);
-		return result;
-	},
-	
-	getByIndex: function (index) {
-		return this.__data.get(index);
-	},
-	
-	getById: function (id) {
-		return this.__data.get(this.__data.ident_by_id(id));
-	},
-	
-	getIndex: function (object) {
-		return this.__data.get_ident(object);
-	},
-	
-	iterate: function (cb, context) {
-		this.__data.iterate(cb, context);
-	},
-	
-	iterator: function () {
-		return BetaJS.Iterators.ArrayIterator.byIterate(this.iterate, this);
-	},
-	
-	clear: function () {
-		this.iterate(function (obj) {
-			this.remove(obj);
-		}, this);
-	}
-		
-}]);
-
-
-
-
-BetaJS.Collections.Collection.extend("BetaJS.Collections.FilteredCollection", {
-	
-	constructor: function (parent, options) {
-		this.__parent = parent;
-		options = options || {};
-		delete options["objects"];
-		options.compare = options.compare || parent.get_compare();
-		this._inherited(BetaJS.Collections.FilteredCollection, "constructor", options);
-		if ("filter" in options)
-			this.filter = options["filter"];
-		this.__parent.iterate(function (object) {
-			this.add(object);
-			return true;
-		}, this);
-		this.__parent.on("add", this.add, this);
-		this.__parent.on("remove", this.remove, this);
-	},
-	
-	filter: function (object) {
-		return true;
-	},
-	
-	_object_changed: function (object, key, value) {
-		this._inherited(BetaJS.Collections.FilteredCollection, "_object_changed", object, key, value);
-		if (!this.filter(object))
-			this.__selfRemove(object);
-	},
-	
-	destroy: function () {
-		this.__parent.off(null, null, this);
-		this._inherited(BetaJS.Collections.FilteredCollection, "destroy");
-	},
-	
-	__selfAdd: function (object) {
-		return this._inherited(BetaJS.Collections.FilteredCollection, "add", object);
-	},
-	
-	add: function (object) {
-		if (this.exists(object) || !this.filter(object))
-			return null;
-		var id = this.__selfAdd(object);
-		this.__parent.add(object);
-		return id;
-	},
-	
-	__selfRemove: function (object) {
-		return this._inherited(BetaJS.Collections.FilteredCollection, "remove", object);
-	},
-
-	remove: function (object) {
-		if (!this.exists(object))
-			return null;
-		var result = this.__selfRemove(object);
-		if (!result)
-			return null;
-		return this.__parent.remove(object);
-	}
-	
-});
-
-BetaJS.Comparators = {
-	
-	byObject: function (object) {
-		return function (left, right) {
-			for (key in object) {
-				var c = 0;
-				if (BetaJS.Properties.Properties.is_class_instance(left) && BetaJS.Properties.Properties.is_class_instance(right))
-					c = BetaJS.Comparators.byValue(left.get(key) || null, right.get(key) || null);
-				else
-					c = BetaJS.Comparators.byValue(left[key] || null, right[key] || null);
-				if (c !== 0)
-					return c * object[key];
 			}
-			return 0;
+			
 		};
-	},
-	
-	byValue: function (a, b) {
-		if (BetaJS.Types.is_string(a))
-			return a.localeCompare(b);
-		if (a < b)
-			return -1;
-		if (a > b)
-			return 1;
-		return 0;
-	},
-	
-	listEqual: function (a, b) {
-		if (BetaJS.Types.is_array(a) && BetaJS.Types.is_array(b)) {
-			if (a.length != b.length)
-				return false;
-			for (var i = 0; i < a.length; ++i) {
-				if (a[i] !== b[i])
-					return false;
-			}
-			return true;
-		} else if (BetaJS.Types.is_object(a) && BetaJS.Types.is_object(b)) {
-			for (var key in a) {
-				if (b[key] !== a[key])
-					return false;
-			}
-			for (key in b) {
-				if (!(key in a))
-					return false;
-			}
-			return true;
-		} else
-			return false;
-	}
-		
-};
-
-BetaJS.Sort = {
-
-	sort_object : function(object, f) {
-		var a = [];
-		for (var key in object)
-			a.push({
-				key : key,
-				value : object[key]
-			});
-		a.sort(function (x, y) {
-			return f(x.key, y.key, x.value, y.value);
-		});
-		var o = {};
-		for (var i = 0; i < a.length; ++i)
-			o[a[i].key] = a[i].value;
-		return o;
-	},
-	
-	deep_sort: function (object, f) {
-		f = f || BetaJS.Comparators.byValue;
-		if (BetaJS.Types.is_array(object)) {
-			for (var i = 0; i < object.length; ++i)
-				object[i] = this.deep_sort(object[i], f);
-			return object.sort(f);
-		} else if (BetaJS.Types.is_object(object)) {
-			for (var key in object)
-				object[key] = this.deep_sort(object[key], f);
-			return this.sort_object(object, f);
-		} else
-			return object;
-	},
-
-	dependency_sort : function(items, identifier, before, after) {
-		var identifierf = BetaJS.Types.is_string(identifier) ? function(obj) {
-			return obj[identifier];
-		} : identifier;
-		var beforef = BetaJS.Types.is_string(before) ? function(obj) {
-			return obj[before];
-		} : before;
-		var afterf = BetaJS.Types.is_string(after) ? function(obj) {
-			return obj[after];
-		} : after;
-		var n = items.length;
-		var data = [];
-		var identifier_to_index = {};
-		var todo = {};
-		var i = null;
-		for ( i = 0; i < n; ++i) {
-			todo[i] = true;
-			var ident = identifierf(items[i], i);
-			identifier_to_index[ident] = i;
-			data.push({
-				before : {},
-				after : {}
-			});
-		}
-		for ( i = 0; i < n; ++i) {
-			BetaJS.Objs.iter(beforef(items[i], i) || [], function(before) {
-				var before_index = identifier_to_index[before];
-				if (BetaJS.Types.is_defined(before_index)) {
-					data[i].before[before_index] = true;
-					data[before_index].after[i] = true;
-				}
-			});
-			BetaJS.Objs.iter(afterf(items[i]) || [], function(after) {
-				var after_index = identifier_to_index[after];
-				if (BetaJS.Types.is_defined(after_index)) {
-					data[i].after[after_index] = true;
-					data[after_index].before[i] = true;
-				}
-			});
-		}
-		var result = [];
-		while (!BetaJS.Types.is_empty(todo)) {
-			for (i in todo) {
-				if (BetaJS.Types.is_empty(data[i].after)) {
-					delete todo[i];
-					result.push(items[i]);
-					for (bef in data[i].before)
-					delete data[bef].after[i];
-				}
-			}
-		}
-		return result;
-	}
-};
-
-BetaJS.Class.extend("BetaJS.Timers.Timer", {
-	
-	/*
-	 * int delay (mandatory): number of milliseconds until it fires
-	 * bool once (optional, default false): should it fire infinitely often
-	 * func fire (optional): will be fired
-	 * object context (optional): for fire
-	 * bool start (optional, default true): should it start immediately
-	 * 
-	 */
-	constructor: function (options) {
-		this._inherited(BetaJS.Timers.Timer, "constructor");
-		options = BetaJS.Objs.extend({
-			once: false,
-			start: true,
-			fire: null,
-			context: this,
-			destroy_on_fire: false
-		}, options);
-		this.__delay = options.delay;
-		this.__destroy_on_fire = options.destroy_on_fire;
-		this.__once = options.once;
-		this.__fire = options.fire;
-		this.__context = options.context;
-		this.__started = false;
-		if (options.start)
-			this.start();
-	},
-	
-	destroy: function () {
-		this.stop();
-		this._inherited(BetaJS.Timers.Timer, "destroy");
-	},
-	
-	fire: function () {
-		if (this.__once)
-			this.__started = false;
-		if (this.__fire)
-			this.__fire.apply(this.__context, [this]);
-		if (this.__destroy_on_fire)
-			this.destroy();
-	},
-	
-	stop: function () {
-		if (!this.__started)
-			return;
-		if (this.__once)
-			clearTimeout(this.__timer);
-		else
-			clearInterval(this.__timer);
-		this.__started = false;
-	},
-	
-	start: function () {
-		if (this.__started)
-			return;
-		var self = this;
-		if (this.__once)
-			this.__timer = setTimeout(function () {
-				self.fire();
-			}, this.__delay);
-		else
-			this.__timer = setInterval(function () {
-				self.fire();
-			}, this.__delay);
-		this.__started = true;
-	},
-	
-	restart: function () {
-		this.stop();
-		this.start();
-	}
-	
+	});
 });
+
+
+Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "module:Functions"], function (Class, Types, Functions, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (classes) {
+				inherited.constructor.call(this);
+				this._classes = classes || {};
+			},
+			
+			register: function (key, cls) {
+				this._classes[key] = cls;
+			},
+			
+			get: function (key) {
+				return Types.is_object(key) ? key : this._classes[key];
+			},
+			
+			create: function (key) {
+				var cons = Functions.newClassFunc(this.get(key));
+				return cons.apply(this, Functions.getArguments(arguments, 1));
+			}	
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Classes.ObjectIdScopeMixin", function () {
+	return {
+
+		__objects: {},
+
+	    get: function (id) {
+	        return this.__objects[id];
+	    }
+
+	};
+});	
+	
+		
+Scoped.define("module:Classes.ObjectIdScope", ["module:Class", "module:Classes.ObjectIdScopeMixin"], function (Class, Mixin, scoped) {
+	return Class.extend({scoped: scoped}, Mixin, {
+		singleton: function () {
+			if (!this.__singleton)
+				this.__singleton = new this();
+			return this.__singleton;
+		}
+	});
+});
+
+
+Scoped.define("module:Classes.ObjectIdMixin", ["module:Classes.ObjectIdScope", "module:Objs", "module:Ids"], function (ObjectIdScope, Objs, Ids) {
+	return {
+	
+	    _notifications: {
+	        construct: "__register_object_id",
+	        destroy: "__unregister_object_id"
+	    },
+	
+	    __object_id_scope: function () {
+	        if (this.object_id_scope)
+	            return this.object_id_scope;
+	        return ObjectIdScope.singleton();
+	    },
+	
+	    __register_object_id: function () {
+	        var scope = this.__object_id_scope();
+	        scope.__objects[Ids.objectId(this)] = this;
+	    },
+	
+	    __unregister_object_id: function () {
+	        var scope = this.__object_id_scope();
+	        delete scope.__objects[Ids.objectId(this)];
+	    }
+	
+	};
+});
+Scoped.define("module:Collections.Collection", [
+	    "module:Class",
+	    "module:Events.EventsMixin",
+	    "module:Objs",
+	    "module:Functions",
+	    "module:Lists",
+	    "module:Ids",
+	    "module:Properties.Properties",
+	    "module:Iterators.ArrayIterator"
+	], function (Class, EventsMixin, Objs, Functions, Lists, Ids, Properties, ArrayIterator, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		return {
+
+			constructor : function(options) {
+				inherited.constructor.call(this);
+				options = options || {};
+				this.__indices = {};
+				if (options.indices)
+					Objs.iter(options.indices, this.add_secondary_index, this);
+				var list_options = {};
+				if ("compare" in options)
+					list_options["compare"] = options["compare"];
+				list_options.get_ident = Functions.as_method(this.get_ident, this);
+				this.__data = new Lists.ArrayList([], list_options);
+				var self = this;
+				this.__data._ident_changed = function (object, index) {
+					self._index_changed(object, index);
+				};
+				this.__data._re_indexed = function (object) {
+					self._re_indexed(object);
+				};
+				this.__data._sorted = function () {
+					self._sorted();
+				};
+				if ("objects" in options)
+					this.add_objects(options["objects"]);
+			},
+			
+			add_secondary_index: function (key) {
+				this.__indices[key] = {};
+				this.iterate(function (object) {
+					this.__indices[key][object.get(key)] = object;
+				}, this);
+			},
+			
+			get_by_secondary_index: function (key, value) {
+				return this.__indices[key][value];
+			},
+			
+			get_ident: function (obj) {
+				return Ids.objectId(obj);
+			},
+			
+			set_compare: function (compare) {
+				this.__data.set_compare(compare);
+			},
+			
+			get_compare: function () {
+				this.__data.get_compare();
+			},
+		
+			destroy: function () {
+				this.__data.iterate(function (object) {
+					if ("off" in object)
+						object.off(null, null, this);
+				}, this);
+				this.__data.destroy();
+				this.trigger("destroy");
+				inherited.destroy.call(this);
+			},
+			
+			count: function () {
+				return this.__data.count();
+			},
+			
+			_index_changed: function (object, index) {
+				this.trigger("index", object, index);
+			},
+			
+			_re_indexed: function (object) {
+				this.trigger("reindexed", object);
+			},
+			
+			_sorted: function () {
+				this.trigger("sorted");
+			},
+			
+			_object_changed: function (object, key, value) {
+				this.trigger("update");
+				this.trigger("change", object, key, value);
+				this.trigger("change:" + key, object, value);
+				this.__data.re_index(this.getIndex(object));
+			},
+			
+			add: function (object) {
+				if (!Class.is_class_instance(object))
+					object = new Properties(object);
+				if (this.exists(object))
+					return null;
+				var ident = this.__data.add(object);
+				if (ident !== null) {
+					Objs.iter(this.__indices, function (entry, key) {
+						entry[object.get(key)] = object;
+					}, this);
+					this.trigger("add", object);
+					this.trigger("update");
+					if ("on" in object)
+						object.on("change", function (key, value, oldvalue) {
+							this._object_changed(object, key, value, oldvalue);
+						}, this);
+				}
+				return ident;
+			},
+			
+			add_objects: function (objects) {
+				var count = 0;
+				Objs.iter(objects, function (object) {
+					if (this.add(object))
+						count++;
+				}, this);		
+				return count;
+			},
+			
+			exists: function (object) {
+				return this.__data.exists(object);
+			},
+			
+			remove: function (object) {
+				if (!this.exists(object))
+					return null;
+				Objs.iter(this.__indices, function (entry, key) {
+					delete entry[object.get(key)];
+				}, this);
+				this.trigger("remove", object);
+				this.trigger("update");
+				var result = this.__data.remove(object);
+				if ("off" in object)
+					object.off(null, null, this);
+				return result;
+			},
+			
+			getByIndex: function (index) {
+				return this.__data.get(index);
+			},
+			
+			getById: function (id) {
+				return this.__data.get(this.__data.ident_by_id(id));
+			},
+			
+			getIndex: function (object) {
+				return this.__data.get_ident(object);
+			},
+			
+			iterate: function (cb, context) {
+				this.__data.iterate(cb, context);
+			},
+			
+			iterator: function () {
+				return ArrayIterator.byIterate(this.iterate, this);
+			},
+			
+			clear: function () {
+				this.iterate(function (obj) {
+					this.remove(obj);
+				}, this);
+			}
+			
+		};
+	}]);
+});
+
+
+Scoped.define("module:Collections.FilteredCollection", [
+	    "module:Collections.Collection"
+	], function (Collection, scoped) {
+	return Collection.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor : function(parent, options) {
+				this.__parent = parent;
+				options = options || {};
+				delete options["objects"];
+				options.compare = options.compare || parent.get_compare();
+				inherited.constructor.call(this, options);
+				if ("filter" in options)
+					this.filter = options["filter"];
+				this.__parent.iterate(function (object) {
+					this.add(object);
+					return true;
+				}, this);
+				this.__parent.on("add", this.add, this);
+				this.__parent.on("remove", this.remove, this);
+			},
+			
+			filter: function (object) {
+				return true;
+			},
+			
+			_object_changed: function (object, key, value) {
+				inherited._object_changed.call(this, object, key, value);
+				if (!this.filter(object))
+					this.__selfRemove(object);
+			},
+			
+			destroy: function () {
+				this.__parent.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+			
+			__selfAdd: function (object) {
+				return inherited.add.call(this, object);
+			},
+			
+			add: function (object) {
+				if (this.exists(object) || !this.filter(object))
+					return null;
+				var id = this.__selfAdd(object);
+				this.__parent.add(object);
+				return id;
+			},
+			
+			__selfRemove: function (object) {
+				return inherited.remove.call(this, object);
+			},
+		
+			remove: function (object) {
+				if (!this.exists(object))
+					return null;
+				var result = this.__selfRemove(object);
+				if (!result)
+					return null;
+				return this.__parent.remove(object);
+			}
+			
+		};	
+	});
+});
+
+Scoped.define("module:Channels.Sender", ["module:Class", "module:Events.EventsMixin"], function (Class, EventsMixin, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, {
+		
+		send: function (message, data) {
+			this.trigger("send", message, data);
+			this._send(message, data);
+		},
+		
+		_send: function (message, data) {}
+	
+	}]);
+});
+
+
+Scoped.define("module:Channels.Receiver", ["module:Class", "module:Events.EventsMixin"], function (Class, EventsMixin, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, {
+			
+		_receive: function (message, data) {
+			this.trigger("receive", message, data);
+			this.trigger("receive:" + message, data);
+		}
+	
+	}]);
+});
+
+
+Scoped.define("module:Channels.ReceiverSender", ["module:Channels.Sender"], function (Sender, scoped) {
+	return Sender.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (receiver) {
+				inherited.constructor.call(this);
+				this.__receiver = receiver;
+			},
+			
+			_send: function (message, data) {
+				this.__receiver._receive(message, data);
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Channels.SenderMultiplexer", ["module:Channels.Sender"], function (Sender, scoped) {
+	return Sender.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (sender, prefix) {
+				inherited.constructor.call(this);
+				this.__sender = sender;
+				this.__prefix = prefix;
+			},
+			
+			_send: function (message, data) {
+				this.__sender.send(this.__prefix + ":" + message, data);
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Channels.ReceiverMultiplexer", ["module:Channels.Receiver", "module:Strings"], function (Receiver, Strings, scoped) {
+	return Receiver.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (receiver, prefix) {
+				inherited.constructor.call(this);
+				this.__receiver = receiver;
+				this.__prefix = prefix;
+				this.__receiver.on("receive", function (message, data) {
+					if (Strings.starts_with(message, this.__prefix + ":"))
+						this._receive(Strings.strip_start(message, this.__prefix + ":"), data);
+				}, this);
+			}
+		
+		};
+	});
+});
+
+
+
+Scoped.define("module:Channels.TransportChannel", [
+	    "module:Class",
+	    "module:Objs",
+	    "module:Timers.Timer",
+	    "module:Time",
+	    "module:Promise"
+	], function (Class, Objs, Timer, Time, Promise, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+					
+			constructor: function (sender, receiver, options) {
+				inherited.constructor.call(this);
+				this.__sender = sender;
+				this.__receiver = receiver;
+				this.__options = Objs.extend(options, {
+					timeout: 10000,
+					tries: 1,
+					timer: 500
+				});
+				this.__receiver.on("receive:send", function (data) {
+					this.__reply(data);
+				}, this);
+				this.__receiver.on("receive:reply", function (data) {
+					this.__complete(data);
+				}, this);
+				this.__sent_id = 0;
+				this.__sent = {};
+				this.__received = {};
+				this.__timer = this._auto_destroy(new Timer({
+					delay: this.__options.timer,
+					context: this,
+					fire: this.__maintenance
+				}));
+			},
+			
+			// Returns Promise
+			_reply: function (message, data) {},
+			
+			send: function (message, data, options) {
+				var promise = Promise.create();
+				options = options || {};
+				if (options.stateless) {
+					this.__sender.send("send", {
+						message: message,
+						data: data,
+						stateless: true
+					});
+					promise.asyncSuccess(true);
+				} else {
+					this.__sent_id++;
+					this.__sent[this.__sent_id] = {
+						message: message,
+						data: data,
+						tries: 1,
+						time: Time.now(),
+						id: this.__sent_id,
+						promise: promise
+					};
+					this.__sender.send("send", {
+						message: message,
+						data: data,
+						id: this.__sent_id
+					});
+				}
+				return promise;
+			},
+			
+			__reply: function (data) {
+				if (data.stateless) {
+					this._reply(data.message, data.data);
+					return;
+				}
+				if (!this.__received[data.id]) {
+					this.__received[data.id] = data;
+					this.__received[data.id].time = Time.now();
+					this.__received[data.id].returned = false;
+					this.__received[data.id].success = false;
+					this._reply(data.message, data.data).success(function (result) {
+						this.__received[data.id].reply = result;
+						this.__received[data.id].success = true;
+					}, this).error(function (error) {
+						this.__received[data.id].reply = error;
+					}, this).callback(function () {
+						this.__received[data.id].returned = true;
+						this.__sender.send("reply", {
+							id: data.id,
+							reply: data.reply,
+							success: data.success
+						});
+					}, this);			  
+				} else if (this.__received[data.id].returned) {
+					this.__sender.send("reply", {
+						id: data.id,
+						reply: data.reply,
+						success: data.success
+					});
+				}
+			},
+			
+			__complete: function (data) {
+				if (this.__sent[data.id]) {
+					var promise = this.__sent[data.id].promise;
+					promise[data.success ? "asyncSuccess" : "asyncError"](data.reply);
+					delete this.__sent[data.id];
+				}
+			},
+			
+			__maintenance: function () {
+				var now = Time.now();
+				for (var received_key in this.__received) {
+					var received = this.__received[received_key];
+					if (received.time + this.__options.tries * this.__options.timeout <= now)
+						delete this.__received[received_key];
+				}
+				for (var sent_key in this.__sent) {
+					var sent = this.__sent[sent_key];
+					if (sent.time + sent.tries * this.__options.timeout <= now) {
+						if (sent.tries < this.__options.tries) {
+							sent.tries++;
+							this.__sender.send("send", {
+								message: sent.message,
+								data: sent.data,
+								id: sent.id
+							});
+						} else {
+							sent.promise.asyncError({
+								message: sent.message,
+								data: sent.data
+							});
+							delete this.__sent[sent_key];
+						}
+					}
+				}
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:KeyValue.KeyValueStore", ["module:Class", "module:Events.EventsMixin"], function (Class, EventsMixin, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, {
+
+		mem: function (key) {
+			return this._mem(key);
+		},
+		
+		get: function (key) {
+			return this._get(key);
+		},
+		
+		set: function (key, value) {
+			this._set(key, value);
+			this.trigger("change:" + key, value);
+		},
+		
+		remove: function (key) {
+			this._remove(key);
+		}
+	
+	}]);
+});
+
+
+Scoped.define("module:KeyValue.PrefixKeyValueStore", ["module:KeyValue.KeyValueStore"], function (KeyValueStore, scoped) {
+	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (kv, prefix) {
+				inherited.constructor.call(this);
+				this.__kv = kv;
+				this.__prefix = prefix;
+			},
+			
+			_mem: function (key) {
+				return this.__kv.mem(this.__prefix + key);
+			},
+			
+			_get: function (key) {
+				return this.__kv.get(this.__prefix + key);
+			},
+			
+			_set: function (key, value) {
+				this.__kv.set(this.__prefix + key, value);
+			},
+			
+			_remove: function (key) {
+				this.__kv.remove(this.__prefix + key);
+			}
+	
+		};
+	});
+});
+
+
+Scoped.define("module:KeyValue.MemoryKeyValueStore", ["module:KeyValue.KeyValueStore", "module:Objs"], function (KeyValueStore, Objs, scoped) {
+	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function (data, clone) {
+				inherited.constructor.call(this);
+				this.__data = Objs.clone(data, clone ? 1 : 0);
+			},
+			
+			_mem: function (key) {
+				return key in this.__data;
+			},
+			
+			_get: function (key) {
+				return this.__data[key];
+			},
+			
+			_set: function (key, value) {
+				this.__data[key] = value;
+			},
+			
+			_remove: function (key) {
+				delete this.__data[key];
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:KeyValue.LocalKeyValueStore", ["module:KeyValue.MemoryKeyValueStore"], function (MemoryKeyValueStore, scoped) {
+	return MemoryKeyValueStore.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function () {
+				inherited.constructor.call(this, localStorage, false);
+			}
+	
+		};
+	});
+});
+
+
+Scoped.define("module:KeyValue.DefaultKeyValueStore", ["module:KeyValue.KeyValueStore"], function (KeyValueStore, scoped) {
+	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (kv, def) {
+				inherited.constructor.call(this);
+				this.__kv = kv;
+				this.__def = def;
+			},
+			
+			_mem: function (key) {
+				return this.__kv.mem(key) || this.__def.mem(key);
+			},
+			
+			_get: function (key) {
+				return this.__kv.mem(key) ? this.__kv.get(key) : this.__def.get(key);
+			},
+			
+			_set: function (key, value) {
+				this.__kv.set(key, value);
+			},
+			
+			_remove: function (key) {
+				this.__kv.remove(key);
+			}
+
+		};
+	});
+});
+
+Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+	return Exception.extend({scoped: scoped}, function (inherited) {
+		return {
+		
+			constructor: function (status_code, status_text, data) {
+				inherited.constructor.call(this, status_code + ": " + status_text);
+				this.__status_code = status_code;
+				this.__status_text = status_text;
+				this.__data = data;
+			},
+			
+			status_code: function () {
+				return this.__status_code;
+			},
+			
+			status_text: function () {
+				return this.__status_text;
+			},
+			
+			data: function () {
+				return this.__data;
+			},
+			
+			json: function () {
+				var obj = inherited.json.call(this);
+				obj.data = this.data();
+				return obj;
+			}
+		
+		};
+	});
+});
+
+
 /*
- * Inspired by Underscore's Templating Engine
- * (which itself is inspired by John Resig's implementation)
+ * <ul>
+ *  <li>uri: target uri</li>
+ *  <li>method: get, post, ...</li>
+ *  <li>data: data as JSON to be passed with the request</li>
+ * </ul>
+ * 
  */
 
-BetaJS.Templates = {
-	
-	tokenize: function (s) {
-		// Already tokenized?
-		if (BetaJS.Types.is_array(s))
-			return s;
-		var tokens = [];
-		var index = 0;
-		s.replace(BetaJS.Templates.SYNTAX_REGEX(), function(match, expr, esc, code, offset) {
-			if (index < offset) 
-				tokens.push({
-					type: BetaJS.Templates.TOKEN_STRING,
-					data: BetaJS.Strings.js_escape(s.slice(index, offset))
-				});
-			if (code)
-				tokens.push({type: BetaJS.Templates.TOKEN_CODE, data: code});
-			if (expr)
-				tokens.push({type: BetaJS.Templates.TOKEN_EXPR, data: expr});
-			if (esc)
-				tokens.push({type: BetaJS.Templates.TOKEN_ESC, data: esc});
-		    index = offset + match.length;
-		    return match;
-		});
-		return tokens;
-	},
-	
-	/*
-	 * options
-	 *  - start_index: token start index
-	 *  - end_index: token end index
-	 */
-	compile: function(source, options) {
-		if (BetaJS.Types.is_string(source))
-			source = this.tokenize(source);
-		options = options || {};
-		var start_index = options.start_index || 0;
-		var end_index = options.end_index || source.length;
-		var result = "__p+='";
-		for (var i = start_index; i < end_index; ++i) {
-			switch (source[i].type) {
-				case BetaJS.Templates.TOKEN_STRING:
-					result += source[i].data;
-					break;
-				case BetaJS.Templates.TOKEN_CODE:
-					result += "';\n" + source[i].data + "\n__p+='";
-					break;
-				case BetaJS.Templates.TOKEN_EXPR:
-					result += "'+\n((__t=(" + source[i].data + "))==null?'':__t)+\n'";
-					break;
-				case BetaJS.Templates.TOKEN_ESC:
-					result += "'+\n((__t=(" + source[i].data + "))==null?'':BetaJS.Strings.htmlentities(__t))+\n'";
-					break;
-				default:
-					break;
-			}	
-		}
-		result += "';\n";
-		result = 'with(obj||{}){\n' + result + '}\n';
-		result = "var __t,__p='',__j=Array.prototype.join," +
-		  "echo=function(){__p+=__j.call(arguments,'');};\n" +
-		  result + "return __p;\n";
-		var func = new Function('obj', result);
-		var func_call = function(data) {
-			return func.call(this, data);
-		};
-		func_call.source = 'function(obj){\n' + result + '}';
-		return func_call;
-	}
+Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module:Net.AjaxException"], function (Class, Objs, AjaxException, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				this.__options = Objs.extend({
+					"method": "GET",
+					"data": {}
+				}, options);
+			},
+			
+			syncCall: function (options) {
+				try {
+					return this._syncCall(Objs.extend(Objs.clone(this.__options, 1), options));
+				} catch (e) {
+					throw AjaxException.ensure(e);
+				}
+			},
+			
+			asyncCall: function (options) {
+				return this._asyncCall(Objs.extend(Objs.clone(this.__options, 1), options));
+			},
+			
+			_syncCall: function (options) {
+				throw "Unsupported";
+			},
 		
-};
-
-BetaJS.Templates.SYNTAX = {
-	OPEN: "{%",
-	CLOSE: "%}",
-	MODIFIER_CODE: "",
-	MODIFIER_EXPR: "=",
-	MODIFIER_ESC: "-"
-};
-
-BetaJS.Templates.SYNTAX_REGEX = function () {
-	var syntax = BetaJS.Templates.SYNTAX;
-	if (!BetaJS.Templates.SYNTAX_REGEX_CACHED)
-		BetaJS.Templates.SYNTAX_REGEX_CACHED = new RegExp(
-			syntax.OPEN + syntax.MODIFIER_EXPR + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_ESC + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			syntax.OPEN + syntax.MODIFIER_CODE + "([\\s\\S]+?)" + syntax.CLOSE + "|" +
-			"$",
-		'g');
-	return BetaJS.Templates.SYNTAX_REGEX_CACHED;
-};
-
-BetaJS.Templates.TOKEN_STRING = 1;
-BetaJS.Templates.TOKEN_CODE = 2;
-BetaJS.Templates.TOKEN_EXPR = 3;
-BetaJS.Templates.TOKEN_ESC = 4;
-
-
-
-BetaJS.Class.extend("BetaJS.Templates.Template", {
-	
-	constructor: function (template_string) {
-		this._inherited(BetaJS.Templates.Template, "constructor");
-		this.__tokens = BetaJS.Templates.tokenize(template_string);
-		this.__compiled = BetaJS.Templates.compile(this.__tokens);
-	},
-	
-	evaluate: function (obj) {
-		return this.__compiled.apply(this, [obj]);
-	}
-	
+			_asyncCall: function (options) {
+				throw "Unsupported";
+			}
+			
+		};
+	});
 });
+Scoped.define("module:Net.SocketSenderChannel", ["module:Channels.Sender", "module:Types"], function (Sender, Types, scoped) {
+	return Sender.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (socket, message, ready) {
+				inherited.constructor.call(this);
+				this.__socket = socket;
+				this.__message = message;
+				this.__ready = Types.is_defined(ready) ? ready : true;
+				this.__cache = [];
+			},
+			
+			_send: function (message, data) {
+				if (this.__ready) {
+					this.__socket.emit(this.__message, {
+						message: message,
+						data: data
+					});
+				} else {
+					this.__cache.push({
+						message: message,
+						data: data
+					});
+				}
+			},
+			
+			ready: function () {
+				this.__ready = true;
+				for (var i = 0; i < this.__cache.length; ++i)
+					this._send(this.__cache[i].message, this.__cache[i].data);
+				this.__cache = [];
+			},
+			
+			unready: function () {
+			    this.__ready = false;
+			},
+			
+			socket: function () {
+			    if (arguments.length > 0)
+			        this.__socket = arguments[0];
+			    return this.__socket;
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Net.SocketReceiverChannel", ["module:Channels.Receiver"], function (Receiver, scoped) {
+	return Receiver.extend({scoped: scoped}, function (inherited) {
+		return {
+						
+			constructor: function (socket, message) {
+				inherited.constructor.call(this);
+				this.__message = message;
+				this.socket(socket);
+			},
+			
+		    socket: function () {
+		        if (arguments.length > 0) {
+		            this.__socket = arguments[0];
+		            if (this.__socket) {
+		                var self = this;
+		                this.__socket.on(this.__message, function (data) {
+		                    self._receive(data.message, data.data);
+		                });
+		            }
+		        }
+		        return this.__socket;
+		    }
+	
+		};
+	});
+});
+
+Scoped.define("module:Net.HttpHeader", function () {
+	return {
+		
+		HTTP_STATUS_OK : 200,
+		HTTP_STATUS_CREATED : 201,
+		HTTP_STATUS_PAYMENT_REQUIRED : 402,
+		HTTP_STATUS_FORBIDDEN : 403,
+		HTTP_STATUS_NOT_FOUND : 404,
+		HTTP_STATUS_PRECONDITION_FAILED : 412,
+		HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+		
+		format: function (code, prepend_code) {
+			var ret = "";
+			if (code == this.HTTP_STATUS_OK)
+				ret = "OK";
+			else if (code == this.HTTP_STATUS_CREATED)
+				ret = "Created";
+			else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
+				ret = "Payment Required";
+			else if (code == this.HTTP_STATUS_FORBIDDEN)
+				ret = "Forbidden";
+			else if (code == this.HTTP_STATUS_NOT_FOUND)
+				ret = "Not found";
+			else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
+				ret = "Precondition Failed";
+			else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+				ret = "Internal Server Error";
+			else
+				ret = "Other Error";
+			return prepend_code ? (code + " " + ret) : ret;
+		}
+		
+	};
+});
+Scoped.define("module:Net.Uri", ["module:Objs", "module:Types"], function (Objs, Types) {
+	return {
+		
+		build: function (obj) {
+			var s = "";
+			if (obj.username)
+				s += obj.username + ":";
+			if (obj.password)
+				s += obj.password + "@";
+			s += obj.server;
+			if (obj.port)
+				s += ":" + obj.port;
+			if (obj.path)
+				s += "/" + obj.path;
+			return s;
+		},
+		
+		encodeUriParams: function (arr, prefix) {
+			prefix = prefix || "";
+			var res = [];
+			Objs.iter(arr, function (value, key) {
+				if (Types.is_object(value))
+					res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
+				else
+					res.push(prefix + key + "=" + encodeURI(value));
+			}, this);
+			return res.join("&");
+		},
+		
+		appendUriParams: function (uri, arr, prefix) {
+			return Types.is_empty(arr) ? uri : (uri + (uri.indexOf("?") != -1 ? "&" : "?") + this.encodeUriParams(arr, prefix));
+		},
+		
+		// parseUri 1.2.2
+		// (c) Steven Levithan <stevenlevithan.com>
+		// MIT License
+	
+		parse: function (str, strict) {
+			var parser = strict ? this.__parse_strict_regex : this.__parse_loose_regex;
+			var m = parser.exec(str);
+			var uri = {};
+			for (var i = 0; i < this.__parse_key.length; ++i)
+				uri[this.__parse_key[i]] = m[i] || "";
+			uri.queryKey = {};
+			uri[this.__parse_key[12]].replace(this.__parse_key_parser, function ($0, $1, $2) {
+				if ($1) uri.queryKey[$1] = $2;
+			});
+	
+			return uri;
+		},
+		
+		__parse_strict_regex: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+		__parse_loose_regex: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/,
+		__parse_key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+		__parse_key_parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+	
+	};
+});	
 BetaJS.Class.extend("BetaJS.States.Host", [
     BetaJS.Events.EventsMixin,
     {
@@ -5142,465 +5999,115 @@ BetaJS.Class.extend("BetaJS.States.StateRouter", {
 	
 });
 
-BetaJS.Class.extend("BetaJS.Parser.Lexer", {
+/** @class */
+BetaJS.Scopes = {
 	
-	constructor: function (patterns) {
-		this._inherited(BetaJS.Parser.Lexer, "constructor");
-		this.__patterns = [];
-		BetaJS.Objs.iter(patterns, function (value, key) {
-			this.__patterns.push({
-				regex: new RegExp("^" + key, "m"),
-				data: BetaJS.Types.is_string(value) ? {token: value} : value
-			});
-		}, this);
+	/** Takes a string and returns the global object associated with it by name.
+     * 
+     * @param s string (example: "BetaJS")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example: BetaJS object)
+     */
+	base: function (s, base, initialize) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		if (base)
+			return base[s];
+		try {
+			if (window && window[s])
+				return window[s];
+		} catch (e) {}
+		try {
+			if (global && global[s])
+				return global[s];
+		} catch (e) {}
+		try {
+			if (module && module.exports)
+				return module.exports;
+		} catch (e) {}
+		if (!initialize)
+		    return null;
+        try {
+            if (window) {
+                window[s] = {};
+                return window[s];
+            }
+        } catch (e) {}
+        try {
+            if (global) {
+                global[s] = {};
+                return global[s];
+            }
+        } catch (e) {}
+        try {
+            if (module && module.exports) {
+                module.exports = {};
+                return module.exports;
+            }
+        } catch (e) {}
+        return null;
 	},
 	
-	lex: function (source) {
-		var result = [];
-		var head = "";
-		var tail = source;
-		while (tail) {
-			var match = null;
-			var data = null;
-			for (var i = 0; i < this.__patterns.length; ++i) {
-				match = this.__patterns[i].regex.exec(tail);
-				if (match) { 
-					data = BetaJS.Objs.clone(this.__patterns[i].data, 1);
-					break;
-				}
-			}
-			if (!match)
-				throw new BetaJS.Parser.LexerException(head, tail);
-			head += match[0];
-			tail = tail.substring(match[0].length);
-			if (!data)
-				continue;
-			for (var key in data) {
-				if (BetaJS.Types.is_string(data[key])) {
-					for (var j = 0; j < match.length; ++j)
-						data[key] = data[key].replace("$" + j, match[j]);
-				}
-			}
-			result.push(data);
+	/** Takes an object address string and returns the object associated with it.
+     * 
+     * @param s string (example: "BetaJS.Strings")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example BetaJS.Strings object)
+     */
+	resolve: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var a = s.split(".");			
+		var object = this.base(a[0], base);
+		for (var i = 1; i < a.length; ++i)
+			object = object[a[i]];
+		return object;
+	},
+	
+	/** Takes an object address string and returns the object associated with it.
+	 *  If the address does not exist, it will be created.
+     * 
+     * @param s string (example: "BetaJS.Strings.FooBar")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example BetaJS.Strings.FooBar object)
+     */
+	touch: function (s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var a = s.split(".");		
+		var object = this.base(a[0], base, true);
+		for (var i = 1; i < a.length; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
 		}
-		return result;
+		return object;
+	},
+	
+	/** Takes an object address string and overwrites it by a given object.
+	 *  If the address does not exist, it will be created.
+     * 
+     * @param obj object (example: {test: "foobar"})
+     * @param s string (example: "BetaJS.Strings.FooBar")
+     * @param base a global namespace base (optional, will autodetect the right one if not provided)
+     * @return global object (example BetaJS.Strings.FooBar object)
+     */
+	set: function (obj, s, base) {
+		if (!BetaJS.Types.is_string(s))
+			return s;
+		var a = s.split(".");			
+		var object = this.base(a[0], base, true);
+		for (var i = 1; i < a.length - 1; ++i) {
+			if (!(a[i] in object))
+				object[a[i]] = {};
+			object = object[a[i]];
+		}
+		if (a.length > 1)
+			object[a[a.length - 1]] = obj;
+		return obj;
 	}
 	
-});
-
-BetaJS.Exceptions.Exception.extend("BetaJS.Parser.LexerException", {
-	
-	constructor: function (head, tail) {
-		this._inherited(BetaJS.Parser.LexerException, "constructor", "Lexer error: Unrecognized identifier at " + head.length + ".");
-		this.__head = head;
-		this.__tail = tail;
-	}
-	
-});
-
-BetaJS.Trees = {};
-
-BetaJS.Trees.TreeNavigator = {
-	
-	nodeRoot: function () {},
-	nodeId: function (node) {},
-	nodeParent: function (node) {},
-	nodeChildren: function (node) {},
-	nodeWatch: function (node, func, context) {},
-	nodeUnwatch: function (node, func, context) {},
-	nodeData: function (node) {}
-		
 };
-
-
-BetaJS.Class.extend("BetaJS.Trees.TreeQueryEngine", {
-	
-	constructor: function (navigator) {
-		this._inherited(BetaJS.Trees.TreeQueryEngine, "constructor");
-		this.__navigator = navigator;
-		this.__lexer = this._auto_destroy(new BetaJS.Parser.Lexer({
-			"<\\+": {token: "Up"},
-			"<": {token: "Up", single: true},
-			">\\+": {token: "Down"},
-			">": {token: "Down", single: true},
-			"\\[\s*([a-zA-Z]+)\s*=\s*\'([^']*)\'\s*\\]": {token: "Selector", key: "$1", value: "$2"},
-			"\s": null
-		}));
-	},
-	
-	query: function (node, query) {
-		return new BetaJS.Trees.TreeQueryObject(this.__navigator, node, this.__lexer.lex(query));
-	}
-	
-});
-
-
-BetaJS.Class.extend("BetaJS.Trees.TreeQueryObject", [
-	BetaJS.Events.EventsMixin, {
-	
-	constructor: function (navigator, node, query) {
-		this._inherited(BetaJS.Trees.TreeQueryObject, "constructor");
-		this.__navigator = navigator;
-		this.__node = node;
-		this.__query = query;
-		this.__result = {};
-		this.__partials = {};
-		this.__register(node, 0, {});
-		this.__ids = 0;
-	},
-	
-	destroy: function () {
-		BetaJS.Objs.iter(this.__partials, function (partials) {
-			BetaJS.Objs.iter(partials.partials, function (partial) {
-				this.__navigator.nodeUnwatch(partials.node, null, partial);
-			}, this);			
-		}, this);
-		this._inherited(BetaJS.Trees.TreeQueryObject, "destroy");
-	},
-	
-	result: function () {
-		var result = [];
-		BetaJS.Objs.iter(this.__result, function (value) {
-			result.push(value.node);
-		});
-		return result;
-	},
-	
-	__register: function (node, index) {
-		var node_id = this.__navigator.nodeId(node);
-		if (!this.__partials[node_id]) {
-			this.__partials[node_id] = {
-				node: node,
-				partials: {}
-			};
-		}
-		var partials = this.__partials[node_id];
-		this.__ids++;
-		var partial = {
-			owner: partials,
-			id: this.__ids,
-			query_index_start: index,
-			query_index_next: index,
-			query_index_last: index,
-			partial_match: false,
-			partial_final: index >= this.__query.length,
-			partial_data: false,
-			partial_children: false,
-			partial_parent: false,
-			partial_star: false,
-			parent: null,
-			deps: {}
-		};
-		partials.partials[partial.id] = partial;
-		for (var i = partial.query_index_start; i < this.__query.length; ++i) {
-			if (this.__query[i].token == "Selector")
-				partial.partial_data = true;
-			else {
-				if (this.__query[i].token == "Up")
-					partial.partial_parent = true;
-				else if (this.__query[i].token == "Down")
-					partial.partial_children = true;
-				partial.partial_star = !this.__query[i].single;
-				if (!partial.partial_star)
-					partial.query_index_next = i + 1;
-				break;
-			}
-			partial.query_index_next = i + 1;
-			partial.partial_final = i + 1 == this.__query.length;
-		}
-		partial.query_index_last = partial.partial_star ? partial.query_index_next + 1 : partial.query_index_next;
-		var self = this;
-		this.__navigator.nodeWatch(node, function (action, node) {
-			if (action == "data" && partial.partial_data)
-				self.__update(partial);
-			if (action == "remove")
-				self.__unregisterPartial(partial);
-			if (action == "addChild" && partial.partial_children && partial.partial_match)
-				self.__addDependentPartial(partial, node);
-		}, partial);
-		this.__update(partial);
-		return partial;
-	},
-	
-	__unregisterPartial: function (partial) {
-		var owner = partial.owner;
-		var node = owner.node;
-		var node_id = this.__navigator.nodeId(node);
-		if (partial.partial_final && this.__result[node_id]) {
-			this.__result[node_id].count--;
-			if (this.__result[node_id].count <= 0) {
-				delete this.__result[node_id];
-				this.trigger("remove", node);
-				this.trigger("change");
-			}
-		}
-		BetaJS.Objs.iter(partial.deps, this.__unregisterPartial, this);
-		if (partial.parent)
-			delete partial.parent.deps[partial.id];
-		this.__navigator.nodeUnwatch(node, null, partial);
-		delete owner.partials[partial.id];
-		if (BetaJS.Types.is_empty(owner.partials))
-			delete this.__partials[node_id];
-	},
-	
-	__addDependentPartial: function (partial, node) {
-		var partials = [];
-		partials.push(this.__register(node, partial.query_index_next));
-		if (partial.partial_star)
-			partials.push(this.__register(node, partial.query_index_next + 1));
-		BetaJS.Objs.iter(partials, function (p) {
-			partial.deps[p.id] = p;
-			p.parent = partial;
-		}, this);
-	},
-	
-	__update: function (partial) {
-		var matching = true;
-		var node = partial.owner.node;
-		var node_id = this.__navigator.nodeId(node);
-		var node_data = this.__navigator.nodeData(node);
-		for (var i = partial.query_index_start; i < partial.query_index_last; ++i) {
-			var q = this.__query[i];
-			if (q.token != "Selector")
-				break;
-			if (node_data[q.key] != q.value) {
-				matching = false;
-				break;
-			}
-		}
-		if (matching == partial.partial_match)
-			return;
-		partial.partial_match = matching;
-		if (matching) {
-			if (partial.partial_final) {
-				if (!this.__result[node_id]) {
-					this.__result[node_id] = {
-						node: node,
-						count: 1
-					};
-					this.trigger("add", node);
-					this.trigger("change");
-				} else
-					this.__result[node_id].count++;
-			} else if (partial.partial_parent) {
-				this.__addDependentPartial(partial, this.__navigator.nodeParent(node));
-			} else if (partial.partial_children) {
-				BetaJS.Objs.iter(this.__navigator.nodeChildren(node), function (child) {
-					this.__addDependentPartial(partial, child);
-				}, this);
-			}
-		} else {
-			if (partial.partial_final) {
-				this.__result[node_id].count--;
-				if (this.__result[node_id].count <= 0) {
-					delete this.__result[node_id];
-					this.trigger("remove", node);
-					this.trigger("change");
-				}
-			}
-			BetaJS.Objs.iter(partial.deps, this.__unregisterPartial, this);
-		}
-	}
-	
-}]);
-
-BetaJS.Class.extend("BetaJS.Channels.Sender", [
-	BetaJS.Events.EventsMixin,
-	{
-	
-	send: function (message, data) {
-		this.trigger("send", message, data);
-		this._send(message, data);
-	},
-	
-	_send: function (message, data) {}
-	
-}]);
-
-BetaJS.Class.extend("BetaJS.Channels.Receiver", [
-	BetaJS.Events.EventsMixin,
-	{
-		
-	_receive: function (message, data) {
-		this.trigger("receive", message, data);
-		this.trigger("receive:" + message, data);
-	}
-	
-}]);
-
-
-BetaJS.Channels.Sender.extend("BetaJS.Channels.ReceiverSender", {
-	
-	constructor: function (receiver) {
-		this._inherited(BetaJS.Channels.ReceiverSender, "constructor");
-		this.__receiver = receiver;
-	},
-	
-	_send: function (message, data) {
-		this.__receiver._receive(message, data);
-	}
-	
-});
-
-BetaJS.Channels.Sender.extend("BetaJS.Channels.SenderMultiplexer", {
-	
-	constructor: function (sender, prefix) {
-		this._inherited(BetaJS.Channels.SenderMultiplexer, "constructor");
-		this.__sender = sender;
-		this.__prefix = prefix;
-	},
-	
-	_send: function (message, data) {
-		this.__sender.send(this.__prefix + ":" + message, data);
-	}
-	
-});
-
-BetaJS.Channels.Receiver.extend("BetaJS.Channels.ReceiverMultiplexer", {
-
-	constructor: function (receiver, prefix) {
-		this._inherited(BetaJS.Channels.ReceiverMultiplexer, "constructor");
-		this.__receiver = receiver;
-		this.__prefix = prefix;
-		this.__receiver.on("receive", function (message, data) {
-			if (BetaJS.Strings.starts_with(message, this.__prefix + ":")) {
-				this._receive(BetaJS.Strings.strip_start(message, this.__prefix + ":"), data);
-			}
-		}, this);
-	}
-		
-});
-
-
-
-BetaJS.Class.extend("BetaJS.Channels.TransportChannel", {
-	
-	constructor: function (sender, receiver, options) {
-		this._inherited(BetaJS.Channels.TransportChannel, "constructor");
-		this.__sender = sender;
-		this.__receiver = receiver;
-		this.__options = BetaJS.Objs.extend(options, {
-			timeout: 10000,
-			tries: 1,
-			timer: 500
-		});
-		this.__receiver.on("receive:send", function (data) {
-			this.__reply(data);
-		}, this);
-		this.__receiver.on("receive:reply", function (data) {
-			this.__complete(data);
-		}, this);
-		this.__sent_id = 0;
-		this.__sent = {};
-		this.__received = {};
-		this.__timer = this._auto_destroy(new BetaJS.Timers.Timer({
-			delay: this.__options.timer,
-			context: this,
-			fire: this.__maintenance
-		}));
-	},
-	
-	// Returns Promise
-	_reply: function (message, data) {},
-	
-	send: function (message, data, options) {
-		var promise = BetaJS.Promise.create();
-		options = options || {};
-		if (options.stateless) {
-			this.__sender.send("send", {
-				message: message,
-				data: data,
-				stateless: true
-			});
-			promise.asyncSuccess(true);
-		} else {
-			this.__sent_id++;
-			this.__sent[this.__sent_id] = {
-				message: message,
-				data: data,
-				tries: 1,
-				time: BetaJS.Time.now(),
-				id: this.__sent_id,
-				promise: promise
-			};
-			this.__sender.send("send", {
-				message: message,
-				data: data,
-				id: this.__sent_id
-			});
-		}
-		return promise;
-	},
-	
-	__reply: function (data) {
-		if (data.stateless) {
-			this._reply(data.message, data.data);
-			return;
-		}
-		if (!this.__received[data.id]) {
-			this.__received[data.id] = data;
-			this.__received[data.id].time = BetaJS.Time.now();
-			this.__received[data.id].returned = false;
-			this.__received[data.id].success = false;
-			this._reply(data.message, data.data).success(function (result) {
-				this.__received[data.id].reply = result;
-				this.__received[data.id].success = true;
-			}, this).error(function (error) {
-				this.__received[data.id].reply = error;
-			}, this).callback(function () {
-				this.__received[data.id].returned = true;
-				this.__sender.send("reply", {
-					id: data.id,
-					reply: data.reply,
-					success: data.success
-				});
-			}, this);			  
-		} else if (this.__received[data.id].returned) {
-			this.__sender.send("reply", {
-				id: data.id,
-				reply: data.reply,
-				success: data.success
-			});
-		}
-	},
-	
-	__complete: function (data) {
-		if (this.__sent[data.id]) {
-			var promise = this.__sent[data.id].promise;
-			promise[data.success ? "asyncSuccess" : "asyncError"](data.reply);
-			delete this.__sent[data.id];
-		}
-	},
-	
-	__maintenance: function () {
-		var now = BetaJS.Time.now();
-		for (var received_key in this.__received) {
-			var received = this.__received[received_key];
-			if (received.time + this.__options.tries * this.__options.timeout <= now)
-				delete this.__received[received_key];
-		}
-		for (var sent_key in this.__sent) {
-			var sent = this.__sent[sent_key];
-			if (sent.time + sent.tries * this.__options.timeout <= now) {
-				if (sent.tries < this.__options.tries) {
-					sent.tries++;
-					this.__sender.send("send", {
-						message: sent.message,
-						data: sent.data,
-						id: sent.id
-					});
-				} else {
-					sent.promise.asyncError({
-						message: sent.message,
-						data: sent.data
-					});
-					delete this.__sent[sent_key];
-				}
-			}
-		}
-	}
-	
-});
 
 BetaJS.Class.extend("BetaJS.RMI.Stub", [
 	BetaJS.Classes.InvokerMixin,
@@ -5922,347 +6429,3 @@ BetaJS.Class.extend("BetaJS.RMI.Peer", {
 	}
 
 });
-
-BetaJS.Class.extend("BetaJS.KeyValue.KeyValueStore", [
-	BetaJS.Events.EventsMixin,
-	{
-	
-	mem: function (key) {
-		return this._mem(key);
-	},
-	
-	get: function (key) {
-		return this._get(key);
-	},
-	
-	set: function (key, value) {
-		this._set(key, value);
-		this.trigger("change:" + key, value);
-	},
-	
-	remove: function (key) {
-		this._remove(key);
-	}
-	
-}]);
-
-
-BetaJS.KeyValue.KeyValueStore.extend("BetaJS.KeyValue.PrefixKeyValueStore", {
-	
-	constructor: function (kv, prefix) {
-		this._inherited(BetaJS.KeyValue.PrefixKeyValueStore, "constructor");
-		this.__kv = kv;
-		this.__prefix = prefix;
-	},
-	
-	_mem: function (key) {
-		return this.__kv.mem(this.__prefix + key);
-	},
-	
-	_get: function (key) {
-		return this.__kv.get(this.__prefix + key);
-	},
-	
-	_set: function (key, value) {
-		this.__kv.set(this.__prefix + key, value);
-	},
-	
-	_remove: function (key) {
-		this.__kv.remove(this.__prefix + key);
-	}
-	
-});
-
-
-BetaJS.KeyValue.KeyValueStore.extend("BetaJS.KeyValue.MemoryKeyValueStore", {
-	
-	constructor: function (data, clone) {
-		this._inherited(BetaJS.KeyValue.MemoryKeyValueStore, "constructor");
-		this.__data = BetaJS.Objs.clone(data, clone ? 1 : 0);
-	},
-	
-	_mem: function (key) {
-		return key in this.__data;
-	},
-	
-	_get: function (key) {
-		return this.__data[key];
-	},
-	
-	_set: function (key, value) {
-		this.__data[key] = value;
-	},
-	
-	_remove: function (key) {
-		delete this.__data[key];
-	}
-
-});
-
-
-BetaJS.KeyValue.MemoryKeyValueStore.extend("BetaJS.KeyValue.LocalKeyValueStore", {
-	
-	constructor: function () {
-		this._inherited(BetaJS.KeyValue.LocalKeyValueStore, "constructor", localStorage, false);
-	}
-	
-});
-
-
-BetaJS.KeyValue.KeyValueStore.extend("BetaJS.KeyValue.DefaultKeyValueStore", {
-	
-	constructor: function (kv, def) {
-		this._inherited(BetaJS.KeyValue.DefaultKeyValueStore, "constructor");
-		this.__kv = kv;
-		this.__def = def;
-	},
-	
-	_mem: function (key) {
-		return this.__kv.mem(key) || this.__def.mem(key);
-	},
-	
-	_get: function (key) {
-		return this.__kv.mem(key) ? this.__kv.get(key) : this.__def.get(key);
-	},
-	
-	_set: function (key, value) {
-		this.__kv.set(key, value);
-	},
-	
-	_remove: function (key) {
-		this.__kv.remove(key);
-	}
-
-});
-
-/*
- * <ul>
- *  <li>uri: target uri</li>
- *  <li>method: get, post, ...</li>
- *  <li>data: data as JSON to be passed with the request</li>
- * </ul>
- * 
- */
-BetaJS.Class.extend("BetaJS.Net.AbstractAjax", {
-	
-	constructor: function (options) {
-		this._inherited(BetaJS.Net.AbstractAjax, "constructor");
-		this.__options = BetaJS.Objs.extend({
-			"method": "GET",
-			"data": {}
-		}, options);
-	},
-	
-	syncCall: function (options) {
-		try {
-			return this._syncCall(BetaJS.Objs.extend(BetaJS.Objs.clone(this.__options, 1), options));
-		} catch (e) {
-			e = BetaJS.Exceptions.ensure(e);
-			e.assert(BetaJS.Net.AjaxException);
-			throw e;
-		}
-	},
-	
-	asyncCall: function (options) {
-		return this._asyncCall(BetaJS.Objs.extend(BetaJS.Objs.clone(this.__options, 1), options));
-	},
-	
-	_syncCall: function (options) {
-		throw "Unsupported";
-	},
-
-	_asyncCall: function (options) {
-		throw "Unsupported";
-	}
-	
-});
-
-
-BetaJS.Exceptions.Exception.extend("BetaJS.Net.AjaxException", {
-	
-	constructor: function (status_code, status_text, data) {
-		this._inherited(BetaJS.Net.AjaxException, "constructor", status_code + ": " + status_text);
-		this.__status_code = status_code;
-		this.__status_text = status_text;
-		this.__data = data;
-	},
-	
-	status_code: function () {
-		return this.__status_code;
-	},
-	
-	status_text: function () {
-		return this.__status_text;
-	},
-	
-	data: function () {
-		return this.__data;
-	},
-	
-	json: function () {
-		var obj = this._inherited(BetaJS.Net.AjaxException, "json");
-		obj.data = this.data();
-		return obj;
-	}
-	
-});
-
-BetaJS.Channels.Sender.extend("BetaJS.Net.SocketSenderChannel", {
-	
-	constructor: function (socket, message, ready) {
-		this._inherited(BetaJS.Net.SocketSenderChannel, "constructor");
-		this.__socket = socket;
-		this.__message = message;
-		this.__ready = BetaJS.Types.is_defined(ready) ? ready : true;
-		this.__cache = [];
-	},
-	
-	_send: function (message, data) {
-		if (this.__ready) {
-			this.__socket.emit(this.__message, {
-				message: message,
-				data: data
-			});
-		} else {
-			this.__cache.push({
-				message: message,
-				data: data
-			});
-		}
-	},
-	
-	ready: function () {
-		this.__ready = true;
-		for (var i = 0; i < this.__cache.length; ++i)
-			this._send(this.__cache[i].message, this.__cache[i].data);
-		this.__cache = [];
-	},
-	
-	unready: function () {
-	    this.__ready = false;
-	},
-	
-	socket: function () {
-	    if (arguments.length > 0)
-	        this.__socket = arguments[0];
-	    return this.__socket;
-	}
-	
-});
-
-
-BetaJS.Channels.Receiver.extend("BetaJS.Net.SocketReceiverChannel", {
-	
-	constructor: function (socket, message) {
-		this._inherited(BetaJS.Net.SocketReceiverChannel, "constructor");
-		this.__message = message;
-		this.socket(socket);
-	},
-	
-    socket: function () {
-        if (arguments.length > 0) {
-            this.__socket = arguments[0];
-            if (this.__socket) {
-                var self = this;
-                this.__socket.on(this.__message, function (data) {
-                    self._receive(data.message, data.data);
-                });
-            }
-        }
-        return this.__socket;
-    }
-	
-});
-
-BetaJS.Net = BetaJS.Net || {};
-
-BetaJS.Net.HttpHeader = {
-	
-	HTTP_STATUS_OK : 200,
-	HTTP_STATUS_CREATED : 201,
-	HTTP_STATUS_PAYMENT_REQUIRED : 402,
-	HTTP_STATUS_FORBIDDEN : 403,
-	HTTP_STATUS_NOT_FOUND : 404,
-	HTTP_STATUS_PRECONDITION_FAILED : 412,
-	HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
-	
-	format: function (code, prepend_code) {
-		var ret = "";
-		if (code == this.HTTP_STATUS_OK)
-			ret = "OK";
-		else if (code == this.HTTP_STATUS_CREATED)
-			ret = "Created";
-		else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
-			ret = "Payment Required";
-		else if (code == this.HTTP_STATUS_FORBIDDEN)
-			ret = "Forbidden";
-		else if (code == this.HTTP_STATUS_NOT_FOUND)
-			ret = "Not found";
-		else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
-			ret = "Precondition Failed";
-		else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-			ret = "Internal Server Error";
-		else
-			ret = "Other Error";
-		return prepend_code ? (code + " " + ret) : ret;
-	}
-	
-};
-BetaJS.Net = BetaJS.Net || {};
-
-BetaJS.Net.Uri = {
-	
-	build: function (obj) {
-		var s = "";
-		if (obj.username)
-			s += obj.username + ":";
-		if (obj.password)
-			s += obj.password + "@";
-		s += obj.server;
-		if (obj.port)
-			s += ":" + obj.port;
-		if (obj.path)
-			s += "/" + obj.path;
-		return s;
-	},
-	
-	encodeUriParams: function (arr, prefix) {
-		prefix = prefix || "";
-		var res = [];
-		BetaJS.Objs.iter(arr, function (value, key) {
-			if (BetaJS.Types.is_object(value))
-				res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
-			else
-				res.push(prefix + key + "=" + encodeURI(value));
-		}, this);
-		return res.join("&");
-	},
-	
-	appendUriParams: function (uri, arr, prefix) {
-		return BetaJS.Types.is_empty(arr) ? uri : (uri + (uri.indexOf("?") != -1 ? "&" : "?") + this.encodeUriParams(arr, prefix));
-	},
-	
-	// parseUri 1.2.2
-	// (c) Steven Levithan <stevenlevithan.com>
-	// MIT License
-
-	parse: function (str, strict) {
-		var parser = strict ? this.__parse_strict_regex : this.__parse_loose_regex;
-		var m = parser.exec(str);
-		var uri = {};
-		for (var i = 0; i < this.__parse_key.length; ++i)
-			uri[this.__parse_key[i]] = m[i] || "";
-		uri.queryKey = {};
-		uri[this.__parse_key[12]].replace(this.__parse_key_parser, function ($0, $1, $2) {
-			if ($1) uri.queryKey[$1] = $2;
-		});
-
-		return uri;
-	},
-	
-	__parse_strict_regex: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
-	__parse_loose_regex: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/,
-	__parse_key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
-	__parse_key_parser: /(?:^|&)([^&=]*)=?([^&]*)/g
-
-};
