@@ -1,3 +1,4 @@
+
 BetaJS.Iterators = {
 	
 	ensure: function (mixed) {

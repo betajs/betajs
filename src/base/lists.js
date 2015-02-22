@@ -1,3 +1,4 @@
+
 BetaJS.Class.extend("BetaJS.Lists.AbstractList", {
 	
 	_add: function (object) {},
