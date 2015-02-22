@@ -4,15 +4,20 @@ module.exports = function(grunt) {
 
 	grunt.initConfig({
 		pkg : grunt.file.readJSON('package.json'),
+		'revision-count': {
+		    options: {
+		      property: 'revisioncount',
+		      ref: 'HEAD'
+		    }
+		},
 		concat : {
 			options : {
 				banner : module.banner
 			},
-			dist : {
-				dest : 'dist/beta.js',
+			dist_raw : {
+				dest : 'dist/beta-raw.js',
 				src : [
-				    'vendors/scoped.js',
-					'src/base/base.js', 
+					'src/fragments/begin.js-fragment',
 					'src/base/types.js',
 					'src/base/functions.js',
 					'src/base/ids.js', 
@@ -41,20 +46,40 @@ module.exports = function(grunt) {
 					'src/base/collections.js',
 					'src/base/channels.js',
 					'src/base/keyvalue.js',					
-					'src/net/*.js',
-
 					'src/base/states.js', 
-					'src/base/scopes.js',
 					'src/base/rmi.js',					
+					'src/net/*.js',
+					'src/fragments/end.js-fragment'
 				]
 			},
+			dist_scoped: {
+				dest : 'dist/beta.js',
+				src : [
+				    'vendors/scoped.js',
+				    'dist/beta-noscoped.js'
+				]
+			}
 		},
+		preprocess : {
+			options: {
+			    context : {
+			    	MAJOR_VERSION: '<%= revisioncount %>',
+			    	MINOR_VERSION: (new Date()).getTime()
+			    }
+			},
+			dist : {
+			    src : 'dist/beta-raw.js',
+			    dest : 'dist/beta-noscoped.js'
+			}
+		},	
+		clean: ["dist/beta-raw.js"],
 		uglify : {
 			options : {
 				banner : module.banner
 			},
 			dist : {
 				files : {
+					'dist/beta-noscoped.min.js' : [ 'dist/beta-noscoped.js' ],
 					'dist/beta.min.js' : [ 'dist/beta.js' ],					
 				}
 			}
@@ -88,8 +113,12 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-shell');	
+	grunt.loadNpmTasks('grunt-git-revision-count');
+	grunt.loadNpmTasks('grunt-preprocess');
+	grunt.loadNpmTasks('grunt-contrib-clean');	
+	
 
-	grunt.registerTask('default', ['newer:concat', 'newer:uglify']);
+	grunt.registerTask('default', ['revision-count', 'concat:dist_raw', 'preprocess', 'clean', 'concat:dist_scoped', 'uglify']);
 	grunt.registerTask('qunit', ['shell:qunit']);
 	grunt.registerTask('lint', ['shell:lint']);	
 	grunt.registerTask('check', ['lint', 'qunit']);

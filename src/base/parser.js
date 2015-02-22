@@ -18,7 +18,7 @@ Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Ob
 			constructor: function (patterns) {
 				inherited.constructor.call(this);
 				this.__patterns = [];
-				BetaJS.Objs.iter(patterns, function (value, key) {
+				Objs.iter(patterns, function (value, key) {
 					this.__patterns.push({
 						regex: new RegExp("^" + key, "m"),
 						data: Types.is_string(value) ? {token: value} : value

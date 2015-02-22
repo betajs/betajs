@@ -1,0 +1,16 @@
+(function () {
+
+var Scoped = this.subScope();
+
+Scoped.binding("module", "global:BetaJS");
+
+Scoped.define("module:", function () {
+	return {
+		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
+		version: '/* @echo MAJOR_VERSION */./* @echo MINOR_VERSION */',
+	};
+});
+
+Scoped.require(["module:"], function (mod) {
+	this.exports(typeof module != "undefined" ? module : null, mod);
+}, this);

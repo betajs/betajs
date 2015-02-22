@@ -27,7 +27,7 @@ Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"],
 			var arr = [];
 			while (this.hasNext()) {
 				var obj = this.next();			
-				arr.push(obj[f].apply(obj, BetaJS.Functions.getArguments(arguments, 1)));
+				arr.push(obj[f].apply(obj, Functions.getArguments(arguments, 1)));
 			}
 			return arr;
 		},

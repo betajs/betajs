@@ -1,5 +1,5 @@
 /*!
-betajs-scoped - v0.0.1 - 2015-02-09
+betajs-scoped - v0.0.1 - 2015-02-21
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -46,6 +46,19 @@ var Globals = {
 		}
 		current[args[args.length - 1]] = value;
 		return value;
+	},
+	
+	getPath: function (path) {
+		var args = path.split(".");
+		if (args.length == 1)
+			return this.get(path);		
+		var current = this.get(args[0]);
+		for (var i = 1; i < args.length; ++i) {
+			if (!current)
+				return current;
+			current = current[args[i]];
+		}
+		return current;
 	}
 
 };
@@ -53,7 +66,7 @@ var Helper = {
 		
 	method: function (obj, func) {
 		return function () {
-			func.apply(obj, arguments);
+			return func.apply(obj, arguments);
 		};
 	},
 	
@@ -69,6 +82,18 @@ var Helper = {
 		return Object.prototype.toString.call(obj) === '[object Array]' ? "array" : typeof obj;
 	},
 	
+	isEmpty: function (obj) {
+		if (obj === null || typeof obj === "undefined")
+			return true;
+		if (this.typeOf(obj) == "array")
+			return obj.length === 0;
+		if (typeof obj !== "object")
+			return false;
+		for (var key in obj)
+			return false;
+		return true;
+	},
+	
 	matchArgs: function (args, pattern) {
 		var i = 0;
 		var result = {};
@@ -80,46 +105,70 @@ var Helper = {
 				i++;
 		}
 		return result;
-	}
+	},
 	
+	stringify: function (value) {
+		if (this.typeOf(value) == "function")
+			return "" + value;
+		return JSON.stringify(value);
+	}	
 
 };
-var Scoped = {
+var Attach = {
 		
 	__namespace: "Scoped",
+	
+	upgrade: function (namespace) {
+		var current = Globals.get(namespace || Attach.__namespace);
+		if (current && Helper.typeOf(current) == "object" && current.guid == this.guid && Helper.typeOf(current.version) == "string") {
+			var my_version = this.version.split(".");
+			var current_version = current.version.split(".");
+			var newer = false;
+			for (var i = 0; i < Math.min(my_version.length, current_version.length); ++i) {
+				newer = my_version[i] > current_version[i];
+				if (my_version[i] != current_version[i]) 
+					break;
+			}
+			return newer ? this.attach(namespace) : current;				
+		} else
+			return this.attach(namespace);		
+	},
 
 	attach : function(namespace) {
 		if (namespace)
-			Scoped.__namespace = namespace;
-		var current = Globals.get(Scoped.__namespace);
+			Attach.__namespace = namespace;
+		var current = Globals.get(Attach.__namespace);
 		if (current == this)
 			return this;
-		Scoped.__revert = current;
-		Globals.set(namespace, this);
+		Attach.__revert = current;
+		Globals.set(Attach.__namespace, this);
 		return this;
 	},
 	
 	detach: function (forceDetach) {
 		if (forceDetach)
-			Globals.set(Scoped.__namespace, null);
-		if (typeof Scoped.__revert != "undefined")
-			Globals.set(Scoped.__namespace, Scoped.__revert);
-		delete Scoped.__revert;
+			Globals.set(Attach.__namespace, null);
+		if (typeof Attach.__revert != "undefined")
+			Globals.set(Attach.__namespace, Attach.__revert);
+		delete Attach.__revert;
 		return this;
 	},
 	
-	exports: function (object) {
-		if (typeof module != "undefined" && "exports" in module)
-			module.exports = object;
+	exports: function (mod, object, forceExport) {
+		mod = mod || (typeof module != "undefined" ? module : null);
+		if (typeof mod == "object" && mod && "exports" in mod && (forceExport || mod.exports == this || !mod.exports || Helper.isEmpty(mod.exports)))
+			mod.exports = object || this;
 		return this;
 	}	
 
 };
+
 function newNamespace (options) {
 	
 	options = Helper.extend({
 		tree: false,
-		global: false
+		global: false,
+		root: {}
 	}, options);
 	
 	function initNode(options) {
@@ -129,7 +178,8 @@ function newNamespace (options) {
 			children: {},
 			watchers: [],
 			data: {},
-			ready: false
+			ready: false,
+			lazy: []
 		}, options);
 	}
 	
@@ -148,7 +198,7 @@ function newNamespace (options) {
 					treeRoot = global;
 			} catch (e) { }
 		} else
-			treeRoot = {};
+			treeRoot = options.root;
 		nsRoot.data = treeRoot;
 	}
 	
@@ -232,6 +282,15 @@ function newNamespace (options) {
 				callback: callback,
 				context: context
 			});
+			if (node.lazy.length > 0) {
+				var f = function () {
+					if (node.lazy.length > 0) {
+						var lazy = node.lazy.shift();
+						lazy.callback.call(lazy.context || this, node.data);
+					}
+				};
+				f(node);
+			}
 		}
 	}
 
@@ -246,6 +305,18 @@ function newNamespace (options) {
 			if (node.data)
 				nodeClearData(node);
 			nodeSetData(node, value);
+		},
+		
+		lazy: function (path, callback, context) {
+			var node = nodeNavigate(path);
+			if (node.ready)
+				callback(context || this, node.data);
+			else {
+				node.lazy.push({
+					callback: callback,
+					context: context
+				});
+			}
 		},
 		
 		digest: function (path) {
@@ -284,7 +355,56 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 		}
 	};
 	
+	var custom = function (argmts, name, callback) {
+		var args = Helper.matchArgs(argmts, {
+			options: "object",
+			namespaceLocator: true,
+			dependencies: "array",
+			hiddenDependencies: "array",
+			callback: true,
+			context: "object"
+		});
+		
+		var options = Helper.extend({
+			lazy: this.options.lazy
+		}, args.options || {});
+		
+		var ns = this.resolve(args.namespaceLocator);
+		
+		var execute = function () {
+			this.require(args.dependencies, args.hiddenDependencies, function () {
+				arguments[arguments.length - 1].ns = ns;
+				if (this.options.compile) {
+					var params = [];
+					for (var i = 0; i < argmts.length; ++i)
+						params.push(Helper.stringify(argmts[i]));
+					this.compiled += this.options.ident + "." + name + "(" + params.join(", ") + ");\n\n";
+				}
+				var result = args.callback.apply(args.context || this, arguments);
+				callback.call(this, ns, result);
+			}, this);
+		};
+		
+		if (options.lazy)
+			ns.namespace.lazy(ns.path, execute, this);
+		else
+			execute.apply(this);
+
+		return this;
+	};
+	
 	return {
+		
+		getGlobal: Helper.method(Globals, Globals.getPath),
+		setGlobal: Helper.method(Globals, Globals.setPath),
+		
+		options: {
+			lazy: false,
+			ident: "Scoped",
+			compile: false			
+		},
+		
+		compiled: "",
 		
 		nextScope: function () {
 			if (!nextScope)
@@ -300,8 +420,20 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 		},
 		
 		binding: function (alias, namespaceLocator, options) {
-			if (!bindings[alias] || !bindings[alias].readonly)
-				bindings[alias] = Helper.extend(options, this.resolve(namespaceLocator));
+			if (!bindings[alias] || !bindings[alias].readonly) {
+				var ns;
+				if (Helper.typeOf(namespaceLocator) != "string") {
+					ns = {
+						namespace: newNamespace({
+							tree: true,
+							root: namespaceLocator
+						}),
+						path: null	
+					};
+				} else
+					ns = this.resolve(namespaceLocator);
+				bindings[alias] = Helper.extend(options, ns);
+			}
 			return this;
 		},
 		
@@ -322,62 +454,32 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 		},
 		
 		define: function () {
-			var args = Helper.matchArgs(arguments, {
-				namespaceLocator: true,
-				dependencies: "array",
-				hiddenDependencies: "array",
-				callback: true,
-				context: "object"
+			return custom.call(this, arguments, "define", function (ns, result) {
+				ns.namespace.set(ns.path, result);
 			});
-			var ns = this.resolve(args.namespaceLocator);
-			this.require(args.dependencies, args.hiddenDependencies, function () {
-				arguments[arguments.length - 1].ns = ns;
-				ns.namespace.set(ns.path, args.callback.apply(args.context || this, arguments));
-			}, this);
-			return this;
 		},
 		
 		extend: function () {
-			var args = Helper.matchArgs(arguments, {
-				namespaceLocator: true,
-				dependencies: "array",
-				hiddenDependencies: "array",
-				callback: true,
-				context: "object"
+			return custom.call(this, arguments, "extend", function (ns, result) {
+				ns.namespace.extend(ns.path, result);
 			});
-			var ns = this.resolve(args.namespaceLocator);
-			this.require(args.dependencies, args.hiddenDependencies, function () {
-				arguments[arguments.length - 1].ns = ns;
-				ns.namespace.extend(ns.path, args.callback.apply(args.context || this, arguments));
-			}, this);
-			return this;
 		},
 		
 		condition: function () {
-			var args = Helper.matchArgs(arguments, {
-				namespaceLocator: true,
-				dependencies: "array",
-				hiddenDependencies: "array",
-				callback: true,
-				context: "object"
-			});
-			var ns = this.resolve(args.namespaceLocator);
-			this.require(args.dependencies, args.hiddenDependencies, function () {
-				arguments[arguments.length - 1].ns = ns;
-				var result = args.callback.apply(args.context || this, arguments);
+			return custom.call(this, arguments, "condition", function (ns, result) {
 				if (result)
 					ns.namespace.set(ns.path, result);
-			}, this);
-			return this;
+			});
 		},
 		
 		require: function () {
 			var args = Helper.matchArgs(arguments, {
 				dependencies: "array",
 				hiddenDependencies: "array",
-				callback: true,
+				callback: "function",
 				context: "object"
 			});
+			args.callback = args.callback || function () {};
 			var dependencies = args.dependencies || [];
 			var allDependencies = dependencies.concat(args.hiddenDependencies || []);
 			var count = allDependencies.length;
@@ -421,25 +523,19 @@ var globalNamespace = newNamespace({tree: true, global: true});
 var rootNamespace = newNamespace({tree: true});
 var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 
-var Public = {
+var Public = Helper.extend(rootScope, {
 		
-	attach: Scoped.attach,
-	detach: Scoped.detach,
-	exports: Scoped.exports,
+	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
+	version: '5.1424568052349',
+		
+	upgrade: Attach.upgrade,
+	attach: Attach.attach,
+	detach: Attach.detach,
+	exports: Attach.exports
 	
-	nextScope: Helper.method(rootScope, rootScope.nextScope),
-	subScope: Helper.method(rootScope, rootScope.nextScope),
-	binding: Helper.method(rootScope, rootScope.binding),
-	condition: Helper.method(rootScope, rootScope.condition),
-	define: Helper.method(rootScope, rootScope.define),
-	extend: Helper.method(rootScope, rootScope.extend),
-	require: Helper.method(rootScope, rootScope.require),
-	digest: Helper.method(rootScope, rootScope.digest),
-	
-	setGlobal: Helper.method(Globals, Globals.setPath)
-	
-};
-Public.attach();
-Public.exports(Public);
+});
+
+Public = Public.upgrade();
+Public.exports();
 	return Public;
 }).call(this);
