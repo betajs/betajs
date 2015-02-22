@@ -15,6 +15,9 @@
     "grunt-contrib-concat": "",
     "grunt-contrib-uglify": "",
     "grunt-shell": "",
-    "grunt-newer": ""
+    "grunt-newer": "",
+    "grunt-contrib-clean": "",
+    "grunt-preprocess": "",
+    "grunt-git-revision-count": ""
   }
 }
