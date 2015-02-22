@@ -84,7 +84,7 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		 * @return remaining part of the string in question after the last occurrence of the sub string
 		 */
 		last_after : function(s, needle) {
-			return s.substring(s.lastIndexOf(needle) + needle.length, s.length);
+			return this.splitLast(s, needle).tail;
 		},
 		
 		first_after: function (s, needle) {
