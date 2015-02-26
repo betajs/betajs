@@ -346,7 +346,11 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 			create: function (key) {
 				var cons = Functions.newClassFunc(this.get(key));
 				return cons.apply(this, Functions.getArguments(arguments, 1));
-			}	
+			},
+			
+			classes: function () {
+				return this._classes;
+			}
 			
 		};
 	});
