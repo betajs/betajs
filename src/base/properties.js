@@ -332,7 +332,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
 		
-		set: function (key, value) {
+		set: function (key, value, force) {
 			if (Types.is_object(value) && value && value.guid == this.__properties_guid) {
 				if (value.properties)
 					this.bind(key, value.properties, {secondKey: value.key});
@@ -345,6 +345,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			if (oldValue !== value) {
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
+			} else if (force) {
+				this.trigger("change", key, value, oldValue);
+				this.trigger("change:" + key, value, oldValue);
 			}
 			return this;
 		},

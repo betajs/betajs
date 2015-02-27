@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-02-26
+betajs - v1.0.0 - 2015-02-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '336.1424924453426',
+		version: '337.1425039652217',
 	};
 });
 
@@ -3537,7 +3537,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
 		
-		set: function (key, value) {
+		set: function (key, value, force) {
 			if (Types.is_object(value) && value && value.guid == this.__properties_guid) {
 				if (value.properties)
 					this.bind(key, value.properties, {secondKey: value.key});
@@ -3550,6 +3550,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			if (oldValue !== value) {
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
+			} else if (force) {
+				this.trigger("change", key, value, oldValue);
+				this.trigger("change:" + key, value, oldValue);
 			}
 			return this;
 		},
