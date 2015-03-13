@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-02-27
+betajs - v1.0.0 - 2015-03-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -545,7 +545,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-02-27
+betajs - v1.0.0 - 2015-03-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -558,7 +558,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '337.1425039652217',
+		version: '338.1426263485604',
 	};
 });
 
@@ -4066,7 +4066,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 					this.trigger("change:" + key, value, oldValue);
 				}
 				Objs.iter(current.children, function (child, subkey) {
-					process_set.call(this, child, key ? (key + "." + subkey) : subkey, value[subkey], oldValue[subkey]);
+					process_set.call(this, child, key ? (key + "." + subkey) : subkey, Types.is_object(value) && value ? value[subkey] : null, Types.is_object(oldValue) && oldValue ? oldValue[subkey] : null);
 				}, this);
 			}
 			process_set.call(this, current, key, value, oldValue);
