@@ -194,35 +194,38 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			return this.__find(key, t, t.root);
 		},
 	
-		__iterate : function(t, node, callback, context) {
+		__iterate : function(t, node, callback, context, reverse) {
 			if (!node)
 				return true;
-			return this.__iterate(t, node.left, callback, context) && (callback.call(context, node.data.key, node.data.value) !== false) && this.__iterate(t, node.right, callback, context);
+			return (
+				this.__iterate(t, reverse ? node.right : node.left, callback, context, reverse) &&
+				(callback.call(context, node.data.key, node.data.value) !== false) &&
+				this.__iterate(t, reverse ? node.left : node.right, callback, context, reverse));
 		},
 	
-		iterate : function(t, callback, context) {
-			this.__iterate(t, t.root, callback, context);
+		iterate : function(t, callback, context, reverse) {
+			this.__iterate(t, t.root, callback, context, reverse);
 		},
 	
-		__iterate_from : function(key, t, node, callback, context) {
+		__iterate_from : function(key, t, node, callback, context, reverse) {
 			if (!node)
 				return true;
-			var c = t.compare(key, node.data.key);
-			if (c < 0 && !this.__iterate_from(key, t, node.left, callback, context))
+			var c = t.compare(key, node.data.key) * (reverse ? -1 : 1);
+			if (c < 0 && !this.__iterate_from(key, t, reverse ? node.right : node.left, callback, context, reverse))
 				return false;
 			if (c <= 0 && callback.call(context, node.data.key, node.data.value) === false)
 				return false;
-			return this.__iterate_from(key, t, node.right, callback, context);
+			return this.__iterate_from(key, t, reverse ? node.left : node.right, callback, context, reverse);
 		},
 	
-		iterate_from : function(key, t, callback, context) {
-			this.__iterate_from(key, t, t.root, callback, context);
+		iterate_from : function(key, t, callback, context, reverse) {
+			this.__iterate_from(key, t, t.root, callback, context, reverse);
 		},
 	
-		iterate_range : function(from_key, to_key, t, callback, context) {
+		iterate_range : function(from_key, to_key, t, callback, context, reverse) {
 			this.iterate_from(from_key, t, function(key, value) {
-				return t.compare(key, to_key) <= 0 && callback.call(context, key, value) !== false;
-			}, this);
+				return t.compare(key, to_key) * (reverse ? -1 : 1) <= 0 && callback.call(context, key, value) !== false;
+			}, this, reverse);
 		}
 	
 	};
