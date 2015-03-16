@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-03-13
+betajs - v1.0.0 - 2015-03-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -545,7 +545,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-03-13
+betajs - v1.0.0 - 2015-03-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -558,7 +558,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '338.1426263485604',
+		version: '339.1426453618957',
 	};
 });
 
@@ -1951,8 +1951,36 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 	};
 
 });
-Scoped.define("module:Async", ["module:Types"], function (Types) {
+Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Types, Functions) {
 	return {		
+		
+		waitFor: function () {
+			var args = Functions.matchArgs(arguments, {
+				condition: true,
+				conditionCtx: "object",
+				callback: true,
+				callbackCtx: "object",
+				interval: "int"
+			});
+			var h = function () {
+				try {
+					return !!args.condition.apply(args.conditionCtx || args.callbackCtx || this);
+				} catch (e) {
+					
+					return false;
+				}
+			};
+			if (h())
+				args.callback.apply(args.callbackCtx || this);
+			else {
+				var timer = setInterval(function () {
+					if (h()) {
+						clearInterval(timer);
+						args.callback.apply(args.callbackCtx || this);
+					}
+				}, args.interval || 1);
+			}
+		},
 		
 		eventually: function (func, params, context) {
 			var timer = setTimeout(function () {
