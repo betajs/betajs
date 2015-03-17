@@ -157,17 +157,16 @@ Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module
 			},
 		
 			_add: function (object) {
-			    while (true) {
-			        var id = object.__cid;
-			        if (!id) {
+		        var id = object.__cid;
+		        if (!id) {
+		        	while (true) {
 		                id = this.__id_generator ? Ids.objectId(object, this.__id_generator()) : Ids.objectId(object);
-		        		if (this.__map[id] && this.__id_generator)
-		        		  continue;
-		            }
-		    		this.__map[id] = object;
-		    		return id;
-		    	}
-		    	return null;
+		        		if (!this.__map[id] || !this.__id_generator)
+		        			break;
+		        	}
+	            }
+	    		this.__map[id] = object;
+	    		return id;
 			},
 			
 			_remove: function (ident) {

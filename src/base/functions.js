@@ -1,4 +1,7 @@
 Scoped.define("module:Functions", ["module:Types"], function (Types) {
+	/** Function and Function Argument Support
+	 * @module BetaJS.Functions
+	 */
 	return {
 	
 	    /** Takes a function and an instance and returns the method call as a function
@@ -33,7 +36,7 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 		
 	    /** Converts some other function's arguments to an array
 	     * 
-	     * @param func function arguments
+	     * @param args function arguments
 	     * @param slice number of arguments to be omitted (default: 0)
 	     * @return arguments as array 
 	     */	
@@ -70,6 +73,7 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 			return result;
 		},
 		
+		/** @suppress {checkTypes} */
 		newClassFunc: function (cls) {
 			return function () {
 				var args = arguments;

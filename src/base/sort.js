@@ -81,8 +81,8 @@ Scoped.define("module:Sort", [
 					if (Types.is_empty(data[i].after)) {
 						delete todo[i];
 						result.push(items[i]);
-						for (bef in data[i].before)
-						delete data[bef].after[i];
+						for (var bef in data[i].before)
+							delete data[bef].after[i];
 					}
 				}
 			}

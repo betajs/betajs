@@ -1,4 +1,7 @@
 Scoped.define("module:Tokens", function () {
+	/** Unique Token Generation
+	 * @module BetaJS.Tokens
+	 */
 	return {
 		
 	    /** Returns a new token

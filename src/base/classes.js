@@ -289,10 +289,10 @@ Scoped.define("module:Classes.PathResolver", ["module:Class", "module:Objs"], fu
 				while (true) {
 					var matches = regExp.exec(path);
 					if (!matches)
-						return this.simplify(path);
+						break;
 					path = path.replace(regExp, this._bindings[matches[1]]);
 				}
-				return path;
+				return this.simplify(path);
 			},
 			
 			simplify: function (path) {

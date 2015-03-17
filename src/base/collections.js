@@ -3,11 +3,11 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Events.EventsMixin",
 	    "module:Objs",
 	    "module:Functions",
-	    "module:Lists",
+	    "module:Lists.ArrayList",
 	    "module:Ids",
 	    "module:Properties.Properties",
 	    "module:Iterators.ArrayIterator"
-	], function (Class, EventsMixin, Objs, Functions, Lists, Ids, Properties, ArrayIterator, scoped) {
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -21,7 +21,7 @@ Scoped.define("module:Collections.Collection", [
 				if ("compare" in options)
 					list_options["compare"] = options["compare"];
 				list_options.get_ident = Functions.as_method(this.get_ident, this);
-				this.__data = new Lists.ArrayList([], list_options);
+				this.__data = new ArrayList([], list_options);
 				var self = this;
 				this.__data._ident_changed = function (object, index) {
 					self._index_changed(object, index);

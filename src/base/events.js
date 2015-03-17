@@ -163,7 +163,7 @@ Scoped.define("module:Events.EventsMixin", [
 	          callback.apply(this, arguments);
 	        });
 	        once._callback = callback;
-	        return this.on(name, once, context, options);
+	        return this.on(events, once, context, options);
 	    },
 	    
 	    delegateEvents: function (events, source, prefix, params) {

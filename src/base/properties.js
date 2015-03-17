@@ -171,7 +171,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		unbind: function (key, props) {
 			if (key in this.__properties.bindings) {
-				for (i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
+				for (var i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
 					var binding = this.__properties.bindings[key][i];
 					if (!props || props == binding) {
 						if (binding.left) 

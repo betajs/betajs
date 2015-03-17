@@ -10,6 +10,7 @@ Scoped.define("module:Net.SocketSenderChannel", ["module:Channels.Sender", "modu
 				this.__cache = [];
 			},
 			
+			/** @suppress {missingProperties} */
 			_send: function (message, data) {
 				if (this.__ready) {
 					this.__socket.emit(this.__message, {

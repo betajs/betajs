@@ -110,7 +110,7 @@ Scoped.define("module:RMI.Skeleton", [
 				return Promise.value(result);
 			},
 			
-			_error: function (callbacks) {
+			_error: function (result) {
 				return Promise.error(result);
 			},
 			

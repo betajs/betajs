@@ -1,4 +1,7 @@
 Scoped.define("module:Ids", function () {
+	/** Id Generation
+	 * @module BetaJS.Ids
+	 */
 	return {
 	
 		__uniqueId: 0,

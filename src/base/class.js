@@ -1,6 +1,7 @@
 Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions", "module:Ids"], function (Types, Objs, Functions, Ids) {
 	var Class = function () {};
 
+	/** @suppress {checkTypes} */
 	Class.extend = function (options, objects, statics, class_statics) {
 		objects = objects || [];
 		if (!Types.is_array(objects))

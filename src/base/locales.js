@@ -20,12 +20,15 @@ Scoped.define("module:Locales", function () {
 		view: function (base) {
 			return {
 				context: this,
-				base: base,
+				prefix: base,
 				get: function (key) {
-					return this.context.get(this.base + "." + key);
+					return this.context.get(this.prefix + "." + key);
 				},
-				base: function (base) {
-					return this.context.base(this.base + "." + base);
+				view: function (key) {
+					return this.context.view(this.prefix + "." + key);
+				},
+				register: function (strings, prefix) {
+					this.context.register(strings, this.prefix + (prefix ? "." + prefix : ""));
 				}
 			};
 		}
