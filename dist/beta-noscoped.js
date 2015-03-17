@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-03-16
+betajs - v1.0.0 - 2015-03-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '340.1426546740165',
+		version: '341.1426601462197'
 	};
 });
 
@@ -1201,10 +1201,10 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 		__iterate : function(t, node, callback, context, reverse) {
 			if (!node)
 				return true;
-			return
+			return (
 				this.__iterate(t, reverse ? node.right : node.left, callback, context, reverse) &&
 				(callback.call(context, node.data.key, node.data.value) !== false) &&
-				this.__iterate(t, reverse ? node.left : node.right, callback, context, reverse);
+				this.__iterate(t, reverse ? node.left : node.right, callback, context, reverse));
 		},
 	
 		iterate : function(t, callback, context, reverse) {
