@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '343.1427306834915'
+		version: '344.1427307407313'
 	};
 });
 
@@ -3106,15 +3106,15 @@ Scoped.define("module:Events.EventsMixin", [
 					}
 				}, this);
 			} else {
-				Objs.iter(this.__events_mixin_events, function (evnt) {
-					this.__events_mixin_events[evnt].remove_by_filter(function (object) {
+				Objs.iter(this.__events_mixin_events, function (evntobj, evnt) {
+					evntobj.remove_by_filter(function (object) {
 						var result = (!callback || object.callback == callback) && (!context || object.context == context);
 						if (result && this.__destroy_event_object)
 							this.__destroy_event_object(object);
 						return result;
 					});
-					if (this.__events_mixin_events[evnt].count() === 0) {
-						this.__events_mixin_events[evnt].destroy();
+					if (evntobj.count() === 0) {
+						evntobj.destroy();
 						delete this.__events_mixin_events[evnt];
 						this._notify("unregister_event", evnt);
 					}
