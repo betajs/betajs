@@ -66,6 +66,7 @@ Scoped.define("module:Templates", ["module:Types", "module:Strings"], function (
 			result = "var __t,__p='',__j=Array.prototype.join," +
 			  "echo=function(){__p+=__j.call(arguments,'');};\n" +
 			  result + "return __p;\n";
+			/*jslint evil: true */
 			var func = new Function('obj', 'Helpers', result);
 			var func_call = function(data) {
 				return func.call(this, data, {Strings: Strings});

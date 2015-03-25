@@ -160,11 +160,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			for (var i = 0; i < deps.length; ++i) {
-				deps[i].properties.on("change:" + deps[i].key, function () {
-					recompute();
-				}, deps[i]);
-			}
+			for (var i = 0; i < deps.length; ++i)
+				deps[i].properties.on("change:" + deps[i].key, recompute, deps[i]);
 			recompute();
 			return this;
 		},

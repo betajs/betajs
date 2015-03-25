@@ -204,9 +204,9 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				this.__items = [];
 				options = options || {};
 				if ("compare" in options)
-					this._compare = options["compare"];
+					this._compare = options.compare;
 				if ("get_ident" in options)
-					this._get_ident = options["get_ident"];
+					this._get_ident = options.get_ident;
 				inherited.constructor.call(this, objects);
 			},
 			

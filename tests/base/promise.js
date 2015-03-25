@@ -51,7 +51,7 @@ test("promise test 5", function () {
 	var promise1 = BetaJS.Promise.create();
 	var promise2 = BetaJS.Promise.create();
 	var f = function (pr1, x, pr2, y) {
-		var pr = BetaJS.Promise.create(pr1 + x + pr2 + y);;
+		var pr = BetaJS.Promise.create(pr1 + x + pr2 + y);
 		return pr;
 	};
 	var pr = BetaJS.Promise.func(f, promise1, 2, promise2, 4);

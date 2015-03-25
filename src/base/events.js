@@ -87,11 +87,7 @@ Scoped.define("module:Events.EventsMixin", [
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			if (events) {
 				events = events.split(this.EVENT_SPLITTER);
-				var event;
-				while (true) {
-					event = events.shift();
-					if (!event)
-						break;
+				Objs.iter(events, function (event) {
 					if (this.__events_mixin_events[event]) {
 						this.__events_mixin_events[event].remove_by_filter(function (object) {
 							var result = (!callback || object.callback == callback) && (!context || object.context == context);
@@ -105,21 +101,21 @@ Scoped.define("module:Events.EventsMixin", [
 							this._notify("unregister_event", event);
 						}
 					}
-				}
+				}, this);
 			} else {
-				for (event in this.__events_mixin_events) {
-					this.__events_mixin_events[event].remove_by_filter(function (object) {
+				Objs.iter(this.__events_mixin_events, function (evnt) {
+					this.__events_mixin_events[evnt].remove_by_filter(function (object) {
 						var result = (!callback || object.callback == callback) && (!context || object.context == context);
 						if (result && this.__destroy_event_object)
 							this.__destroy_event_object(object);
 						return result;
 					});
-					if (this.__events_mixin_events[event].count() === 0) {
-						this.__events_mixin_events[event].destroy();
-						delete this.__events_mixin_events[event];
-						this._notify("unregister_event", event);
+					if (this.__events_mixin_events[evnt].count() === 0) {
+						this.__events_mixin_events[evnt].destroy();
+						delete this.__events_mixin_events[evnt];
+						this._notify("unregister_event", evnt);
 					}
-				}
+				}, this);
 			}
 			return this;
 		},
@@ -140,19 +136,16 @@ Scoped.define("module:Events.EventsMixin", [
 			var event;
 			if (!this.__events_mixin_events)
 				return this;
-			while (true) {
-				event = events.shift();
-				if (!event)
-					break;
+			Objs.iter(events, function (event) {
 	    		if (this.__events_mixin_events[event])
 	    			this.__events_mixin_events[event].iterate(function (object) {
 	    				self.__call_event_object(object, rest);
 	    			});
 				if (this.__events_mixin_events && "all" in this.__events_mixin_events)
-					this.__events_mixin_events["all"].iterate(function (object) {
+					this.__events_mixin_events.all.iterate(function (object) {
 						self.__call_event_object(object, [event].concat(rest));
 					});
-			}
+			}, this);
 	    	return this;
 	    },
 	    
