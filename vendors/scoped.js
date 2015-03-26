@@ -1,5 +1,5 @@
 /*!
-betajs-scoped - v0.0.1 - 2015-03-17
+betajs-scoped - v0.0.1 - 2015-03-26
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -477,19 +477,20 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			var deps = [];
 			var environment = {};
 			if (count) {
+				var f = function (value) {
+					if (this.i < deps.length)
+						deps[this.i] = value;
+					count--;
+					if (count === 0) {
+						deps.push(environment);
+						args.callback.apply(args.context || this.ctx, deps);
+					}
+				};
 				for (var i = 0; i < allDependencies.length; ++i) {
 					var ns = this.resolve(allDependencies[i]);
 					if (i < dependencies.length)
 						deps.push(null);
-					ns.namespace.obtain(ns.path, function (value) {
-						if (this.i < deps.length)
-							deps[this.i] = value;
-						count--;
-						if (count === 0) {
-							deps.push(environment);
-							args.callback.apply(args.context || this.ctx, deps);
-						}
-					}, {
+					ns.namespace.obtain(ns.path, f, {
 						ctx: this,
 						i: i
 					});
@@ -517,7 +518,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '8.1426613087189',
+	version: '9.1427403679672',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,

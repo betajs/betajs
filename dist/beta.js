@@ -1,10 +1,10 @@
 /*!
-betajs - v1.0.0 - 2015-03-25
+betajs - v1.0.0 - 2015-03-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
 /*!
-betajs-scoped - v0.0.1 - 2015-03-17
+betajs-scoped - v0.0.1 - 2015-03-26
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -482,19 +482,20 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			var deps = [];
 			var environment = {};
 			if (count) {
+				var f = function (value) {
+					if (this.i < deps.length)
+						deps[this.i] = value;
+					count--;
+					if (count === 0) {
+						deps.push(environment);
+						args.callback.apply(args.context || this.ctx, deps);
+					}
+				};
 				for (var i = 0; i < allDependencies.length; ++i) {
 					var ns = this.resolve(allDependencies[i]);
 					if (i < dependencies.length)
 						deps.push(null);
-					ns.namespace.obtain(ns.path, function (value) {
-						if (this.i < deps.length)
-							deps[this.i] = value;
-						count--;
-						if (count === 0) {
-							deps.push(environment);
-							args.callback.apply(args.context || this.ctx, deps);
-						}
-					}, {
+					ns.namespace.obtain(ns.path, f, {
 						ctx: this,
 						i: i
 					});
@@ -522,7 +523,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '8.1426613087189',
+	version: '9.1427403679672',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -536,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-03-25
+betajs - v1.0.0 - 2015-03-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -549,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '344.1427307407313'
+		version: '345.1427403710989'
 	};
 });
 
