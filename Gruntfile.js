@@ -62,11 +62,15 @@ module.exports = function(grunt) {
 					dist : {
 						files : {
 							'dist/beta-noscoped.min.js' : [ 'dist/beta-noscoped.js' ],
-							'dist/beta.min.js' : [ 'dist/beta.js' ],
+							'dist/beta.min.js' : [ 'dist/beta.js' ]
 						}
 					}
 				},
 				jshint : {
+					options: {
+						es5: false,
+						es3: true
+					},
 					source : [ "./src/base/*.js", "./src/net/*.js" ],
 					dist : [ "./dist/beta-noscoped.js", "./dist/beta.js" ],
 					gruntfile : [ "./Gruntfile.js" ],
