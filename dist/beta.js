@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-03-26
+betajs - v1.0.0 - 2015-04-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-03-26
+betajs - v1.0.0 - 2015-04-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '345.1427403710989'
+		version: '347.1428693305502'
 	};
 });
 
@@ -887,25 +887,42 @@ Scoped.define("module:Ids", function () {
 	
 	};
 });
-Scoped.define("module:Tokens", function () {
-	/** Unique Token Generation
+Scoped.define("module:Tokens", function() {
+	/**
+	 * Unique Token Generation
+	 * 
 	 * @module BetaJS.Tokens
 	 */
 	return {
-		
-	    /** Returns a new token
-	     * 
-	     * @param length optional length of token, default is 16
-	     * @return token
-	     */
-		generate_token: function (length) {
+
+		/**
+		 * Returns a new token
+		 * 
+		 * @param length
+		 *            optional length of token, default is 16
+		 * @return token
+		 */
+		generate_token : function(length) {
 			length = length || 16;
 			var s = "";
 			while (s.length < length)
-				s += Math.random().toString(36).substr(2); 
+				s += Math.random().toString(36).substr(2);
 			return s.substr(0, length);
+		},
+
+		// http://jsperf.com/string-hashing-methods
+		simple_hash : function(s) {
+			var nHash = 0;
+			if (!s.length)
+				return nHash;
+			for (var i = 0, imax = s.length, n; i < imax; ++i) {
+				n = s.charCodeAt(i);
+				nHash = ((nHash << 5) - nHash) + n;
+				nHash = nHash & nHash;
+			}
+			return Math.abs(nHash);
 		}
-	
+
 	};
 });
 Scoped.define("module:Objs", ["module:Types"], function (Types) {
