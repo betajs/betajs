@@ -1,5 +1,5 @@
 Scoped.define("module:States.Host", [
-	    "module:Class",
+	    "module:Properties.Properties",
 	    "module:Events.EventsMixin",
 	    "module:States.State",
 	    "module:Types",

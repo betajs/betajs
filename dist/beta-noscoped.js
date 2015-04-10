@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '347.1428693305502'
+		version: '348.1428706807095'
 	};
 });
 
@@ -4987,7 +4987,7 @@ Scoped.define("module:KeyValue.DefaultKeyValueStore", ["module:KeyValue.KeyValue
 });
 
 Scoped.define("module:States.Host", [
-	    "module:Class",
+	    "module:Properties.Properties",
 	    "module:Events.EventsMixin",
 	    "module:States.State",
 	    "module:Types",
