@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-04-10
+betajs - v1.0.0 - 2015-04-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-04-10
+betajs - v1.0.0 - 2015-04-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '348.1428706807095'
+		version: '349.1428988653370'
 	};
 });
 
@@ -1588,7 +1588,8 @@ Scoped.define("module:Structures.AvlTree", function () {
 				data : data,
 				left : null,
 				right : null,
-				height : 1
+				height : 1,
+				length: 1
 			};
 		},
 	
@@ -1603,17 +1604,26 @@ Scoped.define("module:Structures.AvlTree", function () {
 		height : function(node) {
 			return node ? node.height : 0;
 		},
+		
+		length : function (node){
+			return node ? node.length : 0;
+		}, 
 	
 		height_join : function(left, right) {
 			return 1 + Math.max(this.height(left), this.height(right));
 		},
 	
+		length_join : function(left, right) {
+			return 1 + this.length(left) + this.length(right);
+		},
+
 		create : function(data, left, right) {
 			return {
 				data : data,
 				left : left,
 				right : right,
-				height : this.height_join(left, right)
+				height : this.height_join(left, right),
+				length : this.length_join(left, right)
 			};
 		},
 	
@@ -1677,7 +1687,7 @@ Scoped.define("module:Structures.AvlTree", function () {
 			return [ result[0], this.join(root.data, root.left, result[1]) ];
 		},
 	
-		rereoot : function(left, right) {
+		reroot : function(left, right) {
 			if (!left || !right)
 				return left || right;
 			if (this.height(left) > this.height(right)) {
@@ -1718,7 +1728,6 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 		empty : function(compare) {
 			return {
 				root : null,
-				length : 0,
 				compare : compare || function(x, y) {
 					return x > y ? 1 : x < y ? -1 : 0;
 				}
@@ -1730,7 +1739,7 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 		},
 	
 		length : function(t) {
-			return t.length;
+			return t.root ? t.root.length : 0;
 		},
 	
 		__add : function(key, value, t, node) {
@@ -1738,10 +1747,8 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 				key : key,
 				value : value
 			};
-			if (!node) {
-				t.length++;
+			if (!node) 
 				return AvlTree.singleton(kv);
-			}
 			var c = t.compare(key, node.data.key);
 			if (c === 0) {
 				node.data = kv;
@@ -1804,6 +1811,32 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			this.iterate_from(from_key, t, function(key, value) {
 				return t.compare(key, to_key) * (reverse ? -1 : 1) <= 0 && callback.call(context, key, value) !== false;
 			}, this, reverse);
+		},
+		
+		__treeSizeLeft: function (key, t, node) {
+			var c = t.compare(key, node.data.key);
+			if (c < 0)
+				return this.__treeSizeLeft(key, t, node.left);
+			return 1 + (node.left ? node.left.length : 0) + (c > 0 ? this.__treeSizeLeft(key, t, node.right) : 0);
+		},
+		
+		__treeSizeRight: function (key, t, node) {
+			var c = t.compare(key, node.data.key);
+			if (c > 0)
+				return this.__treeSizeRight(key, t, node.right);
+			return 1 + (node.right ? node.right.length : 0) + (c < 0 ? this.__treeSizeRight(key, t, node.left) : 0);
+		},
+		
+		__distance: function (keyLeft, keyRight, t, node) {
+			var cLeft = t.compare(keyLeft, node.data.key);
+			var cRight = t.compare(keyRight, node.data.key);
+			if (cLeft > 0 || cRight < 0)
+				return this.__distance(keyLeft, keyRight, t, cLeft > 0 ? node.right : node.left);
+			return 1 + (cRight > 0 ? this.__treeSizeLeft(keyRight, t, node.right) : 0) + (cLeft < 0 ? this.__treeSizeRight(keyLeft, t, node.left) : 0);
+		},
+		
+		distance: function (keyLeft, keyRight, t) {
+			return t.compare(keyLeft, keyRight) < 0 ? this.__distance(keyLeft, keyRight, t, t.root) - 1 : 0;
 		}
 	
 	};

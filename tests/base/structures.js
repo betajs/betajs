@@ -18,3 +18,12 @@ test("treemap iteration test", function() {
 	}, null, true);
 	QUnit.equal(s, "e5d4c3b2a1");
 });
+
+test("treemap distance test", function () {
+	var TM = BetaJS.Structures.TreeMap;
+	var tm = TM.empty(BetaJS.Comparators.byValue);
+	for (var i = 0; i < 256; ++i)
+		tm = TM.add(i, i, tm);
+	for (var j = 0; j < 128; ++j)
+		QUnit.equal(TM.distance(j, 255-j, tm), 255 - 2 * j);
+});
