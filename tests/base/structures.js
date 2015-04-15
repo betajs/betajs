@@ -24,6 +24,9 @@ test("treemap distance test", function () {
 	var tm = TM.empty(BetaJS.Comparators.byValue);
 	for (var i = 0; i < 256; ++i)
 		tm = TM.add(i, i, tm);
-	for (var j = 0; j < 128; ++j)
+	for (var j = 0; j < 128; ++j) {
 		QUnit.equal(TM.distance(j, 255-j, tm), 255 - 2 * j);
+		QUnit.equal(TM.treeSizeRight(j, tm), 255 - j + 1);
+		QUnit.equal(TM.treeSizeLeft(j, tm), j + 1);
+	}
 });

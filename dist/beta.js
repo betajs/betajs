@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-04-14
+betajs - v1.0.0 - 2015-04-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-04-14
+betajs - v1.0.0 - 2015-04-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '349.1428988653370'
+		version: '350.1429134364359'
 	};
 });
 
@@ -1813,6 +1813,15 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			}, this, reverse);
 		},
 		
+		take_min: function (t) {
+			var a = AvlTree.take_min(t.root);
+			a[1] = {
+				compare: t.compare,
+				root: a[1]
+			};
+			return a;
+		},
+		
 		__treeSizeLeft: function (key, t, node) {
 			var c = t.compare(key, node.data.key);
 			if (c < 0)
@@ -1835,6 +1844,14 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			return 1 + (cRight > 0 ? this.__treeSizeLeft(keyRight, t, node.right) : 0) + (cLeft < 0 ? this.__treeSizeRight(keyLeft, t, node.left) : 0);
 		},
 		
+		treeSizeLeft: function (key, t) {
+			return this.__treeSizeLeft(key, t, t.root);
+		},
+		
+		treeSizeRight: function (key, t) {
+			return this.__treeSizeRight(key, t, t.root);
+		},
+
 		distance: function (keyLeft, keyRight, t) {
 			return t.compare(keyLeft, keyRight) < 0 ? this.__distance(keyLeft, keyRight, t, t.root) - 1 : 0;
 		}
@@ -3269,6 +3286,96 @@ Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], 
 				var ret = this.__array[this.__i];
 				this.__i++;
 				return ret;
+			}
+	
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__finished = false;
+				this.__initialized = false;
+				this.__current = null;
+				this.__has_current = false;
+			},
+			
+			_initialize: function () {},
+			
+			_next: function () {},
+			
+			_finished: function () {
+				this.__finished = true;
+			},
+			
+			_current: function (result) {
+				this.__current = result;
+				this.__has_current = true;
+			},
+			
+			__touch: function () {
+				if (!this.__initialized)
+					this._initialize();
+				this.__initiliazed = true;
+				if (!this.__has_current && !this.__finished)
+					this._next();
+			},
+			
+			hasNext: function () {
+				this.__touch();
+				return this.__has_current;
+			},
+			
+			next: function () {
+				this.__touch();
+				return this.__current;
+			}
+	
+		};
+	});
+});
+
+Scoped.define("module:Iterators.SortedOrIterator", [
+    "module:Iterators.LazyIterator",
+    "module:Structures.TreeMap",
+    "module:Objs"
+], function (Iterator, TreeMap, Objs, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function (iterators, compare) {
+				inherited.constructor.call(this);
+				this.__iterators = iterators;
+				this.__map = TreeMap.empty(compare);
+			},
+			
+			__process: function (iter) {
+				if (iter.hasNext()) {
+					var n = iter.next();
+	  				var value = TreeMap.find(n, this.__map);
+	  				if (value)
+	  					value.push(iter);
+	  				else 
+	  					this.__map = TreeMap.add(n, [iter], this.__map);
+				}
+			},
+			
+			_initialize: function () {
+				Objs.iterate(this.__iterators, this.__process, this);
+				if (TreeMap.is_empty(this.__map))
+					this._finished();
+			},
+			
+			_next: function () {
+				var ret = TreeMap.take_min(this.__map);
+				this.__map = ret[1];
+				Objs.iter(ret[0].value, this.__process, this);
+				return ret[0].key;
 			}
 	
 		};

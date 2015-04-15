@@ -235,6 +235,15 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			}, this, reverse);
 		},
 		
+		take_min: function (t) {
+			var a = AvlTree.take_min(t.root);
+			a[1] = {
+				compare: t.compare,
+				root: a[1]
+			};
+			return a;
+		},
+		
 		__treeSizeLeft: function (key, t, node) {
 			var c = t.compare(key, node.data.key);
 			if (c < 0)
@@ -257,6 +266,14 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			return 1 + (cRight > 0 ? this.__treeSizeLeft(keyRight, t, node.right) : 0) + (cLeft < 0 ? this.__treeSizeRight(keyLeft, t, node.left) : 0);
 		},
 		
+		treeSizeLeft: function (key, t) {
+			return this.__treeSizeLeft(key, t, t.root);
+		},
+		
+		treeSizeRight: function (key, t) {
+			return this.__treeSizeRight(key, t, t.root);
+		},
+
 		distance: function (keyLeft, keyRight, t) {
 			return t.compare(keyLeft, keyRight) < 0 ? this.__distance(keyLeft, keyRight, t, t.root) - 1 : 0;
 		}
