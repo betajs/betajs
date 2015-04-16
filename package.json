@@ -18,7 +18,9 @@
 		"grunt-node-qunit": "",
 		"grunt-contrib-jshint": "",
 		"grunt-wget": "",
-		"grunt-jsdoc": "beta"
+		"grunt-jsdoc": "beta",
+		"grunt-shell": "",
+		"grunt-template": ""
 	},
 	"repository": {
 		"type": "git",
