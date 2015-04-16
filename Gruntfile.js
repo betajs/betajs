@@ -133,7 +133,7 @@ module.exports = function(grunt) {
 					}
 				},
 				template : {
-					browserstack : {
+					"browserstack-desktop" : {
 						options : {
 							data: {
 								data: {
@@ -148,15 +148,31 @@ module.exports = function(grunt) {
 						                'safari_latest',
 							            'safari_4',
 						                'opera_latest', 
-									    'opera_12_15', 
+									    'opera_12_15',
 						                'ie_11',
 						                'ie_10',
 						                'ie_9',
 						                'ie_8',
 						                'ie_7',
-						                'ie_6',
-									    {"os": "ios", "os_version": "8.0"},  
-									    {"os": "ios", "os_version": "6.1"},
+						                'ie_6'
+						            ]
+								}
+							}
+						},
+						files : {
+							"browserstack.json" : ["json.tpl"]
+						}
+					},
+					"browserstack-mobile" : {
+						options : {
+							data: {
+								data: {
+									"test_path" : "tests/tests.html",
+									"test_framework" : "qunit",
+									"timeout": 10 * 60,
+									"browsers": [
+									    {"os": "ios", "os_version": "8.0"}, 
+									    {"os": "ios", "os_version": "7.0"},
 									    {"os": "android", "os_version": "4.4"},
 									    {"os": "android", "os_version": "4.0"}
 						            ]
@@ -166,7 +182,7 @@ module.exports = function(grunt) {
 						files : {
 							"browserstack.json" : ["json.tpl"]
 						}
-					}
+					}			
 				}
 			});
 
@@ -191,6 +207,7 @@ module.exports = function(grunt) {
 	grunt.registerTask('check', [ 'lint', 'qunit' ]);
 	grunt.registerTask('dependencies', [ 'wget:dependencies' ]);
 	grunt.registerTask('closure', [ 'closureCompiler', 'clean:closure' ]);
-	grunt.registerTask('browserstack', [ 'template:browserstack', 'shell:browserstack', 'clean:browserstack' ]);
+	grunt.registerTask('browserstack-desktop', [ 'template:browserstack-desktop', 'shell:browserstack', 'clean:browserstack' ]);
+	grunt.registerTask('browserstack-mobile', [ 'template:browserstack-mobile', 'shell:browserstack', 'clean:browserstack' ]);
 
 };
