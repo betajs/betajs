@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-04-15
+betajs - v1.0.0 - 2015-04-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-04-15
+betajs - v1.0.0 - 2015-04-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '350.1429134364359'
+		version: '352.1429221701174'
 	};
 });
 
@@ -2643,8 +2643,19 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 						this.__auto_destroy_list[i].destroy();
 				}
 			}
+			var cid = this.cid();
 			for (var key in this)
 				delete this[key];
+			Ids.objectId(this, cid);
+			this.destroy = this.__destroyedDestroy;
+		},
+		
+		destroyed: function () {
+			return this.destroy === this.__destroyedDestroy;
+		},
+		
+		__destroyedDestroy: function () {
+			throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
 		},
 		
 		cid: function () {

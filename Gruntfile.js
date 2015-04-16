@@ -156,8 +156,8 @@ module.exports = function(grunt) {
 						                'ie_7',
 						                'ie_6',
 									    {"os": "ios", "os_version": "8.0"},  
-									    //{"os": "ios", "os_version": "6.1"},
-									    //{"os": "android", "os_version": "5.0"},
+									    {"os": "ios", "os_version": "6.1"},
+									    {"os": "android", "os_version": "4.4"},
 									    {"os": "android", "os_version": "4.0"}
 						            ]
 								}

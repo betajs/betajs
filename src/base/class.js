@@ -181,8 +181,19 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 						this.__auto_destroy_list[i].destroy();
 				}
 			}
+			var cid = this.cid();
 			for (var key in this)
 				delete this[key];
+			Ids.objectId(this, cid);
+			this.destroy = this.__destroyedDestroy;
+		},
+		
+		destroyed: function () {
+			return this.destroy === this.__destroyedDestroy;
+		},
+		
+		__destroyedDestroy: function () {
+			throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
 		},
 		
 		cid: function () {
