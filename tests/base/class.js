@@ -85,9 +85,13 @@ test("test constructor & destructor", function() {
 		}
 	});
 	var b = new B(1, 2);
-	ok(b.x == 1 && b.y == 2 && b.z == 3);
+	QUnit.equal(b.x, 1);
+	QUnit.equal(b.y, 2);
+	QUnit.equal(b.z, 3);
 	b.destroy();
-	ok(typeof b.x == "undefined" && typeof b.y == "undefined" && typeof b.z == "undefined");
+	QUnit.equal(typeof b.x, "undefined");
+	QUnit.equal(typeof b.y, "undefined");
+	QUnit.equal(typeof b.z, "undefined");
 });
 
 
