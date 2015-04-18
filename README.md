@@ -31,10 +31,10 @@ Active, Production ready
 ## CDN
 | Resource | URL |
 | :----- | -------: |
-| beta.js | [http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta.js](http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta.js) |
-| beta.min.js | [http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta.min.js](http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta.min.js) |
-| beta-noscoped.js | [http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta-noscoped.js](http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta-noscoped.js) |
-| beta-noscoped.min.js | [http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta-noscoped.min.js](http://cdn.rawgit.com/betajs/betajs/tree/master/dist/beta-noscoped.min.js) |
+| beta.js | [http://cdn.rawgit.com/betajs/betajs/master/dist/beta.js](http://cdn.rawgit.com/betajs/betajs/master/dist/beta.js) |
+| beta.min.js | [http://cdn.rawgit.com/betajs/betajs/master/dist/beta.min.js](http://cdn.rawgit.com/betajs/betajs/master/dist/beta.min.js) |
+| beta-noscoped.js | [http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.js](http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.js) |
+| beta-noscoped.min.js | [http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.min.js](http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.min.js) |
 
 
 ## Unit Tests
