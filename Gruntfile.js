@@ -134,6 +134,17 @@ module.exports = function(grunt) {
 					}
 				},
 				template : {
+					"readme" : {
+						options : {
+							data: {
+								indent: "",
+								framework: grunt.file.readJSON('package.json')
+							}
+						},
+						files : {
+							"README.md" : ["readme.tpl"]
+						}
+					},
 					"browserstack-desktop" : {
 						options : {
 							data: {
@@ -210,5 +221,6 @@ module.exports = function(grunt) {
 	grunt.registerTask('closure', [ 'closureCompiler', 'clean:closure' ]);
 	grunt.registerTask('browserstack-desktop', [ 'template:browserstack-desktop', 'shell:browserstack', 'clean:browserstack' ]);
 	grunt.registerTask('browserstack-mobile', [ 'template:browserstack-mobile', 'shell:browserstack', 'clean:browserstack' ]);
+	grunt.registerTask('readme', [ 'template:readme' ]);
 
 };
