@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-04-16
+betajs - v1.0.0 - 2015-04-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '355.1429230918532'
+		version: '364.1429715913632'
 	};
 });
 
