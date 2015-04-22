@@ -72,7 +72,16 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 				if (this.__ended)
 					return this;
 				if (!Types.is_array(promises))
-					promises = [promises];	
+					promises = [promises];
+				var f = function (error, value) {
+					if (error)
+						this.__errorPromise = promises[this.idx];
+					else {
+						this.promise.__successCount++;
+						this.promise.__values[this.idx] = value;
+					}
+					this.promise.results();
+				};
 				for (var i = 0; i < promises.length; ++i) {
 					var last = this.__promises.length;
 					this.__promises.push(promises[i]);
@@ -84,15 +93,7 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 						} else
 							this.__errorPromise = promises[i];
 					} else {
-						promises[i].callback(function (error, value) {
-							if (error)
-								this.__errorPromise = promises[this.idx];
-							else {
-								this.promise.__successCount++;
-								this.promise.__values[this.idx] = value;
-							}
-							this.promise.results();
-						}, {promise: this, idx: last});					
+						promises[i].callback(f, {promise: this, idx: last});					
 					}
 				}
 				return this;

@@ -76,6 +76,10 @@ test("test tree query engine", function() {
 	QUnit.deepEqual(query.result(), [leftleft, leftright]);
 
 	var leftmid = SimpleTree.nodeAddNode(left, "mid", {other: "value"});
+	
+	var cmp = function (x, y) {
+		return BetaJS.Ids.objectId(x) > BetaJS.Ids.objectId(y) ? 1 : -1;
+	};
 
 	QUnit.deepEqual(query.result(), [leftleft, leftright, leftmid]);
 	
@@ -83,9 +87,9 @@ test("test tree query engine", function() {
 	
 	QUnit.deepEqual(query.result(), [leftright, leftmid]);
 	
-	var leftleft = SimpleTree.nodeAddNode(left, "left", {test: "tester"});
+	leftleft = SimpleTree.nodeAddNode(left, "left", {test: "tester"});
 	
-	QUnit.deepEqual(query.result(), [leftright, leftmid, leftleft]);
+	QUnit.deepEqual(query.result().sort(cmp), [leftright, leftmid, leftleft].sort(cmp));
 	
 	var query2 = engine.query(root, ">>[label='foobar']");
 	

@@ -1,23 +1,58 @@
 {
-  "name": "betajs",
-  "version": "1.0.0",
-  "description": "BetaJS is a general-purpose JavaScript framework for doing awesome things.",
-  "homepage": "http://betajs.com",
-  "contributors": [
-  	"Oliver Friedmann",
-  	"Victor Lingenthal"
-  ],
-  "license": "MIT",
-  "devDependencies": {
-    "grunt": "",
-    "grunt-contrib-jshint": "",
-    "grunt-contrib-nodeunit": "",
-    "grunt-contrib-concat": "",
-    "grunt-contrib-uglify": "",
-    "grunt-shell": "",
-    "grunt-newer": "",
-    "grunt-contrib-clean": "",
-    "grunt-preprocess": "",
-    "grunt-git-revision-count": ""
-  }
+	"name": "betajs",
+	"version": "1.0.0",
+	"description": "BetaJS is a general-purpose JavaScript framework for doing awesome things.",
+	"homepage": "http://betajs.com",
+	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
+	"license": "MIT",
+	"devDependencies": {
+		"grunt": "",
+		"grunt-contrib-jshint": "",
+		"grunt-contrib-nodeunit": "",
+		"grunt-contrib-concat": "",
+		"grunt-contrib-uglify": "",
+		"grunt-contrib-clean": "",
+		"grunt-preprocess": "",
+		"grunt-git-revision-count": "",
+		"grunt-closure-tools": "",
+		"grunt-node-qunit": "",
+		"grunt-contrib-jshint": "",
+		"grunt-wget": "",
+		"grunt-jsdoc": "beta",
+		"grunt-shell": "",
+		"grunt-template": ""
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/betajs/betajs.git"
+	},
+	"meta": {
+		"credits": [
+			"Underscore, MIT Software License, (c) 2009-2013 Jeremy Ashkenas, DocumentCloud",
+			"parseUri, MIT Software License, (c) Steven Levithan"
+		],
+		"status": "Active, Production ready",
+		"compatability": {
+			"Firefox": "4 - Latest",
+			"Chrome": "14 - Latest",
+			"Safari": "4 - Latest",
+			"Opera": "12 - Latest",
+			"Internet Explorer": "6 - Latest",
+			"iOS": "7.0 - Latest",
+			"Android": "4.0 - Latest",
+			"NodeJS": "0.10 - Latest" 
+		},
+		"weakDependencies": {
+			"betajs-scoped": "https://github.com/betajs/betajs-scoped"
+		},
+		"tests": {
+			"Test Suite": "http://rawgit.com/betajs/betajs/master/tests/tests.html"
+		},
+		"cdn": {
+			"beta.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta.js",
+			"beta.min.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta.min.js",
+			"beta-noscoped.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.js",
+			"beta-noscoped.min.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.min.js"
+		}
+	} 
 }

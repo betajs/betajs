@@ -1,6 +1,7 @@
 Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions", "module:Ids"], function (Types, Objs, Functions, Ids) {
 	var Class = function () {};
 
+	/** @suppress {checkTypes} */
 	Class.extend = function (options, objects, statics, class_statics) {
 		objects = objects || [];
 		if (!Types.is_array(objects))
@@ -163,76 +164,82 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	 * 
 	 */
 	
+	Class.prototype.__class_instance_guid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
 	
-	Objs.extend(Class.prototype, {
-		
-		__class_instance_guid: "e6b0ed30-80ee-4b28-af02-7d52430ba45f",
-		
-		constructor: function () {
-			this._notify("construct");
-		},
-		
-		destroy: function () {
-			this._notify("destroy");
-			if (this.__auto_destroy_list) {
-				for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
-					if ("destroy" in this.__auto_destroy_list[i])
-						this.__auto_destroy_list[i].destroy();
-				}
+	Class.prototype.constructor = function () {
+		this._notify("construct");
+	};
+	
+	Class.prototype.destroy = function () {
+		this._notify("destroy");
+		if (this.__auto_destroy_list) {
+			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
+				if ("destroy" in this.__auto_destroy_list[i])
+					this.__auto_destroy_list[i].destroy();
 			}
-			for (var key in this)
-				delete this[key];
-		},
-		
-		cid: function () {
-			return Ids.objectId(this);
-		},
-	
-		cls: Class,
-		
-		as_method: function (s) {
-			return Functions.as_method(this[s], this);
-		},
-		
-		auto_destroy: function (obj) {
-			if (!this.__auto_destroy_list)
-				this.__auto_destroy_list = [];
-			var target = obj;
-			if (!Types.is_array(target))
-			   target = [target];
-			for (var i = 0; i < target.length; ++i)
-			   this.__auto_destroy_list.push(target[i]);
-			return obj;
-		},
-		
-		_notify: function (name) {
-			if (!this.cls.__notifications)
-				return;
-			var rest = Array.prototype.slice.call(arguments, 1);
-			Objs.iter(this.cls.__notifications[name], function (entry) {
-				var method = Types.is_function(entry) ? entry : this[entry];
-				if (!method)
-					throw this.cls.classname  + ": Could not find " + name + " notification handler " + entry;
-				method.apply(this, rest);
-			}, this);
-		},
-		
-		instance_of: function (cls) {
-			return this.cls.ancestor_of(cls);
-		},
-		
-		// Legacy Methods
-		
-		_auto_destroy: function(obj) {
-			return this.auto_destroy(obj);
-		},
-		
-		_inherited: function (cls, func) {
-			return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 		}
-		
-	});
+		var cid = this.cid();
+		for (var key in this)
+			delete this[key];
+		Ids.objectId(this, cid);
+		this.destroy = this.__destroyedDestroy;
+	};
+	
+	Class.prototype.destroyed = function () {
+		return this.destroy === this.__destroyedDestroy;
+	};
+	
+	Class.prototype.__destroyedDestroy = function () {
+		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
+	};
+	
+	Class.prototype.cid = function () {
+		return Ids.objectId(this);
+	};
 
+	Class.prototype.cls = Class;
+	
+	Class.prototype.as_method = function (s) {
+		return Functions.as_method(this[s], this);
+	};
+	
+	Class.prototype.auto_destroy = function (obj) {
+		if (!this.__auto_destroy_list)
+			this.__auto_destroy_list = [];
+		var target = obj;
+		if (!Types.is_array(target))
+		   target = [target];
+		for (var i = 0; i < target.length; ++i)
+		   this.__auto_destroy_list.push(target[i]);
+		return obj;
+	};
+	
+	Class.prototype._notify = function (name) {
+		if (!this.cls.__notifications)
+			return;
+		var rest = Array.prototype.slice.call(arguments, 1);
+		Objs.iter(this.cls.__notifications[name], function (entry) {
+			var method = Types.is_function(entry) ? entry : this[entry];
+			if (!method)
+				throw this.cls.classname  + ": Could not find " + name + " notification handler " + entry;
+			method.apply(this, rest);
+		}, this);
+	};
+	
+	Class.prototype.instance_of = function (cls) {
+		return this.cls.ancestor_of(cls);
+	};
+	
+	// Legacy Methods
+	
+	Class.prototype._auto_destroy = function(obj) {
+		return this.auto_destroy(obj);
+	};
+	
+	Class.prototype._inherited = function (cls, func) {
+		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
+	};
+		
 	return Class;
 
 });

@@ -13,20 +13,6 @@ Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, 
 				return this;
 			},
 			
-			callstack: function () {
-				var callstack = [];
-				var current = arguments.callee.caller;
-				while (current) {
-					callstack.push(current.toString());
-					current = current.caller;
-				}
-				return callstack;
-			},
-			
-			callstack_to_string: function () {
-				return this.callstack().join("\n");
-			},
-			
 			message: function () {
 				return this.__message;
 			},
@@ -36,7 +22,7 @@ Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, 
 			},
 			
 			format: function () {
-				return this.cls.classname + ": " + this.toString() + "\n\nCall Stack:\n" + this.callstack_to_string();
+				return this.cls.classname + ": " + this.toString();
 			},
 			
 			json: function () {

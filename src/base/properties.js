@@ -160,18 +160,15 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			for (var i = 0; i < deps.length; ++i) {
-				deps[i].properties.on("change:" + deps[i].key, function () {
-					recompute();
-				}, deps[i]);
-			}
+			for (var i = 0; i < deps.length; ++i)
+				deps[i].properties.on("change:" + deps[i].key, recompute, deps[i]);
 			recompute();
 			return this;
 		},
 		
 		unbind: function (key, props) {
 			if (key in this.__properties.bindings) {
-				for (i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
+				for (var i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
 					var binding = this.__properties.bindings[key][i];
 					if (!props || props == binding) {
 						if (binding.left) 
@@ -315,7 +312,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 					this.trigger("change:" + key, value, oldValue);
 				}
 				Objs.iter(current.children, function (child, subkey) {
-					process_set.call(this, child, key ? (key + "." + subkey) : subkey, value[subkey], oldValue[subkey]);
+					process_set.call(this, child, key ? (key + "." + subkey) : subkey, Types.is_object(value) && value ? value[subkey] : null, Types.is_object(oldValue) && oldValue ? oldValue[subkey] : null);
 				}, this);
 			}
 			process_set.call(this, current, key, value, oldValue);
@@ -332,7 +329,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
 		
-		set: function (key, value) {
+		set: function (key, value, force) {
 			if (Types.is_object(value) && value && value.guid == this.__properties_guid) {
 				if (value.properties)
 					this.bind(key, value.properties, {secondKey: value.key});
@@ -345,6 +342,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			if (oldValue !== value) {
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
+			} else if (force) {
+				this.trigger("change", key, value, oldValue);
+				this.trigger("change:" + key, value, oldValue);
 			}
 			return this;
 		},

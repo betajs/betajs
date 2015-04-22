@@ -170,11 +170,11 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			var key = null;
 			if (depth && depth > 0) {
 				for (key in obj1) {
-					if (!key in obj2 || !this.equals(obj1[key], obj2[key], depth-1))
+					if (!(key in obj2) || !this.equals(obj1[key], obj2[key], depth-1))
 						return false;
 				}
 				for (key in obj2) {
-					if (!key in obj1)
+					if (!(key in obj1))
 						return false;
 				}
 				return true;

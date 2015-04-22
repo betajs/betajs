@@ -30,7 +30,9 @@ test("test states w router", function () {
 	router.registerRoute("b", "B");
 	router.registerRoute("c", "C");
 	host.initialize("BetaJS.Test.A");
+	host.state().host.set("x", 42);
 	QUnit.equal(router.currentRoute(), "a");
 	router.navigateRoute("c");
 	QUnit.equal(host.state().state_name(), "C");
+	QUnit.equal(host.get("x"), 42);
 });

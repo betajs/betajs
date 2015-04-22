@@ -1,4 +1,4 @@
-Scoped.define("module:Classes.InvokerMixin", ["module:Types", "module:Functions"], function (Types, Functions) {
+Scoped.define("module:Classes.InvokerMixin", ["module:Objs", "module:Types", "module:Functions"], function (Objs, Types, Functions) {
 	return {
 		
 		invoke_delegate : function(invoker, members) {
@@ -6,8 +6,7 @@ Scoped.define("module:Classes.InvokerMixin", ["module:Types", "module:Functions"
 				members = [members];
 			invoker = this[invoker];
 			var self = this;
-			for (var i = 0; i < members.length; ++i) {
-				var member = members[i];
+			Objs.iter(members, function (member) {
 				this[member] = function(member) {
 					return function() {
 						var args = Functions.getArguments(arguments);
@@ -15,8 +14,7 @@ Scoped.define("module:Classes.InvokerMixin", ["module:Types", "module:Functions"
 						return invoker.apply(self, args);
 					};
 				}.call(self, member);
-			}
-		
+			}, this);
 		}
 	};
 });
@@ -289,10 +287,10 @@ Scoped.define("module:Classes.PathResolver", ["module:Class", "module:Objs"], fu
 				while (true) {
 					var matches = regExp.exec(path);
 					if (!matches)
-						return this.simplify(path);
+						break;
 					path = path.replace(regExp, this._bindings[matches[1]]);
 				}
-				return path;
+				return this.simplify(path);
 			},
 			
 			simplify: function (path) {
@@ -346,7 +344,11 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 			create: function (key) {
 				var cons = Functions.newClassFunc(this.get(key));
 				return cons.apply(this, Functions.getArguments(arguments, 1));
-			}	
+			},
+			
+			classes: function () {
+				return this._classes;
+			}
 			
 		};
 	});

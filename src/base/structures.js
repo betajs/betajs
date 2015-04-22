@@ -10,7 +10,8 @@ Scoped.define("module:Structures.AvlTree", function () {
 				data : data,
 				left : null,
 				right : null,
-				height : 1
+				height : 1,
+				length: 1
 			};
 		},
 	
@@ -25,17 +26,26 @@ Scoped.define("module:Structures.AvlTree", function () {
 		height : function(node) {
 			return node ? node.height : 0;
 		},
+		
+		length : function (node){
+			return node ? node.length : 0;
+		}, 
 	
 		height_join : function(left, right) {
 			return 1 + Math.max(this.height(left), this.height(right));
 		},
 	
+		length_join : function(left, right) {
+			return 1 + this.length(left) + this.length(right);
+		},
+
 		create : function(data, left, right) {
 			return {
 				data : data,
 				left : left,
 				right : right,
-				height : this.height_join(left, right)
+				height : this.height_join(left, right),
+				length : this.length_join(left, right)
 			};
 		},
 	
@@ -99,7 +109,7 @@ Scoped.define("module:Structures.AvlTree", function () {
 			return [ result[0], this.join(root.data, root.left, result[1]) ];
 		},
 	
-		rereoot : function(left, right) {
+		reroot : function(left, right) {
 			if (!left || !right)
 				return left || right;
 			if (this.height(left) > this.height(right)) {
@@ -140,7 +150,6 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 		empty : function(compare) {
 			return {
 				root : null,
-				length : 0,
 				compare : compare || function(x, y) {
 					return x > y ? 1 : x < y ? -1 : 0;
 				}
@@ -152,7 +161,7 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 		},
 	
 		length : function(t) {
-			return t.length;
+			return t.root ? t.root.length : 0;
 		},
 	
 		__add : function(key, value, t, node) {
@@ -160,10 +169,8 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 				key : key,
 				value : value
 			};
-			if (!node) {
-				t.length++;
+			if (!node) 
 				return AvlTree.singleton(kv);
-			}
 			var c = t.compare(key, node.data.key);
 			if (c === 0) {
 				node.data = kv;
@@ -194,35 +201,81 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			return this.__find(key, t, t.root);
 		},
 	
-		__iterate : function(t, node, callback, context) {
+		__iterate : function(t, node, callback, context, reverse) {
 			if (!node)
 				return true;
-			return this.__iterate(t, node.left, callback, context) && (callback.call(context, node.data.key, node.data.value) !== false) && this.__iterate(t, node.right, callback, context);
+			return (
+				this.__iterate(t, reverse ? node.right : node.left, callback, context, reverse) &&
+				(callback.call(context, node.data.key, node.data.value) !== false) &&
+				this.__iterate(t, reverse ? node.left : node.right, callback, context, reverse));
 		},
 	
-		iterate : function(t, callback, context) {
-			this.__iterate(t, t.root, callback, context);
+		iterate : function(t, callback, context, reverse) {
+			this.__iterate(t, t.root, callback, context, reverse);
 		},
 	
-		__iterate_from : function(key, t, node, callback, context) {
+		__iterate_from : function(key, t, node, callback, context, reverse) {
 			if (!node)
 				return true;
-			var c = t.compare(key, node.data.key);
-			if (c < 0 && !this.__iterate_from(key, t, node.left, callback, context))
+			var c = t.compare(key, node.data.key) * (reverse ? -1 : 1);
+			if (c < 0 && !this.__iterate_from(key, t, reverse ? node.right : node.left, callback, context, reverse))
 				return false;
 			if (c <= 0 && callback.call(context, node.data.key, node.data.value) === false)
 				return false;
-			return this.__iterate_from(key, t, node.right, callback, context);
+			return this.__iterate_from(key, t, reverse ? node.left : node.right, callback, context, reverse);
 		},
 	
-		iterate_from : function(key, t, callback, context) {
-			this.__iterate_from(key, t, t.root, callback, context);
+		iterate_from : function(key, t, callback, context, reverse) {
+			this.__iterate_from(key, t, t.root, callback, context, reverse);
 		},
 	
-		iterate_range : function(from_key, to_key, t, callback, context) {
+		iterate_range : function(from_key, to_key, t, callback, context, reverse) {
 			this.iterate_from(from_key, t, function(key, value) {
-				return t.compare(key, to_key) <= 0 && callback.call(context, key, value) !== false;
-			}, this);
+				return t.compare(key, to_key) * (reverse ? -1 : 1) <= 0 && callback.call(context, key, value) !== false;
+			}, this, reverse);
+		},
+		
+		take_min: function (t) {
+			var a = AvlTree.take_min(t.root);
+			a[1] = {
+				compare: t.compare,
+				root: a[1]
+			};
+			return a;
+		},
+		
+		__treeSizeLeft: function (key, t, node) {
+			var c = t.compare(key, node.data.key);
+			if (c < 0)
+				return this.__treeSizeLeft(key, t, node.left);
+			return 1 + (node.left ? node.left.length : 0) + (c > 0 ? this.__treeSizeLeft(key, t, node.right) : 0);
+		},
+		
+		__treeSizeRight: function (key, t, node) {
+			var c = t.compare(key, node.data.key);
+			if (c > 0)
+				return this.__treeSizeRight(key, t, node.right);
+			return 1 + (node.right ? node.right.length : 0) + (c < 0 ? this.__treeSizeRight(key, t, node.left) : 0);
+		},
+		
+		__distance: function (keyLeft, keyRight, t, node) {
+			var cLeft = t.compare(keyLeft, node.data.key);
+			var cRight = t.compare(keyRight, node.data.key);
+			if (cLeft > 0 || cRight < 0)
+				return this.__distance(keyLeft, keyRight, t, cLeft > 0 ? node.right : node.left);
+			return 1 + (cRight > 0 ? this.__treeSizeLeft(keyRight, t, node.right) : 0) + (cLeft < 0 ? this.__treeSizeRight(keyLeft, t, node.left) : 0);
+		},
+		
+		treeSizeLeft: function (key, t) {
+			return this.__treeSizeLeft(key, t, t.root);
+		},
+		
+		treeSizeRight: function (key, t) {
+			return this.__treeSizeRight(key, t, t.root);
+		},
+
+		distance: function (keyLeft, keyRight, t) {
+			return t.compare(keyLeft, keyRight) < 0 ? this.__distance(keyLeft, keyRight, t, t.root) - 1 : 0;
 		}
 	
 	};

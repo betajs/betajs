@@ -83,19 +83,6 @@ Scoped.define("module:KeyValue.MemoryKeyValueStore", ["module:KeyValue.KeyValueS
 });
 
 
-Scoped.define("module:KeyValue.LocalKeyValueStore", ["module:KeyValue.MemoryKeyValueStore"], function (MemoryKeyValueStore, scoped) {
-	return MemoryKeyValueStore.extend({scoped: scoped}, function (inherited) {
-		return {
-	
-			constructor: function () {
-				inherited.constructor.call(this, localStorage, false);
-			}
-	
-		};
-	});
-});
-
-
 Scoped.define("module:KeyValue.DefaultKeyValueStore", ["module:KeyValue.KeyValueStore"], function (KeyValueStore, scoped) {
 	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
 		return {

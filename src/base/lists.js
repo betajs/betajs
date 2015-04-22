@@ -157,6 +157,7 @@ Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module
 			},
 
 			_add: function (object) {
+<<<<<<< HEAD
 				while (true) {
 					var id = object.__cid;
 					if (!id) {
@@ -168,6 +169,18 @@ Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module
 					return id;
 				}
 				return null;
+=======
+		        var id = object.__cid;
+		        if (!id) {
+		        	while (true) {
+		                id = this.__id_generator ? Ids.objectId(object, this.__id_generator()) : Ids.objectId(object);
+		        		if (!this.__map[id] || !this.__id_generator)
+		        			break;
+		        	}
+	            }
+	    		this.__map[id] = object;
+	    		return id;
+>>>>>>> NEW_BRANCH
 			},
 
 			_remove: function (ident) {
@@ -205,9 +218,9 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				this.__items = [];
 				options = options || {};
 				if ("compare" in options)
-					this._compare = options["compare"];
+					this._compare = options.compare;
 				if ("get_ident" in options)
-					this._get_ident = options["get_ident"];
+					this._get_ident = options.get_ident;
 				inherited.constructor.call(this, objects);
 			},
 

@@ -1,4 +1,7 @@
 Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
+	/** String Utilities
+	 * @module BetaJS.Strings
+	 */
 	return {
 		
 		/** Converts a string new lines to html <br /> tags
@@ -113,7 +116,7 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		 */
 		strip_html : function(html) {
 			var result = html;
-			for ( i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
+			for (var i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
 				result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">", "i"), '');
 			result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
 			return result;

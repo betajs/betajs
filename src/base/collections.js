@@ -3,11 +3,11 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Events.EventsMixin",
 	    "module:Objs",
 	    "module:Functions",
-	    "module:Lists",
+	    "module:Lists.ArrayList",
 	    "module:Ids",
 	    "module:Properties.Properties",
 	    "module:Iterators.ArrayIterator"
-	], function (Class, EventsMixin, Objs, Functions, Lists, Ids, Properties, ArrayIterator, scoped) {
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -19,9 +19,9 @@ Scoped.define("module:Collections.Collection", [
 					Objs.iter(options.indices, this.add_secondary_index, this);
 				var list_options = {};
 				if ("compare" in options)
-					list_options["compare"] = options["compare"];
+					list_options.compare = options.compare;
 				list_options.get_ident = Functions.as_method(this.get_ident, this);
-				this.__data = new Lists.ArrayList([], list_options);
+				this.__data = new ArrayList([], list_options);
 				var self = this;
 				this.__data._ident_changed = function (object, index) {
 					self._index_changed(object, index);
@@ -33,7 +33,7 @@ Scoped.define("module:Collections.Collection", [
 					self._sorted();
 				};
 				if ("objects" in options)
-					this.add_objects(options["objects"]);
+					this.add_objects(options.objects);
 			},
 			
 			add_secondary_index: function (key) {
@@ -179,11 +179,11 @@ Scoped.define("module:Collections.FilteredCollection", [
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				options = options || {};
-				delete options["objects"];
+				delete options.objects;
 				options.compare = options.compare || parent.get_compare();
 				inherited.constructor.call(this, options);
 				if ("filter" in options)
-					this.filter = options["filter"];
+					this.filter = options.filter;
 				this.__parent.iterate(function (object) {
 					this.add(object);
 					return true;

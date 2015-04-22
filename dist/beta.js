@@ -1,10 +1,10 @@
 /*!
-betajs - v1.0.0 - 2015-02-22
+betajs - v1.0.0 - 2015-04-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
 /*!
-betajs-scoped - v0.0.1 - 2015-02-21
+betajs-scoped - v0.0.1 - 2015-03-26
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -12,30 +12,18 @@ var Scoped = (function () {
 var Globals = {
 
 	get : function(key) {
-		try {
-			if (window)
-				return window[key];
-		} catch (e) {
-		}
-		try {
-			if (global)
-				return global[key];
-		} catch (e) {
-		}
+		if (typeof window !== "undefined")
+			return window[key];
+		if (typeof global !== "undefined")
+			return global[key];
 		return null;
 	},
 
 	set : function(key, value) {
-		try {
-			if (window)
-				window[key] = value;
-		} catch (e) {
-		}
-		try {
-			if (global)
-				global[key] = value;
-		} catch (e) {
-		}
+		if (typeof window !== "undefined")
+			window[key] = value;
+		if (typeof global !== "undefined")
+			global[key] = value;
 		return value;
 	},
 	
@@ -288,10 +276,11 @@ function newNamespace (options) {
 				context: context
 			});
 			if (node.lazy.length > 0) {
-				var f = function () {
+				var f = function (node) {
 					if (node.lazy.length > 0) {
 						var lazy = node.lazy.shift();
 						lazy.callback.call(lazy.context || this, node.data);
+						f(node);
 					}
 				};
 				f(node);
@@ -451,6 +440,8 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 				};
 			} else {
 				var binding = bindings[parts[0]];
+				if (!binding)
+					throw ("The namespace '" + parts[0] + "' has not been defined (yet).");
 				return {
 					namespace: binding.namespace,
 					path : binding.path && parts[1] ? binding.path + "." + parts[1] : (binding.path || parts[1])
@@ -491,19 +482,20 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			var deps = [];
 			var environment = {};
 			if (count) {
+				var f = function (value) {
+					if (this.i < deps.length)
+						deps[this.i] = value;
+					count--;
+					if (count === 0) {
+						deps.push(environment);
+						args.callback.apply(args.context || this.ctx, deps);
+					}
+				};
 				for (var i = 0; i < allDependencies.length; ++i) {
 					var ns = this.resolve(allDependencies[i]);
 					if (i < dependencies.length)
 						deps.push(null);
-					ns.namespace.obtain(ns.path, function (value) {
-						if (this.i < deps.length)
-							deps[this.i] = value;
-						count--;
-						if (count === 0) {
-							deps.push(environment);
-							args.callback.apply(args.context || this.ctx, deps);
-						}
-					}, {
+					ns.namespace.obtain(ns.path, f, {
 						ctx: this,
 						i: i
 					});
@@ -531,7 +523,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '5.1424568052349',
+	version: '9.1427403679672',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -545,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-02-22
+betajs - v1.0.0 - 2015-04-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -558,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '335.1424625981067',
+		version: '355.1429230918532'
 	};
 });
 
@@ -567,6 +559,9 @@ Scoped.require(["module:"], function (mod) {
 }, this);
 
 Scoped.define("module:Types", function () {
+	/** Type-Testing and Type-Parsing
+	 * @module BetaJS.Types
+	 */
 	return {
 		/**
 		 * Returns whether argument is an object
@@ -766,6 +761,9 @@ Scoped.define("module:Types", function () {
 });
 
 Scoped.define("module:Functions", ["module:Types"], function (Types) {
+	/** Function and Function Argument Support
+	 * @module BetaJS.Functions
+	 */
 	return {
 	
 	    /** Takes a function and an instance and returns the method call as a function
@@ -800,7 +798,7 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 		
 	    /** Converts some other function's arguments to an array
 	     * 
-	     * @param func function arguments
+	     * @param args function arguments
 	     * @param slice number of arguments to be omitted (default: 0)
 	     * @return arguments as array 
 	     */	
@@ -837,6 +835,7 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 			return result;
 		},
 		
+		/** @suppress {checkTypes} */
 		newClassFunc: function (cls) {
 			return function () {
 				var args = arguments;
@@ -856,6 +855,9 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 });
 
 Scoped.define("module:Ids", function () {
+	/** Id Generation
+	 * @module BetaJS.Ids
+	 */
 	return {
 	
 		__uniqueId: 0,
@@ -885,22 +887,42 @@ Scoped.define("module:Ids", function () {
 	
 	};
 });
-Scoped.define("module:Tokens", function () {
+Scoped.define("module:Tokens", function() {
+	/**
+	 * Unique Token Generation
+	 * 
+	 * @module BetaJS.Tokens
+	 */
 	return {
-		
-	    /** Returns a new token
-	     * 
-	     * @param length optional length of token, default is 16
-	     * @return token
-	     */
-		generate_token: function (length) {
+
+		/**
+		 * Returns a new token
+		 * 
+		 * @param length
+		 *            optional length of token, default is 16
+		 * @return token
+		 */
+		generate_token : function(length) {
 			length = length || 16;
 			var s = "";
 			while (s.length < length)
-				s += Math.random().toString(36).substr(2); 
+				s += Math.random().toString(36).substr(2);
 			return s.substr(0, length);
+		},
+
+		// http://jsperf.com/string-hashing-methods
+		simple_hash : function(s) {
+			var nHash = 0;
+			if (!s.length)
+				return nHash;
+			for (var i = 0, imax = s.length, n; i < imax; ++i) {
+				n = s.charCodeAt(i);
+				nHash = ((nHash << 5) - nHash) + n;
+				nHash = nHash & nHash;
+			}
+			return Math.abs(nHash);
 		}
-	
+
 	};
 });
 Scoped.define("module:Objs", ["module:Types"], function (Types) {
@@ -1075,11 +1097,11 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			var key = null;
 			if (depth && depth > 0) {
 				for (key in obj1) {
-					if (!key in obj2 || !this.equals(obj1[key], obj2[key], depth-1))
+					if (!(key in obj2) || !this.equals(obj1[key], obj2[key], depth-1))
 						return false;
 				}
 				for (key in obj2) {
-					if (!key in obj1)
+					if (!(key in obj1))
 						return false;
 				}
 				return true;
@@ -1300,6 +1322,9 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 });
 
 Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
+	/** String Utilities
+	 * @module BetaJS.Strings
+	 */
 	return {
 		
 		/** Converts a string new lines to html <br /> tags
@@ -1414,7 +1439,7 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		 */
 		strip_html : function(html) {
 			var result = html;
-			for ( i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
+			for (var i = 0; i < this.STRIP_HTML_TAGS.length; ++i)
 				result = result.replace(new RegExp("<" + this.STRIP_HTML_TAGS[i] + ".*</" + this.STRIP_HTML_TAGS[i] + ">", "i"), '');
 			result = result.replace(this.STRIP_HTML_REGEX, '').replace(this.STRIP_HTML_COMMENT_REGEX, '');
 			return result;
@@ -1535,12 +1560,15 @@ Scoped.define("module:Locales", function () {
 		view: function (base) {
 			return {
 				context: this,
-				base: base,
+				prefix: base,
 				get: function (key) {
-					return this.context.get(this.base + "." + key);
+					return this.context.get(this.prefix + "." + key);
 				},
-				base: function (base) {
-					return this.context.base(this.base + "." + base);
+				view: function (key) {
+					return this.context.view(this.prefix + "." + key);
+				},
+				register: function (strings, prefix) {
+					this.context.register(strings, this.prefix + (prefix ? "." + prefix : ""));
 				}
 			};
 		}
@@ -1560,7 +1588,8 @@ Scoped.define("module:Structures.AvlTree", function () {
 				data : data,
 				left : null,
 				right : null,
-				height : 1
+				height : 1,
+				length: 1
 			};
 		},
 	
@@ -1575,17 +1604,26 @@ Scoped.define("module:Structures.AvlTree", function () {
 		height : function(node) {
 			return node ? node.height : 0;
 		},
+		
+		length : function (node){
+			return node ? node.length : 0;
+		}, 
 	
 		height_join : function(left, right) {
 			return 1 + Math.max(this.height(left), this.height(right));
 		},
 	
+		length_join : function(left, right) {
+			return 1 + this.length(left) + this.length(right);
+		},
+
 		create : function(data, left, right) {
 			return {
 				data : data,
 				left : left,
 				right : right,
-				height : this.height_join(left, right)
+				height : this.height_join(left, right),
+				length : this.length_join(left, right)
 			};
 		},
 	
@@ -1649,7 +1687,7 @@ Scoped.define("module:Structures.AvlTree", function () {
 			return [ result[0], this.join(root.data, root.left, result[1]) ];
 		},
 	
-		rereoot : function(left, right) {
+		reroot : function(left, right) {
 			if (!left || !right)
 				return left || right;
 			if (this.height(left) > this.height(right)) {
@@ -1690,7 +1728,6 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 		empty : function(compare) {
 			return {
 				root : null,
-				length : 0,
 				compare : compare || function(x, y) {
 					return x > y ? 1 : x < y ? -1 : 0;
 				}
@@ -1702,7 +1739,7 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 		},
 	
 		length : function(t) {
-			return t.length;
+			return t.root ? t.root.length : 0;
 		},
 	
 		__add : function(key, value, t, node) {
@@ -1710,10 +1747,8 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 				key : key,
 				value : value
 			};
-			if (!node) {
-				t.length++;
+			if (!node) 
 				return AvlTree.singleton(kv);
-			}
 			var c = t.compare(key, node.data.key);
 			if (c === 0) {
 				node.data = kv;
@@ -1744,35 +1779,81 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 			return this.__find(key, t, t.root);
 		},
 	
-		__iterate : function(t, node, callback, context) {
+		__iterate : function(t, node, callback, context, reverse) {
 			if (!node)
 				return true;
-			return this.__iterate(t, node.left, callback, context) && (callback.call(context, node.data.key, node.data.value) !== false) && this.__iterate(t, node.right, callback, context);
+			return (
+				this.__iterate(t, reverse ? node.right : node.left, callback, context, reverse) &&
+				(callback.call(context, node.data.key, node.data.value) !== false) &&
+				this.__iterate(t, reverse ? node.left : node.right, callback, context, reverse));
 		},
 	
-		iterate : function(t, callback, context) {
-			this.__iterate(t, t.root, callback, context);
+		iterate : function(t, callback, context, reverse) {
+			this.__iterate(t, t.root, callback, context, reverse);
 		},
 	
-		__iterate_from : function(key, t, node, callback, context) {
+		__iterate_from : function(key, t, node, callback, context, reverse) {
 			if (!node)
 				return true;
-			var c = t.compare(key, node.data.key);
-			if (c < 0 && !this.__iterate_from(key, t, node.left, callback, context))
+			var c = t.compare(key, node.data.key) * (reverse ? -1 : 1);
+			if (c < 0 && !this.__iterate_from(key, t, reverse ? node.right : node.left, callback, context, reverse))
 				return false;
 			if (c <= 0 && callback.call(context, node.data.key, node.data.value) === false)
 				return false;
-			return this.__iterate_from(key, t, node.right, callback, context);
+			return this.__iterate_from(key, t, reverse ? node.left : node.right, callback, context, reverse);
 		},
 	
-		iterate_from : function(key, t, callback, context) {
-			this.__iterate_from(key, t, t.root, callback, context);
+		iterate_from : function(key, t, callback, context, reverse) {
+			this.__iterate_from(key, t, t.root, callback, context, reverse);
 		},
 	
-		iterate_range : function(from_key, to_key, t, callback, context) {
+		iterate_range : function(from_key, to_key, t, callback, context, reverse) {
 			this.iterate_from(from_key, t, function(key, value) {
-				return t.compare(key, to_key) <= 0 && callback.call(context, key, value) !== false;
-			}, this);
+				return t.compare(key, to_key) * (reverse ? -1 : 1) <= 0 && callback.call(context, key, value) !== false;
+			}, this, reverse);
+		},
+		
+		take_min: function (t) {
+			var a = AvlTree.take_min(t.root);
+			a[1] = {
+				compare: t.compare,
+				root: a[1]
+			};
+			return a;
+		},
+		
+		__treeSizeLeft: function (key, t, node) {
+			var c = t.compare(key, node.data.key);
+			if (c < 0)
+				return this.__treeSizeLeft(key, t, node.left);
+			return 1 + (node.left ? node.left.length : 0) + (c > 0 ? this.__treeSizeLeft(key, t, node.right) : 0);
+		},
+		
+		__treeSizeRight: function (key, t, node) {
+			var c = t.compare(key, node.data.key);
+			if (c > 0)
+				return this.__treeSizeRight(key, t, node.right);
+			return 1 + (node.right ? node.right.length : 0) + (c < 0 ? this.__treeSizeRight(key, t, node.left) : 0);
+		},
+		
+		__distance: function (keyLeft, keyRight, t, node) {
+			var cLeft = t.compare(keyLeft, node.data.key);
+			var cRight = t.compare(keyRight, node.data.key);
+			if (cLeft > 0 || cRight < 0)
+				return this.__distance(keyLeft, keyRight, t, cLeft > 0 ? node.right : node.left);
+			return 1 + (cRight > 0 ? this.__treeSizeLeft(keyRight, t, node.right) : 0) + (cLeft < 0 ? this.__treeSizeRight(keyLeft, t, node.left) : 0);
+		},
+		
+		treeSizeLeft: function (key, t) {
+			return this.__treeSizeLeft(key, t, t.root);
+		},
+		
+		treeSizeRight: function (key, t) {
+			return this.__treeSizeRight(key, t, t.root);
+		},
+
+		distance: function (keyLeft, keyRight, t) {
+			return t.compare(keyLeft, keyRight) < 0 ? this.__distance(keyLeft, keyRight, t, t.root) - 1 : 0;
 		}
 	
 	};
@@ -1951,8 +2032,36 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 	};
 
 });
-Scoped.define("module:Async", ["module:Types"], function (Types) {
+Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Types, Functions) {
 	return {		
+		
+		waitFor: function () {
+			var args = Functions.matchArgs(arguments, {
+				condition: true,
+				conditionCtx: "object",
+				callback: true,
+				callbackCtx: "object",
+				interval: "int"
+			});
+			var h = function () {
+				try {
+					return !!args.condition.apply(args.conditionCtx || args.callbackCtx || this);
+				} catch (e) {
+					
+					return false;
+				}
+			};
+			if (h())
+				args.callback.apply(args.callbackCtx || this);
+			else {
+				var timer = setInterval(function () {
+					if (h()) {
+						clearInterval(timer);
+						args.callback.apply(args.callbackCtx || this);
+					}
+				}, args.interval || 1);
+			}
+		},
 		
 		eventually: function (func, params, context) {
 			var timer = setTimeout(function () {
@@ -2065,7 +2174,16 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 				if (this.__ended)
 					return this;
 				if (!Types.is_array(promises))
-					promises = [promises];	
+					promises = [promises];
+				var f = function (error, value) {
+					if (error)
+						this.__errorPromise = promises[this.idx];
+					else {
+						this.promise.__successCount++;
+						this.promise.__values[this.idx] = value;
+					}
+					this.promise.results();
+				};
 				for (var i = 0; i < promises.length; ++i) {
 					var last = this.__promises.length;
 					this.__promises.push(promises[i]);
@@ -2077,15 +2195,7 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 						} else
 							this.__errorPromise = promises[i];
 					} else {
-						promises[i].callback(function (error, value) {
-							if (error)
-								this.__errorPromise = promises[this.idx];
-							else {
-								this.promise.__successCount++;
-								this.promise.__values[this.idx] = value;
-							}
-							this.promise.results();
-						}, {promise: this, idx: last});					
+						promises[i].callback(f, {promise: this, idx: last});					
 					}
 				}
 				return this;
@@ -2353,6 +2463,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
 Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions", "module:Ids"], function (Types, Objs, Functions, Ids) {
 	var Class = function () {};
 
+	/** @suppress {checkTypes} */
 	Class.extend = function (options, objects, statics, class_statics) {
 		objects = objects || [];
 		if (!Types.is_array(objects))
@@ -2515,76 +2626,82 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	 * 
 	 */
 	
+	Class.prototype.__class_instance_guid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
 	
-	Objs.extend(Class.prototype, {
-		
-		__class_instance_guid: "e6b0ed30-80ee-4b28-af02-7d52430ba45f",
-		
-		constructor: function () {
-			this._notify("construct");
-		},
-		
-		destroy: function () {
-			this._notify("destroy");
-			if (this.__auto_destroy_list) {
-				for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
-					if ("destroy" in this.__auto_destroy_list[i])
-						this.__auto_destroy_list[i].destroy();
-				}
+	Class.prototype.constructor = function () {
+		this._notify("construct");
+	};
+	
+	Class.prototype.destroy = function () {
+		this._notify("destroy");
+		if (this.__auto_destroy_list) {
+			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
+				if ("destroy" in this.__auto_destroy_list[i])
+					this.__auto_destroy_list[i].destroy();
 			}
-			for (var key in this)
-				delete this[key];
-		},
-		
-		cid: function () {
-			return Ids.objectId(this);
-		},
-	
-		cls: Class,
-		
-		as_method: function (s) {
-			return Functions.as_method(this[s], this);
-		},
-		
-		auto_destroy: function (obj) {
-			if (!this.__auto_destroy_list)
-				this.__auto_destroy_list = [];
-			var target = obj;
-			if (!Types.is_array(target))
-			   target = [target];
-			for (var i = 0; i < target.length; ++i)
-			   this.__auto_destroy_list.push(target[i]);
-			return obj;
-		},
-		
-		_notify: function (name) {
-			if (!this.cls.__notifications)
-				return;
-			var rest = Array.prototype.slice.call(arguments, 1);
-			Objs.iter(this.cls.__notifications[name], function (entry) {
-				var method = Types.is_function(entry) ? entry : this[entry];
-				if (!method)
-					throw this.cls.classname  + ": Could not find " + name + " notification handler " + entry;
-				method.apply(this, rest);
-			}, this);
-		},
-		
-		instance_of: function (cls) {
-			return this.cls.ancestor_of(cls);
-		},
-		
-		// Legacy Methods
-		
-		_auto_destroy: function(obj) {
-			return this.auto_destroy(obj);
-		},
-		
-		_inherited: function (cls, func) {
-			return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 		}
-		
-	});
+		var cid = this.cid();
+		for (var key in this)
+			delete this[key];
+		Ids.objectId(this, cid);
+		this.destroy = this.__destroyedDestroy;
+	};
+	
+	Class.prototype.destroyed = function () {
+		return this.destroy === this.__destroyedDestroy;
+	};
+	
+	Class.prototype.__destroyedDestroy = function () {
+		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
+	};
+	
+	Class.prototype.cid = function () {
+		return Ids.objectId(this);
+	};
 
+	Class.prototype.cls = Class;
+	
+	Class.prototype.as_method = function (s) {
+		return Functions.as_method(this[s], this);
+	};
+	
+	Class.prototype.auto_destroy = function (obj) {
+		if (!this.__auto_destroy_list)
+			this.__auto_destroy_list = [];
+		var target = obj;
+		if (!Types.is_array(target))
+		   target = [target];
+		for (var i = 0; i < target.length; ++i)
+		   this.__auto_destroy_list.push(target[i]);
+		return obj;
+	};
+	
+	Class.prototype._notify = function (name) {
+		if (!this.cls.__notifications)
+			return;
+		var rest = Array.prototype.slice.call(arguments, 1);
+		Objs.iter(this.cls.__notifications[name], function (entry) {
+			var method = Types.is_function(entry) ? entry : this[entry];
+			if (!method)
+				throw this.cls.classname  + ": Could not find " + name + " notification handler " + entry;
+			method.apply(this, rest);
+		}, this);
+	};
+	
+	Class.prototype.instance_of = function (cls) {
+		return this.cls.ancestor_of(cls);
+	};
+	
+	// Legacy Methods
+	
+	Class.prototype._auto_destroy = function(obj) {
+		return this.auto_destroy(obj);
+	};
+	
+	Class.prototype._inherited = function (cls, func) {
+		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
+	};
+		
 	return Class;
 
 });
@@ -2604,20 +2721,6 @@ Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, 
 				return this;
 			},
 			
-			callstack: function () {
-				var callstack = [];
-				var current = arguments.callee.caller;
-				while (current) {
-					callstack.push(current.toString());
-					current = current.caller;
-				}
-				return callstack;
-			},
-			
-			callstack_to_string: function () {
-				return this.callstack().join("\n");
-			},
-			
 			message: function () {
 				return this.__message;
 			},
@@ -2627,7 +2730,7 @@ Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, 
 			},
 			
 			format: function () {
-				return this.cls.classname + ": " + this.toString() + "\n\nCall Stack:\n" + this.callstack_to_string();
+				return this.cls.classname + ": " + this.toString();
 			},
 			
 			json: function () {
@@ -2749,6 +2852,7 @@ Scoped.define("module:Templates", ["module:Types", "module:Strings"], function (
 			result = "var __t,__p='',__j=Array.prototype.join," +
 			  "echo=function(){__p+=__j.call(arguments,'');};\n" +
 			  result + "return __p;\n";
+			/*jslint evil: true */
 			var func = new Function('obj', 'Helpers', result);
 			var func_call = function(data) {
 				return func.call(this, data, {Strings: Strings});
@@ -3194,6 +3298,96 @@ Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], 
 	});
 });
 
+
+Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__finished = false;
+				this.__initialized = false;
+				this.__current = null;
+				this.__has_current = false;
+			},
+			
+			_initialize: function () {},
+			
+			_next: function () {},
+			
+			_finished: function () {
+				this.__finished = true;
+			},
+			
+			_current: function (result) {
+				this.__current = result;
+				this.__has_current = true;
+			},
+			
+			__touch: function () {
+				if (!this.__initialized)
+					this._initialize();
+				this.__initiliazed = true;
+				if (!this.__has_current && !this.__finished)
+					this._next();
+			},
+			
+			hasNext: function () {
+				this.__touch();
+				return this.__has_current;
+			},
+			
+			next: function () {
+				this.__touch();
+				return this.__current;
+			}
+	
+		};
+	});
+});
+
+Scoped.define("module:Iterators.SortedOrIterator", [
+    "module:Iterators.LazyIterator",
+    "module:Structures.TreeMap",
+    "module:Objs"
+], function (Iterator, TreeMap, Objs, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function (iterators, compare) {
+				inherited.constructor.call(this);
+				this.__iterators = iterators;
+				this.__map = TreeMap.empty(compare);
+			},
+			
+			__process: function (iter) {
+				if (iter.hasNext()) {
+					var n = iter.next();
+	  				var value = TreeMap.find(n, this.__map);
+	  				if (value)
+	  					value.push(iter);
+	  				else 
+	  					this.__map = TreeMap.add(n, [iter], this.__map);
+				}
+			},
+			
+			_initialize: function () {
+				Objs.iterate(this.__iterators, this.__process, this);
+				if (TreeMap.is_empty(this.__map))
+					this._finished();
+			},
+			
+			_next: function () {
+				var ret = TreeMap.take_min(this.__map);
+				this.__map = ret[1];
+				Objs.iter(ret[0].value, this.__process, this);
+				return ret[0].key;
+			}
+	
+		};
+	});
+});
+
 Scoped.define("module:Lists.AbstractList", [
 		"module:Class",
 		"module:Objs",
@@ -3353,17 +3547,16 @@ Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module
 			},
 		
 			_add: function (object) {
-			    while (true) {
-			        var id = object.__cid;
-			        if (!id) {
+		        var id = object.__cid;
+		        if (!id) {
+		        	while (true) {
 		                id = this.__id_generator ? Ids.objectId(object, this.__id_generator()) : Ids.objectId(object);
-		        		if (this.__map[id] && this.__id_generator)
-		        		  continue;
-		            }
-		    		this.__map[id] = object;
-		    		return id;
-		    	}
-		    	return null;
+		        		if (!this.__map[id] || !this.__id_generator)
+		        			break;
+		        	}
+	            }
+	    		this.__map[id] = object;
+	    		return id;
 			},
 			
 			_remove: function (ident) {
@@ -3401,9 +3594,9 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				this.__items = [];
 				options = options || {};
 				if ("compare" in options)
-					this._compare = options["compare"];
+					this._compare = options.compare;
 				if ("get_ident" in options)
-					this._get_ident = options["get_ident"];
+					this._get_ident = options.get_ident;
 				inherited.constructor.call(this, objects);
 			},
 			
@@ -3598,11 +3791,7 @@ Scoped.define("module:Events.EventsMixin", [
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			if (events) {
 				events = events.split(this.EVENT_SPLITTER);
-				var event;
-				while (true) {
-					event = events.shift();
-					if (!event)
-						break;
+				Objs.iter(events, function (event) {
 					if (this.__events_mixin_events[event]) {
 						this.__events_mixin_events[event].remove_by_filter(function (object) {
 							var result = (!callback || object.callback == callback) && (!context || object.context == context);
@@ -3616,21 +3805,21 @@ Scoped.define("module:Events.EventsMixin", [
 							this._notify("unregister_event", event);
 						}
 					}
-				}
+				}, this);
 			} else {
-				for (event in this.__events_mixin_events) {
-					this.__events_mixin_events[event].remove_by_filter(function (object) {
+				Objs.iter(this.__events_mixin_events, function (evntobj, evnt) {
+					evntobj.remove_by_filter(function (object) {
 						var result = (!callback || object.callback == callback) && (!context || object.context == context);
 						if (result && this.__destroy_event_object)
 							this.__destroy_event_object(object);
 						return result;
 					});
-					if (this.__events_mixin_events[event].count() === 0) {
-						this.__events_mixin_events[event].destroy();
-						delete this.__events_mixin_events[event];
-						this._notify("unregister_event", event);
+					if (evntobj.count() === 0) {
+						evntobj.destroy();
+						delete this.__events_mixin_events[evnt];
+						this._notify("unregister_event", evnt);
 					}
-				}
+				}, this);
 			}
 			return this;
 		},
@@ -3651,19 +3840,16 @@ Scoped.define("module:Events.EventsMixin", [
 			var event;
 			if (!this.__events_mixin_events)
 				return this;
-			while (true) {
-				event = events.shift();
-				if (!event)
-					break;
+			Objs.iter(events, function (event) {
 	    		if (this.__events_mixin_events[event])
 	    			this.__events_mixin_events[event].iterate(function (object) {
 	    				self.__call_event_object(object, rest);
 	    			});
 				if (this.__events_mixin_events && "all" in this.__events_mixin_events)
-					this.__events_mixin_events["all"].iterate(function (object) {
+					this.__events_mixin_events.all.iterate(function (object) {
 						self.__call_event_object(object, [event].concat(rest));
 					});
-			}
+			}, this);
 	    	return this;
 	    },
 	    
@@ -3674,7 +3860,7 @@ Scoped.define("module:Events.EventsMixin", [
 	          callback.apply(this, arguments);
 	        });
 	        once._callback = callback;
-	        return this.on(name, once, context, options);
+	        return this.on(events, once, context, options);
 	    },
 	    
 	    delegateEvents: function (events, source, prefix, params) {
@@ -3911,18 +4097,15 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			for (var i = 0; i < deps.length; ++i) {
-				deps[i].properties.on("change:" + deps[i].key, function () {
-					recompute();
-				}, deps[i]);
-			}
+			for (var i = 0; i < deps.length; ++i)
+				deps[i].properties.on("change:" + deps[i].key, recompute, deps[i]);
 			recompute();
 			return this;
 		},
 		
 		unbind: function (key, props) {
 			if (key in this.__properties.bindings) {
-				for (i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
+				for (var i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
 					var binding = this.__properties.bindings[key][i];
 					if (!props || props == binding) {
 						if (binding.left) 
@@ -4066,7 +4249,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 					this.trigger("change:" + key, value, oldValue);
 				}
 				Objs.iter(current.children, function (child, subkey) {
-					process_set.call(this, child, key ? (key + "." + subkey) : subkey, value[subkey], oldValue[subkey]);
+					process_set.call(this, child, key ? (key + "." + subkey) : subkey, Types.is_object(value) && value ? value[subkey] : null, Types.is_object(oldValue) && oldValue ? oldValue[subkey] : null);
 				}, this);
 			}
 			process_set.call(this, current, key, value, oldValue);
@@ -4083,7 +4266,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
 		
-		set: function (key, value) {
+		set: function (key, value, force) {
 			if (Types.is_object(value) && value && value.guid == this.__properties_guid) {
 				if (value.properties)
 					this.bind(key, value.properties, {secondKey: value.key});
@@ -4096,6 +4279,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			if (oldValue !== value) {
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
+			} else if (force) {
+				this.trigger("change", key, value, oldValue);
+				this.trigger("change:" + key, value, oldValue);
 			}
 			return this;
 		},
@@ -4141,7 +4327,7 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
 		byObject: function (object) {
 			var self = this;
 			return function (left, right) {
-				for (key in object) {
+				for (var key in object) {
 					var c = 0;
 					if (Properties.is_class_instance(left) && Properties.is_class_instance(right))
 						c = self.byValue(left.get(key) || null, right.get(key) || null);
@@ -4240,8 +4426,8 @@ Scoped.define("module:Sort", [
 			var data = [];
 			var identifier_to_index = {};
 			var todo = {};
-			var i = null;
-			for ( i = 0; i < n; ++i) {
+			var i = 0;
+			for (i = 0; i < n; ++i) {
 				todo[i] = true;
 				var ident = identifierf(items[i], i);
 				identifier_to_index[ident] = i;
@@ -4250,21 +4436,27 @@ Scoped.define("module:Sort", [
 					after : {}
 				});
 			}
-			for ( i = 0; i < n; ++i) {
-				Objs.iter(beforef(items[i], i) || [], function(before) {
+			var make_before_iter_func = function (i) {
+				return function (before) {
 					var before_index = identifier_to_index[before];
 					if (Types.is_defined(before_index)) {
 						data[i].before[before_index] = true;
 						data[before_index].after[i] = true;
 					}
-				});
-				Objs.iter(afterf(items[i]) || [], function(after) {
+				};
+			};
+			var make_after_iter_func = function (i) {
+				return function(after) {
 					var after_index = identifier_to_index[after];
 					if (Types.is_defined(after_index)) {
 						data[i].after[after_index] = true;
 						data[after_index].before[i] = true;
 					}
-				});
+				};
+			};
+			for (i = 0; i < n; ++i) {
+				Objs.iter(beforef(items[i], i) || [], make_before_iter_func(i));
+				Objs.iter(afterf(items[i]) || [], make_after_iter_func(i));
 			}
 			var result = [];
 			while (!Types.is_empty(todo)) {
@@ -4272,8 +4464,8 @@ Scoped.define("module:Sort", [
 					if (Types.is_empty(data[i].after)) {
 						delete todo[i];
 						result.push(items[i]);
-						for (bef in data[i].before)
-						delete data[bef].after[i];
+						for (var bef in data[i].before)
+							delete data[bef].after[i];
 					}
 				}
 			}
@@ -4495,7 +4687,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 	}]);
 });
 
-Scoped.define("module:Classes.InvokerMixin", ["module:Types", "module:Functions"], function (Types, Functions) {
+Scoped.define("module:Classes.InvokerMixin", ["module:Objs", "module:Types", "module:Functions"], function (Objs, Types, Functions) {
 	return {
 		
 		invoke_delegate : function(invoker, members) {
@@ -4503,8 +4695,7 @@ Scoped.define("module:Classes.InvokerMixin", ["module:Types", "module:Functions"
 				members = [members];
 			invoker = this[invoker];
 			var self = this;
-			for (var i = 0; i < members.length; ++i) {
-				var member = members[i];
+			Objs.iter(members, function (member) {
 				this[member] = function(member) {
 					return function() {
 						var args = Functions.getArguments(arguments);
@@ -4512,8 +4703,7 @@ Scoped.define("module:Classes.InvokerMixin", ["module:Types", "module:Functions"
 						return invoker.apply(self, args);
 					};
 				}.call(self, member);
-			}
-		
+			}, this);
 		}
 	};
 });
@@ -4786,10 +4976,10 @@ Scoped.define("module:Classes.PathResolver", ["module:Class", "module:Objs"], fu
 				while (true) {
 					var matches = regExp.exec(path);
 					if (!matches)
-						return this.simplify(path);
+						break;
 					path = path.replace(regExp, this._bindings[matches[1]]);
 				}
-				return path;
+				return this.simplify(path);
 			},
 			
 			simplify: function (path) {
@@ -4843,7 +5033,11 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 			create: function (key) {
 				var cons = Functions.newClassFunc(this.get(key));
 				return cons.apply(this, Functions.getArguments(arguments, 1));
-			}	
+			},
+			
+			classes: function () {
+				return this._classes;
+			}
 			
 		};
 	});
@@ -4905,11 +5099,11 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Events.EventsMixin",
 	    "module:Objs",
 	    "module:Functions",
-	    "module:Lists",
+	    "module:Lists.ArrayList",
 	    "module:Ids",
 	    "module:Properties.Properties",
 	    "module:Iterators.ArrayIterator"
-	], function (Class, EventsMixin, Objs, Functions, Lists, Ids, Properties, ArrayIterator, scoped) {
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -4921,9 +5115,9 @@ Scoped.define("module:Collections.Collection", [
 					Objs.iter(options.indices, this.add_secondary_index, this);
 				var list_options = {};
 				if ("compare" in options)
-					list_options["compare"] = options["compare"];
+					list_options.compare = options.compare;
 				list_options.get_ident = Functions.as_method(this.get_ident, this);
-				this.__data = new Lists.ArrayList([], list_options);
+				this.__data = new ArrayList([], list_options);
 				var self = this;
 				this.__data._ident_changed = function (object, index) {
 					self._index_changed(object, index);
@@ -4935,7 +5129,7 @@ Scoped.define("module:Collections.Collection", [
 					self._sorted();
 				};
 				if ("objects" in options)
-					this.add_objects(options["objects"]);
+					this.add_objects(options.objects);
 			},
 			
 			add_secondary_index: function (key) {
@@ -5081,11 +5275,11 @@ Scoped.define("module:Collections.FilteredCollection", [
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				options = options || {};
-				delete options["objects"];
+				delete options.objects;
 				options.compare = options.compare || parent.get_compare();
 				inherited.constructor.call(this, options);
 				if ("filter" in options)
-					this.filter = options["filter"];
+					this.filter = options.filter;
 				this.__parent.iterate(function (object) {
 					this.add(object);
 					return true;
@@ -5446,19 +5640,6 @@ Scoped.define("module:KeyValue.MemoryKeyValueStore", ["module:KeyValue.KeyValueS
 });
 
 
-Scoped.define("module:KeyValue.LocalKeyValueStore", ["module:KeyValue.MemoryKeyValueStore"], function (MemoryKeyValueStore, scoped) {
-	return MemoryKeyValueStore.extend({scoped: scoped}, function (inherited) {
-		return {
-	
-			constructor: function () {
-				inherited.constructor.call(this, localStorage, false);
-			}
-	
-		};
-	});
-});
-
-
 Scoped.define("module:KeyValue.DefaultKeyValueStore", ["module:KeyValue.KeyValueStore"], function (KeyValueStore, scoped) {
 	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
 		return {
@@ -5490,7 +5671,7 @@ Scoped.define("module:KeyValue.DefaultKeyValueStore", ["module:KeyValue.KeyValue
 });
 
 Scoped.define("module:States.Host", [
-	    "module:Class",
+	    "module:Properties.Properties",
 	    "module:Events.EventsMixin",
 	    "module:States.State",
 	    "module:Types",
@@ -5871,9 +6052,8 @@ Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], func
 					if (result === null)
 						continue;
 					var args = {};
-					Objs.iter(descriptor.mapping, function (key, i) {
-						args[key] = result[i + 1];
-					});
+					for (var j = 0; j < descriptor.mapping.length; ++j)
+						args[descriptor.mapping[j]] = result[j + 1];
 					return {
 						state: descriptor.state,
 						args: args
@@ -6007,7 +6187,7 @@ Scoped.define("module:RMI.Skeleton", [
 				return Promise.value(result);
 			},
 			
-			_error: function (callbacks) {
+			_error: function (result) {
 				return Promise.error(result);
 			},
 			
@@ -6362,6 +6542,7 @@ Scoped.define("module:Net.SocketSenderChannel", ["module:Channels.Sender", "modu
 				this.__cache = [];
 			},
 			
+			/** @suppress {missingProperties} */
 			_send: function (message, data) {
 				if (this.__ready) {
 					this.__socket.emit(this.__message, {

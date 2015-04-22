@@ -1,4 +1,7 @@
 Scoped.define("module:Types", function () {
+	/** Type-Testing and Type-Parsing
+	 * @module BetaJS.Types
+	 */
 	return {
 		/**
 		 * Returns whether argument is an object

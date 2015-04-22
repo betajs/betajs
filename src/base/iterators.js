@@ -240,4 +240,98 @@ Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], 
 
 		};
 	});
+<<<<<<< HEAD
 });
+=======
+});
+
+
+Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__finished = false;
+				this.__initialized = false;
+				this.__current = null;
+				this.__has_current = false;
+			},
+			
+			_initialize: function () {},
+			
+			_next: function () {},
+			
+			_finished: function () {
+				this.__finished = true;
+			},
+			
+			_current: function (result) {
+				this.__current = result;
+				this.__has_current = true;
+			},
+			
+			__touch: function () {
+				if (!this.__initialized)
+					this._initialize();
+				this.__initiliazed = true;
+				if (!this.__has_current && !this.__finished)
+					this._next();
+			},
+			
+			hasNext: function () {
+				this.__touch();
+				return this.__has_current;
+			},
+			
+			next: function () {
+				this.__touch();
+				return this.__current;
+			}
+	
+		};
+	});
+});
+
+Scoped.define("module:Iterators.SortedOrIterator", [
+    "module:Iterators.LazyIterator",
+    "module:Structures.TreeMap",
+    "module:Objs"
+], function (Iterator, TreeMap, Objs, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+	
+			constructor: function (iterators, compare) {
+				inherited.constructor.call(this);
+				this.__iterators = iterators;
+				this.__map = TreeMap.empty(compare);
+			},
+			
+			__process: function (iter) {
+				if (iter.hasNext()) {
+					var n = iter.next();
+	  				var value = TreeMap.find(n, this.__map);
+	  				if (value)
+	  					value.push(iter);
+	  				else 
+	  					this.__map = TreeMap.add(n, [iter], this.__map);
+				}
+			},
+			
+			_initialize: function () {
+				Objs.iterate(this.__iterators, this.__process, this);
+				if (TreeMap.is_empty(this.__map))
+					this._finished();
+			},
+			
+			_next: function () {
+				var ret = TreeMap.take_min(this.__map);
+				this.__map = ret[1];
+				Objs.iter(ret[0].value, this.__process, this);
+				return ret[0].key;
+			}
+	
+		};
+	});
+});
+>>>>>>> NEW_BRANCH

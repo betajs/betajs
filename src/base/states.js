@@ -1,5 +1,5 @@
 Scoped.define("module:States.Host", [
-	    "module:Class",
+	    "module:Properties.Properties",
 	    "module:Events.EventsMixin",
 	    "module:States.State",
 	    "module:Types",
@@ -380,9 +380,8 @@ Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], func
 					if (result === null)
 						continue;
 					var args = {};
-					Objs.iter(descriptor.mapping, function (key, i) {
-						args[key] = result[i + 1];
-					});
+					for (var j = 0; j < descriptor.mapping.length; ++j)
+						args[descriptor.mapping[j]] = result[j + 1];
 					return {
 						state: descriptor.state,
 						args: args

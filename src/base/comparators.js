@@ -4,7 +4,7 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
 		byObject: function (object) {
 			var self = this;
 			return function (left, right) {
-				for (key in object) {
+				for (var key in object) {
 					var c = 0;
 					if (Properties.is_class_instance(left) && Properties.is_class_instance(right))
 						c = self.byValue(left.get(key) || null, right.get(key) || null);

@@ -49,8 +49,8 @@ Scoped.define("module:Sort", [
 			var data = [];
 			var identifier_to_index = {};
 			var todo = {};
-			var i = null;
-			for ( i = 0; i < n; ++i) {
+			var i = 0;
+			for (i = 0; i < n; ++i) {
 				todo[i] = true;
 				var ident = identifierf(items[i], i);
 				identifier_to_index[ident] = i;
@@ -59,21 +59,27 @@ Scoped.define("module:Sort", [
 					after : {}
 				});
 			}
-			for ( i = 0; i < n; ++i) {
-				Objs.iter(beforef(items[i], i) || [], function(before) {
+			var make_before_iter_func = function (i) {
+				return function (before) {
 					var before_index = identifier_to_index[before];
 					if (Types.is_defined(before_index)) {
 						data[i].before[before_index] = true;
 						data[before_index].after[i] = true;
 					}
-				});
-				Objs.iter(afterf(items[i]) || [], function(after) {
+				};
+			};
+			var make_after_iter_func = function (i) {
+				return function(after) {
 					var after_index = identifier_to_index[after];
 					if (Types.is_defined(after_index)) {
 						data[i].after[after_index] = true;
 						data[after_index].before[i] = true;
 					}
-				});
+				};
+			};
+			for (i = 0; i < n; ++i) {
+				Objs.iter(beforef(items[i], i) || [], make_before_iter_func(i));
+				Objs.iter(afterf(items[i]) || [], make_after_iter_func(i));
 			}
 			var result = [];
 			while (!Types.is_empty(todo)) {
@@ -81,8 +87,8 @@ Scoped.define("module:Sort", [
 					if (Types.is_empty(data[i].after)) {
 						delete todo[i];
 						result.push(items[i]);
-						for (bef in data[i].before)
-						delete data[bef].after[i];
+						for (var bef in data[i].before)
+							delete data[bef].after[i];
 					}
 				}
 			}
