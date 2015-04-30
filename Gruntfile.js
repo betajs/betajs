@@ -111,7 +111,8 @@ module.exports = function(grunt) {
 							destination : 'docs',
 							template : "node_modules/grunt-jsdoc/node_modules/ink-docstrap/template",
 							configure : "./jsdoc.conf.json",
-							tutorials: "./docsrc/tutorials"
+							tutorials: "./docsrc/tutorials",
+							recurse: true
 						}
 					}
 				},
