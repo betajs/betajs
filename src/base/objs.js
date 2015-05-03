@@ -1,6 +1,16 @@
 Scoped.define("module:Objs", ["module:Types"], function (Types) {
 	return {
 		
+		ithKey: function (obj, i) {
+			i = i || 0;
+			for (var key in obj) {
+				if (i <= 0)
+					return key;
+				i--;
+			}
+			return null;
+		},
+		
 		count: function (obj) {
 			if (Types.is_array(obj))
 				return obj.length;

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-04-22
+betajs - v1.0.0 - 2015-05-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-04-22
+betajs - v1.0.0 - 2015-05-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '364.1429715913632'
+		version: '366.1430619622389'
 	};
 });
 
@@ -927,6 +927,16 @@ Scoped.define("module:Tokens", function() {
 });
 Scoped.define("module:Objs", ["module:Types"], function (Types) {
 	return {
+		
+		ithKey: function (obj, i) {
+			i = i || 0;
+			for (var key in obj) {
+				if (i <= 0)
+					return key;
+				i--;
+			}
+			return null;
+		},
 		
 		count: function (obj) {
 			if (Types.is_array(obj))
@@ -3327,7 +3337,7 @@ Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], fu
 			__touch: function () {
 				if (!this.__initialized)
 					this._initialize();
-				this.__initiliazed = true;
+				this.__initialized = true;
 				if (!this.__has_current && !this.__finished)
 					this._next();
 			},
@@ -3339,6 +3349,7 @@ Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], fu
 			
 			next: function () {
 				this.__touch();
+				this.__has_current = false;
 				return this.__current;
 			}
 	
@@ -3355,9 +3366,9 @@ Scoped.define("module:Iterators.SortedOrIterator", [
 		return {
 	
 			constructor: function (iterators, compare) {
-				inherited.constructor.call(this);
 				this.__iterators = iterators;
 				this.__map = TreeMap.empty(compare);
+				inherited.constructor.call(this);
 			},
 			
 			__process: function (iter) {
@@ -3372,18 +3383,96 @@ Scoped.define("module:Iterators.SortedOrIterator", [
 			},
 			
 			_initialize: function () {
-				Objs.iterate(this.__iterators, this.__process, this);
+				Objs.iter(this.__iterators, this.__process, this);
 				if (TreeMap.is_empty(this.__map))
 					this._finished();
 			},
 			
 			_next: function () {
 				var ret = TreeMap.take_min(this.__map);
+				this._current(ret[0].key);
 				this.__map = ret[1];
 				Objs.iter(ret[0].value, this.__process, this);
-				return ret[0].key;
+				if (TreeMap.is_empty(this.__map))
+					this._finished();
 			}
 	
+		};
+	});
+});
+
+
+
+Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, compare, partial_same) {
+				inherited.constructor.call(this);
+				this.__compare = compare;
+				this.__partial_same = partial_same;
+				this.__iterator = iterator;
+				this.__head = [];
+				this.__tail = [];
+			},
+			
+			__cache: function () {
+				if (this.__head.length > 0 || !this.__iterator.hasNext())
+					return;
+				this.__head = this.__tail;
+				this.__tail = [];
+				if (this.__head.length === 0)
+					this.__head.push(this.__iterator.next());
+				while (this.__iterator.hasNext()) {
+					var n = this.__iterator.next();
+					if (!this.__partial_same(this.__head[0], n)) {
+						this.__tail.push(n);
+						break;
+					}
+				}
+				this.__head.sort(this.__compare);
+			},
+			
+			hasNext: function () {
+				this.__cache();
+				return this.__head.length > 0;
+			},
+			
+			next: function () {
+				this.__cache();
+				return this.__head.shift();
+			}
+			
+		};
+	});		
+});
+
+
+Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.LazyIterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (next_callback, next_context) {
+				inherited.constructor.call(this);
+				this.__next_callback = next_callback;
+				this.__next_context = next_context;
+				this.__array = null;
+				this.__i = 0;
+			},
+			
+			_next: function () {
+				if (this.__array === null || this.__i >= this.__array.length) {
+					this.__array = this.__next_callback.apply(this.__next_context);
+					this.__i = 0;
+				}
+				if (this.__array !== null) {
+					var ret = this.__array[this.__i];
+					this.__i++;
+					return ret;
+				} else
+					this._finished();
+			}
+			
 		};
 	});
 });
