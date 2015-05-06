@@ -1,5 +1,24 @@
 {
-     "properties": {
-         "title": "Introduction to Properties"
-     }
- }
+
+    "properties": {
+       "title": "Introduction to Properties",
+      "children" : {
+        "introduction" : {
+            "title" : "Introduction to Properties2"
+        },
+        "advanced" : {
+            "title" : "Advanced Properties"
+        }
+      }
+    },
+
+    "dynamics" : {
+      "title" : "Introduction to BetaJS Dynamics",
+      "children" : {
+        "helloworld": {
+          "title": "Hello World"
+        }
+      }
+    }
+
+}
