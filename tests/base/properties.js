@@ -26,6 +26,10 @@ test("test properties binding", function() {
     QUnit.equal(f.get("test"), 2);
     f.set("test", 3);
     QUnit.equal(e.get("test"), 3);
+    f.destroy();
+    e.set("test", 4);
+    QUnit.equal(e.get("test"), 4);
+    e.destroy();
 });
 
 test("test properties computed", function() {

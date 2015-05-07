@@ -251,8 +251,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 					binding.properties.set(binding.key, this.get(key));
 			}
 			binding.properties.on("destroy", function () {
-				this.unbind();
-			}, this);
+				this.unbind(key);
+			}, binding);
 			return this;
 		},
 		

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-05-02
+betajs - v1.0.0 - 2015-05-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '366.1430619622389'
+		version: '368.1431027951109'
 	};
 });
 
@@ -3739,8 +3739,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 					binding.properties.set(binding.key, this.get(key));
 			}
 			binding.properties.on("destroy", function () {
-				this.unbind();
-			}, this);
+				this.unbind(key);
+			}, binding);
 			return this;
 		},
 		
