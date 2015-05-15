@@ -137,6 +137,12 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 				tail: i >= 0 ? s.substring(i + delimiter.length) : s
 			};
 		},
+		
+		replaceAll: function (s, sub, wth) {
+			while (s.indexOf(sub) >= 0)
+				s = s.replace(sub, wth);
+			return s;
+		},
 	
 		/** Trims all trailing and leading whitespace and removes block indentations
 		 *

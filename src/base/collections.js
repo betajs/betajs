@@ -182,18 +182,25 @@ Scoped.define("module:Collections.FilteredCollection", [
 				delete options.objects;
 				options.compare = options.compare || parent.get_compare();
 				inherited.constructor.call(this, options);
-				if ("filter" in options)
-					this.filter = options.filter;
+				this.__parent.on("add", this.add, this);
+				this.__parent.on("remove", this.remove, this);
+				this.setFilter(options.filter, options.context);
+			},
+			
+			filter: function (object) {
+				return !this.__filter || this.__filter.call(this.__filterContext || this, object);
+			},
+			
+			setFilter: function (filterFunction, filterContext) {
+				this.__filterContext = filterContext;
+				this.__filter = filterFunction;
+				this.iterate(function (obj) {
+					inherited.remove.call(this, obj);
+				}, this);
 				this.__parent.iterate(function (object) {
 					this.add(object);
 					return true;
 				}, this);
-				this.__parent.on("add", this.add, this);
-				this.__parent.on("remove", this.remove, this);
-			},
-			
-			filter: function (object) {
-				return true;
 			},
 			
 			_object_changed: function (object, key, value) {

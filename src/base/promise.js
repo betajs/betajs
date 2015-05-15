@@ -99,6 +99,8 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 				return this;
 			};
 			promise.end = function () {
+				if (this.__ended)
+					return this;
 				this.__ended = true;
 				this.results();
 				return this;
@@ -180,6 +182,8 @@ Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Fun
 		},
 		
 		callback: function (f, context, options, type) {
+			if ("end" in this)
+				this.end();
 			var record = {
 				type: type || "callback",
 				func: f,

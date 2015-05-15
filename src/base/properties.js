@@ -25,6 +25,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 					// flat organization
 					bindings: {}
 				};
+				Objs.iter(this.materializes, function (key) {
+					this.materializeAttr(key);
+				}, this);
 			},
 			"destroy": function () {
 				Objs.iter(this.__properties.bindings, function (value, key) {
@@ -45,6 +48,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				}, this);
 			}
 		},
+		
+		materializes: [],
 		
 		get: function (key) {
 			return Scopes.get(key, this.__properties.data);
@@ -80,6 +85,14 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		getAll: function () {
 			return Objs.clone(this.__properties.data, 1);
+		},
+		
+		materializeAttr: function (attr) {
+			this[attr] = function (value) {
+				if (arguments.length === 0)
+					return this.get(attr);
+				this.set(attr, value);
+			};
 		},
 		
 		__registerWatcher: function (key, event) {
@@ -371,15 +384,21 @@ Scoped.define("module:Properties.PropertiesMixin", [
 
 Scoped.define("module:Properties.Properties", [
 	    "module:Class",
+	    "module:Objs",
 	    "module:Events.EventsMixin",
 	    "module:Properties.PropertiesMixin"
-	], function (Class, EventsMixin, PropertiesMixin, scoped) {
+	], function (Class, Objs, EventsMixin, PropertiesMixin, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, function (inherited) {
 		return {
-			constructor: function (obj) {
+			constructor: function (obj, materializes) {
 				inherited.constructor.call(this);
 				if (obj)
 					this.setAll(obj);
+				if (materializes) {
+					Objs.iter(materializes, function (key) {
+						this.materializeAttr(key);
+					}, this);
+				}
 			}
 		};
 	}]);

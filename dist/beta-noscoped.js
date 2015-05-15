@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-05-07
+betajs - v1.0.0 - 2015-05-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '368.1431027951109'
+		version: '369.1431722054265'
 	};
 });
 
@@ -932,6 +932,12 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 				tail: i >= 0 ? s.substring(i + delimiter.length) : s
 			};
 		},
+		
+		replaceAll: function (s, sub, wth) {
+			while (s.indexOf(sub) >= 0)
+				s = s.replace(sub, wth);
+			return s;
+		},
 	
 		/** Trims all trailing and leading whitespace and removes block indentations
 		 *
@@ -1673,6 +1679,8 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 				return this;
 			};
 			promise.end = function () {
+				if (this.__ended)
+					return this;
 				this.__ended = true;
 				this.results();
 				return this;
@@ -1754,6 +1762,8 @@ Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Fun
 		},
 		
 		callback: function (f, context, options, type) {
+			if ("end" in this)
+				this.end();
 			var record = {
 				type: type || "callback",
 				func: f,
@@ -3513,6 +3523,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 					// flat organization
 					bindings: {}
 				};
+				Objs.iter(this.materializes, function (key) {
+					this.materializeAttr(key);
+				}, this);
 			},
 			"destroy": function () {
 				Objs.iter(this.__properties.bindings, function (value, key) {
@@ -3533,6 +3546,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				}, this);
 			}
 		},
+		
+		materializes: [],
 		
 		get: function (key) {
 			return Scopes.get(key, this.__properties.data);
@@ -3568,6 +3583,14 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		getAll: function () {
 			return Objs.clone(this.__properties.data, 1);
+		},
+		
+		materializeAttr: function (attr) {
+			this[attr] = function (value) {
+				if (arguments.length === 0)
+					return this.get(attr);
+				this.set(attr, value);
+			};
 		},
 		
 		__registerWatcher: function (key, event) {
@@ -3859,15 +3882,21 @@ Scoped.define("module:Properties.PropertiesMixin", [
 
 Scoped.define("module:Properties.Properties", [
 	    "module:Class",
+	    "module:Objs",
 	    "module:Events.EventsMixin",
 	    "module:Properties.PropertiesMixin"
-	], function (Class, EventsMixin, PropertiesMixin, scoped) {
+	], function (Class, Objs, EventsMixin, PropertiesMixin, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, function (inherited) {
 		return {
-			constructor: function (obj) {
+			constructor: function (obj, materializes) {
 				inherited.constructor.call(this);
 				if (obj)
 					this.setAll(obj);
+				if (materializes) {
+					Objs.iter(materializes, function (key) {
+						this.materializeAttr(key);
+					}, this);
+				}
 			}
 		};
 	}]);
@@ -4829,18 +4858,25 @@ Scoped.define("module:Collections.FilteredCollection", [
 				delete options.objects;
 				options.compare = options.compare || parent.get_compare();
 				inherited.constructor.call(this, options);
-				if ("filter" in options)
-					this.filter = options.filter;
+				this.__parent.on("add", this.add, this);
+				this.__parent.on("remove", this.remove, this);
+				this.setFilter(options.filter, options.context);
+			},
+			
+			filter: function (object) {
+				return !this.__filter || this.__filter.call(this.__filterContext || this, object);
+			},
+			
+			setFilter: function (filterFunction, filterContext) {
+				this.__filterContext = filterContext;
+				this.__filter = filterFunction;
+				this.iterate(function (obj) {
+					inherited.remove.call(this, obj);
+				}, this);
 				this.__parent.iterate(function (object) {
 					this.add(object);
 					return true;
 				}, this);
-				this.__parent.on("add", this.add, this);
-				this.__parent.on("remove", this.remove, this);
-			},
-			
-			filter: function (object) {
-				return true;
 			},
 			
 			_object_changed: function (object, key, value) {
