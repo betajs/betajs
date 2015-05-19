@@ -189,6 +189,11 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		return this.destroy === this.__destroyedDestroy;
 	};
 	
+	Class.prototype.weakDestroy = function () {
+		if (!this.destroyed())
+			this.destroy();
+	};
+
 	Class.prototype.__destroyedDestroy = function () {
 		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
 	};

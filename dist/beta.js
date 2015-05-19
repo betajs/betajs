@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-05-15
+betajs - v1.0.0 - 2015-05-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-05-15
+betajs - v1.0.0 - 2015-05-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '369.1431722054265'
+		version: '370.1432053122077'
 	};
 });
 
@@ -2671,6 +2671,11 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		return this.destroy === this.__destroyedDestroy;
 	};
 	
+	Class.prototype.weakDestroy = function () {
+		if (!this.destroyed())
+			this.destroy();
+	};
+
 	Class.prototype.__destroyedDestroy = function () {
 		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
 	};
@@ -6373,7 +6378,7 @@ Scoped.define("module:RMI.Server", [
 			
 			unregisterInstance: function (instance) {
 				delete this.__instances[Ids.objectId(instance)];
-				instance.destroy();
+				instance.weakDestroy();
 			},
 			
 			registerClient: function (channel) {
@@ -6523,8 +6528,7 @@ Scoped.define("module:RMI.Client", [
 				var instance_name = Ids.objectId(instance);
 				if (!this.__instances[instance_name])
 					return;
-				instance.off(null, null, this);
-				instance.destroy();
+				instance.weakDestroy();
 				delete this.__instances[instance_name];
 			}
 			

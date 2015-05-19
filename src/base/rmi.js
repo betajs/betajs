@@ -171,7 +171,7 @@ Scoped.define("module:RMI.Server", [
 			
 			unregisterInstance: function (instance) {
 				delete this.__instances[Ids.objectId(instance)];
-				instance.destroy();
+				instance.weakDestroy();
 			},
 			
 			registerClient: function (channel) {
@@ -321,8 +321,7 @@ Scoped.define("module:RMI.Client", [
 				var instance_name = Ids.objectId(instance);
 				if (!this.__instances[instance_name])
 					return;
-				instance.off(null, null, this);
-				instance.destroy();
+				instance.weakDestroy();
 				delete this.__instances[instance_name];
 			}
 			
