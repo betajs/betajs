@@ -1,4 +1,8 @@
-Scoped.define("module:Timers.Timer", ["module:Class", "module:Objs"], function (Class, Objs, scoped) {
+Scoped.define("module:Timers.Timer", [
+    "module:Class",
+    "module:Objs",
+    "module:Time"
+], function (Class, Objs, Time, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -8,6 +12,7 @@ Scoped.define("module:Timers.Timer", ["module:Class", "module:Objs"], function (
 			 * func fire (optional): will be fired
 			 * object context (optional): for fire
 			 * bool start (optional, default true): should it start immediately
+			 * bool real_time (default false)
 			 * 
 			 */
 			constructor: function (options) {
@@ -17,7 +22,8 @@ Scoped.define("module:Timers.Timer", ["module:Class", "module:Objs"], function (
 					start: true,
 					fire: null,
 					context: this,
-					destroy_on_fire: false
+					destroy_on_fire: false,
+					real_time: false
 				}, options);
 				this.__delay = options.delay;
 				this.__destroy_on_fire = options.destroy_on_fire;
@@ -25,6 +31,7 @@ Scoped.define("module:Timers.Timer", ["module:Class", "module:Objs"], function (
 				this.__fire = options.fire;
 				this.__context = options.context;
 				this.__started = false;
+				this.__real_time = options.real_time;
 				if (options.start)
 					this.start();
 			},
@@ -37,8 +44,16 @@ Scoped.define("module:Timers.Timer", ["module:Class", "module:Objs"], function (
 			fire: function () {
 				if (this.__once)
 					this.__started = false;
-				if (this.__fire)
-					this.__fire.apply(this.__context, [this]);
+				if (this.__fire) {
+					this.__fire.call(this.__context, this);
+					this.__fire_count++;
+					if (this.__real_time && !this.__destroy_on_fire && !this.__once) {
+						while ((this.__fire_count + 1) * this.__delay <= Time.now() - this.__start_time) {
+							this.__fire.call(this.__context, this);
+							this.__fire_count++;
+						}
+					}
+				}
 				if (this.__destroy_on_fire)
 					this.destroy();
 			},
@@ -57,6 +72,9 @@ Scoped.define("module:Timers.Timer", ["module:Class", "module:Objs"], function (
 				if (this.__started)
 					return;
 				var self = this;
+				if (this.__real_time)
+					this.__start_time = Time.now();
+				this.__fire_count = 0;
 				if (this.__once)
 					this.__timer = setTimeout(function () {
 						self.fire();
