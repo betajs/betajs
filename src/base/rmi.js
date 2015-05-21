@@ -309,6 +309,8 @@ Scoped.define("module:RMI.Client", [
 				this.__instances[Ids.objectId(instance, instance_name)] = instance;
 				var self = this;
 				instance.__send = function (message, data) {
+					if (!self.__channel)
+						return;
 					data = Objs.map(data, self._serializeValue, self);
 					return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
 						return this._unserializeValue(result);

@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '371.1432231894329'
+		version: '372.1432249839458'
 	};
 });
 
@@ -5996,6 +5996,8 @@ Scoped.define("module:RMI.Client", [
 				this.__instances[Ids.objectId(instance, instance_name)] = instance;
 				var self = this;
 				instance.__send = function (message, data) {
+					if (!self.__channel)
+						return;
 					data = Objs.map(data, self._serializeValue, self);
 					return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
 						return this._unserializeValue(result);
