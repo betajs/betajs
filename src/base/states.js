@@ -124,6 +124,8 @@ Scoped.define("module:States.State", [
                              		    	
 		    _locals: [],
 		    _persistents: [],
+		    _globals: [],
+		    _defaults: {},
 		    
 		    _white_list: null,
 		
@@ -137,13 +139,15 @@ Scoped.define("module:States.State", [
 		        this._transitioning = false;
 		        this.__next_state = null;
 		        this.__suspended = 0;
-		        args = args || {};
+		        args = Objs.extend(Objs.clone(args || {}, 1), this._defaults);
 		        this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 		        for (var i = 0; i < this._locals.length; ++i)
 		            this["_" + this._locals[i]] = args[this._locals[i]];
 		        this._persistents = Types.is_function(this._persistents) ? this._persistents() : this._persistents;
 		        for (i = 0; i < this._persistents.length; ++i)
 		            this["_" + this._persistents[i]] = args[this._persistents[i]];
+		        for (i = 0; i < this._globals.length; ++i)
+		        	host.set(this._globals[i], args[this._globals[i]]);
 		    },
 		
 		    state_name: function () {
@@ -245,6 +249,17 @@ Scoped.define("module:States.State", [
 		    }
 		    
  		};
+ 	}, {
+ 		
+ 		_extender: {
+ 			_defaults: function (base, overwrite) {
+ 				return Objs.extend(Objs.clone(base, 1), overwrite);
+ 			},
+ 			_globals: function (base, overwrite) {
+ 				return (base || []).concat(overwrite || []);
+ 			}
+ 		}
+ 		
  	});
 });
 

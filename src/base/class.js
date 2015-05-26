@@ -37,7 +37,11 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	
 		// Add External Statics
 		Objs.iter(statics, function (stat) {
-			Objs.extend(result, Types.is_function(stat) ? stat(parent) : stat);
+			stat = Types.is_function(stat) ? stat(parent) : stat;
+			var extender = result._extender;
+			Objs.extend(result, stat);
+			if (stat._extender)
+				result._extender = Objs.extend(Objs.clone(extender, 1), stat._extender);
 		});
 		
 		
@@ -92,7 +96,9 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 			Objs.extend(result.__notifications, parent.__notifications, 1);		
 	
 		Objs.iter(objects, function (object) {
-			Objs.extend(result.prototype, object);
+			for (var objkey in object)
+				result.prototype[objkey] = result._extender && objkey in result._extender ? result._extender[objkey](result.prototype[objkey], object[objkey]) : object[objkey]; 
+			//Objs.extend(result.prototype, object);
 	
 			// Note: Required for Internet Explorer
 			if ("constructor" in object)
@@ -143,6 +149,21 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		
 		is_instance_of: function (obj) {
 			return obj && this.is_class_instance(obj) && obj.instance_of(this);
+		},
+		
+		define: function (parent, current) {
+			var args = Functions.getArguments(arguments, 2);
+			if (Types.is_object(parent)) {
+				return Scoped.define(current, [], function (scoped) {
+					args.unshift({scoped: scoped});
+					return parent.extend.apply(parent, args);
+				});
+			} else {
+				return Scoped.define(current, [parent], function (parent, scoped) {
+					args.unshift({scoped: scoped});
+					return parent.extend.apply(parent, args);
+				});
+			}
 		},
 		
 		// Legacy Methods
