@@ -1,12 +1,4 @@
 {
-	"objs": {
-		"title": "Functional Helpers for Objects and Arrays"
-	},
-	
-	"ids": {
-		"title": "Identifiable Objects"
-	},
-	
 	"class": {
 		"title": "Object Orientation",
 		"children": {
@@ -67,6 +59,15 @@
 	
 	"states": {
 		"title": "State Machines"
+	},
+	
+	"objs": {
+		"title": "Functional Helpers for Objects and Arrays"
+	},
+	
+	"ids": {
+		"title": "Identifiable Objects"
 	}
+		
 	
 }
