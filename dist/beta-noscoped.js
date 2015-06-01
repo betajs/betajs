@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-05-26
+betajs - v1.0.0 - 2015-06-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '373.1432614864223'
+		version: '377.1433185889234'
 	};
 });
 
@@ -4830,6 +4830,32 @@ Scoped.define("module:Collections.Collection", [
 						}, this);
 				}
 				return ident;
+			},
+			
+			replace_objects: function (objects) {
+				var ids = {};
+				Objs.iter(objects, function (oriObject) {
+					var is_prop = Class.is_class_instance(oriObject);
+					var object = is_prop ? new Properties(oriObject) : oriObject;
+					ids[this.get_ident(object)] = true;
+					if (this.exists(object)) {
+						var existing = this.getById(this.get_ident(object));
+						if (is_prop) {
+							this.remove(existing);
+							this.add(object);
+						} else
+							existing.setAll(oriObject);
+					} else
+						this.add(object);
+				}, this);
+				var iterator = this.iterator();
+				while (iterator.hasNext()) {
+					var object = iterator.next();
+					var ident = this.get_ident(object);
+					if (!(ident in ids))
+						this.remove(object);
+				}
+				iterator.destroy();
 			},
 			
 			add_objects: function (objects) {
