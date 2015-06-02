@@ -422,8 +422,12 @@ Scoped.define("module:Classes.ContextRegistry", [
 				inherited.constructor.apply(this);
 				this.__data = {};
 				this.__contexts = {};
-				this.__serializer = serializer || Ids.objectId;
-				this.__serializerContext = serializerContext || Ids;
+				this.__serializer = serializer || this.__defaultSerializer;
+				this.__serializerContext = serializerContext || this;
+			},
+			
+			__defaultSerializer: function (data) {
+				return Types.is_object(data) ? Ids.objectId(data) : data;
 			},
 			
 			_serializeContext: function (ctx) {

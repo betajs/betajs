@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '378.1433283292006'
+		version: '381.1433284957987'
 	};
 });
 
@@ -4735,8 +4735,12 @@ Scoped.define("module:Classes.ContextRegistry", [
 				inherited.constructor.apply(this);
 				this.__data = {};
 				this.__contexts = {};
-				this.__serializer = serializer || Ids.objectId;
-				this.__serializerContext = serializerContext || Ids;
+				this.__serializer = serializer || this.__defaultSerializer;
+				this.__serializerContext = serializerContext || this;
+			},
+			
+			__defaultSerializer: function (data) {
+				return Types.is_object(data) ? Ids.objectId(data) : data;
 			},
 			
 			_serializeContext: function (ctx) {
