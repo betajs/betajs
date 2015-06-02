@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-01
+betajs - v1.0.0 - 2015-06-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '377.1433185889234'
+		version: '378.1433283292006'
 	};
 });
 
@@ -4718,6 +4718,75 @@ Scoped.define("module:Classes.ObjectIdMixin", ["module:Classes.ObjectIdScope", "
 	
 	};
 });
+
+
+
+Scoped.define("module:Classes.ContextRegistry", [
+    "module:Class",
+    "module:Ids",
+    "module:Types",
+    "module:Iterators.MappedIterator",
+    "module:Iterators.ObjectValuesIterator"
+], function (Class, Ids, Types, MappedIterator, ObjectValuesIterator, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (serializer, serializerContext) {
+				inherited.constructor.apply(this);
+				this.__data = {};
+				this.__contexts = {};
+				this.__serializer = serializer || Ids.objectId;
+				this.__serializerContext = serializerContext || Ids;
+			},
+			
+			_serializeContext: function (ctx) {
+				return ctx ? Ids.objectId(ctx) : null;
+			},
+			
+			_serializeData: function (data) {
+				return this.__serializer.call(this.__serializerContext, data);
+			},
+			
+			register: function (data, context) {
+				var serializedData = this._serializeData(data);
+				var serializedCtx = this._serializeContext(context);
+				var result = false;
+				if (!(serializedData in this.__data)) {
+					this.__data[serializedData] = {
+						data: data,
+						contexts: {}
+					};
+					result = true;
+				}
+				this.__data[serializedData].contexts[serializedCtx] = true;
+				return result;
+			},
+			
+			unregister: function (data, context) {
+				var serializedData = this.__serializer.call(this.__serializerContext, data);
+				if (!this.__data[serializedData])
+					return false;
+				if (context) {
+					var serializedCtx = this._serializeContext(context);
+					delete this.__data[serializedData].contexts[serializedCtx];
+				}
+				if (!context || Types.is_empty(this.__data[serializedData].contexts)) {
+					delete this.__data[serializedData];
+					return true;
+				}
+				return false;
+			},
+			
+			iterator: function () {
+				return new MappedIterator(new ObjectValuesIterator(this.__data), function (item) {
+					return item.data;
+				});
+			}
+
+		};
+	});
+});
+
 Scoped.define("module:Collections.Collection", [
 	    "module:Class",
 	    "module:Events.EventsMixin",

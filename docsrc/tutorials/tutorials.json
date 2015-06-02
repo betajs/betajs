@@ -24,7 +24,7 @@
     "properties": {
        "title": "Introduction to Properties",
        "children" : {
-    	   "advanced" : {
+    	   "properties-advanced" : {
     		   "title" : "Advanced Properties"
     	   }
        }

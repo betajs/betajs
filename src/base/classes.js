@@ -405,3 +405,71 @@ Scoped.define("module:Classes.ObjectIdMixin", ["module:Classes.ObjectIdScope", "
 	
 	};
 });
+
+
+
+Scoped.define("module:Classes.ContextRegistry", [
+    "module:Class",
+    "module:Ids",
+    "module:Types",
+    "module:Iterators.MappedIterator",
+    "module:Iterators.ObjectValuesIterator"
+], function (Class, Ids, Types, MappedIterator, ObjectValuesIterator, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (serializer, serializerContext) {
+				inherited.constructor.apply(this);
+				this.__data = {};
+				this.__contexts = {};
+				this.__serializer = serializer || Ids.objectId;
+				this.__serializerContext = serializerContext || Ids;
+			},
+			
+			_serializeContext: function (ctx) {
+				return ctx ? Ids.objectId(ctx) : null;
+			},
+			
+			_serializeData: function (data) {
+				return this.__serializer.call(this.__serializerContext, data);
+			},
+			
+			register: function (data, context) {
+				var serializedData = this._serializeData(data);
+				var serializedCtx = this._serializeContext(context);
+				var result = false;
+				if (!(serializedData in this.__data)) {
+					this.__data[serializedData] = {
+						data: data,
+						contexts: {}
+					};
+					result = true;
+				}
+				this.__data[serializedData].contexts[serializedCtx] = true;
+				return result;
+			},
+			
+			unregister: function (data, context) {
+				var serializedData = this.__serializer.call(this.__serializerContext, data);
+				if (!this.__data[serializedData])
+					return false;
+				if (context) {
+					var serializedCtx = this._serializeContext(context);
+					delete this.__data[serializedData].contexts[serializedCtx];
+				}
+				if (!context || Types.is_empty(this.__data[serializedData].contexts)) {
+					delete this.__data[serializedData];
+					return true;
+				}
+				return false;
+			},
+			
+			iterator: function () {
+				return new MappedIterator(new ObjectValuesIterator(this.__data), function (item) {
+					return item.data;
+				});
+			}
+
+		};
+	});
+});
