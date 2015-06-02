@@ -1,4 +1,8 @@
 {
+  "introduction": {
+	"title": "Introduction to BetaJS"
+  },
+
 	"class": {
 		"title": "Object Orientation",
 		"children": {
