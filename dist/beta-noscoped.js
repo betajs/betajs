@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-02
+betajs - v1.0.0 - 2015-06-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '381.1433284957987'
+		version: '382.1433352523677'
 	};
 });
 
@@ -4749,6 +4749,11 @@ Scoped.define("module:Classes.ContextRegistry", [
 			
 			_serializeData: function (data) {
 				return this.__serializer.call(this.__serializerContext, data);
+			},
+			
+			get: function (data) {
+				var serializedData = this._serializeData(data);
+				return this.__data[serializedData];
 			},
 			
 			register: function (data, context) {

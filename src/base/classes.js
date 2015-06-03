@@ -438,6 +438,11 @@ Scoped.define("module:Classes.ContextRegistry", [
 				return this.__serializer.call(this.__serializerContext, data);
 			},
 			
+			get: function (data) {
+				var serializedData = this._serializeData(data);
+				return this.__data[serializedData];
+			},
+			
 			register: function (data, context) {
 				var serializedData = this._serializeData(data);
 				var serializedCtx = this._serializeContext(context);
