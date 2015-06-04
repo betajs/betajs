@@ -455,26 +455,30 @@ Scoped.define("module:Classes.ContextRegistry", [
 					result = true;
 				}
 				this.__data[serializedData].contexts[serializedCtx] = true;
-				return result;
+				return result ? this.__data[serializedData] : null;
 			},
 			
 			unregister: function (data, context) {
 				var serializedData = this.__serializer.call(this.__serializerContext, data);
 				if (!this.__data[serializedData])
-					return false;
+					return null;
 				if (context) {
 					var serializedCtx = this._serializeContext(context);
 					delete this.__data[serializedData].contexts[serializedCtx];
 				}
 				if (!context || Types.is_empty(this.__data[serializedData].contexts)) {
-					delete this.__data[serializedData];
-					return true;
+					var oldData = this.__data[serializedData];
+					return oldData;
 				}
-				return false;
+				return null;
+			},
+			
+			customIterator: function () {
+				return new ObjectValuesIterator(this.__data);
 			},
 			
 			iterator: function () {
-				return new MappedIterator(new ObjectValuesIterator(this.__data), function (item) {
+				return new MappedIterator(this.customIterator(), function (item) {
 					return item.data;
 				});
 			}

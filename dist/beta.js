@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-03
+betajs - v1.0.0 - 2015-06-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-06-03
+betajs - v1.0.0 - 2015-06-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '382.1433352523677'
+		version: '383.1433446888900'
 	};
 });
 
@@ -5306,26 +5306,30 @@ Scoped.define("module:Classes.ContextRegistry", [
 					result = true;
 				}
 				this.__data[serializedData].contexts[serializedCtx] = true;
-				return result;
+				return result ? this.__data[serializedData] : null;
 			},
 			
 			unregister: function (data, context) {
 				var serializedData = this.__serializer.call(this.__serializerContext, data);
 				if (!this.__data[serializedData])
-					return false;
+					return null;
 				if (context) {
 					var serializedCtx = this._serializeContext(context);
 					delete this.__data[serializedData].contexts[serializedCtx];
 				}
 				if (!context || Types.is_empty(this.__data[serializedData].contexts)) {
-					delete this.__data[serializedData];
-					return true;
+					var oldData = this.__data[serializedData];
+					return oldData;
 				}
-				return false;
+				return null;
+			},
+			
+			customIterator: function () {
+				return new ObjectValuesIterator(this.__data);
 			},
 			
 			iterator: function () {
-				return new MappedIterator(new ObjectValuesIterator(this.__data), function (item) {
+				return new MappedIterator(this.customIterator(), function (item) {
 					return item.data;
 				});
 			}
