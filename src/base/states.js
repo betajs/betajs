@@ -139,7 +139,7 @@ Scoped.define("module:States.State", [
 		        this._transitioning = false;
 		        this.__next_state = null;
 		        this.__suspended = 0;
-		        args = Objs.extend(Objs.clone(args || {}, 1), this._defaults);
+		        args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
 		        this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 		        for (var i = 0; i < this._locals.length; ++i)
 		            this["_" + this._locals[i]] = args[this._locals[i]];

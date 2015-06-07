@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-04
+betajs - v1.0.0 - 2015-06-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '383.1433446888900'
+		version: '385.1433701973353'
 	};
 });
 
@@ -5550,7 +5550,7 @@ Scoped.define("module:States.State", [
 		        this._transitioning = false;
 		        this.__next_state = null;
 		        this.__suspended = 0;
-		        args = Objs.extend(Objs.clone(args || {}, 1), this._defaults);
+		        args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
 		        this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 		        for (var i = 0; i < this._locals.length; ++i)
 		            this["_" + this._locals[i]] = args[this._locals[i]];
