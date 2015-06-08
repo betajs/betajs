@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-07
+betajs - v1.0.0 - 2015-06-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-06-07
+betajs - v1.0.0 - 2015-06-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '385.1433701973353'
+		version: '386.1433797332111'
 	};
 });
 
@@ -5549,7 +5549,7 @@ Scoped.define("module:Collections.FilteredCollection", [
 				options.compare = options.compare || parent.get_compare();
 				inherited.constructor.call(this, options);
 				this.__parent.on("add", this.add, this);
-				this.__parent.on("remove", this.remove, this);
+				this.__parent.on("remove", this.__selfRemove, this);
 				this.setFilter(options.filter, options.context);
 			},
 			
@@ -5561,9 +5561,11 @@ Scoped.define("module:Collections.FilteredCollection", [
 				this.__filterContext = filterContext;
 				this.__filter = filterFunction;
 				this.iterate(function (obj) {
-					inherited.remove.call(this, obj);
+					if (!this.filter(obj))
+						inherited.remove.call(this, obj);
 				}, this);
 				this.__parent.iterate(function (object) {
+					if (!this.exists(object) && this.filter(object))
 					this.add(object);
 					return true;
 				}, this);

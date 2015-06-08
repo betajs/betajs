@@ -209,7 +209,7 @@ Scoped.define("module:Collections.FilteredCollection", [
 				options.compare = options.compare || parent.get_compare();
 				inherited.constructor.call(this, options);
 				this.__parent.on("add", this.add, this);
-				this.__parent.on("remove", this.remove, this);
+				this.__parent.on("remove", this.__selfRemove, this);
 				this.setFilter(options.filter, options.context);
 			},
 			
@@ -221,10 +221,12 @@ Scoped.define("module:Collections.FilteredCollection", [
 				this.__filterContext = filterContext;
 				this.__filter = filterFunction;
 				this.iterate(function (obj) {
-					inherited.remove.call(this, obj);
+					if (!this.filter(obj))
+						this.__selfRemove(obj);
 				}, this);
 				this.__parent.iterate(function (object) {
-					this.add(object);
+					if (!this.exists(object) && this.filter(object))
+						this.__selfAdd(object);
 					return true;
 				}, this);
 			},
