@@ -5,11 +5,12 @@ A collection is a dynamic list that allows for observers to listen for change ev
 	var collection = new BetaJS.Collections.Collection();
 ```
 
-You can add and remove items as follows:
+You can add, remove and access items as follows:
 
 ```
 	collection.add(item);
 	collection.remove(item);
+	collection.getByIndex(0);
 ```
 
 Item can either implement *Properties* or be a bare JSON object in which case it will be converted to a Properties instance.
