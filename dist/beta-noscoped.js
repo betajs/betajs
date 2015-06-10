@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-03
+betajs - v1.0.0 - 2015-06-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '382.1433352523677'
+		version: '386.1433797332111'
 	};
 });
 
@@ -4768,26 +4768,30 @@ Scoped.define("module:Classes.ContextRegistry", [
 					result = true;
 				}
 				this.__data[serializedData].contexts[serializedCtx] = true;
-				return result;
+				return result ? this.__data[serializedData] : null;
 			},
 			
 			unregister: function (data, context) {
 				var serializedData = this.__serializer.call(this.__serializerContext, data);
 				if (!this.__data[serializedData])
-					return false;
+					return null;
 				if (context) {
 					var serializedCtx = this._serializeContext(context);
 					delete this.__data[serializedData].contexts[serializedCtx];
 				}
 				if (!context || Types.is_empty(this.__data[serializedData].contexts)) {
-					delete this.__data[serializedData];
-					return true;
+					var oldData = this.__data[serializedData];
+					return oldData;
 				}
-				return false;
+				return null;
+			},
+			
+			customIterator: function () {
+				return new ObjectValuesIterator(this.__data);
 			},
 			
 			iterator: function () {
-				return new MappedIterator(new ObjectValuesIterator(this.__data), function (item) {
+				return new MappedIterator(this.customIterator(), function (item) {
 					return item.data;
 				});
 			}
@@ -5007,7 +5011,7 @@ Scoped.define("module:Collections.FilteredCollection", [
 				options.compare = options.compare || parent.get_compare();
 				inherited.constructor.call(this, options);
 				this.__parent.on("add", this.add, this);
-				this.__parent.on("remove", this.remove, this);
+				this.__parent.on("remove", this.__selfRemove, this);
 				this.setFilter(options.filter, options.context);
 			},
 			
@@ -5019,9 +5023,11 @@ Scoped.define("module:Collections.FilteredCollection", [
 				this.__filterContext = filterContext;
 				this.__filter = filterFunction;
 				this.iterate(function (obj) {
-					inherited.remove.call(this, obj);
+					if (!this.filter(obj))
+						inherited.remove.call(this, obj);
 				}, this);
 				this.__parent.iterate(function (object) {
+					if (!this.exists(object) && this.filter(object))
 					this.add(object);
 					return true;
 				}, this);
@@ -5546,7 +5552,7 @@ Scoped.define("module:States.State", [
 		        this._transitioning = false;
 		        this.__next_state = null;
 		        this.__suspended = 0;
-		        args = Objs.extend(Objs.clone(args || {}, 1), this._defaults);
+		        args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
 		        this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 		        for (var i = 0; i < this._locals.length; ++i)
 		            this["_" + this._locals[i]] = args[this._locals[i]];

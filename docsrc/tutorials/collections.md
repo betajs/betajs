@@ -1,8 +1,20 @@
 
 A collection is a dynamic list that allows for observers to listen for change events. Every item in a collection is based on a properties instance.
 
+Create a Collection:
 ```
 	var collection = new BetaJS.Collections.Collection();
+```
+
+Create a Collection with Data inside:
+```
+	var collection = new BetaJS.Collections.Collection(
+		{
+			item1: "This is Item 1";
+			item2: 2;
+			item3: 3;
+		}
+	);
 ```
 
 You can add, remove and access items as follows:

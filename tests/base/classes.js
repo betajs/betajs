@@ -26,12 +26,12 @@ test("test context registry", function () {
 	var data2 = {};
 	var ctx1 = {};
 	var ctx2 = {};
-	QUnit.equal(registry.register(data1, ctx1), true);
-	QUnit.equal(registry.register(data1, ctx2), false);
-	QUnit.equal(registry.register(data2, ctx2), true);
-	QUnit.equal(registry.register(data2, ctx1), false);
-	QUnit.equal(registry.unregister(data2, ctx1), false);
-	QUnit.equal(registry.unregister(data2, ctx2), true);
-	QUnit.equal(registry.unregister(data1, null), true);
+	QUnit.equal(!!registry.register(data1, ctx1), true);
+	QUnit.equal(!!registry.register(data1, ctx2), false);
+	QUnit.equal(!!registry.register(data2, ctx2), true);
+	QUnit.equal(!!registry.register(data2, ctx1), false);
+	QUnit.equal(!!registry.unregister(data2, ctx1), false);
+	QUnit.equal(!!registry.unregister(data2, ctx2), true);
+	QUnit.equal(!!registry.unregister(data1, null), true);
 	
 });
