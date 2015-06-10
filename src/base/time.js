@@ -81,7 +81,7 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 		},
 		
 		decodeTime: function (t, timezone) {
-			var d = this.timeToTimezoneBasedDate(t, timezone);
+			var d = this.timeToTimezoneBasedDate(t || this.now(), timezone);
 			var result = {};
 			for (var key in this.__components)
 				result[key] = this.__components[key].get(d);
