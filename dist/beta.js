@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-08
+betajs - v1.0.0 - 2015-06-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-06-08
+betajs - v1.0.0 - 2015-06-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '386.1433797332111'
+		version: '390.1434064251286'
 	};
 });
 
@@ -927,7 +927,7 @@ Scoped.define("module:Tokens", function() {
 });
 Scoped.define("module:Objs", ["module:Types"], function (Types) {
 	return {
-		
+
 		ithKey: function (obj, i) {
 			i = i || 0;
 			for (var key in obj) {
@@ -937,7 +937,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return null;
 		},
-		
+
 		count: function (obj) {
 			if (Types.is_array(obj))
 				return obj.length;
@@ -948,7 +948,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return c;
 			}
 		},
-		
+
 		clone: function (item, depth) {
 			if (!depth || depth === 0)
 				return item;
@@ -959,7 +959,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			else
 				return item;
 		},
-		
+
 		acyclic_clone: function (object, def) {
 			if (object === null || ! Types.is_object(object))
 				return object;
@@ -975,7 +975,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			delete object[s];
 			return result;
 		},
-		
+
 		extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -984,7 +984,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return target;
 		},
-		
+
 		weak_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -995,7 +995,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return target;
 		},
-		
+
 		tree_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -1008,7 +1008,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return target;
 		},
-			
+
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -1020,8 +1020,8 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 					if (key in primary || key in secondary) {
 						if (opt == "primary")
 							result[key] = key in primary ? primary[key] : secondary[key];
-						else
-							result[key] = key in secondary ? secondary[key] : primary[key];
+							else
+								result[key] = key in secondary ? secondary[key] : primary[key];
 					}			
 				}
 				else if (Types.is_function(opt))
@@ -1031,7 +1031,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return result;
 		},
-		
+
 		tree_merge: function (secondary, primary) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -1045,7 +1045,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return result;
 		},
-	
+
 		keys: function(obj, mapped) {
 			var result = null;
 			var key = null;
@@ -1061,7 +1061,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return result;
 			}
 		},
-		
+
 		map: function (obj, f, context) {
 			var result = null;
 			if (Types.is_array(obj)) {
@@ -1073,17 +1073,17 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				result = {};
 				for (var key in obj)
 					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-				return result;
+					return result;
 			}
 		},
-		
+
 		values: function (obj) {
 			var result = [];
 			for (var key in obj)
 				result.push(obj[key]);
 			return result;
 		},
-		
+
 		filter: function (obj, f, context) {
 			var ret = null;
 			if (Types.is_array(obj)) {
@@ -1102,7 +1102,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return ret;
 			}
 		},
-		
+
 		equals: function (obj1, obj2, depth) {
 			var key = null;
 			if (depth && depth > 0) {
@@ -1118,7 +1118,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			} else
 				return obj1 == obj2;
 		},
-		
+
 		iter: function (obj, f, context) {
 			var result = null;
 			if (Types.is_array(obj)) {
@@ -1136,7 +1136,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return true;
 		},
-		
+
 		intersect: function (a, b) {
 			var c = {};
 			for (var key in a) {
@@ -1145,14 +1145,14 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return c;
 		},
-		
+
 		contains_key: function (obj, key) {
 			if (Types.is_array(obj))
 				return Types.is_defined(obj[key]);
 			else
 				return key in obj;
 		},
-		
+
 		contains_value: function (obj, value) {
 			if (Types.is_array(obj)) {
 				for (var i = 0; i < obj.length; ++i) {
@@ -1167,7 +1167,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return false;
 		},
-		
+
 		exists: function (obj, f, context) {
 			var success = false;
 			this.iter(obj, function () {
@@ -1176,7 +1176,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}, context);
 			return success;
 		},
-		
+
 		all: function (obj, f, context) {
 			var success = true;
 			this.iter(obj, function () {
@@ -1185,7 +1185,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}, context);
 			return success;
 		},
-		
+
 		objectify: function (arr, f, context) {
 			var result = {};
 			var is_function = Types.is_function(f);
@@ -1193,19 +1193,19 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				f = true;
 			for (var i = 0; i < arr.length; ++i)
 				result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
-			return result;
+				return result;
 		},
-		
+
 		peek: function (obj) {
 			if (Types.is_array(obj))
 				return obj.length > 0 ? obj[0] : null;
-			else {
-				for (var key in obj)
-					return obj[key];
-				return null;
-			} 
+				else {
+					for (var key in obj)
+						return obj[key];
+					return null;
+				} 
 		},
-		
+
 		poll: function (obj) {
 			if (Types.is_array(obj))
 				return obj.shift();
@@ -1218,7 +1218,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return null;
 			} 
 		},
-		
+
 		objectBy: function () {
 			var obj = {};
 			var count = arguments.length / 2;
@@ -1226,7 +1226,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				obj[arguments[2 * i]] = arguments[2 * i + 1];
 			return obj;
 		},
-		
+
 		valueByIndex: function (obj, idx) {
 			idx = idx || 0;
 			if (Types.is_array(obj))
@@ -1238,7 +1238,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return null;
 		},
-		
+
 		keyByIndex: function (obj, idx) {
 			idx = idx || 0;
 			if (Types.is_array(obj))
@@ -1250,48 +1250,48 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return null;
 		},
-		
+
 		pairArrayToObject: function (arr) {
 			var result = {};
 			for (var i = 0; i < arr.length / 2; i += 2)
 				result[arr[i]] = arr[i+1];
 			return result;
 		},
-		
+
 		pairsToObject: function () {
 			var result = {};
 			for (var i = 0; i < arguments.length; ++i)
 				result[arguments[i][0]] = arguments[i][1];
 			return result;
 		}
-	
+
 	};
 });
 
 
 Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 	return {
-		
+
 		has: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
-		       if (!scope || !Types.is_object(scope))
-		    	   return false;
-		       scope = scope[keys[i]];
-		    }
+				if (!scope || !Types.is_object(scope))
+					return false;
+				scope = scope[keys[i]];
+			}
 			return Types.is_defined(scope);
 		},
-		
+
 		get: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
-		       if (!scope || !Types.is_object(scope))
-		    	   return null;
-		       scope = scope[keys[i]];
-		    }
+				if (!scope || !Types.is_object(scope))
+					return null;
+				scope = scope[keys[i]];
+			}
 			return scope;
 		},
-		
+
 		set: function (key, value, scope) {
 			if (!key)
 				return;
@@ -1299,23 +1299,23 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			for (var i = 0; i < keys.length - 1; ++i) {
 				if (!(keys[i] in scope) || !Types.is_object(scope[keys[i]]))
 					scope[keys[i]] = {};
-		       scope = scope[keys[i]];
-		    }
+				scope = scope[keys[i]];
+			}
 			scope[keys[keys.length - 1]] = value;
 		},
-		
+
 		unset: function (key, scope) {
 			if (!key)
 				return;
 			var keys = key.split(".");
 			for (var i = 0; i < keys.length - 1; ++i) {
-		       if (!scope || !Types.is_object(scope))
-		    	   return;
-		       scope = scope[keys[i]];
-		    }
+				if (!scope || !Types.is_object(scope))
+					return;
+				scope = scope[keys[i]];
+			}
 			delete scope[keys[keys.length - 1]];
 		},
-		
+
 		touch: function (key, scope) {
 			if (!key)
 				return scope;
@@ -1323,8 +1323,8 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			for (var i = 0; i < keys.length; ++i) {
 				if (!(keys[i] in scope) || !Types.is_object(scope))
 					scope[keys[i]] = {};
-		       scope = scope[keys[i]];
-		    }
+				scope = scope[keys[i]];
+			}
 			return scope[keys[keys.length - 1]];
 		}
 
@@ -1958,7 +1958,7 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 		},
 		
 		decodeTime: function (t, timezone) {
-			var d = this.timeToTimezoneBasedDate(t, timezone);
+			var d = this.timeToTimezoneBasedDate(t || this.now(), timezone);
 			var result = {};
 			for (var key in this.__components)
 				result[key] = this.__components[key].get(d);
@@ -2048,6 +2048,7 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 	};
 
 });
+
 Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Types, Functions) {
 	return {		
 		
@@ -3142,7 +3143,7 @@ Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"],
 				arr.push(this.next());
 			return arr;
 		},
-		
+
 		asArrayDelegate: function (f) {
 			var arr = [];
 			while (this.hasNext()) {
@@ -3151,12 +3152,12 @@ Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"],
 			}
 			return arr;
 		},
-		
+
 		iterate: function (callback, context) {
 			while (this.hasNext())
 				callback.call(context || this, this.next());
 		}
-		
+
 	});
 });
 
@@ -3164,17 +3165,17 @@ Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"],
 Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (arr) {
 				inherited.constructor.call(this);
 				this.__array = arr;
 				this.__i = 0;
 			},
-			
+
 			hasNext: function () {
 				return this.__i < this.__array.length;
 			},
-			
+
 			next: function () {
 				var ret = this.__array[this.__i];
 				this.__i++;
@@ -3182,7 +3183,7 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 			}
 		};
 	}, {
-		
+
 		byIterate: function (iterate_func, iterate_func_ctx) {
 			var result = [];
 			iterate_func.call(iterate_func_ctx || this, function (item) {
@@ -3197,11 +3198,11 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
 	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (obj) {
 				inherited.constructor.call(this, Objs.keys(obj));
 			}
-	
+
 		};
 	});
 });
@@ -3210,11 +3211,11 @@ Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIte
 Scoped.define("module:Iterators.ObjectValuesIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
 	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (obj) {
 				inherited.constructor.call(this, Objs.values(obj));
 			}
-	
+
 		};
 	});
 });
@@ -3223,22 +3224,22 @@ Scoped.define("module:Iterators.ObjectValuesIterator", ["module:Iterators.ArrayI
 Scoped.define("module:Iterators.MappedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-		
+
 			constructor: function (iterator, map, context) {
 				inherited.constructor.call(this);
 				this.__iterator = iterator;
 				this.__map = map;
 				this.__context = context || this;
 			},
-			
+
 			hasNext: function () {
 				return this.__iterator.hasNext();
 			},
-			
+
 			next: function () {
 				return this.hasNext() ? this.__map.call(this.__context, this.__iterator.next()) : null;
 			}
-	
+
 		};
 	});
 });
@@ -3247,7 +3248,7 @@ Scoped.define("module:Iterators.MappedIterator", ["module:Iterators.Iterator"], 
 Scoped.define("module:Iterators.FilteredIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (iterator, filter, context) {
 				inherited.constructor.call(this);
 				this.__iterator = iterator;
@@ -3255,19 +3256,19 @@ Scoped.define("module:Iterators.FilteredIterator", ["module:Iterators.Iterator"]
 				this.__context = context || this;
 				this.__next = null;
 			},
-			
+
 			hasNext: function () {
 				this.__crawl();
 				return this.__next !== null;
 			},
-			
+
 			next: function () {
 				this.__crawl();
 				var item = this.__next;
 				this.__next = null;
 				return item;
 			},
-			
+
 			__crawl: function () {
 				while (!this.__next && this.__iterator.hasNext()) {
 					var item = this.__iterator.next();
@@ -3275,7 +3276,7 @@ Scoped.define("module:Iterators.FilteredIterator", ["module:Iterators.Iterator"]
 						this.__next = item;
 				}
 			},
-			
+
 			__filter_func: function (item) {
 				return this.__filter.apply(this.__context, [item]);
 			}
@@ -3297,11 +3298,11 @@ Scoped.define("module:Iterators.SkipIterator", ["module:Iterators.Iterator"], fu
 					skip--;
 				}
 			},
-			
+
 			hasNext: function () {
 				return this.__iterator.hasNext();
 			},
-			
+
 			next: function () {
 				return this.__iterator.next();
 			}
@@ -3314,17 +3315,17 @@ Scoped.define("module:Iterators.SkipIterator", ["module:Iterators.Iterator"], fu
 Scoped.define("module:Iterators.LimitIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-	
+
 			constructor: function (iterator, limit) {
 				inherited.constructor.call(this);
 				this.__iterator = iterator;
 				this.__limit = limit;
 			},
-			
+
 			hasNext: function () {
 				return this.__limit > 0 && this.__iterator.hasNext();
 			},
-			
+
 			next: function () {
 				if (this.__limit <= 0)
 					return null;
@@ -3340,24 +3341,24 @@ Scoped.define("module:Iterators.LimitIterator", ["module:Iterators.Iterator"], f
 Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-	
+
 			constructor: function (iterator, compare) {
 				inherited.constructor.call(this);
 				this.__array = iterator.asArray();
 				this.__array.sort(compare);
 				this.__i = 0;
 			},
-			
+
 			hasNext: function () {
 				return this.__i < this.__array.length;
 			},
-			
+
 			next: function () {
 				var ret = this.__array[this.__i];
 				this.__i++;
 				return ret;
 			}
-	
+
 		};
 	});
 });
@@ -3366,7 +3367,7 @@ Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], 
 Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-	
+
 			constructor: function () {
 				inherited.constructor.call(this);
 				this.__finished = false;
@@ -3374,20 +3375,20 @@ Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], fu
 				this.__current = null;
 				this.__has_current = false;
 			},
-			
+
 			_initialize: function () {},
-			
+
 			_next: function () {},
-			
+
 			_finished: function () {
 				this.__finished = true;
 			},
-			
+
 			_current: function (result) {
 				this.__current = result;
 				this.__has_current = true;
 			},
-			
+
 			__touch: function () {
 				if (!this.__initialized)
 					this._initialize();
@@ -3395,53 +3396,53 @@ Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], fu
 				if (!this.__has_current && !this.__finished)
 					this._next();
 			},
-			
+
 			hasNext: function () {
 				this.__touch();
 				return this.__has_current;
 			},
-			
+
 			next: function () {
 				this.__touch();
 				this.__has_current = false;
 				return this.__current;
 			}
-	
+
 		};
 	});
 });
 
 Scoped.define("module:Iterators.SortedOrIterator", [
-    "module:Iterators.LazyIterator",
-    "module:Structures.TreeMap",
-    "module:Objs"
-], function (Iterator, TreeMap, Objs, scoped) {
+                                                    "module:Iterators.LazyIterator",
+                                                    "module:Structures.TreeMap",
+                                                    "module:Objs"
+                                                    ], function (Iterator, TreeMap, Objs, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-	
+
 			constructor: function (iterators, compare) {
 				this.__iterators = iterators;
 				this.__map = TreeMap.empty(compare);
 				inherited.constructor.call(this);
 			},
-			
+
 			__process: function (iter) {
 				if (iter.hasNext()) {
 					var n = iter.next();
-	  				var value = TreeMap.find(n, this.__map);
-	  				if (value)
-	  					value.push(iter);
-	  				else 
-	  					this.__map = TreeMap.add(n, [iter], this.__map);
+					var value = TreeMap.find(n, this.__map);
+					if (value)
+						value.push(iter);
+					else 
+						this.__map = TreeMap.add(n, [iter], this.__map);
 				}
 			},
-			
+
 			_initialize: function () {
 				Objs.iter(this.__iterators, this.__process, this);
 				if (TreeMap.is_empty(this.__map))
 					this._finished();
 			},
-			
+
 			_next: function () {
 				var ret = TreeMap.take_min(this.__map);
 				this._current(ret[0].key);
@@ -3450,7 +3451,7 @@ Scoped.define("module:Iterators.SortedOrIterator", [
 				if (TreeMap.is_empty(this.__map))
 					this._finished();
 			}
-	
+
 		};
 	});
 });
@@ -3469,7 +3470,7 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
 				this.__head = [];
 				this.__tail = [];
 			},
-			
+
 			__cache: function () {
 				if (this.__head.length > 0 || !this.__iterator.hasNext())
 					return;
@@ -3486,17 +3487,17 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
 				}
 				this.__head.sort(this.__compare);
 			},
-			
+
 			hasNext: function () {
 				this.__cache();
 				return this.__head.length > 0;
 			},
-			
+
 			next: function () {
 				this.__cache();
 				return this.__head.shift();
 			}
-			
+
 		};
 	});		
 });
@@ -3505,7 +3506,7 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
 Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.LazyIterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (next_callback, next_context) {
 				inherited.constructor.call(this);
 				this.__next_callback = next_callback;
@@ -3513,7 +3514,7 @@ Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.Lazy
 				this.__array = null;
 				this.__i = 0;
 			},
-			
+
 			_next: function () {
 				if (this.__array === null || this.__i >= this.__array.length) {
 					this.__array = this.__next_callback.apply(this.__next_context);
@@ -3526,17 +3527,17 @@ Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.Lazy
 				} else
 					this._finished();
 			}
-			
+
 		};
 	});
 });
 
 Scoped.define("module:Lists.AbstractList", [
-		"module:Class",
-		"module:Objs",
-		"module:Types",
-		"module:Iterators.ArrayIterator"
-	], function (Class, Objs, Types, ArrayIterator, scoped) {
+                                            "module:Class",
+                                            "module:Objs",
+                                            "module:Types",
+                                            "module:Iterators.ArrayIterator"
+                                            ], function (Class, Objs, Types, ArrayIterator, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -3544,7 +3545,7 @@ Scoped.define("module:Lists.AbstractList", [
 			_remove: function (ident) {},
 			_get: function (ident) {},
 			_iterate: function (callback, context) {},
-			
+
 			get_ident: function (object) {
 				var ident = null;
 				this._iterate(function (obj, id) {
@@ -3556,13 +3557,13 @@ Scoped.define("module:Lists.AbstractList", [
 				});
 				return ident;
 			},
-			
+
 			exists: function (object) {
 				return object && this.get_ident(object) !== null;
 			},
-			
+
 			_ident_changed: function (object, new_ident) {},
-			
+
 			constructor: function (objects) {
 				inherited.constructor.call(this);
 				this.__count = 0;
@@ -3572,36 +3573,36 @@ Scoped.define("module:Lists.AbstractList", [
 					}, this);
 				}
 			},
-			
+
 			add: function (object) {
 				var ident = this._add(object);
 				if (Types.is_defined(ident))
 					this.__count++;
 				return ident;
 			},
-			
+
 			count: function () {
 				return this.__count;
 			},
-			
+
 			clear: function () {
 				this._iterate(function (object, ident) {
 					this.remove_by_ident(ident);
 					return true;
 				}, this);
 			},
-			
+
 			remove_by_ident: function (ident) {
 				var ret = this._remove(ident);
 				if (Types.is_defined(ret))
 					this.__count--;
 				return ret;
 			},
-			
+
 			remove: function (object) {
 				return this.remove_by_ident(this.get_ident(object));
 			},
-			
+
 			remove_by_filter: function (filter) {
 				this._iterate(function (object, ident) {
 					if (filter(object))
@@ -3609,22 +3610,22 @@ Scoped.define("module:Lists.AbstractList", [
 					return true;
 				}, this);
 			},
-			
+
 			get: function (ident) {
 				return this._get(ident);
 			},
-			
+
 			iterate: function (cb, context) {
 				this._iterate(function (object, ident) {
 					var ret = cb.apply(this, [object, ident]);
 					return Types.is_defined(ret) ? ret : true;
 				}, context);
 			},
-			
+
 			iterator: function () {
 				return ArrayIterator.byIterate(this.iterate, this);
 			}
-			
+
 		};
 	});
 });
@@ -3632,15 +3633,15 @@ Scoped.define("module:Lists.AbstractList", [
 
 Scoped.define("module:Lists.LinkedList", ["module:Lists.AbstractList"], function (AbstractList, scoped) {
 	return AbstractList.extend({scoped: scoped},  {
-		
+
 		__first: null,
 		__last: null,
-		
+
 		_add: function (obj) {
 			this.__last = {
-				obj: obj,
-				prev: this.__last,
-				next: null
+					obj: obj,
+					prev: this.__last,
+					next: null
 			};
 			if (this.__first)
 				this.__last.prev.next = this.__last;
@@ -3648,7 +3649,7 @@ Scoped.define("module:Lists.LinkedList", ["module:Lists.AbstractList"], function
 				this.__first = this.__last;
 			return this.__last;
 		},
-		
+
 		_remove: function (container) {
 			if (container.next)
 				container.next.prev = container.prev;
@@ -3660,11 +3661,11 @@ Scoped.define("module:Lists.LinkedList", ["module:Lists.AbstractList"], function
 				this.__first = container.next;
 			return container.obj;
 		},
-		
+
 		_get: function (container) {
 			return container.obj;
 		},
-		
+
 		_iterate: function (cb, context) {
 			var current = this.__first;
 			while (current) {
@@ -3674,7 +3675,7 @@ Scoped.define("module:Lists.LinkedList", ["module:Lists.AbstractList"], function
 					return;
 			}
 		}
-		
+
 	});
 });
 
@@ -3682,46 +3683,46 @@ Scoped.define("module:Lists.LinkedList", ["module:Lists.AbstractList"], function
 Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module:Ids"], function (AbstractList, Ids, scoped) {
 	return AbstractList.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (objects, id_generator) {
 				this.__map = {};
 				this.__id_generator = id_generator;
 				inherited.constructor.call(this, objects);
 			},
-		
+
 			_add: function (object) {
-		        var id = object.__cid;
-		        if (!id) {
-		        	while (true) {
-		                id = this.__id_generator ? Ids.objectId(object, this.__id_generator()) : Ids.objectId(object);
-		        		if (!this.__map[id] || !this.__id_generator)
-		        			break;
-		        	}
-	            }
-	    		this.__map[id] = object;
-	    		return id;
+				var id = object.__cid;
+				if (!id) {
+					while (true) {
+						id = this.__id_generator ? Ids.objectId(object, this.__id_generator()) : Ids.objectId(object);
+						if (!this.__map[id] || !this.__id_generator)
+							break;
+					}
+				}
+				this.__map[id] = object;
+				return id;
 			},
-			
+
 			_remove: function (ident) {
 				var obj = this.__map[ident];
 				delete this.__map[ident];
 				return obj;
 			},
-			
+
 			_get: function (ident) {
 				return this.__map[ident];
 			},
-			
+
 			_iterate: function (callback, context) {
 				for (var key in this.__map)
 					callback.apply(context || this, [this.__map[key], key]);
 			},
-			
+
 			get_ident: function (object) {
 				var ident = Ids.objectId(object);
 				return this.__map[ident] ? ident : null;
 			}
-			
+
 		};
 	});
 });
@@ -3731,7 +3732,7 @@ Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module
 Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Ids", "module:Objs"], function (AbstractList, Ids, Objs, scoped) {
 	return AbstractList.extend({scoped: scoped}, function (inherited) {
 		return {
-	
+
 			constructor: function (objects, options) {
 				this.__idToIndex = {};
 				this.__items = [];
@@ -3742,17 +3743,17 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 					this._get_ident = options.get_ident;
 				inherited.constructor.call(this, objects);
 			},
-			
+
 			set_compare: function (compare) {
 				this._compare = compare;
 				if (compare)
 					this.sort();
 			},
-			
+
 			get_compare: function () {
 				return this._compare;
 			},
-			
+
 			sort: function (compare) {
 				compare = compare || this._compare;
 				if (!compare)
@@ -3762,9 +3763,9 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 					this.__ident_changed(this.__items[i], i);
 				this._sorted();
 			},
-			
+
 			_sorted: function () {},
-				
+
 			re_index: function (index) {
 				if (!this._compare)
 					return index;
@@ -3791,13 +3792,13 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				}
 				return i;
 			},
-			
+
 			_re_indexed: function (object) {},
-			
+
 			__objectId: function(object) {
 				return this._get_ident ? this._get_ident(object) : Ids.objectId(object);
 			},
-			
+
 			_add: function (object) {
 				var last = this.__items.length;
 				this.__items.push(object);
@@ -3805,7 +3806,7 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				this.__idToIndex[this.__objectId(object)] = i;
 				return i;
 			},
-			
+
 			_remove: function (ident) {
 				var obj = this.__items[ident];
 				for (var i = ident + 1; i < this.__items.length; ++i) {
@@ -3816,27 +3817,27 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				delete this.__idToIndex[this.__objectId(obj)];
 				return obj;
 			},
-			
+
 			_get: function (ident) {
 				return this.__items[ident];
 			},
-			
+
 			_iterate: function (callback, context) {
 				var items = Objs.clone(this.__items, 1);
 				for (var i = 0; i < items.length; ++i)
 					callback.apply(context || this, [items[i], this.get_ident(items[i])]);
 			},
-		
+
 			__ident_changed: function (object, index) {
 				this.__idToIndex[this.__objectId(object)] = index;
 				this._ident_changed(object, index);
 			},
-		
+
 			get_ident: function (object) {
 				var id = this.__objectId(object);
 				return id in this.__idToIndex ? this.__idToIndex[id] : null;
 			},
-			
+
 			ident_by_id: function (id) {
 				return this.__idToIndex[id];
 			}
@@ -3846,23 +3847,23 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 });
 
 Scoped.define("module:Events.EventsMixin", [
-	"module:Timers.Timer",
-	"module:Async",
-	"module:Lists.LinkedList",
-	"module:Functions",
-	"module:Types",
-	"module:Objs"
-	], function (Timer, Async, LinkedList, Functions, Types, Objs) {
-	
+                                            "module:Timers.Timer",
+                                            "module:Async",
+                                            "module:Lists.LinkedList",
+                                            "module:Functions",
+                                            "module:Types",
+                                            "module:Objs"
+                                            ], function (Timer, Async, LinkedList, Functions, Types, Objs) {
+
 	return {
-			
+
 		EVENT_SPLITTER: /\s+/,
-		
+
 		__create_event_object: function (callback, context, options) {
 			options = options || {};
 			var obj = {
-				callback: callback,
-				context: context
+					callback: callback,
+					context: context
 			};
 			if (options.eventually)
 				obj.eventually = options.eventually;
@@ -3892,14 +3893,14 @@ Scoped.define("module:Events.EventsMixin", [
 				});
 			return obj;
 		},
-		
+
 		__destroy_event_object: function (object) {
 			if (object.min_delay)
 				object.min_delay.destroy();
 			if (object.max_delay)
 				object.max_delay.destroy();
 		},
-		
+
 		__call_event_object: function (object, params) {
 			if (object.min_delay)
 				object.min_delay.restart();
@@ -3913,7 +3914,7 @@ Scoped.define("module:Events.EventsMixin", [
 			} else
 				object.params = params;
 		},
-		
+
 		on: function(events, callback, context, options) {
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			events = events.split(this.EVENT_SPLITTER);
@@ -3929,7 +3930,7 @@ Scoped.define("module:Events.EventsMixin", [
 			}
 			return this;
 		},
-		
+
 		off: function(events, callback, context) {
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			if (events) {
@@ -3966,7 +3967,7 @@ Scoped.define("module:Events.EventsMixin", [
 			}
 			return this;
 		},
-		
+
 		triggerAsync: function () {
 			var self = this;
 			var args = Functions.getArguments(arguments);
@@ -3975,60 +3976,60 @@ Scoped.define("module:Events.EventsMixin", [
 				self.trigger.apply(self, args);
 			}, 0);
 		},
-	
-	    trigger: function(events) {
-	    	var self = this;
-	    	events = events.split(this.EVENT_SPLITTER);
-	    	var rest = Functions.getArguments(arguments, 1);
+
+		trigger: function(events) {
+			var self = this;
+			events = events.split(this.EVENT_SPLITTER);
+			var rest = Functions.getArguments(arguments, 1);
 			var event;
 			if (!this.__events_mixin_events)
 				return this;
 			Objs.iter(events, function (event) {
-	    		if (this.__events_mixin_events[event])
-	    			this.__events_mixin_events[event].iterate(function (object) {
-	    				self.__call_event_object(object, rest);
-	    			});
+				if (this.__events_mixin_events[event])
+					this.__events_mixin_events[event].iterate(function (object) {
+						self.__call_event_object(object, rest);
+					});
 				if (this.__events_mixin_events && "all" in this.__events_mixin_events)
 					this.__events_mixin_events.all.iterate(function (object) {
 						self.__call_event_object(object, [event].concat(rest));
 					});
 			}, this);
-	    	return this;
-	    },
-	    
-	    once: function (events, callback, context, options) {
-	        var self = this;
-	        var once = Functions.once(function() {
-	          self.off(events, once);
-	          callback.apply(this, arguments);
-	        });
-	        once._callback = callback;
-	        return this.on(events, once, context, options);
-	    },
-	    
-	    delegateEvents: function (events, source, prefix, params) {
-	    	params = params || []; 
-	    	prefix = prefix ? prefix + ":" : "";
-	    	if (events === null) {
-	    		source.on("all", function (event) {
+			return this;
+		},
+
+		once: function (events, callback, context, options) {
+			var self = this;
+			var once = Functions.once(function() {
+				self.off(events, once);
+				callback.apply(this, arguments);
+			});
+			once._callback = callback;
+			return this.on(events, once, context, options);
+		},
+
+		delegateEvents: function (events, source, prefix, params) {
+			params = params || []; 
+			prefix = prefix ? prefix + ":" : "";
+			if (events === null) {
+				source.on("all", function (event) {
 					var rest = Functions.getArguments(arguments, 1);
 					this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
-	    		}, this);
-	    	} else {
-	    		if (!Types.is_array(events))
-	    			events = [events];
-		   		Objs.iter(events, function (event) {
+				}, this);
+			} else {
+				if (!Types.is_array(events))
+					events = [events];
+				Objs.iter(events, function (event) {
 					source.on(event, function () {
 						var rest = Functions.getArguments(arguments);
 						this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
 					}, this);
 				}, this);
 			}
-	    }
-		
+		}
+
 	};
 });
-	
+
 
 Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixin"], function (Class, Mixin, scoped) {
 	return Class.extend({scoped: scoped}, Mixin);
@@ -4037,23 +4038,23 @@ Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixi
 
 Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], function (Ids, Objs) {
 	return {
-		
+
 		_notifications: {
 			"destroy": "listenOff" 
 		},
-			
+
 		listenOn: function (target, events, callback, options) {
 			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 			this.__listen_mixin_listen[Ids.objectId(target)] = target;
 			target.on(events, callback, this, options);
 		},
-		
+
 		listenOnce: function (target, events, callback, options) {
 			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 			this.__listen_mixin_listen[Ids.objectId(target)] = target;
 			target.once(events, callback, this, options);
 		},
-		
+
 		listenOff: function (target, events, callback) {
 			if (!this.__listen_mixin_listen)
 				return;
@@ -4070,7 +4071,7 @@ Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], functi
 						delete this.__listen_mixin_listen[Ids.objectId(obj)];
 				}, this);
 		}		
-		
+
 	};
 });
 
@@ -4512,27 +4513,32 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
 			return 0;
 		},
 		
-		listEqual: function (a, b) {
+		deepEqual: function (a, b, depth) {
+			if (depth === 0)
+				return true;
+			if (depth === 1)
+				return a === b;
 			if (Types.is_array(a) && Types.is_array(b)) {
-				if (a.length != b.length)
+				if (a.length !== b.length)
 					return false;
-				for (var i = 0; i < a.length; ++i) {
-					if (a[i] !== b[i])
+				for (var i = 0; i < a.length; ++i)
+					if (!this.deepEqual(a[i], b[i], depth - 1))
 						return false;
-				}
 				return true;
 			} else if (Types.is_object(a) && Types.is_object(b)) {
-				for (var key in a) {
-					if (b[key] !== a[key])
+				for (var key in a)
+					if (!this.deepEqual(a[key], b[key], depth - 1))
 						return false;
-				}
-				for (key in b) {
+				for (key in b)
 					if (!(key in a))
 						return false;
-				}
 				return true;
 			} else
-				return false;
+				return a === b;
+		},
+		
+		listEqual: function (a, b) {
+			return this.deepEqual(a, b, 2);
 		}
 			
 	};
@@ -4639,7 +4645,7 @@ Scoped.define("module:Sort", [
 
 Scoped.define("module:Trees.TreeNavigator", function () {
 	return {		
-		
+
 		nodeRoot: function () {},
 		nodeId: function (node) {},
 		nodeParent: function (node) {},
@@ -4647,7 +4653,7 @@ Scoped.define("module:Trees.TreeNavigator", function () {
 		nodeWatch: function (node, func, context) {},
 		nodeUnwatch: function (node, func, context) {},
 		nodeData: function (node) {}
-			
+
 	};
 });
 
@@ -4655,7 +4661,7 @@ Scoped.define("module:Trees.TreeNavigator", function () {
 Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Lexer", "module:Trees.TreeQueryObject"], function (Class, Lexer, TreeQueryObject, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (navigator) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -4668,7 +4674,7 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 					"\s": null
 				}));
 			},
-			
+
 			query: function (node, query) {
 				return new TreeQueryObject(this.__navigator, node, this.__lexer.lex(query));
 			}
@@ -4681,7 +4687,7 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.EventsMixin", "module:Objs", "module:Types"], function (Class, EventsMixin, Objs, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
-			
+
 			constructor: function (navigator, node, query) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -4692,7 +4698,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__register(node, 0, {});
 				this.__ids = 0;
 			},
-			
+
 			destroy: function () {
 				Objs.iter(this.__partials, function (partials) {
 					Objs.iter(partials.partials, function (partial) {
@@ -4701,7 +4707,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				}, this);
 				inherited.destroy.call(this);
 			},
-			
+
 			result: function () {
 				var result = [];
 				Objs.iter(this.__result, function (value) {
@@ -4709,31 +4715,31 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				});
 				return result;
 			},
-			
+
 			__register: function (node, index) {
 				var node_id = this.__navigator.nodeId(node);
 				if (!this.__partials[node_id]) {
 					this.__partials[node_id] = {
-						node: node,
-						partials: {}
+							node: node,
+							partials: {}
 					};
 				}
 				var partials = this.__partials[node_id];
 				this.__ids++;
 				var partial = {
-					owner: partials,
-					id: this.__ids,
-					query_index_start: index,
-					query_index_next: index,
-					query_index_last: index,
-					partial_match: false,
-					partial_final: index >= this.__query.length,
-					partial_data: false,
-					partial_children: false,
-					partial_parent: false,
-					partial_star: false,
-					parent: null,
-					deps: {}
+						owner: partials,
+						id: this.__ids,
+						query_index_start: index,
+						query_index_next: index,
+						query_index_last: index,
+						partial_match: false,
+						partial_final: index >= this.__query.length,
+						partial_data: false,
+						partial_children: false,
+						partial_parent: false,
+						partial_star: false,
+						parent: null,
+						deps: {}
 				};
 				partials.partials[partial.id] = partial;
 				for (var i = partial.query_index_start; i < this.__query.length; ++i) {
@@ -4765,7 +4771,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__update(partial);
 				return partial;
 			},
-			
+
 			__unregisterPartial: function (partial) {
 				var owner = partial.owner;
 				var node = owner.node;
@@ -4786,7 +4792,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				if (Types.is_empty(owner.partials))
 					delete this.__partials[node_id];
 			},
-			
+
 			__addDependentPartial: function (partial, node) {
 				var partials = [];
 				partials.push(this.__register(node, partial.query_index_next));
@@ -4797,7 +4803,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 					p.parent = partial;
 				}, this);
 			},
-			
+
 			__update: function (partial) {
 				var matching = true;
 				var node = partial.owner.node;
@@ -4819,8 +4825,8 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 					if (partial.partial_final) {
 						if (!this.__result[node_id]) {
 							this.__result[node_id] = {
-								node: node,
-								count: 1
+									node: node,
+									count: 1
 							};
 							this.trigger("add", node);
 							this.trigger("change");
@@ -5562,11 +5568,11 @@ Scoped.define("module:Collections.FilteredCollection", [
 				this.__filter = filterFunction;
 				this.iterate(function (obj) {
 					if (!this.filter(obj))
-						inherited.remove.call(this, obj);
+						this.__selfRemove(obj);
 				}, this);
 				this.__parent.iterate(function (object) {
 					if (!this.exists(object) && this.filter(object))
-					this.add(object);
+						this.__selfAdd(object);
 					return true;
 				}, this);
 			},
@@ -5950,99 +5956,99 @@ Scoped.define("module:KeyValue.DefaultKeyValueStore", ["module:KeyValue.KeyValue
 });
 
 Scoped.define("module:States.Host", [
-	    "module:Properties.Properties",
-	    "module:Events.EventsMixin",
-	    "module:States.State",
-	    "module:Types",
-	    "module:Strings",
-	    "module:Classes.ClassRegistry"
-	], function (Class, EventsMixin, State, Types, Strings, ClassRegistry, scoped) {
+                                     "module:Properties.Properties",
+                                     "module:Events.EventsMixin",
+                                     "module:States.State",
+                                     "module:Types",
+                                     "module:Strings",
+                                     "module:Classes.ClassRegistry"
+                                     ], function (Class, EventsMixin, State, Types, Strings, ClassRegistry, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
-		    	
-		    constructor: function (options) {
-		    	inherited.constructor.call(this);
-		    	options = options || {};
-		    	this._stateRegistry = options.stateRegistry;
-		    	this._baseState = options.baseState;
-		    },
-		    	
-		    initialize: function (initial_state, initial_args) {
-		    	if (!this._stateRegistry) {
-		    		if (Types.is_string(initial_state) && initial_state.indexOf(".") >= 0) {
-		    			var split = Strings.splitLast(initial_state, ".");
-		        		this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(split.head)));
-		        		initial_state = split.tail;
-		    		} else
-		    			this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(this.cls.classname, ".").head)));
-		    	}
-		    	this._createState(initial_state, initial_args).start();
+
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				options = options || {};
+				this._stateRegistry = options.stateRegistry;
+				this._baseState = options.baseState;
+			},
+
+			initialize: function (initial_state, initial_args) {
+				if (!this._stateRegistry) {
+					if (Types.is_string(initial_state) && initial_state.indexOf(".") >= 0) {
+						var split = Strings.splitLast(initial_state, ".");
+						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(split.head)));
+						initial_state = split.tail;
+					} else
+						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(this.cls.classname, ".").head)));
+				}
+				this._createState(initial_state, initial_args).start();
 				this._baseState = this._baseState || this._state.cls; 
-		    },
-		    
-		    _createState: function (state, args, transitionals) {
-		    	return this._stateRegistry.create(state, this, args || {}, transitionals || {});
-		    },
-		    
-		    finalize: function () {
-		        if (this._state)
-		            this._state.destroy();
+			},
+
+			_createState: function (state, args, transitionals) {
+				return this._stateRegistry.create(state, this, args || {}, transitionals || {});
+			},
+
+			finalize: function () {
+				if (this._state)
+					this._state.destroy();
 				this._state = null;    	
-		    },
-		    
-		    destroy: function () {
-		    	this.finalize();
-		    	inherited.destroy.call(this);
-		    },
-		    
-		    state: function () {
-		        return this._state;
-		    },
-		    
-		    state_name: function () {
-		    	return this.state().state_name();
-		    },
-		    
-		    next: function () {
-		    	return this.state().next.apply(this.state(), arguments);
-		    },
-		    
-		    _start: function (state) {
-		        this._stateEvent(state, "before_start");
-		        this._state = state;
-		    },
-		    
-		    _afterStart: function (state) {
-		        this._stateEvent(state, "start");
-		    },
-		    
-		    _end: function (state) {
-		        this._stateEvent(state, "end");
-		        this._state = null;
-		    },
-		    
-		    _afterEnd: function (state) {
-		        this._stateEvent(state, "after_end");
-		    },
-		    
-		    _next: function (state) {
-		        this._stateEvent(state, "next");
-		    },
-		    
-		    _afterNext: function (state) {
-		        this._stateEvent(state, "after_next");
-		    },
-		    
-		    _can_transition_to: function (state) {
-		        return true;
-		    },
-		    
-		    _stateEvent: function (state, s) {
-		        this.trigger("event", s, state.state_name(), state.description());
-		        this.trigger(s, state.state_name(), state.description());
-		        this.trigger(s + ":" + state.state_name(), state.description());
-		    },
-		
+			},
+
+			destroy: function () {
+				this.finalize();
+				inherited.destroy.call(this);
+			},
+
+			state: function () {
+				return this._state;
+			},
+
+			state_name: function () {
+				return this.state().state_name();
+			},
+
+			next: function () {
+				return this.state().next.apply(this.state(), arguments);
+			},
+
+			_start: function (state) {
+				this._stateEvent(state, "before_start");
+				this._state = state;
+			},
+
+			_afterStart: function (state) {
+				this._stateEvent(state, "start");
+			},
+
+			_end: function (state) {
+				this._stateEvent(state, "end");
+				this._state = null;
+			},
+
+			_afterEnd: function (state) {
+				this._stateEvent(state, "after_end");
+			},
+
+			_next: function (state) {
+				this._stateEvent(state, "next");
+			},
+
+			_afterNext: function (state) {
+				this._stateEvent(state, "after_next");
+			},
+
+			_can_transition_to: function (state) {
+				return true;
+			},
+
+			_stateEvent: function (state, s) {
+				this.trigger("event", s, state.state_name(), state.description());
+				this.trigger(s, state.state_name(), state.description());
+				this.trigger(s + ":" + state.state_name(), state.description());
+			},
+
 			register: function (state_name, parent_state, extend) {
 				if (!Types.is_string(parent_state)) {
 					extend = parent_state;
@@ -6064,269 +6070,269 @@ Scoped.define("module:States.Host", [
 
 
 Scoped.define("module:States.State", [
- 	    "module:Class",
- 	    "module:Types",
- 	    "module:Strings",
- 	    "module:Async",
- 	    "module:Objs"
- 	], function (Class, Types, Strings, Async, Objs, scoped) {
- 	return Class.extend({scoped: scoped}, function (inherited) {
- 		return {
-                             		    	
-		    _locals: [],
-		    _persistents: [],
-		    _globals: [],
-		    _defaults: {},
-		    
-		    _white_list: null,
-		
-		    constructor: function (host, args, transitionals) {
-		    	inherited.constructor.call(this);
-		        this.host = host;
-		        this.transitionals = transitionals;
-		        this._starting = false;
-		        this._started = false;
-		        this._stopped = false;
-		        this._transitioning = false;
-		        this.__next_state = null;
-		        this.__suspended = 0;
-		        args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
-		        this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
-		        for (var i = 0; i < this._locals.length; ++i)
-		            this["_" + this._locals[i]] = args[this._locals[i]];
-		        this._persistents = Types.is_function(this._persistents) ? this._persistents() : this._persistents;
-		        for (i = 0; i < this._persistents.length; ++i)
-		            this["_" + this._persistents[i]] = args[this._persistents[i]];
-		        for (i = 0; i < this._globals.length; ++i)
-		        	host.set(this._globals[i], args[this._globals[i]]);
-		    },
-		
-		    state_name: function () {
-		        return Strings.last_after(this.cls.classname, ".");
-		    },
-		    
-		    description: function () {
-		        return this.state_name();
-		    },
-		    
-		    start: function () {
-		    	if (this._starting)
-		    		return;
-		        this._starting = true;
-		        this.host._start(this);
-		        this._start();
-		        if (this.host) {
-		            this.host._afterStart(this);
-		            this._started = true;
-		        }
-		    },
-		    
-		    end: function () {
-		    	if (this._stopped)
-		    		return;
-		    	this._stopped = true;
-		        this._end();
-		        this.host._end(this);
-		        this.host._afterEnd(this);
-		        this.destroy();
-		    },
-		    
-		    eventualNext: function (state_name, args, transitionals) {
-		    	this.suspend();
+                                      "module:Class",
+                                      "module:Types",
+                                      "module:Strings",
+                                      "module:Async",
+                                      "module:Objs"
+                                      ], function (Class, Types, Strings, Async, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			_locals: [],
+			_persistents: [],
+			_globals: [],
+			_defaults: {},
+
+			_white_list: null,
+
+			constructor: function (host, args, transitionals) {
+				inherited.constructor.call(this);
+				this.host = host;
+				this.transitionals = transitionals;
+				this._starting = false;
+				this._started = false;
+				this._stopped = false;
+				this._transitioning = false;
+				this.__next_state = null;
+				this.__suspended = 0;
+				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
+				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
+				for (var i = 0; i < this._locals.length; ++i)
+					this["_" + this._locals[i]] = args[this._locals[i]];
+				this._persistents = Types.is_function(this._persistents) ? this._persistents() : this._persistents;
+				for (i = 0; i < this._persistents.length; ++i)
+					this["_" + this._persistents[i]] = args[this._persistents[i]];
+				for (i = 0; i < this._globals.length; ++i)
+					host.set(this._globals[i], args[this._globals[i]]);
+			},
+
+			state_name: function () {
+				return Strings.last_after(this.cls.classname, ".");
+			},
+
+			description: function () {
+				return this.state_name();
+			},
+
+			start: function () {
+				if (this._starting)
+					return;
+				this._starting = true;
+				this.host._start(this);
+				this._start();
+				if (this.host) {
+					this.host._afterStart(this);
+					this._started = true;
+				}
+			},
+
+			end: function () {
+				if (this._stopped)
+					return;
+				this._stopped = true;
+				this._end();
+				this.host._end(this);
+				this.host._afterEnd(this);
+				this.destroy();
+			},
+
+			eventualNext: function (state_name, args, transitionals) {
+				this.suspend();
 				this.next(state_name, args, transitionals);
 				this.eventualResume();
-		    },
-		    
-		    next: function (state_name, args, transitionals) {
-		    	if (!this._starting || this._stopped || this.__next_state)
-		    		return;
-		        args = args || {};
-		        for (var i = 0; i < this._persistents.length; ++i) {
-		            if (!(this._persistents[i] in args))
-		                args[this._persistents[i]] = this["_" + this._persistents[i]];
-		        }
-		        var obj = this.host._createState(state_name, args, transitionals);
-		        if (!this.can_transition_to(obj)) {
-		            obj.destroy();
-		            return;
-		        }
-		        if (!this._started) {
-		            this.host._afterStart(this);
-		            this._started = true;
-		        }
-		        this.__next_state = obj;
-		        this._transitioning = true;
-		        this._transition();
-		        if (this.__suspended <= 0)
-		        	this.__next();
-		    },
-		    
-		    __next: function () {
-		        var host = this.host;
-		        var obj = this.__next_state;
-		        host._next(obj);
-		        this.end();
-		        obj.start();
-		        host._afterNext(obj);
-		    },
-		    
-		    _transition: function () {
-		    },
-		    
-		    suspend: function () {
-		    	this.__suspended++;
-		    },
-		    
-		    eventualResume: function () {
-		    	Async.eventually(this.resume, this);
-		    },
-		    
-		    resume: function () {
-		    	this.__suspended--;
-		    	if (this.__suspended === 0 && !this._stopped && this.__next_state)
-		    		this.__next();
-		    },
-		
-		    can_transition_to: function (state) {
-		        return this.host && this.host._can_transition_to(state) && this._can_transition_to(state);
-		    },
-		    
-		    _start: function () {},
-		    
-		    _end: function () {},
-		    
-		    _can_transition_to: function (state) {
-		        return !Types.is_array(this._white_list) || Objs.contains_value(this._white_list, state.state_name());
-		    }
-		    
- 		};
- 	}, {
- 		
- 		_extender: {
- 			_defaults: function (base, overwrite) {
- 				return Objs.extend(Objs.clone(base, 1), overwrite);
- 			},
- 			_globals: function (base, overwrite) {
- 				return (base || []).concat(overwrite || []);
- 			}
- 		}
- 		
- 	});
+			},
+
+			next: function (state_name, args, transitionals) {
+				if (!this._starting || this._stopped || this.__next_state)
+					return;
+				args = args || {};
+				for (var i = 0; i < this._persistents.length; ++i) {
+					if (!(this._persistents[i] in args))
+						args[this._persistents[i]] = this["_" + this._persistents[i]];
+				}
+				var obj = this.host._createState(state_name, args, transitionals);
+				if (!this.can_transition_to(obj)) {
+					obj.destroy();
+					return;
+				}
+				if (!this._started) {
+					this.host._afterStart(this);
+					this._started = true;
+				}
+				this.__next_state = obj;
+				this._transitioning = true;
+				this._transition();
+				if (this.__suspended <= 0)
+					this.__next();
+			},
+
+			__next: function () {
+				var host = this.host;
+				var obj = this.__next_state;
+				host._next(obj);
+				this.end();
+				obj.start();
+				host._afterNext(obj);
+			},
+
+			_transition: function () {
+			},
+
+			suspend: function () {
+				this.__suspended++;
+			},
+
+			eventualResume: function () {
+				Async.eventually(this.resume, this);
+			},
+
+			resume: function () {
+				this.__suspended--;
+				if (this.__suspended === 0 && !this._stopped && this.__next_state)
+					this.__next();
+			},
+
+			can_transition_to: function (state) {
+				return this.host && this.host._can_transition_to(state) && this._can_transition_to(state);
+			},
+
+			_start: function () {},
+
+			_end: function () {},
+
+			_can_transition_to: function (state) {
+				return !Types.is_array(this._white_list) || Objs.contains_value(this._white_list, state.state_name());
+			}
+
+		};
+	}, {
+
+		_extender: {
+			_defaults: function (base, overwrite) {
+				return Objs.extend(Objs.clone(base, 1), overwrite);
+			},
+			_globals: function (base, overwrite) {
+				return (base || []).concat(overwrite || []);
+			}
+		}
+
+	});
 });
 
 
 
 Scoped.define("module:States.CompetingComposite", [
-   	    "module:Class",
-   	    "module:Objs"
-   	], function (Class, Objs, scoped) {
-   	return Class.extend({scoped: scoped}, {
+                                                   "module:Class",
+                                                   "module:Objs"
+                                                   ], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, {
 
-	   	_register_host: function (competing_host) {
-	        this._hosts = this._hosts || [];
-	        this._hosts.push(this._auto_destroy(competing_host));
-	    },
-	    
-	    other_hosts: function (competing_host) {
-	        return Objs.filter(this._hosts || [], function (other) {
-	            return other != competing_host;
-	        }, this);
-	    },
-	    
-	    _next: function (competing_host, state) {
-	        var others = this.other_hosts(competing_host);
-	        for (var i = 0; i < others.length; ++i) {
-	            var other = others[i];
-	            var other_state = other.state();
-	            if (!other_state.can_coexist_with(state))
-	                other_state.retreat_against(state);
-	        }
-	    }
+		_register_host: function (competing_host) {
+			this._hosts = this._hosts || [];
+			this._hosts.push(this._auto_destroy(competing_host));
+		},
 
-   });
+		other_hosts: function (competing_host) {
+			return Objs.filter(this._hosts || [], function (other) {
+				return other != competing_host;
+			}, this);
+		},
+
+		_next: function (competing_host, state) {
+			var others = this.other_hosts(competing_host);
+			for (var i = 0; i < others.length; ++i) {
+				var other = others[i];
+				var other_state = other.state();
+				if (!other_state.can_coexist_with(state))
+					other_state.retreat_against(state);
+			}
+		}
+
+	});
 });
 
 
 Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (Host, scoped) {
-   	return Host.extend({scoped: scoped}, function (inherited) {
-   		return {
-		
-		    constructor: function (composite) {
-		    	inherited.constructor.call(this);
-		        this._composite = composite;
-		        if (composite)
-		            composite._register_host(this);
-		    },
-		    
-		    composite: function () {
-		        return this._composite;
-		    },
-		
-		    _can_transition_to: function (state) {
-		        if (!this._composite)
-		            return true;
-		        var others = this._composite.other_hosts(this);
-		        for (var i = 0; i < others.length; ++i) {
-		            var other = others[i];
-		            var other_state = other.state();
-		            if (!state.can_coexist_with(other_state) && !state.can_prevail_against(other_state))
-		                return false;
-		        }
-		        return true;
-		    },
-		    
-		    _next: function (state) {
-		        if (this._composite)
-		            this._composite._next(this, state);
-		        inherited._next.call(this, state);
-		    }
-		    
-   		};
-   	});    
+	return Host.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (composite) {
+				inherited.constructor.call(this);
+				this._composite = composite;
+				if (composite)
+					composite._register_host(this);
+			},
+
+			composite: function () {
+				return this._composite;
+			},
+
+			_can_transition_to: function (state) {
+				if (!this._composite)
+					return true;
+				var others = this._composite.other_hosts(this);
+				for (var i = 0; i < others.length; ++i) {
+					var other = others[i];
+					var other_state = other.state();
+					if (!state.can_coexist_with(other_state) && !state.can_prevail_against(other_state))
+						return false;
+				}
+				return true;
+			},
+
+			_next: function (state) {
+				if (this._composite)
+					this._composite._next(this, state);
+				inherited._next.call(this, state);
+			}
+
+		};
+	});    
 });
 
 
 Scoped.define("module:States.CompetingState", ["module:States.State"], function (State, scoped) {
-   	return State.extend({scoped: scoped}, {
+	return State.extend({scoped: scoped}, {
 
-	    can_coexist_with: function (foreign_state) {
-	        return true;
-	    },
-	    
-	    can_prevail_against: function (foreign_state) {
-	        return false;
-	    },
-	    
-	    retreat_against: function (foreign_state) {
-	    }
-    
-   	});
+		can_coexist_with: function (foreign_state) {
+			return true;
+		},
+
+		can_prevail_against: function (foreign_state) {
+			return false;
+		},
+
+		retreat_against: function (foreign_state) {
+		}
+
+	});
 });
 
 
 Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], function (Class, Objs, scoped) {
-   	return Class.extend({scoped: scoped}, function (inherited) {
-   		return {
-			
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
 			constructor: function (host) {
 				inherited.constructor.call(this);
 				this._host = host;
 				this._routes = [];
 				this._states = {};
 			},
-			
+
 			registerRoute: function (route, state, mapping) {
 				var descriptor = {
-					key: route,
-					route: new RegExp("^" + route + "$"),
-					state: state,
-					mapping: mapping || []
+						key: route,
+						route: new RegExp("^" + route + "$"),
+						state: state,
+						mapping: mapping || []
 				};
 				this._routes.push(descriptor);
 				this._states[state] = descriptor;
 				return this;
 			},
-			
+
 			readRoute: function (stateObject) {
 				var descriptor = this._states[stateObject.state_name()];
 				if (!descriptor)
@@ -6338,7 +6344,7 @@ Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], func
 				}, this);
 				return route;
 			},
-			
+
 			parseRoute: function (route) {
 				for (var i = 0; i < this._routes.length; ++i) {
 					var descriptor = this._routes[i];
@@ -6355,58 +6361,58 @@ Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], func
 				}
 				return null;
 			},
-			
+
 			currentRoute: function () {
 				return this.readRoute(this._host.state());
 			},
-			
+
 			navigateRoute: function (route) {
 				var parsed = this.parseRoute(route);
 				if (parsed)
 					this._host.next(parsed.state, parsed.args);
 			}
-			
-   		};		
+
+		};		
 	});
 });
 Scoped.define("module:RMI.Stub", [
-	    "module:Class",
-	    "module:Classes.InvokerMixin",
-	    "module:Functions"
-	], function (Class, InvokerMixin, Functions, scoped) {
+                                  "module:Class",
+                                  "module:Classes.InvokerMixin",
+                                  "module:Functions"
+                                  ], function (Class, InvokerMixin, Functions, scoped) {
 	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
 		return {
-				
+
 			intf: [],
-			
+
 			constructor: function () {
 				inherited.constructor.call(this);
 				this.invoke_delegate("invoke", this.intf);
 			},
-			
+
 			destroy: function () {
 				this.invoke("_destroy");
 				inherited.destroy.call(this);
 			},
-			
+
 			invoke: function (message) {
 				return this.__send(message, Functions.getArguments(arguments, 1));
 			}
-			
+
 		};
 	}]);
 });
 
 
 Scoped.define("module:RMI.StubSyncer", [
-  	    "module:Class",
-  	    "module:Classes.InvokerMixin",
-  	    "module:Functions",
-  	    "module:Promise"
-  	], function (Class, InvokerMixin, Functions, Promise, scoped) {
-  	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
-  		return {
-		                          				
+                                        "module:Class",
+                                        "module:Classes.InvokerMixin",
+                                        "module:Functions",
+                                        "module:Promise"
+                                        ], function (Class, InvokerMixin, Functions, Promise, scoped) {
+	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
+		return {
+
 			constructor: function (stub) {
 				inherited.constructor.call(this);
 				this.__stub = stub;
@@ -6414,43 +6420,43 @@ Scoped.define("module:RMI.StubSyncer", [
 				this.__queue = [];
 				this.invoke_delegate("invoke", this.__stub.intf);
 			},
-			
+
 			invoke: function () {
 				var object = {
-					args: Functions.getArguments(arguments),
-					promise: Promise.create()
+						args: Functions.getArguments(arguments),
+						promise: Promise.create()
 				};
 				this.__queue.push(object);
 				if (!this.__current)
 					this.__next();
 				return object.promise;		
 			},
-			
+
 			__next: function () {
 				if (this.__queue.length === 0)
 					return;
 				this.__current = this.__queue.shift();
 				this.__stub.invoke.apply(this.__stub, this.__current.args).forwardCallback(this.__current.promise).callback(this.__next, this);
 			}
-	
+
 		};
 	}]);
 });
 
 
 Scoped.define("module:RMI.Skeleton", [
-  	    "module:Class",
-  	    "module:Objs",
-  	    "module:Promise"
-  	], function (Class, Objs, Promise, scoped) {
-  	return Class.extend({scoped: scoped}, function (inherited) {
-  		return {
-		                                		                          				
+                                      "module:Class",
+                                      "module:Objs",
+                                      "module:Promise"
+                                      ], function (Class, Objs, Promise, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
 			_stub: null,
 			intf: [],
 			_intf: {},
 			__superIntf: ["_destroy"],
-			
+
 			constructor: function (options) {
 				this._options = Objs.extend({
 					destroyable: false
@@ -6460,12 +6466,12 @@ Scoped.define("module:RMI.Skeleton", [
 				for (var i = 0; i < this.intf.length; ++i)
 					this._intf[this.intf[i]] = true;
 			},
-			
+
 			_destroy: function () {
 				if (this._options.destroyable)
 					this.destroy();
 			},
-			
+
 			invoke: function (message, data) {
 				if (!(this._intf[message]))
 					return Promise.error(message);
@@ -6476,40 +6482,40 @@ Scoped.define("module:RMI.Skeleton", [
 					return Promise.error(e);
 				}
 			},
-			
+
 			_success: function (result) {
 				return Promise.value(result);
 			},
-			
+
 			_error: function (result) {
 				return Promise.error(result);
 			},
-			
+
 			stub: function () {
 				if (this._stub)
 					return this._stub;
 				var stub = this.cls.classname;
 				return stub.indexOf("Skeleton") >= 0 ? stub.replace("Skeleton", "Stub") : stub;
 			}
-	
-  		};
-  	});
+
+		};
+	});
 });
 
 
 Scoped.define("module:RMI.Server", [
-	    "module:Class",
-	    "module:Events.EventsMixin",
-	    "module:Objs",
-	    "module:Channels.TransportChannel",
-	    "module:Lists.ObjectIdList",
-	    "module:Ids",
-	    "module:RMI.Skeleton",
-	    "module:Promise"
-	], function (Class, EventsMixin, Objs, TransportChannel, ObjectIdList, Ids, Skeleton, Promise, scoped) {
+                                    "module:Class",
+                                    "module:Events.EventsMixin",
+                                    "module:Objs",
+                                    "module:Channels.TransportChannel",
+                                    "module:Lists.ObjectIdList",
+                                    "module:Ids",
+                                    "module:RMI.Skeleton",
+                                    "module:Promise"
+                                    ], function (Class, EventsMixin, Objs, TransportChannel, ObjectIdList, Ids, Skeleton, Promise, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
-			
+
 			constructor: function (sender_or_channel_or_null, receiver_or_null) {
 				inherited.constructor.call(this);
 				this.__channels = new ObjectIdList();
@@ -6521,7 +6527,7 @@ Scoped.define("module:RMI.Server", [
 					this.registerClient(channel);
 				}
 			},
-			
+
 			destroy: function () {
 				this.__channels.iterate(this.unregisterClient, this);
 				Objs.iter(this.__instances, function (inst) {
@@ -6530,21 +6536,21 @@ Scoped.define("module:RMI.Server", [
 				this.__channels.destroy();
 				inherited.destroy.call(this);
 			},
-			
+
 			registerInstance: function (instance, options) {
 				options = options || {};
 				this.__instances[Ids.objectId(instance, options.name)] = {
-					instance: instance,
-					options: options
+						instance: instance,
+						options: options
 				};
 				return instance;
 			},
-			
+
 			unregisterInstance: function (instance) {
 				delete this.__instances[Ids.objectId(instance)];
 				instance.weakDestroy();
 			},
-			
+
 			registerClient: function (channel) {
 				var self = this;
 				this.__channels.add(channel);
@@ -6556,12 +6562,12 @@ Scoped.define("module:RMI.Server", [
 						return Promise.error(true);
 				};
 			},
-			
+
 			unregisterClient: function (channel) {
 				this.__channels.remove(channel);
 				channel._reply = null;
 			},
-			
+
 			_serializeValue: function (value) {
 				if (Skeleton.is_instance_of(value)) {
 					var registry = this;
@@ -6574,7 +6580,7 @@ Scoped.define("module:RMI.Server", [
 				} else
 					return value;		
 			},
-			
+
 			_unserializeValue: function (value) {
 				if (value && value.__rmi_meta) {
 					var receiver = this.client;
@@ -6582,7 +6588,7 @@ Scoped.define("module:RMI.Server", [
 				} else
 					return value;		
 			},
-			
+
 			_invoke: function (channel, instance_id, method, data) {
 				var instance = this.__instances[instance_id];
 				if (!instance) {
@@ -6597,24 +6603,24 @@ Scoped.define("module:RMI.Server", [
 					return this._serializeValue(result);
 				}, this);
 			}
-		
+
 		};
 	}]);
 });
 
 
 Scoped.define("module:RMI.Client", [
-	    "module:Class",
-	    "module:Objs",
-	    "module:Channels.TransportChannel",
-	    "module:Ids",
-	    "module:RMI.Skeleton",
-	    "module:Types",
-	    "module:RMI.Stub"
-	], function (Class, Objs, TransportChannel, Ids, Skeleton, Types, Stub, scoped) {
+                                    "module:Class",
+                                    "module:Objs",
+                                    "module:Channels.TransportChannel",
+                                    "module:Ids",
+                                    "module:RMI.Skeleton",
+                                    "module:Types",
+                                    "module:RMI.Stub"
+                                    ], function (Class, Objs, TransportChannel, Ids, Skeleton, Types, Stub, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {			
-			
+
 			constructor: function (sender_or_channel_or_null, receiver_or_null) {
 				inherited.constructor.call(this);
 				this.__channel = null;
@@ -6626,19 +6632,19 @@ Scoped.define("module:RMI.Client", [
 					this.__channel = channel;
 				}
 			},
-			
+
 			destroy: function () {
 				if (this.__channel)
 					this.disconnect();
 				inherited.destroy.call(this);
 			},
-			
+
 			connect: function (channel) {
 				if (this.__channel)
 					return;
 				this.__channel = channel;
 			},
-			
+
 			disconnect: function () {
 				if (!this.__channel)
 					return;
@@ -6647,7 +6653,7 @@ Scoped.define("module:RMI.Client", [
 					this.release(inst);
 				}, this);
 			},
-			
+
 			_serializeValue: function (value) {
 				if (Skeleton.is_instance_of(value)) {
 					var registry = this.server;
@@ -6660,7 +6666,7 @@ Scoped.define("module:RMI.Client", [
 				} else
 					return value;		
 			},
-			
+
 			_unserializeValue: function (value) {
 				if (value && value.__rmi_meta) {
 					var receiver = this;
@@ -6668,7 +6674,7 @@ Scoped.define("module:RMI.Client", [
 				} else
 					return value;		
 			},
-			
+
 			acquire: function (class_type, instance_name) {
 				if (this.__instances[instance_name])
 					return this.__instances[instance_name];
@@ -6689,7 +6695,7 @@ Scoped.define("module:RMI.Client", [
 				};
 				return instance;		
 			},
-			
+
 			release: function (instance) {
 				var instance_name = Ids.objectId(instance);
 				if (!this.__instances[instance_name])
@@ -6697,22 +6703,22 @@ Scoped.define("module:RMI.Client", [
 				instance.weakDestroy();
 				delete this.__instances[instance_name];
 			}
-			
+
 		};
 	});
 });
 
 
 Scoped.define("module:RMI.Peer", [
-	    "module:Class",
-	    "module:Channels.SenderMultiplexer",
-	    "module:Channels.ReceiverMultiplexer",
-	    "module:RMI.Client",
-	    "module:RMI.Server"
-	], function (Class, SenderMultiplexer, ReceiverMultiplexer, Client, Server, scoped) {
+                                  "module:Class",
+                                  "module:Channels.SenderMultiplexer",
+                                  "module:Channels.ReceiverMultiplexer",
+                                  "module:RMI.Client",
+                                  "module:RMI.Server"
+                                  ], function (Class, SenderMultiplexer, ReceiverMultiplexer, Client, Server, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {			
-		                            			
+
 			constructor: function (sender, receiver) {
 				inherited.constructor.call(this);
 				this.__sender = sender;
@@ -6726,23 +6732,23 @@ Scoped.define("module:RMI.Peer", [
 				this.client.server = this.server;
 				this.server.client = this.client;
 			},	
-			
+
 			acquire: function (class_type, instance_name) {
 				return this.client.acquire(class_type, instance_name);
 			},
-			
+
 			release: function (instance) {
 				this.client.release(instance);
 			},
-		
+
 			registerInstance: function (instance, options) {
 				return this.server.registerInstance(instance, options);
 			},
-			
+
 			unregisterInstance: function (instance) {
 				this.server.unregisterInstance(instance);
 			}
-			
+
 		};
 	});
 });

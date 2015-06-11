@@ -1,6 +1,6 @@
 Scoped.define("module:Objs", ["module:Types"], function (Types) {
 	return {
-		
+
 		ithKey: function (obj, i) {
 			i = i || 0;
 			for (var key in obj) {
@@ -10,7 +10,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return null;
 		},
-		
+
 		count: function (obj) {
 			if (Types.is_array(obj))
 				return obj.length;
@@ -21,7 +21,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return c;
 			}
 		},
-		
+
 		clone: function (item, depth) {
 			if (!depth || depth === 0)
 				return item;
@@ -32,7 +32,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			else
 				return item;
 		},
-		
+
 		acyclic_clone: function (object, def) {
 			if (object === null || ! Types.is_object(object))
 				return object;
@@ -48,7 +48,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			delete object[s];
 			return result;
 		},
-		
+
 		extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -57,7 +57,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return target;
 		},
-		
+
 		weak_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -68,7 +68,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return target;
 		},
-		
+
 		tree_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -81,7 +81,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return target;
 		},
-			
+
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -93,8 +93,8 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 					if (key in primary || key in secondary) {
 						if (opt == "primary")
 							result[key] = key in primary ? primary[key] : secondary[key];
-						else
-							result[key] = key in secondary ? secondary[key] : primary[key];
+							else
+								result[key] = key in secondary ? secondary[key] : primary[key];
 					}			
 				}
 				else if (Types.is_function(opt))
@@ -104,7 +104,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return result;
 		},
-		
+
 		tree_merge: function (secondary, primary) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -118,7 +118,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return result;
 		},
-	
+
 		keys: function(obj, mapped) {
 			var result = null;
 			var key = null;
@@ -134,7 +134,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return result;
 			}
 		},
-		
+
 		map: function (obj, f, context) {
 			var result = null;
 			if (Types.is_array(obj)) {
@@ -146,17 +146,17 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				result = {};
 				for (var key in obj)
 					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-				return result;
+					return result;
 			}
 		},
-		
+
 		values: function (obj) {
 			var result = [];
 			for (var key in obj)
 				result.push(obj[key]);
 			return result;
 		},
-		
+
 		filter: function (obj, f, context) {
 			var ret = null;
 			if (Types.is_array(obj)) {
@@ -175,7 +175,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return ret;
 			}
 		},
-		
+
 		equals: function (obj1, obj2, depth) {
 			var key = null;
 			if (depth && depth > 0) {
@@ -191,7 +191,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			} else
 				return obj1 == obj2;
 		},
-		
+
 		iter: function (obj, f, context) {
 			var result = null;
 			if (Types.is_array(obj)) {
@@ -209,7 +209,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return true;
 		},
-		
+
 		intersect: function (a, b) {
 			var c = {};
 			for (var key in a) {
@@ -218,14 +218,14 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return c;
 		},
-		
+
 		contains_key: function (obj, key) {
 			if (Types.is_array(obj))
 				return Types.is_defined(obj[key]);
 			else
 				return key in obj;
 		},
-		
+
 		contains_value: function (obj, value) {
 			if (Types.is_array(obj)) {
 				for (var i = 0; i < obj.length; ++i) {
@@ -240,7 +240,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return false;
 		},
-		
+
 		exists: function (obj, f, context) {
 			var success = false;
 			this.iter(obj, function () {
@@ -249,7 +249,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}, context);
 			return success;
 		},
-		
+
 		all: function (obj, f, context) {
 			var success = true;
 			this.iter(obj, function () {
@@ -258,7 +258,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}, context);
 			return success;
 		},
-		
+
 		objectify: function (arr, f, context) {
 			var result = {};
 			var is_function = Types.is_function(f);
@@ -266,19 +266,19 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				f = true;
 			for (var i = 0; i < arr.length; ++i)
 				result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
-			return result;
+				return result;
 		},
-		
+
 		peek: function (obj) {
 			if (Types.is_array(obj))
 				return obj.length > 0 ? obj[0] : null;
-			else {
-				for (var key in obj)
-					return obj[key];
-				return null;
-			} 
+				else {
+					for (var key in obj)
+						return obj[key];
+					return null;
+				} 
 		},
-		
+
 		poll: function (obj) {
 			if (Types.is_array(obj))
 				return obj.shift();
@@ -291,7 +291,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				return null;
 			} 
 		},
-		
+
 		objectBy: function () {
 			var obj = {};
 			var count = arguments.length / 2;
@@ -299,7 +299,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				obj[arguments[2 * i]] = arguments[2 * i + 1];
 			return obj;
 		},
-		
+
 		valueByIndex: function (obj, idx) {
 			idx = idx || 0;
 			if (Types.is_array(obj))
@@ -311,7 +311,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return null;
 		},
-		
+
 		keyByIndex: function (obj, idx) {
 			idx = idx || 0;
 			if (Types.is_array(obj))
@@ -323,48 +323,48 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return null;
 		},
-		
+
 		pairArrayToObject: function (arr) {
 			var result = {};
 			for (var i = 0; i < arr.length / 2; i += 2)
 				result[arr[i]] = arr[i+1];
 			return result;
 		},
-		
+
 		pairsToObject: function () {
 			var result = {};
 			for (var i = 0; i < arguments.length; ++i)
 				result[arguments[i][0]] = arguments[i][1];
 			return result;
 		}
-	
+
 	};
 });
 
 
 Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 	return {
-		
+
 		has: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
-		       if (!scope || !Types.is_object(scope))
-		    	   return false;
-		       scope = scope[keys[i]];
-		    }
+				if (!scope || !Types.is_object(scope))
+					return false;
+				scope = scope[keys[i]];
+			}
 			return Types.is_defined(scope);
 		},
-		
+
 		get: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
-		       if (!scope || !Types.is_object(scope))
-		    	   return null;
-		       scope = scope[keys[i]];
-		    }
+				if (!scope || !Types.is_object(scope))
+					return null;
+				scope = scope[keys[i]];
+			}
 			return scope;
 		},
-		
+
 		set: function (key, value, scope) {
 			if (!key)
 				return;
@@ -372,23 +372,23 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			for (var i = 0; i < keys.length - 1; ++i) {
 				if (!(keys[i] in scope) || !Types.is_object(scope[keys[i]]))
 					scope[keys[i]] = {};
-		       scope = scope[keys[i]];
-		    }
+				scope = scope[keys[i]];
+			}
 			scope[keys[keys.length - 1]] = value;
 		},
-		
+
 		unset: function (key, scope) {
 			if (!key)
 				return;
 			var keys = key.split(".");
 			for (var i = 0; i < keys.length - 1; ++i) {
-		       if (!scope || !Types.is_object(scope))
-		    	   return;
-		       scope = scope[keys[i]];
-		    }
+				if (!scope || !Types.is_object(scope))
+					return;
+				scope = scope[keys[i]];
+			}
 			delete scope[keys[keys.length - 1]];
 		},
-		
+
 		touch: function (key, scope) {
 			if (!key)
 				return scope;
@@ -396,8 +396,8 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			for (var i = 0; i < keys.length; ++i) {
 				if (!(keys[i] in scope) || !Types.is_object(scope))
 					scope[keys[i]] = {};
-		       scope = scope[keys[i]];
-		    }
+				scope = scope[keys[i]];
+			}
 			return scope[keys[keys.length - 1]];
 		}
 

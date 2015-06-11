@@ -1,6 +1,6 @@
 Scoped.define("module:Trees.TreeNavigator", function () {
 	return {		
-		
+
 		nodeRoot: function () {},
 		nodeId: function (node) {},
 		nodeParent: function (node) {},
@@ -8,7 +8,7 @@ Scoped.define("module:Trees.TreeNavigator", function () {
 		nodeWatch: function (node, func, context) {},
 		nodeUnwatch: function (node, func, context) {},
 		nodeData: function (node) {}
-			
+
 	};
 });
 
@@ -16,7 +16,7 @@ Scoped.define("module:Trees.TreeNavigator", function () {
 Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Lexer", "module:Trees.TreeQueryObject"], function (Class, Lexer, TreeQueryObject, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
-			
+
 			constructor: function (navigator) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -29,7 +29,7 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 					"\s": null
 				}));
 			},
-			
+
 			query: function (node, query) {
 				return new TreeQueryObject(this.__navigator, node, this.__lexer.lex(query));
 			}
@@ -42,7 +42,7 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.EventsMixin", "module:Objs", "module:Types"], function (Class, EventsMixin, Objs, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
-			
+
 			constructor: function (navigator, node, query) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -53,7 +53,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__register(node, 0, {});
 				this.__ids = 0;
 			},
-			
+
 			destroy: function () {
 				Objs.iter(this.__partials, function (partials) {
 					Objs.iter(partials.partials, function (partial) {
@@ -62,7 +62,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				}, this);
 				inherited.destroy.call(this);
 			},
-			
+
 			result: function () {
 				var result = [];
 				Objs.iter(this.__result, function (value) {
@@ -70,31 +70,31 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				});
 				return result;
 			},
-			
+
 			__register: function (node, index) {
 				var node_id = this.__navigator.nodeId(node);
 				if (!this.__partials[node_id]) {
 					this.__partials[node_id] = {
-						node: node,
-						partials: {}
+							node: node,
+							partials: {}
 					};
 				}
 				var partials = this.__partials[node_id];
 				this.__ids++;
 				var partial = {
-					owner: partials,
-					id: this.__ids,
-					query_index_start: index,
-					query_index_next: index,
-					query_index_last: index,
-					partial_match: false,
-					partial_final: index >= this.__query.length,
-					partial_data: false,
-					partial_children: false,
-					partial_parent: false,
-					partial_star: false,
-					parent: null,
-					deps: {}
+						owner: partials,
+						id: this.__ids,
+						query_index_start: index,
+						query_index_next: index,
+						query_index_last: index,
+						partial_match: false,
+						partial_final: index >= this.__query.length,
+						partial_data: false,
+						partial_children: false,
+						partial_parent: false,
+						partial_star: false,
+						parent: null,
+						deps: {}
 				};
 				partials.partials[partial.id] = partial;
 				for (var i = partial.query_index_start; i < this.__query.length; ++i) {
@@ -126,7 +126,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__update(partial);
 				return partial;
 			},
-			
+
 			__unregisterPartial: function (partial) {
 				var owner = partial.owner;
 				var node = owner.node;
@@ -147,7 +147,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				if (Types.is_empty(owner.partials))
 					delete this.__partials[node_id];
 			},
-			
+
 			__addDependentPartial: function (partial, node) {
 				var partials = [];
 				partials.push(this.__register(node, partial.query_index_next));
@@ -158,7 +158,7 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 					p.parent = partial;
 				}, this);
 			},
-			
+
 			__update: function (partial) {
 				var matching = true;
 				var node = partial.owner.node;
@@ -180,8 +180,8 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 					if (partial.partial_final) {
 						if (!this.__result[node_id]) {
 							this.__result[node_id] = {
-								node: node,
-								count: 1
+									node: node,
+									count: 1
 							};
 							this.trigger("add", node);
 							this.trigger("change");

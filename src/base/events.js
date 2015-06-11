@@ -1,21 +1,21 @@
 Scoped.define("module:Events.EventsMixin", [
-	"module:Timers.Timer",
-	"module:Async",
-	"module:Lists.LinkedList",
-	"module:Functions",
-	"module:Types",
-	"module:Objs"
-	], function (Timer, Async, LinkedList, Functions, Types, Objs) {
-	
+                                            "module:Timers.Timer",
+                                            "module:Async",
+                                            "module:Lists.LinkedList",
+                                            "module:Functions",
+                                            "module:Types",
+                                            "module:Objs"
+                                            ], function (Timer, Async, LinkedList, Functions, Types, Objs) {
+
 	return {
-			
+
 		EVENT_SPLITTER: /\s+/,
-		
+
 		__create_event_object: function (callback, context, options) {
 			options = options || {};
 			var obj = {
-				callback: callback,
-				context: context
+					callback: callback,
+					context: context
 			};
 			if (options.eventually)
 				obj.eventually = options.eventually;
@@ -45,14 +45,14 @@ Scoped.define("module:Events.EventsMixin", [
 				});
 			return obj;
 		},
-		
+
 		__destroy_event_object: function (object) {
 			if (object.min_delay)
 				object.min_delay.destroy();
 			if (object.max_delay)
 				object.max_delay.destroy();
 		},
-		
+
 		__call_event_object: function (object, params) {
 			if (object.min_delay)
 				object.min_delay.restart();
@@ -66,7 +66,7 @@ Scoped.define("module:Events.EventsMixin", [
 			} else
 				object.params = params;
 		},
-		
+
 		on: function(events, callback, context, options) {
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			events = events.split(this.EVENT_SPLITTER);
@@ -82,7 +82,7 @@ Scoped.define("module:Events.EventsMixin", [
 			}
 			return this;
 		},
-		
+
 		off: function(events, callback, context) {
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			if (events) {
@@ -119,7 +119,7 @@ Scoped.define("module:Events.EventsMixin", [
 			}
 			return this;
 		},
-		
+
 		triggerAsync: function () {
 			var self = this;
 			var args = Functions.getArguments(arguments);
@@ -128,60 +128,60 @@ Scoped.define("module:Events.EventsMixin", [
 				self.trigger.apply(self, args);
 			}, 0);
 		},
-	
-	    trigger: function(events) {
-	    	var self = this;
-	    	events = events.split(this.EVENT_SPLITTER);
-	    	var rest = Functions.getArguments(arguments, 1);
+
+		trigger: function(events) {
+			var self = this;
+			events = events.split(this.EVENT_SPLITTER);
+			var rest = Functions.getArguments(arguments, 1);
 			var event;
 			if (!this.__events_mixin_events)
 				return this;
 			Objs.iter(events, function (event) {
-	    		if (this.__events_mixin_events[event])
-	    			this.__events_mixin_events[event].iterate(function (object) {
-	    				self.__call_event_object(object, rest);
-	    			});
+				if (this.__events_mixin_events[event])
+					this.__events_mixin_events[event].iterate(function (object) {
+						self.__call_event_object(object, rest);
+					});
 				if (this.__events_mixin_events && "all" in this.__events_mixin_events)
 					this.__events_mixin_events.all.iterate(function (object) {
 						self.__call_event_object(object, [event].concat(rest));
 					});
 			}, this);
-	    	return this;
-	    },
-	    
-	    once: function (events, callback, context, options) {
-	        var self = this;
-	        var once = Functions.once(function() {
-	          self.off(events, once);
-	          callback.apply(this, arguments);
-	        });
-	        once._callback = callback;
-	        return this.on(events, once, context, options);
-	    },
-	    
-	    delegateEvents: function (events, source, prefix, params) {
-	    	params = params || []; 
-	    	prefix = prefix ? prefix + ":" : "";
-	    	if (events === null) {
-	    		source.on("all", function (event) {
+			return this;
+		},
+
+		once: function (events, callback, context, options) {
+			var self = this;
+			var once = Functions.once(function() {
+				self.off(events, once);
+				callback.apply(this, arguments);
+			});
+			once._callback = callback;
+			return this.on(events, once, context, options);
+		},
+
+		delegateEvents: function (events, source, prefix, params) {
+			params = params || []; 
+			prefix = prefix ? prefix + ":" : "";
+			if (events === null) {
+				source.on("all", function (event) {
 					var rest = Functions.getArguments(arguments, 1);
 					this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
-	    		}, this);
-	    	} else {
-	    		if (!Types.is_array(events))
-	    			events = [events];
-		   		Objs.iter(events, function (event) {
+				}, this);
+			} else {
+				if (!Types.is_array(events))
+					events = [events];
+				Objs.iter(events, function (event) {
 					source.on(event, function () {
 						var rest = Functions.getArguments(arguments);
 						this.trigger.apply(this, [prefix + event].concat(params).concat(rest));
 					}, this);
 				}, this);
 			}
-	    }
-		
+		}
+
 	};
 });
-	
+
 
 Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixin"], function (Class, Mixin, scoped) {
 	return Class.extend({scoped: scoped}, Mixin);
@@ -190,23 +190,23 @@ Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixi
 
 Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], function (Ids, Objs) {
 	return {
-		
+
 		_notifications: {
 			"destroy": "listenOff" 
 		},
-			
+
 		listenOn: function (target, events, callback, options) {
 			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 			this.__listen_mixin_listen[Ids.objectId(target)] = target;
 			target.on(events, callback, this, options);
 		},
-		
+
 		listenOnce: function (target, events, callback, options) {
 			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 			this.__listen_mixin_listen[Ids.objectId(target)] = target;
 			target.once(events, callback, this, options);
 		},
-		
+
 		listenOff: function (target, events, callback) {
 			if (!this.__listen_mixin_listen)
 				return;
@@ -223,7 +223,7 @@ Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], functi
 						delete this.__listen_mixin_listen[Ids.objectId(obj)];
 				}, this);
 		}		
-		
+
 	};
 });
 

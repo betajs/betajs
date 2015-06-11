@@ -73,7 +73,8 @@ module.exports = function(grunt) {
 				jshint : {
 					options : {
 						es5 : false,
-						es3 : true
+						es3 : true,
+						smarttabs: true
 					},
 					source : [ "./src/base/*.js", "./src/net/*.js" ],
 					dist : [ "./dist/beta-noscoped.js", "./dist/beta.js" ],
