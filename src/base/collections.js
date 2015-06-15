@@ -116,7 +116,7 @@ Scoped.define("module:Collections.Collection", [
 				var ids = {};
 				Objs.iter(objects, function (oriObject) {
 					var is_prop = Class.is_class_instance(oriObject);
-					var object = is_prop ? new Properties(oriObject) : oriObject;
+					var object = is_prop ? oriObject : new Properties(oriObject);
 					ids[this.get_ident(object)] = true;
 					if (this.exists(object)) {
 						var existing = this.getById(this.get_ident(object));
