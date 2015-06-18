@@ -13,3 +13,14 @@ test("test email_get_email", function() {
 test("test email_get_name", function() {
 	QUnit.equal(BetaJS.Strings.email_get_name("tester <test@test.com>"), "Tester");
 });
+
+
+test("named capture groups", function () {
+	var regex = "/abc/(def)/geh/(test:ijk)/lmn/(opq)/(foobar:\\d+)";
+	var capture = BetaJS.Strings.namedCaptureRegex(regex);
+	var test = "/abc/def/geh/ijk/lmn/opq/123";
+	QUnit.deepEqual(capture.exec(test), {test: "ijk", foobar: "123"});
+	var back = capture.mapBack({test: "ijk", foobar:"456"});
+	var str = BetaJS.Strings.regexReplaceGroups(regex, back);
+	QUnit.equal(str, "/abc/def/geh/ijk/lmn/opq/456");
+});

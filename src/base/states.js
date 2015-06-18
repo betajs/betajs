@@ -53,12 +53,17 @@ Scoped.define("module:States.Host", [
 			},
 
 			next: function () {
-				return this.state().next.apply(this.state(), arguments);
+				return this.state() ? this.state().next.apply(this.state(), arguments) : this.initialize.apply(this, arguments);
 			},
-
+			
+			weakNext: function () {
+				return this.state() ? this.state().weakNext.apply(this.state(), arguments) : this.initialize.apply(this, arguments);
+			},
+			
 			_start: function (state) {
 				this._stateEvent(state, "before_start");
 				this._state = state;
+				this.set("name", state.state_name());
 			},
 
 			_afterStart: function (state) {
@@ -124,7 +129,6 @@ Scoped.define("module:States.State", [
 
 			_locals: [],
 			_persistents: [],
-			_globals: [],
 			_defaults: {},
 
 			_white_list: null,
@@ -141,13 +145,31 @@ Scoped.define("module:States.State", [
 				this.__suspended = 0;
 				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
 				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
-				for (var i = 0; i < this._locals.length; ++i)
+				var used = {};
+				for (var i = 0; i < this._locals.length; ++i) {
 					this["_" + this._locals[i]] = args[this._locals[i]];
+					used[this._locals[i]] = true;
+				}
 				this._persistents = Types.is_function(this._persistents) ? this._persistents() : this._persistents;
-				for (i = 0; i < this._persistents.length; ++i)
+				for (i = 0; i < this._persistents.length; ++i) {
 					this["_" + this._persistents[i]] = args[this._persistents[i]];
-				for (i = 0; i < this._globals.length; ++i)
-					host.set(this._globals[i], args[this._globals[i]]);
+					used[this._locals[i]] = true;
+				}
+				Objs.iter(args, function (value, key) {
+					if (!used[key])
+						host.set(key, value);
+				}, this);
+			},
+			
+			allAttr: function () {
+				var result = Objs.clone(this.host.data(), 1);
+				Objs.iter(this._locals, function (key) {
+					result[key] = this["_" + key];
+				}, this);
+				Objs.iter(this._persistents, function (key) {
+					result[key] = this["_" + key];
+				}, this);
+				return result;
 			},
 
 			state_name: function () {
@@ -209,6 +231,22 @@ Scoped.define("module:States.State", [
 				if (this.__suspended <= 0)
 					this.__next();
 			},
+			
+			weakSame: function (state_name, args, transitionals) {
+				var same = true;
+				if (state_name !== this.state_name())
+					same = false;
+				var all = this.allAttr();
+				Objs.iter(args, function (value, key) {
+					if (all[key] !== value)
+						same = false;
+				}, this);
+				return same;
+			},
+			
+			weakNext: function (state_name, args, transitionals) {
+				return this.weakSame.apply(this, arguments) ? this : this.next.apply(this, arguments);
+			},
 
 			__next: function () {
 				var host = this.host;
@@ -254,9 +292,6 @@ Scoped.define("module:States.State", [
 		_extender: {
 			_defaults: function (base, overwrite) {
 				return Objs.extend(Objs.clone(base, 1), overwrite);
-			},
-			_globals: function (base, overwrite) {
-				return (base || []).concat(overwrite || []);
 			}
 		}
 

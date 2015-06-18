@@ -244,17 +244,22 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 
-			constructor: function (classes) {
+			constructor: function (classes, lowercase) {
 				inherited.constructor.call(this);
 				this._classes = classes || {};
+				this._lowercase = lowercase;
+			},
+			
+			_sanitize: function (key) {
+				return this._lowercase ? key.toLowerCase() : key;
 			},
 			
 			register: function (key, cls) {
-				this._classes[key] = cls;
+				this._classes[this._sanitize(key)] = cls;
 			},
 			
 			get: function (key) {
-				return Types.is_object(key) ? key : this._classes[key];
+				return Types.is_object(key) ? key : this._classes[this._sanitize(key)];
 			},
 			
 			create: function (key) {

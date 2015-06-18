@@ -217,7 +217,60 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		email_get_salutatory_name : function(input) {
 	        input = input || "";
 			return (this.email_get_name(input).split(" "))[0];
+		},
+		
+		regexReplaceGroups: function (regex, args) {
+			var findGroup = /\(.*?\)/;
+			var f = function (captured) {
+				if (arg)
+					return arg;
+				return captured.substring(1, captured.length - 1);
+			};
+			while (args.length > 0) {
+				var arg = args.shift();
+				regex = regex.replace(findGroup, f);
+			}
+			return regex;
+		},
+		
+		namedCaptureRegex: function (regex) {
+			var groupMap = {};
+			var groupIdx = 0;
+			var newRegex = new RegExp(regex.replace(/\([^)]+\)/ig, function (group) {
+				if (group.charAt(1) != "?" && group.indexOf(":") > 0) {
+					var delimiter = group.indexOf(":");
+					groupMap[group.substring(1, delimiter)] = groupIdx;
+					group = "(" + group.substring(delimiter + 1, group.length - 1) + ")";
+				}
+				groupIdx++;
+				return group;
+			}));
+			var map = function (groups) {
+				return Objs.map(groupMap, function (idx) {
+					return groups[idx + 1];
+				});
+			};
+			var exec = function (test) {
+				var result = newRegex.exec(test);
+				return result ? map(result) : null;
+			};
+			var mapBack = function (args) {
+				var result = [];
+				for (var i = 0; i < groupIdx; ++i)
+					result.push(null);
+				for (var key in args)
+					if (key in groupMap)
+						result[groupMap[key]] = args[key]; 
+				return result;
+			};
+			return {
+				regex: newRegex,
+				map: map,
+				exec: exec,
+				mapBack: mapBack
+			};
 		}
+		
 	};
 
 });
