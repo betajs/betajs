@@ -18,24 +18,7 @@ module.exports = function(grunt) {
 					dist_raw : {
 						dest : 'dist/beta-raw.js',
 						src : [ 'src/fragments/begin.js-fragment',
-								'src/base/types.js', 'src/base/functions.js',
-								'src/base/ids.js', 'src/base/tokens.js',
-								'src/base/objs.js', 'src/base/strings.js',
-								'src/base/locales.js',
-								'src/base/structures.js', 'src/base/time.js',
-								'src/base/async.js', 'src/base/promise.js',
-								'src/base/javascript.js', 'src/base/class.js',
-								'src/base/exceptions.js',
-								'src/base/templates.js', 'src/base/parser.js',
-								'src/base/timers.js', 'src/base/iterators.js',
-								'src/base/lists.js', 'src/base/events.js',
-								'src/base/properties.js',
-								'src/base/comparators.js', 'src/base/sort.js',
-								'src/base/trees.js', 'src/base/classes.js',
-								'src/base/collections.js',
-								'src/base/channels.js', 'src/base/keyvalue.js',
-								'src/base/states.js', 'src/base/rmi.js',
-								'src/net/*.js', 'src/fragments/end.js-fragment' ]
+								'src/**/*.js', 'src/fragments/end.js-fragment' ]
 					},
 					dist_scoped : {
 						dest : 'dist/beta.js',
