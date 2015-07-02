@@ -71,7 +71,11 @@
 	
 	"ids": {
 		"title": "Identifiable Objects"
-	}
+	},
+
+  "router": {
+    "title": "Routers"
+  }
 		
 	
 }
