@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-06-18
+betajs - v1.0.0 - 2015-07-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-06-18
+betajs - v1.0.0 - 2015-07-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '394.1434667835063'
+		version: '395.1435834587444'
 	};
 });
 
@@ -6800,6 +6800,7 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 					">\\+": {token: "Down"},
 					">": {token: "Down", single: true},
 					"\\[\s*([a-zA-Z]+)\s*=\s*\'([^']*)\'\s*\\]": {token: "Selector", key: "$1", value: "$2"},
+					"\\[\s*([a-zA-Z]+)\s*=\s*\"([^']*)\"\s*\\]": {token: "Selector", key: "$1", value: "$2"},
 					"\s": null
 				}));
 			},
@@ -6962,7 +6963,9 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 						} else
 							this.__result[node_id].count++;
 					} else if (partial.partial_parent) {
-						this.__addDependentPartial(partial, this.__navigator.nodeParent(node));
+						var parent = this.__navigator.nodeParent(node);
+						if (parent)
+							this.__addDependentPartial(partial, parent);
 					} else if (partial.partial_children) {
 						Objs.iter(this.__navigator.nodeChildren(node), function (child) {
 							this.__addDependentPartial(partial, child);

@@ -26,6 +26,7 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 					">\\+": {token: "Down"},
 					">": {token: "Down", single: true},
 					"\\[\s*([a-zA-Z]+)\s*=\s*\'([^']*)\'\s*\\]": {token: "Selector", key: "$1", value: "$2"},
+					"\\[\s*([a-zA-Z]+)\s*=\s*\"([^']*)\"\s*\\]": {token: "Selector", key: "$1", value: "$2"},
 					"\s": null
 				}));
 			},
@@ -188,7 +189,9 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 						} else
 							this.__result[node_id].count++;
 					} else if (partial.partial_parent) {
-						this.__addDependentPartial(partial, this.__navigator.nodeParent(node));
+						var parent = this.__navigator.nodeParent(node);
+						if (parent)
+							this.__addDependentPartial(partial, parent);
 					} else if (partial.partial_children) {
 						Objs.iter(this.__navigator.nodeChildren(node), function (child) {
 							this.__addDependentPartial(partial, child);

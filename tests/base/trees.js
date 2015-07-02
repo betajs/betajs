@@ -95,6 +95,10 @@ test("test tree query engine", function() {
 	
 	QUnit.deepEqual(query2.result(), []);
 	
+	var query2x = engine.query(root, '>>[label="foobar"]');
+	
+	QUnit.deepEqual(query2x.result(), []);
+
 	SimpleTree.nodeSetData(leftleft, "label", "foobar");
 	
 	QUnit.deepEqual(query2.result(), [leftleft]);
@@ -106,4 +110,8 @@ test("test tree query engine", function() {
 	var query4 = engine.query(left, "><");
 	
 	QUnit.deepEqual(query4.result(), [left]);
+	
+	var query5 = engine.query(leftleft, "<+");
+	
+	QUnit.deepEqual(query5.result(), [root, left]);
 });
