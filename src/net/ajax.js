@@ -41,7 +41,7 @@ Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], funct
  * 
  */
 
-Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module:Net.AjaxException"], function (Class, Objs, AjaxException, scoped) {
+Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module:Net.AjaxException", "module:Net.Uri"], function (Class, Objs, AjaxException, Uri, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -55,6 +55,10 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			
 			syncCall: function (options) {
 				try {
+          if (this.__options.mapPutToPost && options.method.toLowerCase() === "put") {
+            options = this._mapPutToPost(options);
+          }
+
 					return this._syncCall(Objs.extend(Objs.clone(this.__options, 1), options));
 				} catch (e) {
 					throw AjaxException.ensure(e);
@@ -62,6 +66,10 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			},
 			
 			asyncCall: function (options) {
+        if (this.__options.mapPutToPost && options.method.toLowerCase() === "put") {
+          options = this._mapPutToPost(options);
+        }
+
 				return this._asyncCall(Objs.extend(Objs.clone(this.__options, 1), options));
 			},
 			
@@ -71,8 +79,28 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 		
 			_asyncCall: function (options) {
 				throw "Unsupported";
-			}
-			
+			},
+
+      /**
+       * @method _mapPutToPost
+       *
+       * Some implementations of PUT to not supporting sending data with the PUT
+       * request. This fix converts the Request to use POST, so the data is
+       * sent, but the server still thinks it is receiving a PUT request.
+       *
+       * @param {object} options
+       *
+       * @return {object}
+       */
+      _mapPutToPost: function(options) {
+        options.method = "POST";
+        options.uri = Uri.appendUriParams(
+          options.uri, {
+          _method: "PUT"
+        });
+
+        return options;
+      }
 		};
 	});
 });
