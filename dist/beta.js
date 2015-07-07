@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-07-06
+betajs - v1.0.0 - 2015-07-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-07-06
+betajs - v1.0.0 - 2015-07-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -550,7 +550,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '399.1436217166244'
+		version: '400.1436309712370'
 	};
 });
 
@@ -7246,7 +7246,7 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			
 			syncCall: function (options) {
 				try {
-          if (this.__options.mapPutToPost && options.method.toLowerCase() === "put") {
+          if (this._shouldMap(options)) {
             options = this._mapPutToPost(options);
           }
 
@@ -7257,7 +7257,8 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			},
 			
 			asyncCall: function (options) {
-        if (this.__options.mapPutToPost && options.method.toLowerCase() === "put") {
+
+        if (this._shouldMap(options)) {
           options = this._mapPutToPost(options);
         }
 
@@ -7271,6 +7272,20 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			_asyncCall: function (options) {
 				throw "Unsupported";
 			},
+
+      /**
+       * @method _shouldMap
+       *
+       * Check if should even attempt a mapping. Important to not assume
+       * that the method option is always specified.
+       *
+       * @return Boolean
+       */
+      _shouldMap: function (options) {
+        return this.__options.mapPutToPost &&
+          options.method && options.method.toLowerCase === "put";
+
+      },
 
       /**
        * @method _mapPutToPost
@@ -7295,6 +7310,7 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 		};
 	});
 });
+
 
 Scoped.define("module:Net.SocketSenderChannel", ["module:Channels.Sender", "module:Types"], function (Sender, Types, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {

@@ -55,7 +55,7 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			
 			syncCall: function (options) {
 				try {
-          if (this.__options.mapPutToPost && options.method.toLowerCase() === "put") {
+          if (this._shouldMap(options)) {
             options = this._mapPutToPost(options);
           }
 
@@ -66,7 +66,8 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			},
 			
 			asyncCall: function (options) {
-        if (this.__options.mapPutToPost && options.method.toLowerCase() === "put") {
+
+        if (this._shouldMap(options)) {
           options = this._mapPutToPost(options);
         }
 
@@ -80,6 +81,20 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 			_asyncCall: function (options) {
 				throw "Unsupported";
 			},
+
+      /**
+       * @method _shouldMap
+       *
+       * Check if should even attempt a mapping. Important to not assume
+       * that the method option is always specified.
+       *
+       * @return Boolean
+       */
+      _shouldMap: function (options) {
+        return this.__options.mapPutToPost &&
+          options.method && options.method.toLowerCase === "put";
+
+      },
 
       /**
        * @method _mapPutToPost
@@ -104,3 +119,4 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
 		};
 	});
 });
+
