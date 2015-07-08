@@ -92,7 +92,7 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
        */
       _shouldMap: function (options) {
         return this.__options.mapPutToPost &&
-          options.method && options.method.toLowerCase === "put";
+          options.method && options.method.toLowerCase() === "put";
 
       },
 
