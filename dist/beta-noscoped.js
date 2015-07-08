@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '404.1436389119874'
+		version: '405.1436389310033'
 	};
 });
 
@@ -6935,7 +6935,7 @@ Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module
        */
       _shouldMap: function (options) {
         return this.__options.mapPutToPost &&
-          options.method && options.method.toLowerCase === "put";
+          options.method && options.method.toLowerCase() === "put";
 
       },
 
