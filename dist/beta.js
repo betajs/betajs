@@ -4,7 +4,7 @@ Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
 /*!
-betajs-scoped - v0.0.1 - 2015-03-26
+betajs-scoped - v0.0.1 - 2015-07-08
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -118,7 +118,7 @@ var Attach = {
 			var current_version = current.version.split(".");
 			var newer = false;
 			for (var i = 0; i < Math.min(my_version.length, current_version.length); ++i) {
-				newer = my_version[i] > current_version[i];
+				newer = parseInt(my_version[i], 10) > parseInt(current_version[i], 10);
 				if (my_version[i] != current_version[i]) 
 					break;
 			}
@@ -287,6 +287,17 @@ function newNamespace (options) {
 			}
 		}
 	}
+	
+	function nodeUnresolvedWatchers(node, base, result) {
+		node = node || nsRoot;
+		base = base ? base + "." + node.route : node.route;
+		result = result || [];
+		if (!node.ready)
+			result.push(base);
+		for (var k in node.children)
+			result = nodeUnresolvedWatchers(node.children[k], base, result);
+		return result;
+	}
 
 	return {
 		
@@ -319,6 +330,10 @@ function newNamespace (options) {
 		
 		obtain: function (path, callback, context) {
 			nodeAddWatcher(nodeNavigate(path), callback, context);
+		},
+		
+		unresolvedWatchers: function () {
+			return nodeUnresolvedWatchers();
 		}
 		
 	};
@@ -511,7 +526,12 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			var ns = this.resolve(namespaceLocator);
 			ns.namespace.digest(ns.path);
 			return this;
-		}		
+		},
+		
+		unresolved: function (namespaceLocator) {
+			var ns = this.resolve(namespaceLocator);
+			return ns.namespace.unresolvedWatchers();
+		}
 		
 	};
 	
@@ -523,7 +543,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '9.1427403679672',
+	version: '9.9436381745302',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -550,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '403.1436360790192'
+		version: '404.1436389119874'
 	};
 });
 
@@ -2514,7 +2534,7 @@ Scoped.define("module:IdGenerators.PrefixedIdGenerator", ["module:IdGenerators.I
 });
 
 
-Scoped.define("module:Ids.RandomIdGenerator", ["module:Ids.IdGenerator", "module:Tokens"], function (IdGenerator, Tokens, scoped) {
+Scoped.define("module:Ids.RandomIdGenerator", ["module:IdGenerators.IdGenerator", "module:Tokens"], function (IdGenerator, Tokens, scoped) {
 	return IdGenerator.extend({scoped: scoped}, function (inherited) {
 		return {
 

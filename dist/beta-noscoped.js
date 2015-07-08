@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '403.1436360790192'
+		version: '404.1436389119874'
 	};
 });
 
@@ -1976,7 +1976,7 @@ Scoped.define("module:IdGenerators.PrefixedIdGenerator", ["module:IdGenerators.I
 });
 
 
-Scoped.define("module:Ids.RandomIdGenerator", ["module:Ids.IdGenerator", "module:Tokens"], function (IdGenerator, Tokens, scoped) {
+Scoped.define("module:Ids.RandomIdGenerator", ["module:IdGenerators.IdGenerator", "module:Tokens"], function (IdGenerator, Tokens, scoped) {
 	return IdGenerator.extend({scoped: scoped}, function (inherited) {
 		return {
 

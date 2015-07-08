@@ -1,4 +1,4 @@
-test("test linked list", function() {
+test("test scoped", function() {
 	var o = new BetaJS.Lists.LinkedList();
 	var id1 = o.add({x: "a"});
 	var id2 = o.add({x: "b"});
