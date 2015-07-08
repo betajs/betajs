@@ -570,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '405.1436389310033'
+		version: '407.1436393737004'
 	};
 });
 
@@ -7656,7 +7656,7 @@ Scoped.define("module:Net.Uri", ["module:Objs", "module:Types"], function (Objs,
 				if (Types.is_object(value))
 					res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
 				else
-					res.push(prefix + key + "=" + encodeURI(value));
+					res.push(prefix + key + "=" + encodeURIComponent(value));
 			}, this);
 			return res.join("&");
 		},
