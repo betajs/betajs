@@ -407,3 +407,61 @@ Scoped.define("module:Classes.ContextRegistry", [
 		};
 	});
 });
+
+
+
+Scoped.define("module:Classes.ConditionalInstance", [
+	 "module:Class",
+	 "module:Objs"
+], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				this._options = this.cls._initializeOptions(options);
+			}
+			
+		};
+	}, {
+		
+		_initializeOptions: function (options) {
+			return options;
+		},
+		
+		supported: function (options) {
+			return false;
+		}
+		
+	}, {
+
+		__registry: [],
+		
+		register: function (cls, priority) {
+			this.__registry.push({
+				cls: cls,
+				priority: priority
+			});
+		},
+		
+		match: function (options) {
+			options = this._initializeOptions(options);
+			var bestMatch = null;
+			Objs.iter(this.__registry, function (entry) {
+				if ((!bestMatch || bestMatch.priority < entry.priority) && entry.cls.supported(options))
+					bestMatch = entry;				
+			}, this);
+			return bestMatch;
+		},
+		
+		create: function (options) {
+			var match = this.match(options);
+			return match ? new match.cls(options) : null;
+		},
+		
+		anySupport: function (options) {
+			return this.match(options) !== null;
+		}
+		
+	});	
+});

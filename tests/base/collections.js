@@ -76,3 +76,53 @@ test("test filtered collection", function () {
 	QUnit.equal(count.add, 0);
 	QUnit.equal(count.remove, 0);
 });
+
+
+
+test("test mapped collection", function () {
+	var objs = [
+		new BetaJS.Properties.Properties({"text": "A Example Z"}),
+        new BetaJS.Properties.Properties({"text": "D Example W"}),
+        new BetaJS.Properties.Properties({"text": "C Example X"}),
+        new BetaJS.Properties.Properties({"text": "B Example Y"}),
+        new BetaJS.Properties.Properties({"text": "E Example V"})
+    ];
+	var list = new BetaJS.Collections.Collection({
+		objects: objs
+    });
+	var mapped_list = new BetaJS.Collections.MappedCollection(list, {
+		map: function (source, target) {
+			if (!target)
+				target = new BetaJS.Properties.Properties();
+			target.set("text", source.get("text") + "!!");
+			return target;
+		}
+	});
+	QUnit.equal(mapped_list.count(), 5);
+	QUnit.equal(mapped_list.getByIndex(0).get("text"), "A Example Z!!");
+	list.remove(list.getByIndex(0));
+	QUnit.equal(mapped_list.count(), 4);
+	list.getByIndex(0).set("text", "Foobar");
+	QUnit.equal(mapped_list.getByIndex(0).get("text"), "Foobar!!");
+});
+
+
+test("test concat collection", function () {
+	var objs1 = [
+		new BetaJS.Properties.Properties({"text": "A Example Z"}),
+        new BetaJS.Properties.Properties({"text": "D Example W"})
+    ];
+	var list1 = new BetaJS.Collections.Collection({
+		objects: objs1
+    });
+	var objs2 = [
+	             new BetaJS.Properties.Properties({"text": "C Example X"}),
+	             new BetaJS.Properties.Properties({"text": "B Example Y"}),
+	             new BetaJS.Properties.Properties({"text": "E Example V"})
+	         ];
+	var list2 = new BetaJS.Collections.Collection({
+		objects: objs2
+    });
+	var concat_list = new BetaJS.Collections.ConcatCollection([list1, list2]);
+	QUnit.equal(concat_list.count(), 5);
+});

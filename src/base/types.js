@@ -196,6 +196,15 @@ Scoped.define("module:Types", function () {
 			if (type == "date" || type == "time" || type == "datetime")
 				return parseInt(x, 10);
 			return x;
+		},
+		
+		objectType: function (obj) {
+			if (!this.is_object(obj))
+				return null;
+			var matcher = obj.match(/\[object (.*)\]/);
+			return matcher ? matcher[1] : null;
 		}
+		
+		
 	};
 });

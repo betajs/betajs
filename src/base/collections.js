@@ -270,3 +270,126 @@ Scoped.define("module:Collections.FilteredCollection", [
 		};	
 	});
 });
+
+
+Scoped.define("module:Collections.MappedCollection", [
+    "module:Collections.Collection",
+    "module:Functions"
+], function (Collection, Functions, scoped) {
+	return Collection.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor : function(parent, options) {
+				this.__parent = parent;
+				this.__parentToThis = {};
+				this.__thisToParent = {};
+				options = options || {};
+				delete options.objects;
+				options.compare = Functions.as_method(this.__compareByParent, this);
+				inherited.constructor.call(this, options);
+				this._mapFunction = options.map;
+				this._mapCtx = options.context;
+				parent.on("add", this.__parentAdd, this);
+				parent.on("remove", this.__parentRemove, this);
+				parent.on("change", this.__parentUpdate, this);
+				parent.iterate(this.__parentAdd, this);		
+			},
+			
+			destroy: function () {
+				this.__parent.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+
+			__compareByParent: function (item1, item2) {
+				return this.__parent.getIndex(this.__thisToParent[item1.cid()]) - this.__parent.getIndex(this.__thisToParent[item2.cid()]);
+			},
+			
+			__mapItem: function (parentItem, thisItem) {
+				return this._mapFunction.call(this._mapCtx || this, parentItem, thisItem);
+			},
+			
+			__parentAdd: function (item) {
+				var mapped = this.__mapItem(item);
+				this.__parentToThis[item.cid()] = mapped;
+				this.__thisToParent[mapped.cid()] = item;
+				this.add(mapped);
+			},
+			
+			__parentUpdate: function (item) {
+				this.__mapItem(item, this.__parentToThis[item.cid()]);
+			},
+			
+			__parentRemove: function (item) {
+				var mapped = this.__parentToThis[item.cid()];
+				delete this.__parentToThis[item.cid()];
+				delete this.__thisToParent[mapped.cid()];
+				this.remove(mapped);
+			}
+		
+		};	
+	});
+});
+
+
+Scoped.define("module:Collections.ConcatCollection", [
+    "module:Collections.Collection",
+    "module:Objs",
+    "module:Functions"
+], function (Collection, Objs, Functions, scoped) {
+	return Collection.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor : function (parents, options) {
+				this.__parents = {};
+				this.__itemToParent = {};
+				options = options || {};
+				delete options.objects;
+				options.compare = Functions.as_method(this.__compareByParent, this);
+				inherited.constructor.call(this, options);				
+				var idx = 0;
+				Objs.iter(parents, function (parent) {
+					this.__parents[parent.cid()] = {
+						idx: idx,
+						parent: parent
+					};
+					parent.iterate(function (item) {
+						this.__parentAdd(parent, item);
+					}, this);
+					parent.on("add", function (item) {
+						this.__parentAdd(parent, item);
+					}, this);
+					parent.on("remove", function (item) {
+						this.__parentRemove(parent, item);
+					}, this);
+					idx++;
+				}, this);
+			},
+			
+			destroy: function () {
+				Objs.iter(this.__parents, function (parent) {
+					parent.parent.off(null, null, this);
+				}, this);
+				inherited.destroy.call(this);
+			},
+			
+			__parentAdd: function (parent, item) {
+				this.__itemToParent[item.cid()] = parent;
+				this.add(item);
+			},
+			
+			__parentRemove: function (parent, item) {
+				delete this.__itemToParent[item.cid()];
+				this.remove(item);
+			},
+			
+			__compareByParent: function (item1, item2) {
+				var parent1 = this.__itemToParent[item1.cid()];
+				var parent2 = this.__itemToParent[item2.cid()];
+				if (parent1 === parent2)
+					return parent1.getIndex(item1) - parent2.getIndex(item2);
+				return this.__parents[parent1.cid()].idx - this.__parents[parent2.cid()].idx;
+			}			
+		
+		};	
+	});
+});

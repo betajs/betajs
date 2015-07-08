@@ -29,15 +29,17 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Ty
 			}
 		},
 		
-		eventually: function (func, params, context) {
+		eventually: function () {
+			var args = Functions.matchArgs(arguments, {
+				func: true,
+				params: "array",
+				context: "object",
+				time: "number"
+			});
 			var timer = setTimeout(function () {
 				clearTimeout(timer);
-				if (!Types.is_array(params)) {
-					context = params;
-					params = [];
-				}
-				func.apply(context || this, params || []);
-			}, 0);
+				args.func.apply(args.context || this, args.params || []);
+			}, args.time || 0);
 		},
 		
 		eventuallyOnce: function (func, params, context) {

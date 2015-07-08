@@ -126,9 +126,7 @@ Scoped.define("module:Router.Router", [ "module:Class",
 
 	    		dispatch : function(name, args, route) {
 	    			if (this._current) {
-	    				if (this._current.name === name
-	    						&& Comparators.deepEqual(args,
-	    								this._current.args, 2))
+	    				if (this._current.name === name && Comparators.deepEqual(args, this._current.args, 2))
 	    					return;
 	    				this.trigger("leave", this._current.name,
 	    						this._current.args, this._current);
@@ -328,7 +326,7 @@ Scoped.define("module:Router.RouterHistory", [ "module:Class",
 				}
 				var item = this._history.pop();
 				this.trigger("change", item);
-				return this._router.dispatch(item.name, item.args)
+				return this._router.dispatch(item.name, item.args);
 			}
 
 		};
