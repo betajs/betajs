@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-08-12
+betajs - v1.0.0 - 2015-08-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -557,7 +557,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.0 - 2015-08-12
+betajs - v1.0.0 - 2015-08-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '409.1439382842285'
+		version: '412.1440006289942'
 	};
 });
 
@@ -4486,8 +4486,26 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			for (var i = 0; i < deps.length; ++i)
-				deps[i].properties.on("change:" + deps[i].key, recompute, deps[i]);
+			BetaJS.Objs.iter(deps, function (dep) {
+				var value = dep.properties.get(dep.key);
+				// Ugly way of checking whether an EventsMixin is present - please improve in the future on this
+				if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+					value.on("change update", function () {
+						recompute();
+					}, dep);
+				}
+				dep.properties.on("change:" + dep.key, function (value, oldValue) {
+					if (oldValue && typeof oldValue == "object" && "on" in oldValue && "off" in oldValue && "trigger" in oldValue) {
+						oldValue.off("change update", null, dep);
+					}
+					if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+						value.on("change update", function () {
+							recompute();
+						}, dep);
+					}
+					recompute();
+				}, dep);
+			}, this);
 			recompute();
 			return this;
 		},

@@ -107,3 +107,16 @@ test("test properties sub binding full", function() {
     QUnit.equal(e.get("test.xyz"), 6);
     QUnit.equal(f.get("test.abc"), 5);
 });
+
+
+test("test properties computed w collections", function() {
+    var e = new BetaJS.Properties.Properties();
+    e.set("coll", new BetaJS.Collections.Collection());
+    e.set("count", e.computed(function() {
+        return this.get("coll").count();
+    }, ["coll"]));
+    QUnit.equal(e.get("count"), 0);
+    e.get("coll").add({foo: 1});
+    e.get("coll").add({bar: 2});
+    QUnit.equal(e.get("count"), 2);
+});

@@ -173,8 +173,26 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			for (var i = 0; i < deps.length; ++i)
-				deps[i].properties.on("change:" + deps[i].key, recompute, deps[i]);
+			BetaJS.Objs.iter(deps, function (dep) {
+				var value = dep.properties.get(dep.key);
+				// Ugly way of checking whether an EventsMixin is present - please improve in the future on this
+				if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+					value.on("change update", function () {
+						recompute();
+					}, dep);
+				}
+				dep.properties.on("change:" + dep.key, function (value, oldValue) {
+					if (oldValue && typeof oldValue == "object" && "on" in oldValue && "off" in oldValue && "trigger" in oldValue) {
+						oldValue.off("change update", null, dep);
+					}
+					if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+						value.on("change update", function () {
+							recompute();
+						}, dep);
+					}
+					recompute();
+				}, dep);
+			}, this);
 			recompute();
 			return this;
 		},
