@@ -93,7 +93,7 @@ module.exports = function(grunt) {
 						src : [ './README.md', './src/base/*.js' ],					
 						options : {
 							destination : 'docs',
-							template : "node_modules/grunt-jsdoc/node_modules/ink-docstrap/template",
+							template : "node_modules/grunt-betajs-docs-compile",
 							configure : "./jsdoc.conf.json",
 							tutorials: "./docsrc/tutorials",
 							recurse: true

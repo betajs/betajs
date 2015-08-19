@@ -1,81 +1,69 @@
-{
-  "introduction": {
-	"title": "Introduction to BetaJS"
-  },
-
-	"class": {
-		"title": "Object Orientation",
-		"children": {
-			"class-inheritance": {
-				"title": "Inheritance"
-			},
-			"class-mixins": {
-				"title": "Mixins"
-			},
-			"class-notifications": {
-				"title": "Notifications"
-			},
-			"class-reflection": {
-				"title": "Reflection"
-			}
-		}
-	},
-	
-	"events": {
-		"title": "Event System as Observer Pattern"
-	},
-	
-    "properties": {
-       "title": "Introduction to Properties",
-       "children" : {
-    	   "properties-advanced" : {
-    		   "title" : "Advanced Properties"
-    	   }
-       }
-    },
-
-	"collections": {
-		"title": "Collections",
-		"children": {
-			"collections-filtered": {
-				"title": "Filtered Collections"
-			}
-		}
-	},
-	
-	"iterators": {
-		"title": "Enumerable Lists - Iterators",
-		"children": {
-			"iterators-advanced": {
-				"title": "Advanced Iterators"
-			}
-		}
-	},
-	
-	"promise": {
-		"title": "Asynchronous Calls using Promises",
-		"children": {
-			"promise-advanced": {
-				"title": "Advanced Uses"
-			}
-		}
-	},
-	
-	"states": {
-		"title": "State Machines"
-	},
-	
-	"objs": {
-		"title": "Functional Helpers for Objects and Arrays"
-	},
-	
-	"ids": {
-		"title": "Identifiable Objects"
-	},
-
-  "router": {
-    "title": "Routers"
-  }
-		
-	
+{  
+   "introduction":{  
+      "title":"Introduction to BetaJS"
+   },
+   "class":{  
+      "title":"Object Orientation",
+      "children":{  
+         "class-inheritance":{  
+            "title":"Inheritance"
+         },
+         "class-mixins":{  
+            "title":"Mixins"
+         },
+         "class-notifications":{  
+            "title":"Notifications"
+         },
+         "class-reflection":{  
+            "title":"Reflection"
+         }
+      }
+   },
+   "events":{  
+      "title":"Event System as Observer Pattern"
+   },
+   "properties":{  
+      "title":"Introduction to Properties",
+      "children":{  
+         "properties-advanced":{  
+            "title":"Advanced Properties"
+         }
+      }
+   },
+   "collections":{  
+      "title":"Collections",
+      "children":{  
+         "collections-filtered":{  
+            "title":"Filtered Collections"
+         }
+      }
+   },
+   "iterators":{  
+      "title":"Enumerable Lists - Iterators",
+      "children":{  
+         "iterators-advanced":{  
+            "title":"Advanced Iterators"
+         }
+      }
+   },
+   "promise":{  
+      "title":"Asynchronous Calls using Promises",
+      "children":{  
+         "promise-advanced":{  
+            "title":"Advanced Uses"
+         }
+      }
+   },
+   "states":{  
+      "title":"State Machines"
+   },
+   "objs":{  
+      "title":"Functional Helpers for Objects and Arrays"
+   },
+   "ids":{  
+      "title":"Identifiable Objects"
+   },
+   "router":{  
+      "title":"Routers"
+   }
 }

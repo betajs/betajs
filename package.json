@@ -20,7 +20,8 @@
 		"grunt-wget": "",
 		"grunt-jsdoc": "",
 		"grunt-shell": "",
-		"grunt-template": ""
+		"grunt-template": "",
+	    "grunt-betajs-docs-compile":""
 	},
 	"repository": {
 		"type": "git",
