@@ -161,7 +161,13 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 		
 		is: function (obj) {
 			return obj && Types.is_object(obj) && obj.classGuid == this.Promise.prototype.classGuid;
-		} 
+		},
+		
+		resilience: function (method, context, resilience, args) {
+			return method.apply(context, args).mapError(function (error) {
+				return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
+			}, this);
+		}
 		
 	};
 });

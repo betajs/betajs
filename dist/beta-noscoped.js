@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-07-08
+betajs - v1.0.0 - 2015-08-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '407.1436393737004'
+		version: '409.1439382842285'
 	};
 });
 
@@ -3580,7 +3580,13 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 		
 		is: function (obj) {
 			return obj && Types.is_object(obj) && obj.classGuid == this.Promise.prototype.classGuid;
-		} 
+		},
+		
+		resilience: function (method, context, resilience, args) {
+			return method.apply(context, args).mapError(function (error) {
+				return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
+			}, this);
+		}
 		
 	};
 });
@@ -5588,22 +5594,6 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 			for ( i = 0; i < a.length; ++i)
 				a[i] = a[i].substring(len);
 			return a.join("\n").trim();
-		},
-	
-		read_cookie_string : function(raw, key) {
-			var cookie = "; " + raw;
-			var parts = cookie.split("; " + key + "=");
-			if (parts.length == 2)
-				return parts.pop().split(";").shift();
-			return null;
-		},
-	
-		write_cookie_string : function(raw, key, value) {
-			var cookie = "; " + raw;
-			var parts = cookie.split("; " + key + "=");
-			if (parts.length == 2)
-				cookie = parts[0] + parts[1].substring(parts[1].indexOf(";"));
-			return key + "=" + value + cookie;
 		},
 	
 		capitalize : function(input) {
