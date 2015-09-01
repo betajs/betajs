@@ -4,6 +4,12 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 	 */
 	return {
 		
+		padLeft: function (s, padding, length) {
+			while (s.length < length)
+				s = padding + s;
+			return s;
+		},
+		
 		/** Converts a string new lines to html <br /> tags
 		 *
 		 * @param s string

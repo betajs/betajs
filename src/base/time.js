@@ -166,6 +166,10 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 			for (var key in replacers)
 				s = s.replace(key, replacers[key]);
 			return s;
+		},
+		
+		monthString: function (month) {
+			return (d = new Date(), d.setMonth(month), d).toDateString().substring(4,7);
 		}
 		
 	};

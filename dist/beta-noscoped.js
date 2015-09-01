@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2015-08-19
+betajs - v1.0.1 - 2015-09-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '412.1440006289942'
+		version: '413.1441117196235'
 	};
 });
 
@@ -2947,6 +2947,16 @@ Scoped.define("module:Locales", function () {
 	};
 	
 });	
+Scoped.define("module:Maths", [], function () {
+	return {
+		
+	    discreteCeil: function (number, steps, max) {
+	        var x = Math.ceil(number / steps) * steps;
+	        return max && x > max ? 0 : x;
+	    }
+	
+	};
+});
 Scoped.define("module:Objs", ["module:Types"], function (Types) {
 	return {
 
@@ -5450,6 +5460,12 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 	 */
 	return {
 		
+		padLeft: function (s, padding, length) {
+			while (s.length < length)
+				s = padding + s;
+			return s;
+		},
+		
 		/** Converts a string new lines to html <br /> tags
 		 *
 		 * @param s string
@@ -5704,6 +5720,7 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 	};
 
 });
+
 Scoped.define("module:Structures.AvlTree", function () {
 	return {
 	
@@ -6281,6 +6298,10 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 			for (var key in replacers)
 				s = s.replace(key, replacers[key]);
 			return s;
+		},
+		
+		monthString: function (month) {
+			return (d = new Date(), d.setMonth(month), d).toDateString().substring(4,7);
 		}
 		
 	};
