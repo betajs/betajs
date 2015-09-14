@@ -157,11 +157,11 @@ Scoped.define("module:Collections.Collection", [
 				Objs.iter(this.__indices, function (entry, key) {
 					delete entry[object.get(key)];
 				}, this);
-				this.trigger("remove", object);
-				this.trigger("update");
 				var result = this.__data.remove(object);
 				if ("off" in object)
 					object.off(null, null, this);
+				this.trigger("remove", object);
+				this.trigger("update");
 				return result;
 			},
 			
