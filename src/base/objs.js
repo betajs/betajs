@@ -73,7 +73,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			target = target || {};
 			if (source) {
 				for (var key in source) {
-					if (key in target && Types.is_object(target[key]) && Types.is_object(source[key]))
+					if (key in target && Types.is_object(target[key]) && Types.is_object(source[key]) && !Types.is_array(target[key]) && !Types.is_array(source[key]))
 						target[key] = this.tree_extend(target[key], source[key], depth);
 					else
 						target[key] = this.clone(source[key], depth);
