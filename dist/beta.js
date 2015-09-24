@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.2 - 2015-09-14
+betajs - v1.0.2 - 2015-09-24
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -557,7 +557,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.2 - 2015-09-14
+betajs - v1.0.2 - 2015-09-24
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '415.1442268240958'
+		version: '416.1443129734771'
 	};
 });
 
@@ -4579,6 +4579,11 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				}
 				if (!binding.right || !this.has(key))
 					this.set(key, binding.properties.get(binding.key));
+				if (key === "") {
+					Objs.iter(binding.properties.data(), function (value, k) {
+						this.set(k, value);
+					}, this);
+				}
 			}
 			if (binding.right) {
 				this.on("strongchange:" + key, function (value) {
@@ -4603,6 +4608,11 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				}
 				if (!binding.left || this.has(key))
 					binding.properties.set(binding.key, this.get(key));
+				if (key === "") {
+					Objs.iter(this.data(), function (value, k) {
+						binding.properties.set(k, value);
+					}, this);
+				}
 			}
 			binding.properties.on("destroy", function () {
 				this.unbind(key);

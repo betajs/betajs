@@ -256,6 +256,11 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				}
 				if (!binding.right || !this.has(key))
 					this.set(key, binding.properties.get(binding.key));
+				if (key === "") {
+					Objs.iter(binding.properties.data(), function (value, k) {
+						this.set(k, value);
+					}, this);
+				}
 			}
 			if (binding.right) {
 				this.on("strongchange:" + key, function (value) {
@@ -280,6 +285,11 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				}
 				if (!binding.left || this.has(key))
 					binding.properties.set(binding.key, this.get(key));
+				if (key === "") {
+					Objs.iter(this.data(), function (value, k) {
+						binding.properties.set(k, value);
+					}, this);
+				}
 			}
 			binding.properties.on("destroy", function () {
 				this.unbind(key);

@@ -97,15 +97,25 @@ test("test properties sub binding", function() {
 test("test properties sub binding full", function() {
     var e = new BetaJS.Properties.Properties();
     var f = new BetaJS.Properties.Properties();
+    e.set("a", 7);
+    f.set("b", 8);
     e.bind("", f, {deep: true});
     e.set("x", 2);
     f.set("y", 3);
     e.set("test.abc", 5);
     f.set("test.xyz", 6);
+    QUnit.equal(f.get("a"), 7);
+    QUnit.equal(e.get("b"), 8);
     QUnit.equal(e.get("y"), 3);
     QUnit.equal(f.get("x"), 2);
     QUnit.equal(e.get("test.xyz"), 6);
     QUnit.equal(f.get("test.abc"), 5);
+    f.set("a", 9);
+    QUnit.equal(f.get("a"), 9);
+    QUnit.equal(e.get("a"), 9);
+    e.set("a", 10);
+    QUnit.equal(f.get("a"), 10);
+    QUnit.equal(e.get("a"), 10);
 });
 
 
