@@ -26,5 +26,5 @@ The function context is optional.
 Once the component is done listening for events, it can unregister by calling *off*:
 
 ```
-	events.on("event_name", null, function_context);
+	events.off("event_name", null, function_context);
 ```

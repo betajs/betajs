@@ -6,3 +6,4 @@ node_modules
 /docs
 browserstack.json
 BrowserStackLocal
+jsdoc.conf.json

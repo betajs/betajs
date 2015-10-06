@@ -20,16 +20,15 @@ The main concepts are:
 
 ```js
 
-	var property = new BetaJS.property.property({a: "initial value"});
-	// x === "second value"
+	var property = new BetaJS.Properties.Properties({a: "initial value"});
 
 	property.set("a", "second value");
 
 	var x = property.get("a");
 	// x === "second value"
 	
-	property.on('change',function(){
-		console.log('The value of property has been changed');
+	property.of('change:a', function(newValue, oldValue) {
+		console.log('The value of a has been changed');
 	});
 
 ```

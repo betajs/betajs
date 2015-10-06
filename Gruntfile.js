@@ -40,7 +40,8 @@ module.exports = function(grunt) {
 				clean : {
 					raw : "dist/beta-raw.js",
 					closure : "dist/beta-closure.js",
-					browserstack : [ "./browserstack.json", "BrowserStackLocal" ]
+					browserstack : [ "./browserstack.json", "BrowserStackLocal" ],
+					jsdoc : ['./jsdoc.conf.json']
 				},
 				uglify : {
 					options : {
@@ -130,6 +131,42 @@ module.exports = function(grunt) {
 							"README.md" : ["readme.tpl"]
 						}
 					},
+					"jsdoc": {
+						options: {
+							data: {
+								data: {
+									"tags": {
+										"allowUnknownTags": true
+									},
+									"plugins": ["plugins/markdown"],
+									"templates": {
+										"cleverLinks": false,
+										"monospaceLinks": false,
+										"dateFormat": "ddd MMM Do YYYY",
+										"outputSourceFiles": true,
+										"outputSourcePath": true,
+										"systemName": "BetaJS",
+										"footer": "",
+										"copyright": "BetaJS (c) - MIT License",
+										"navType": "vertical",
+										"theme": "cerulean",
+										"linenums": true,
+										"collapseSymbols": false,
+										"inverseNav": true,
+										"highlightTutorialCode": true,
+										"protocol": "fred://"
+									},
+									"markdown": {
+										"parser": "gfm",
+										"hardwrap": true
+									}
+								}
+							}
+						},
+						files : {
+							"jsdoc.conf.json": ["json.tpl"]
+						}
+					},
 					"browserstack-desktop" : {
 						options : {
 							data: {
@@ -198,6 +235,7 @@ module.exports = function(grunt) {
 
 	grunt.registerTask('default', [ 'revision-count', 'concat:dist_raw',
 			'preprocess', 'clean:raw', 'concat:dist_scoped', 'uglify' ]);
+	grunt.registerTask('docs', ['template:jsdoc', 'jsdoc', 'clean:jsdoc']);
 	grunt.registerTask('qunit', [ 'node-qunit' ]);
 	grunt.registerTask('lint', [ 'jshint:source', 'jshint:dist',
 			'jshint:tests', 'jshint:gruntfile' ]);
