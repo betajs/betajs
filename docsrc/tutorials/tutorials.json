@@ -64,6 +64,11 @@
       "title":"Identifiable Objects"
    },
    "router":{  
-      "title":"Routers"
+      "title":"Routers",
+      "children": {
+    	  "routers-states": {
+    		  "title": "Routers and State Machines"
+    	  }
+      }
    }
 }

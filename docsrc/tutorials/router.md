@@ -11,14 +11,14 @@ A router is created by creating an instance of the `Router` object.
 ```
 
 The just created `router` object does nothing at this point, because it does not
-know about any routers. So the next step is binding routes to `router`.
+know about any routes. So the next step is binding routes to `router`.
 
 ```
   /**
    * @param {string} name
    * @param {string} routeUrl
    */
-  router.bind("home", "/");
+  router.bind("test", "/test");
 ```
 
 It is now possible to navigate to "test" by calling the `navigate` method.
