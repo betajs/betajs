@@ -4,11 +4,17 @@ This functionality is particularly useful in
 Single Page Web applications, as it creates an easy
 abstraction for navigating the internal structure of the application.
 
+
+### Setup
+
 A router is created by creating an instance of the `Router` object.
 
 ```
   var router = new BetaJS.Router.Router();
 ```
+
+
+### Binding Routes
 
 The just created `router` object does nothing at this point, because it does not
 know about any routes. So the next step is binding routes to `router`.
@@ -21,11 +27,17 @@ know about any routes. So the next step is binding routes to `router`.
   router.bind("test", "/test");
 ```
 
+
+### Navigation
+
 It is now possible to navigate to "test" by calling the `navigate` method.
 
 ```
   router.navigate("/test");
 ```
+
+
+### Route Events
 
 When the router navigates to "/test", it triggers an `event`. Learn more about
 events by looking at the `BetaJS.Events.Events` documentation. The name of the
@@ -40,6 +52,9 @@ the proper event.
     console.log("Navigated to test.");
   });
 ```
+
+
+### Routes with Arguments
 
 Now, suppose you want to navigate to the fourth post on a blog site. First, bind
 the route.
