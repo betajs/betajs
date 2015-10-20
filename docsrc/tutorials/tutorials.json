@@ -5,14 +5,11 @@
    "class":{  
       "title":"Object Orientation",
       "children":{  
-         "class-inheritance":{  
-            "title":"Inheritance"
-         },
+	      "class-notifications":{  
+	          "title":"Notifications"
+	       },
          "class-mixins":{  
             "title":"Mixins"
-         },
-         "class-notifications":{  
-            "title":"Notifications"
          },
          "class-reflection":{  
             "title":"Reflection"
