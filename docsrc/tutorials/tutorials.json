@@ -51,14 +51,14 @@
          }
       }
    },
-   "states":{  
-      "title":"State Machines"
-   },
    "objs":{  
       "title":"Functional Helpers for Objects and Arrays"
    },
    "ids":{  
       "title":"Identifiable Objects"
+   },
+   "states":{  
+      "title":"State Machines"
    },
    "router":{  
       "title":"Routers",
