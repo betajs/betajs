@@ -87,6 +87,12 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 		
 		newClass: function (cls) {
 			return this.newClassFunc(cls).apply(this, this.getArguments(arguments, 1));
+		},
+		
+		callWithin: function (context, method) {
+			if (Types.is_string(method))
+				method = context[method];
+			return method.apply(context, this.getArguments(arguments, 2));
 		}
 	
 	};
