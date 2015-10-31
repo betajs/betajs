@@ -159,6 +159,7 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 
 		filter: function (obj, f, context) {
 			var ret = null;
+			f = f || function (x) { return !!x; };
 			if (Types.is_array(obj)) {
 				ret = [];
 				for (var i = 0; i < obj.length; ++i) {
