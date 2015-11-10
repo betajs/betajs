@@ -404,7 +404,11 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				func: f,
 				dependencies: dependencies
 			};
-		}	
+		},
+		
+		id: function () {
+			return this.cid();
+		}
 		
 	};
 });
