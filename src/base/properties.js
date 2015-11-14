@@ -406,7 +406,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			};
 		},
 		
-		id: function () {
+		pid: function () {
 			return this.cid();
 		}
 		
