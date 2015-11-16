@@ -130,3 +130,13 @@ test("test properties computed w collections", function() {
     e.get("coll").add({bar: 2});
     QUnit.equal(e.get("count"), 2);
 });
+
+test("test inner properties", function () {
+	var outer = new BetaJS.Properties.Properties();
+	var inner = new BetaJS.Properties.Properties();	
+	outer.set("inner", inner);
+	inner.set("foo", "bar");
+	QUnit.equal(outer.getProp("inner.foo"), "bar");
+	outer.setProp("inner.test", "abc");
+	QUnit.equal(inner.get("test"), "abc");
+});
