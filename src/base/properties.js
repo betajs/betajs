@@ -51,6 +51,36 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		materializes: [],
 		
+		_resolveProps: function (key) {
+			var result = {
+				props: this,
+				key: key
+			};
+			var scope = this.data();
+			while (key) {
+				if (!scope || !Types.is_object(scope))
+					return result;
+				if (scope.__properties_guid === this.__properties_guid)
+					return scope._resolveProps(key);
+				var spl = Strings.splitFirst(key, ".");
+				if (!(spl.head in scope))
+					return result;
+				key = spl.tail;
+				scope = scope[spl.head];
+			}
+			return result;
+		},
+		
+		getProp: function (key) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.get(resolved.key);
+		},
+		
+		setProp: function (key, value) {
+			var resolved = this._resolveProps(key);
+			resolved.props.set(resolved.key, value);
+		},
+		
 		get: function (key) {
 			return Scopes.get(key, this.__properties.data);
 		},
@@ -404,7 +434,11 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				func: f,
 				dependencies: dependencies
 			};
-		}	
+		},
+		
+		pid: function () {
+			return this.cid();
+		}
 		
 	};
 });
