@@ -1,6 +1,9 @@
-{  
-   "introduction":{  
-      "title":"Introduction to BetaJS"
+{
+   "framework_introduction":{
+      "title":"BetaJS Framework Introduction"
+   },
+   "module_introduction":{
+      "title":"BetaJS Module Introduction"
    },
    "class":{  
       "title":"Object Orientation",

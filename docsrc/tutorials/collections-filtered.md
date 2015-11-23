@@ -16,7 +16,7 @@ You can then define the filtered collection as follows:
 
 The filtered collection updates automatically when the parent collection is updated, and vice versa.
 
-##Example:
+####Example:
 
 ```
 	var collection = new BetaJS.Collections.Collection(

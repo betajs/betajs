@@ -1,3 +1,4 @@
+
 test("test route parser", function() {
 	var routeParser = new BetaJS.Router.RouteParser({
 		"simple": "/simple",

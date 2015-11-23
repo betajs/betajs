@@ -1,12 +1,14 @@
 
-BetaJS is a 'lightweight' Javascript Framework with several independent, combinable Frameworks
-to for writing full stack web applications.
+BetaJS is the module/library at the Core of the BetaJS Framework.
 
-For this some parts build on other current well-established web technologies: NodesJS, JQuery and Socket.io
+Almost all other modules use parts of this library (with the exception of BetaJS scoped).
+If you will it is the engine roome of the Framework containing many
+of the main concepts used in the Framework as well as a couple of "Helper Functions".
 
-One of the goals of BetaJS is to be rapidly and easily deployable for demos and prototypes,
-with the added benefit of being able to scale these into production ready Products/
 
+## Dependencies
+
+-
 
 ## Overview of core features
 
