@@ -25,3 +25,39 @@ test("test empty events", function() {
 	e.trigger("test");
 	ok(true);
 });
+
+
+test("chained events", function () {
+	
+	var a = new BetaJS.Events.Events();
+	var b = new BetaJS.Events.Events();
+	b._eventChain = function () { return a; };
+	var c = new BetaJS.Events.Events();
+	c._eventChain = function () { return b; };
+	var d = new BetaJS.Events.Events();
+	d._eventChain = function () { return c; };
+	
+	var s ='';
+	
+	d.on("test", function (data) {
+		s += "d";
+	});
+
+	c.on("test", function (data) {
+		s += "c";
+	});
+
+	b.on("test", function (data) {
+		s += "b";
+		data.bubbles = false;
+	});
+	
+	a.on("test", function (data) {
+		s += "a";
+	});
+	
+	d.chainedTrigger("test");
+	
+	QUnit.equal(s, "dcb");
+	
+});

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.11 - 2015-11-23
+betajs - v1.0.13 - 2015-11-24
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '430.1448326038635'
+		version: '431.1448405133075'
 	};
 });
 
@@ -1687,7 +1687,22 @@ Scoped.define("module:Events.EventsMixin", [
 					}, this);
 				}, this);
 			}
-		}
+		},
+		
+		_eventChain: function () {},
+		
+		chainedTrigger: function (eventName, data) {
+			data = Objs.extend({
+				source: this,
+				bubbles: true
+			}, data);
+			this.trigger(eventName, data);
+			if (data.bubbles) {
+				var chain = this._eventChain();
+				if (chain && chain.chainedTrigger)
+					chain.chainedTrigger(eventName, data);
+			}
+	    }
 
 	};
 });
@@ -5678,7 +5693,7 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 			}
 			for ( i = 0; i < a.length; ++i)
 				a[i] = a[i].substring(len);
-			return a.join("\n").trim();
+			return this.trim(a.join("\n"));
 		},
 	
 		capitalize : function(input) {
@@ -5690,10 +5705,10 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		email_get_name : function(input) {
 		    input = input || "";
 			var temp = input.split("<");
-			input = temp[0].trim();
+			input = this.trim(temp[0]);
 			if (!input && temp.length > 1) {
 				temp = temp[1].split(">");
-				input = temp[0].trim();
+				input = this.trim(temp[0]);
 			}		
 			input = input.replace(/['"]/g, "").replace(/[\\._@]/g, " ");
 			return this.capitalize(input);
@@ -5702,18 +5717,22 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		email_get_email : function(input) {
 	        input = input || "";
 			var temp = input.split("<");
-			input = temp[0].trim();
+			input = this.trim(temp[0]);
 			if (temp.length > 1) {
 				temp = temp[1].split(">");
-				input = temp[0].trim();
+				input = this.trim(temp[0]);
 			}
-			input = input.replace(/'/g, "").replace(/"/g, "").trim();
+			input = this.trim(input.replace(/'/g, "").replace(/"/g, ""));
 			return input;
 		},
 	
 		email_get_salutatory_name : function(input) {
 	        input = input || "";
 			return (this.email_get_name(input).split(" "))[0];
+		},
+		
+		trim: function (s) {
+			return String.prototype.trim ? s.trim() : s.replace(/^\s+|\s+$/g, ''); 
 		},
 		
 		regexReplaceGroups: function (regex, args) {
@@ -6548,8 +6567,8 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__query = query;
 				this.__result = {};
 				this.__partials = {};
-				this.__register(node, 0, {});
 				this.__ids = 0;
+				this.__register(node, 0, {});
 			},
 
 			destroy: function () {

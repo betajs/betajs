@@ -177,7 +177,22 @@ Scoped.define("module:Events.EventsMixin", [
 					}, this);
 				}, this);
 			}
-		}
+		},
+		
+		_eventChain: function () {},
+		
+		chainedTrigger: function (eventName, data) {
+			data = Objs.extend({
+				source: this,
+				bubbles: true
+			}, data);
+			this.trigger(eventName, data);
+			if (data.bubbles) {
+				var chain = this._eventChain();
+				if (chain && chain.chainedTrigger)
+					chain.chainedTrigger(eventName, data);
+			}
+	    }
 
 	};
 });
