@@ -262,8 +262,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			};
 			this.__properties.bindings[key] = this.__properties.bindings[key] || [];
 			this.__properties.bindings[key].push(binding);
+			var self = this;
 			if (binding.left) {
-				var self = this;
 				binding.properties.on("strongchange:" + binding.key, function (value) {
 					self.set(key, value);
 				}, binding);
@@ -322,7 +322,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				}
 			}
 			binding.properties.on("destroy", function () {
-				this.unbind(key);
+				if (!self.destroyed())
+					self.unbind(key);
 			}, binding);
 			return this;
 		},
