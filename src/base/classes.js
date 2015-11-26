@@ -309,19 +309,19 @@ Scoped.define("module:Classes.ObjectIdMixin", ["module:Classes.ObjectIdScope", "
 	    },
 	
 	    __object_id_scope: function () {
-	        if (this.object_id_scope)
-	            return this.object_id_scope;
-	        return ObjectIdScope.singleton();
+	    	if (!this.object_id_scope)
+	    		this.object_id_scope = ObjectIdScope.singleton();
+            return this.object_id_scope;
 	    },
 	
 	    __register_object_id: function () {
 	        var scope = this.__object_id_scope();
-	        scope.__objects[Ids.objectId(this)] = this;
+	        scope.__objects[this.cid()] = this;
 	    },
 	
 	    __unregister_object_id: function () {
 	        var scope = this.__object_id_scope();
-	        delete scope.__objects[Ids.objectId(this)];
+	        delete scope.__objects[this.cid()];
 	    }
 	
 	};

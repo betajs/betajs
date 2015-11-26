@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.13 - 2015-11-24
+betajs - v1.0.13 - 2015-11-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -557,7 +557,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.13 - 2015-11-24
+betajs - v1.0.13 - 2015-11-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '431.1448405133075'
+		version: '432.1448505320032'
 	};
 });
 
@@ -1454,19 +1454,19 @@ Scoped.define("module:Classes.ObjectIdMixin", ["module:Classes.ObjectIdScope", "
 	    },
 	
 	    __object_id_scope: function () {
-	        if (this.object_id_scope)
-	            return this.object_id_scope;
-	        return ObjectIdScope.singleton();
+	    	if (!this.object_id_scope)
+	    		this.object_id_scope = ObjectIdScope.singleton();
+            return this.object_id_scope;
 	    },
 	
 	    __register_object_id: function () {
 	        var scope = this.__object_id_scope();
-	        scope.__objects[Ids.objectId(this)] = this;
+	        scope.__objects[this.cid()] = this;
 	    },
 	
 	    __unregister_object_id: function () {
 	        var scope = this.__object_id_scope();
-	        delete scope.__objects[Ids.objectId(this)];
+	        delete scope.__objects[this.cid()];
 	    }
 	
 	};
