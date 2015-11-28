@@ -60,7 +60,7 @@ module.exports = function(grunt) {
 						es3 : true,
 						smarttabs: true
 					},
-					source : [ "./src/base/*.js", "./src/net/*.js" ],
+					source : [ "./src/*/*.js" ],
 					dist : [ "./dist/beta-noscoped.js", "./dist/beta.js" ],
 					gruntfile : [ "./Gruntfile.js" ],
 					tests : [ "./tests/base/*.js" ]
