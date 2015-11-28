@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.13 - 2015-11-26
+betajs - v1.0.14 - 2015-11-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -557,7 +557,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.13 - 2015-11-26
+betajs - v1.0.14 - 2015-11-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '433.1448558111406'
+		version: '434.1448680681190'
 	};
 });
 
@@ -1619,13 +1619,19 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Lists.ArrayList",
 	    "module:Ids",
 	    "module:Properties.Properties",
-	    "module:Iterators.ArrayIterator"
-	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, scoped) {
+	    "module:Iterators.ArrayIterator",
+	    "module:Types"
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
 			constructor : function(options) {
 				inherited.constructor.call(this);
+				if (Types.is_array(options)) {
+					options = {
+						objects: options
+					};
+				}
 				options = options || {};
 				this.__indices = {};
 				if (options.indices)
@@ -4760,8 +4766,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
 			} else if (force) {
-				this.trigger("change", key, value, oldValue);
-				this.trigger("change:" + key, value, oldValue);
+				this.trigger("change", key, value, oldValue, true);
+				this.trigger("change:" + key, value, oldValue, true);
 			}
 			return this;
 		},

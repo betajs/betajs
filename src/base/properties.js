@@ -415,8 +415,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
 			} else if (force) {
-				this.trigger("change", key, value, oldValue);
-				this.trigger("change:" + key, value, oldValue);
+				this.trigger("change", key, value, oldValue, true);
+				this.trigger("change:" + key, value, oldValue, true);
 			}
 			return this;
 		},

@@ -6,13 +6,19 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Lists.ArrayList",
 	    "module:Ids",
 	    "module:Properties.Properties",
-	    "module:Iterators.ArrayIterator"
-	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, scoped) {
+	    "module:Iterators.ArrayIterator",
+	    "module:Types"
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
 			constructor : function(options) {
 				inherited.constructor.call(this);
+				if (Types.is_array(options)) {
+					options = {
+						objects: options
+					};
+				}
 				options = options || {};
 				this.__indices = {};
 				if (options.indices)
