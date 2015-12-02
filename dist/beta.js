@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.16 - 2015-12-01
+betajs - v1.0.16 - 2015-12-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -557,7 +557,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.16 - 2015-12-01
+betajs - v1.0.16 - 2015-12-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '436.1449031710032'
+		version: '437.1449100126572'
 	};
 });
 
@@ -7528,7 +7528,7 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 			
 			constructor: function (options, transitionals) {
 				inherited.constructor.call(this);
-				this.__transitionals = {};
+				this._transitionals = {};
 			},
 			
 			_initializer: function () {
@@ -7541,8 +7541,8 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 				}, this);
 			},
 			
-			_transitionals: function () {
-				return this.__transitionals;
+			transitionals: function () {
+				return this._transitionals;
 			},
 			
 			_afterInitialize: function () {
@@ -7562,11 +7562,14 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 		},
 		
 		create: function (options) {
+			var promise = Promise.create();
 			var reg = Objs.clone(this.__registry, 1);
 			var transitionals = {};
 			var next = function () {
-				if (!reg.length)
-					return Promise.error(true);
+				if (!reg.length) {
+					promise.asyncError(true);
+					return;
+				}
 				var p = -1;
 				var j = -1;
 				for (var i = 0; i < reg.length; ++i) {
@@ -7578,15 +7581,16 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 				var cls = reg[j].cls;
 				reg.splice(j, 1);
 				var instance = new cls(options, transitionals);
-				return instance._initialize().mapError(function () {
-					transitionals = instance._transitionals();
+				instance._initialize().error(function () {
+					transitionals = instance.transitionals();
 					instance.destroy();
-					return next.call(this);
-				}, this).mapSuccess(function () {
-					return instance;
+					next.call(this);
+				}, this).success(function () {
+					promise.asyncSuccess(instance);
 				});
 			};
-			return next.call(this);
+			next.call(this);
+			return promise;
 		}
 		
 	});	

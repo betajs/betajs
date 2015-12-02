@@ -67,7 +67,7 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 			
 			constructor: function (options, transitionals) {
 				inherited.constructor.call(this);
-				this.__transitionals = {};
+				this._transitionals = {};
 			},
 			
 			_initializer: function () {
@@ -80,8 +80,8 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 				}, this);
 			},
 			
-			_transitionals: function () {
-				return this.__transitionals;
+			transitionals: function () {
+				return this._transitionals;
 			},
 			
 			_afterInitialize: function () {
@@ -101,11 +101,14 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 		},
 		
 		create: function (options) {
+			var promise = Promise.create();
 			var reg = Objs.clone(this.__registry, 1);
 			var transitionals = {};
 			var next = function () {
-				if (!reg.length)
-					return Promise.error(true);
+				if (!reg.length) {
+					promise.asyncError(true);
+					return;
+				}
 				var p = -1;
 				var j = -1;
 				for (var i = 0; i < reg.length; ++i) {
@@ -117,15 +120,16 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 				var cls = reg[j].cls;
 				reg.splice(j, 1);
 				var instance = new cls(options, transitionals);
-				return instance._initialize().mapError(function () {
-					transitionals = instance._transitionals();
+				instance._initialize().error(function () {
+					transitionals = instance.transitionals();
 					instance.destroy();
-					return next.call(this);
-				}, this).mapSuccess(function () {
-					return instance;
+					next.call(this);
+				}, this).success(function () {
+					promise.asyncSuccess(instance);
 				});
 			};
-			return next.call(this);
+			next.call(this);
+			return promise;
 		}
 		
 	});	
