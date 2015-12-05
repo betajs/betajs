@@ -7,8 +7,9 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Ids",
 	    "module:Properties.Properties",
 	    "module:Iterators.ArrayIterator",
+	    "module:Iterators.FilteredIterator",
 	    "module:Types"
-	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, Types, scoped) {
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -189,6 +190,12 @@ Scoped.define("module:Collections.Collection", [
 			
 			iterator: function () {
 				return ArrayIterator.byIterate(this.iterate, this);
+			},
+			
+			query: function (subset) {
+				return new FilteredIterator(this.iterator(), function (prop) {
+					return prop.isSupersetOf(subset); 
+				});
 			},
 			
 			clear: function () {

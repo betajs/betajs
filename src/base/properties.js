@@ -449,6 +449,14 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		pid: function () {
 			return this.cid();
+		},
+		
+		isSubsetOf: function (props) {
+			return Objs.subset_of(this.data(), props.data ? props.data() : props);
+		},
+		
+		isSupersetOf: function (props) {
+			return Objs.superset_of(this.data(), props.data ? props.data() : props);
 		}
 		
 	};

@@ -219,6 +219,19 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return c;
 		},
+		
+		subset_of: function (a, b) {
+			a = Types.is_array(a) ? this.objectify(a) : a;
+			b = Types.is_array(b) ? this.objectify(b) : b;
+			for (var key in a)
+				if (a[key] != b[key])
+					return false;
+			return true;
+		},
+		
+		superset_of: function (a, b) {
+			return this.subset_of(b, a);
+		},
 
 		contains_key: function (obj, key) {
 			if (Types.is_array(obj))

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.16 - 2015-12-05
+betajs - v1.0.17 - 2015-12-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '438.1449321794497'
+		version: '439.1449345011042'
 	};
 });
 
@@ -1008,8 +1008,9 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Ids",
 	    "module:Properties.Properties",
 	    "module:Iterators.ArrayIterator",
+	    "module:Iterators.FilteredIterator",
 	    "module:Types"
-	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, Types, scoped) {
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -1190,6 +1191,12 @@ Scoped.define("module:Collections.Collection", [
 			
 			iterator: function () {
 				return ArrayIterator.byIterate(this.iterate, this);
+			},
+			
+			query: function (subset) {
+				return new FilteredIterator(this.iterator(), function (prop) {
+					return prop.isSupersetOf(subset); 
+				});
 			},
 			
 			clear: function () {
@@ -3159,6 +3166,19 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return c;
 		},
+		
+		subset_of: function (a, b) {
+			a = Types.is_array(a) ? this.objectify(a) : a;
+			b = Types.is_array(b) ? this.objectify(b) : b;
+			for (var key in a)
+				if (a[key] != b[key])
+					return false;
+			return true;
+		},
+		
+		superset_of: function (a, b) {
+			return this.subset_of(b, a);
+		},
 
 		contains_key: function (obj, key) {
 			if (Types.is_array(obj))
@@ -4196,6 +4216,14 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		pid: function () {
 			return this.cid();
+		},
+		
+		isSubsetOf: function (props) {
+			return Objs.subset_of(this.data(), props.data ? props.data() : props);
+		},
+		
+		isSupersetOf: function (props) {
+			return Objs.superset_of(this.data(), props.data ? props.data() : props);
 		}
 		
 	};

@@ -126,3 +126,18 @@ test("test concat collection", function () {
 	var concat_list = new BetaJS.Collections.ConcatCollection([list1, list2]);
 	QUnit.equal(concat_list.count(), 5);
 });
+
+
+test("test collection query", function () {
+	var objs = [
+		new BetaJS.Properties.Properties({"text": "A Example Z"}),
+        new BetaJS.Properties.Properties({"text": "D Example W"}),
+        new BetaJS.Properties.Properties({"text": "C Example X"}),
+        new BetaJS.Properties.Properties({"text": "B Example Y"}),
+        new BetaJS.Properties.Properties({"text": "E Example V"})
+    ];
+	var list = new BetaJS.Collections.Collection({
+		objects: objs
+    });
+	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 1);
+});
