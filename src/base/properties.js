@@ -81,6 +81,16 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			resolved.props.set(resolved.key, value);
 		},
 		
+		uncomputeProp: function (key) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.uncompute(resolved.key);
+		},
+		
+		computeProp: function (key, func) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.compute(resolved.key, func);
+		},
+
 		get: function (key) {
 			return Scopes.get(key, this.__properties.data);
 		},
