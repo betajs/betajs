@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.17 - 2015-12-05
+betajs - v1.0.19 - 2015-12-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '439.1449345011042'
+		version: '441.1449625201418'
 	};
 });
 
@@ -460,6 +460,10 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		
 		is_class_instance: function (obj) {
 			return obj && Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
+		},
+		
+		is_pure_json: function (obj) {
+			return obj && Types.is_object(obj) && !this.is_class_instance(obj);
 		},
 		
 		is_instance_of: function (obj) {
@@ -6925,6 +6929,8 @@ Scoped.define("module:Types", function () {
 				return parseInt(x, 10);
 			if (type == "date" || type == "time" || type == "datetime")
 				return parseInt(x, 10);
+			if (type == "float" || type == "double")
+				return parseFloat(x);
 			return x;
 		},
 		

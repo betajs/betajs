@@ -195,6 +195,8 @@ Scoped.define("module:Types", function () {
 				return parseInt(x, 10);
 			if (type == "date" || type == "time" || type == "datetime")
 				return parseInt(x, 10);
+			if (type == "float" || type == "double")
+				return parseFloat(x);
 			return x;
 		},
 		
