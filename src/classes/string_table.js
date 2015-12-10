@@ -19,12 +19,20 @@ Scoped.define("module:Classes.Taggable", [
 			return this;
 		},
 		
+		removeTags: function (tags) {
+			Objs.iter(tags, this.removeTag, this);
+		},
+		
 		addTag: function (tag) {
 			this.__tags[tag] = true;
 			this._notify("tags-changed");
 			return this;
 		},
 		
+		addTags: function (tags) {
+			Objs.iter(tags, this.addTag, this);
+		},
+
 		tagIntersect: function (tags) {
 			return Objs.filter(tags, this.hasTag, this);
 		}
@@ -111,4 +119,48 @@ Scoped.define("module:Classes.StringTable", [
 
 		};
 	}]);
+});
+
+
+
+Scoped.define("module:Classes.LocaleTable", [
+	"module:Classes.StringTable"
+], function (StringTable, scoped) {
+	return StringTable.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			__locale: null,
+			
+			_localeTags: function (locale) {
+				if (!locale)
+					return null;
+				var result = [];
+				result.push("language:" + locale);
+				if (locale.indexOf("-") > 0)
+					result.push("language:" + locale.substring(0, locale.indexOf("-")));
+				return result;
+			},
+
+			clearLocale: function () {
+				this.removeTags(this._localeTags(this.__locale));
+				this.__locale = null;
+			},
+			
+			setLocale: function (locale) {
+				this.clearLocale();
+				this.__locale = this._localeTags(locale);
+				this.addTags(this.__locale);
+			},
+			
+			isLocaleSet: function () {
+				return !!this.__locale;
+			},
+			
+			setWeakLocale: function (locale) {
+				if (!this.isLocaleSet())
+					this.setLocale(locale);
+			}
+			
+		};
+	});
 });
