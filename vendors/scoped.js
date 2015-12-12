@@ -1,5 +1,5 @@
 /*!
-betajs-scoped - v0.0.1 - 2015-07-08
+betajs-scoped - v0.0.2 - 2015-07-08
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -285,12 +285,14 @@ function newNamespace (options) {
 	
 	function nodeUnresolvedWatchers(node, base, result) {
 		node = node || nsRoot;
-		base = base ? base + "." + node.route : node.route;
 		result = result || [];
 		if (!node.ready)
 			result.push(base);
-		for (var k in node.children)
-			result = nodeUnresolvedWatchers(node.children[k], base, result);
+		for (var k in node.children) {
+			var c = node.children[k];
+			var r = (base ? base + "." : "") + c.route;
+			result = nodeUnresolvedWatchers(c, r, result);
+		}
 		return result;
 	}
 
@@ -327,8 +329,8 @@ function newNamespace (options) {
 			nodeAddWatcher(nodeNavigate(path), callback, context);
 		},
 		
-		unresolvedWatchers: function () {
-			return nodeUnresolvedWatchers();
+		unresolvedWatchers: function (path) {
+			return nodeUnresolvedWatchers(nodeNavigate(path), path);
 		}
 		
 	};
@@ -525,7 +527,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 		
 		unresolved: function (namespaceLocator) {
 			var ns = this.resolve(namespaceLocator);
-			return ns.namespace.unresolvedWatchers();
+			return ns.namespace.unresolvedWatchers(ns.path);
 		}
 		
 	};
@@ -538,7 +540,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '9.9436381745302',
+	version: '9.9436392609879',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,

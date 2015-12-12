@@ -1,10 +1,10 @@
 /*!
-betajs - v1.0.21 - 2015-12-11
+betajs - v1.0.22 - 2015-12-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
 /*!
-betajs-scoped - v0.0.1 - 2015-07-08
+betajs-scoped - v0.0.2 - 2015-07-08
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -290,12 +290,14 @@ function newNamespace (options) {
 	
 	function nodeUnresolvedWatchers(node, base, result) {
 		node = node || nsRoot;
-		base = base ? base + "." + node.route : node.route;
 		result = result || [];
 		if (!node.ready)
 			result.push(base);
-		for (var k in node.children)
-			result = nodeUnresolvedWatchers(node.children[k], base, result);
+		for (var k in node.children) {
+			var c = node.children[k];
+			var r = (base ? base + "." : "") + c.route;
+			result = nodeUnresolvedWatchers(c, r, result);
+		}
 		return result;
 	}
 
@@ -332,8 +334,8 @@ function newNamespace (options) {
 			nodeAddWatcher(nodeNavigate(path), callback, context);
 		},
 		
-		unresolvedWatchers: function () {
-			return nodeUnresolvedWatchers();
+		unresolvedWatchers: function (path) {
+			return nodeUnresolvedWatchers(nodeNavigate(path), path);
 		}
 		
 	};
@@ -530,7 +532,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 		
 		unresolved: function (namespaceLocator) {
 			var ns = this.resolve(namespaceLocator);
-			return ns.namespace.unresolvedWatchers();
+			return ns.namespace.unresolvedWatchers(ns.path);
 		}
 		
 	};
@@ -543,7 +545,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '9.9436381745302',
+	version: '9.9436392609879',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -556,8 +558,9 @@ Public = Public.upgrade();
 Public.exports();
 	return Public;
 }).call(this);
+
 /*!
-betajs - v1.0.21 - 2015-12-11
+betajs - v1.0.22 - 2015-12-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +573,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '443.1449878831909'
+		version: '444.1449951728394'
 	};
 });
 
