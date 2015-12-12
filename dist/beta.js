@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.20 - 2015-12-09
+betajs - v1.0.21 - 2015-12-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -557,7 +557,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.20 - 2015-12-09
+betajs - v1.0.21 - 2015-12-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +570,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '442.1449693402394'
+		version: '443.1449878831909'
 	};
 });
 
@@ -2161,6 +2161,10 @@ Scoped.define("module:Events.EventsMixin", [
 		},
 
 		trigger: function(events) {
+			if (this.__suspendedEvents > 0) {
+				this.__suspendedEventsQueue.push(arguments);
+				return this;
+			}
 			var self = this;
 			events = events.split(this.EVENT_SPLITTER);
 			var rest = Functions.getArguments(arguments, 1);
@@ -2223,6 +2227,23 @@ Scoped.define("module:Events.EventsMixin", [
 				if (chain && chain.chainedTrigger)
 					chain.chainedTrigger(eventName, data);
 			}
+	    },
+	    
+	    __suspendedEvents: 0,
+	    __suspendedEventsQueue: [],
+	    
+	    suspendEvents: function () {
+	    	this.__suspendedEvents++;
+	    },
+	    
+	    resumeEvents: function () {
+	    	this.__suspendedEvents--;
+	    	if (this.__suspendedEvents !== 0)
+	    		return;
+	    	Objs.iter(this.__suspendedEventsQueue, function (ev) {
+	    		this.trigger.apply(this, ev);
+	    	}, this);
+	    	this.__suspendedEventsQueue = [];
 	    }
 
 	};
@@ -5783,10 +5804,12 @@ Scoped.define("module:States.State", [
 					this["_" + this._persistents[i]] = args[this._persistents[i]];
 					used[this._locals[i]] = true;
 				}
+				host.suspendEvents();
 				Objs.iter(args, function (value, key) {
 					if (!used[key])
 						host.set(key, value);
 				}, this);
+				host.resumeEvents();
 			},
 			
 			allAttr: function () {
