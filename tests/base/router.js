@@ -44,7 +44,9 @@ test("test router history", function () {
 test("test router with states", function () {
 	var router = new BetaJS.Router.Router();
 	var host = new BetaJS.States.Host();
-	var binder = new BetaJS.Router.StateRouteBinder(router, host);
+	var binder = new BetaJS.Router.StateRouteBinder(router, host, {
+		capitalizeStates: true
+	});
 	
 	binder.register("simple", "/simple");
 	binder.register("polymorphic", "/polymorphic/(key:first|second)");

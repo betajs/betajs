@@ -200,7 +200,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		if (this.__auto_destroy_list) {
 			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
 				if ("destroy" in this.__auto_destroy_list[i])
-					this.__auto_destroy_list[i].destroy();
+					this.__auto_destroy_list[i].weakDestroy();
 			}
 		}
 		var cid = this.cid();
