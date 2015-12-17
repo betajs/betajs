@@ -7,7 +7,7 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 
 			constructor : function(routes) {
 				inherited.constructor.call(this);
-				this.routes = [];
+				this.routes = {};
 				Objs.iter(routes, function(route, key) {
 					this.bind(key, route);
 				}, this);

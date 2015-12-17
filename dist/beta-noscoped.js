@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.23 - 2015-12-14
+betajs - v1.0.23 - 2015-12-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '445.1450149879588'
+		version: '446.1450314041414'
 	};
 });
 
@@ -4680,7 +4680,7 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 
 			constructor : function(routes) {
 				inherited.constructor.call(this);
-				this.routes = [];
+				this.routes = {};
 				Objs.iter(routes, function(route, key) {
 					this.bind(key, route);
 				}, this);
