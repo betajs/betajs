@@ -213,7 +213,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			BetaJS.Objs.iter(deps, function (dep) {
+			Objs.iter(deps, function (dep) {
 				var value = dep.properties.get(dep.key);
 				// Ugly way of checking whether an EventsMixin is present - please improve in the future on this
 				if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {

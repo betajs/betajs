@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.23 - 2015-12-16
+betajs - v1.0.24 - 2015-12-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '446.1450314041414'
+		version: '447.1450643397868'
 	};
 });
 
@@ -4022,7 +4022,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			BetaJS.Objs.iter(deps, function (dep) {
+			Objs.iter(deps, function (dep) {
 				var value = dep.properties.get(dep.key);
 				// Ugly way of checking whether an EventsMixin is present - please improve in the future on this
 				if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
