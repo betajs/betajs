@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.24 - 2015-12-20
+betajs - v1.0.25 - 2015-12-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -560,7 +560,7 @@ Public.exports();
 }).call(this);
 
 /*!
-betajs - v1.0.24 - 2015-12-20
+betajs - v1.0.25 - 2015-12-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -573,7 +573,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '447.1450643397868'
+		version: '448.1450740696788'
 	};
 });
 
@@ -1136,6 +1136,39 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		return this.cls.ancestor_of(cls);
 	};
 	
+	Class.prototype.inspect = function () {
+		return {
+			header: {
+				cid: this.cid(),
+				classname: this.cls.classname,
+				destroyed: this.destroyed()
+			},
+			attributes: {
+				attributes_public: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				attributes_protected: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				attributes_private: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			},
+			methods: {
+				methods_public: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				methods_protected: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				method_private: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			}
+		};
+	};
+
+	
 	// Legacy Methods
 	
 	Class.prototype._auto_destroy = function(obj) {
@@ -1145,7 +1178,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	Class.prototype._inherited = function (cls, func) {
 		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 	};
-		
+	
 	return Class;
 
 });

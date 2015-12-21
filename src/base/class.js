@@ -260,6 +260,39 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		return this.cls.ancestor_of(cls);
 	};
 	
+	Class.prototype.inspect = function () {
+		return {
+			header: {
+				cid: this.cid(),
+				classname: this.cls.classname,
+				destroyed: this.destroyed()
+			},
+			attributes: {
+				attributes_public: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				attributes_protected: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				attributes_private: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			},
+			methods: {
+				methods_public: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				methods_protected: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				method_private: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			}
+		};
+	};
+
+	
 	// Legacy Methods
 	
 	Class.prototype._auto_destroy = function(obj) {
@@ -269,7 +302,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	Class.prototype._inherited = function (cls, func) {
 		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 	};
-		
+	
 	return Class;
 
 });
