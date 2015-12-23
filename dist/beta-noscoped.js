@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.25 - 2015-12-21
+betajs - v1.0.25 - 2015-12-23
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '448.1450740696788'
+		version: '449.1450889499906'
 	};
 });
 
@@ -3504,8 +3504,13 @@ Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Ob
 });
 
 
-Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Async"], function (Types, Functions, Async) {
-	return {		
+Scoped.define("module:Promise", [
+    "module:Types",
+    "module:Functions",
+    "module:Async",
+    "module:Objs"
+], function (Types, Functions, Async, Objs) {
+	var Promise = {		
 			
 		Promise: function (value, error, finished) {
 			this.__value = error ? null : (value || null);
@@ -3676,13 +3681,8 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 		}
 		
 	};
-});
-
-
-Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Functions"], function (Promise, Functions) {
 	
-	return {
-		
+	Objs.extend(Promise.Promise.prototype, {
 		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
 		
 		success: function (f, context, options) {
@@ -3836,10 +3836,12 @@ Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Fun
 			var result = Promise.and(this);
 			return result.and(promises);
 		}
-			
-	};
+	});
 	
+	return Promise;
 });
+
+
 Scoped.define("module:Properties.PropertiesMixin", [
     "module:Objs.Scopes",
     "module:Objs",
