@@ -1,5 +1,10 @@
-Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Async"], function (Types, Functions, Async) {
-	return {		
+Scoped.define("module:Promise", [
+    "module:Types",
+    "module:Functions",
+    "module:Async",
+    "module:Objs"
+], function (Types, Functions, Async, Objs) {
+	var Promise = {		
 			
 		Promise: function (value, error, finished) {
 			this.__value = error ? null : (value || null);
@@ -170,13 +175,8 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 		}
 		
 	};
-});
-
-
-Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Functions"], function (Promise, Functions) {
 	
-	return {
-		
+	Objs.extend(Promise.Promise.prototype, {
 		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
 		
 		success: function (f, context, options) {
@@ -330,7 +330,8 @@ Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Fun
 			var result = Promise.and(this);
 			return result.and(promises);
 		}
-			
-	};
+	});
 	
+	return Promise;
 });
+

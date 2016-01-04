@@ -61,3 +61,25 @@ test("chained events", function () {
 	QUnit.equal(s, "dcb");
 	
 });
+
+
+test("test persistent events", function() {
+	var e = new BetaJS.Events.Events();
+	e.trigger("event1");
+	var x = 0;
+	e.on("event1", function () {
+		x++;
+	});
+	var y = 0;
+	e.on("event2", function () {
+		y++;
+	});
+	e.persistentTrigger("event2");
+	var z = 0;
+	e.on("event2", function () {
+		z++;
+	});
+	QUnit.equal(x, 0);
+	QUnit.equal(y, 1);
+	QUnit.equal(z, 1);
+});

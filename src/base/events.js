@@ -78,7 +78,13 @@ Scoped.define("module:Events.EventsMixin", [
 				if (!this.__events_mixin_events[event])
 					this._notify("register_event", event);
 				this.__events_mixin_events[event] = this.__events_mixin_events[event] || new LinkedList();
-				this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
+				var event_object = this.__create_event_object(callback, context, options);
+				this.__events_mixin_events[event].add(event_object);
+				if (this.__events_mixin_persistent_events && this.__events_mixin_persistent_events[event]) {
+					var argss = this.__events_mixin_persistent_events[event];
+					for (var i = 0; i < argss.length; ++i)
+						this.__call_event_object(event_object, argss[i]);
+				}
 			}
 			return this;
 		},
@@ -130,6 +136,10 @@ Scoped.define("module:Events.EventsMixin", [
 		},
 
 		trigger: function(events) {
+			if (this.__suspendedEvents > 0) {
+				this.__suspendedEventsQueue.push(arguments);
+				return this;
+			}
 			var self = this;
 			events = events.split(this.EVENT_SPLITTER);
 			var rest = Functions.getArguments(arguments, 1);
@@ -147,6 +157,17 @@ Scoped.define("module:Events.EventsMixin", [
 					});
 			}, this);
 			return this;
+		},
+		
+		persistentTrigger: function (events) {
+			this.trigger.apply(this, arguments);
+			events = events.split(this.EVENT_SPLITTER);
+			var rest = Functions.getArguments(arguments, 1);
+			this.__events_mixin_persistent_events = this.__events_mixin_persistent_events || [];
+			Objs.iter(events, function (event) {
+				this.__events_mixin_persistent_events[event] = this.__events_mixin_persistent_events[event] || [];
+				this.__events_mixin_persistent_events[event].push(rest);
+			}, this);
 		},
 
 		once: function (events, callback, context, options) {
@@ -192,6 +213,23 @@ Scoped.define("module:Events.EventsMixin", [
 				if (chain && chain.chainedTrigger)
 					chain.chainedTrigger(eventName, data);
 			}
+	    },
+	    
+	    __suspendedEvents: 0,
+	    __suspendedEventsQueue: [],
+	    
+	    suspendEvents: function () {
+	    	this.__suspendedEvents++;
+	    },
+	    
+	    resumeEvents: function () {
+	    	this.__suspendedEvents--;
+	    	if (this.__suspendedEvents !== 0)
+	    		return;
+	    	Objs.iter(this.__suspendedEventsQueue, function (ev) {
+	    		this.trigger.apply(this, ev);
+	    	}, this);
+	    	this.__suspendedEventsQueue = [];
 	    }
 
 	};

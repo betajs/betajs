@@ -147,6 +147,10 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 			return obj && Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
 		},
 		
+		is_pure_json: function (obj) {
+			return obj && Types.is_object(obj) && !this.is_class_instance(obj);
+		},
+		
 		is_instance_of: function (obj) {
 			return obj && this.is_class_instance(obj) && obj.instance_of(this);
 		},
@@ -196,7 +200,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		if (this.__auto_destroy_list) {
 			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
 				if ("destroy" in this.__auto_destroy_list[i])
-					this.__auto_destroy_list[i].destroy();
+					this.__auto_destroy_list[i].weakDestroy();
 			}
 		}
 		var cid = this.cid();
@@ -256,6 +260,39 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		return this.cls.ancestor_of(cls);
 	};
 	
+	Class.prototype.inspect = function () {
+		return {
+			header: {
+				cid: this.cid(),
+				classname: this.cls.classname,
+				destroyed: this.destroyed()
+			},
+			attributes: {
+				attributes_public: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				attributes_protected: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				attributes_private: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			},
+			methods: {
+				methods_public: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				methods_protected: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				method_private: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			}
+		};
+	};
+
+	
 	// Legacy Methods
 	
 	Class.prototype._auto_destroy = function(obj) {
@@ -265,7 +302,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	Class.prototype._inherited = function (cls, func) {
 		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 	};
-		
+	
 	return Class;
 
 });

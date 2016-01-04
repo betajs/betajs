@@ -7,7 +7,7 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 
 			constructor : function(routes) {
 				inherited.constructor.call(this);
-				this.routes = [];
+				this.routes = {};
 				Objs.iter(routes, function(route, key) {
 					this.bind(key, route);
 				}, this);
@@ -209,11 +209,14 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 
 			constructor : function(router, stateHost, options) {
 				this._stateHost = stateHost;
-				this._options = options || {};
+				options = Objs.extend({
+					capitalizeStates: false
+				}, options);
+				this._options = options;
 				this._routeToState = new RouteMap({
 					map : this._options.routeToState || function (name, args) {
 						return {
-							name: Strings.capitalize(name),
+							name: options.capitalizeStates ? Strings.capitalize(name) : name,
 							args: args
 						};
 					},
@@ -251,7 +254,7 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 
 			register: function (name, route, extension) {
 				this._router.bind(name, route);
-				this._stateHost.register(Strings.capitalize(name), extension);
+				this._stateHost.register(this._options.capitalizeStates ? Strings.capitalize(name) : name, extension);
 				return this;
 			},			
 

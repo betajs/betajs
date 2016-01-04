@@ -81,6 +81,16 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			resolved.props.set(resolved.key, value);
 		},
 		
+		uncomputeProp: function (key) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.uncompute(resolved.key);
+		},
+		
+		computeProp: function (key, func) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.compute(resolved.key, func);
+		},
+
 		get: function (key) {
 			return Scopes.get(key, this.__properties.data);
 		},
@@ -203,7 +213,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			BetaJS.Objs.iter(deps, function (dep) {
+			Objs.iter(deps, function (dep) {
 				var value = dep.properties.get(dep.key);
 				// Ugly way of checking whether an EventsMixin is present - please improve in the future on this
 				if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
@@ -439,6 +449,14 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		pid: function () {
 			return this.cid();
+		},
+		
+		isSubsetOf: function (props) {
+			return Objs.subset_of(this.data(), props.data ? props.data() : props);
+		},
+		
+		isSupersetOf: function (props) {
+			return Objs.superset_of(this.data(), props.data ? props.data() : props);
 		}
 		
 	};

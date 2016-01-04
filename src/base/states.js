@@ -155,10 +155,12 @@ Scoped.define("module:States.State", [
 					this["_" + this._persistents[i]] = args[this._persistents[i]];
 					used[this._locals[i]] = true;
 				}
+				host.suspendEvents();
 				Objs.iter(args, function (value, key) {
 					if (!used[key])
 						host.set(key, value);
 				}, this);
+				host.resumeEvents();
 			},
 			
 			allAttr: function () {

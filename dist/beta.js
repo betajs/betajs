@@ -1,10 +1,10 @@
 /*!
-betajs - v1.0.15 - 2015-11-28
+betajs - v1.0.25 - 2015-12-23
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
 /*!
-betajs-scoped - v0.0.1 - 2015-07-08
+betajs-scoped - v0.0.2 - 2015-07-08
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -290,12 +290,14 @@ function newNamespace (options) {
 	
 	function nodeUnresolvedWatchers(node, base, result) {
 		node = node || nsRoot;
-		base = base ? base + "." + node.route : node.route;
 		result = result || [];
 		if (!node.ready)
 			result.push(base);
-		for (var k in node.children)
-			result = nodeUnresolvedWatchers(node.children[k], base, result);
+		for (var k in node.children) {
+			var c = node.children[k];
+			var r = (base ? base + "." : "") + c.route;
+			result = nodeUnresolvedWatchers(c, r, result);
+		}
 		return result;
 	}
 
@@ -332,8 +334,8 @@ function newNamespace (options) {
 			nodeAddWatcher(nodeNavigate(path), callback, context);
 		},
 		
-		unresolvedWatchers: function () {
-			return nodeUnresolvedWatchers();
+		unresolvedWatchers: function (path) {
+			return nodeUnresolvedWatchers(nodeNavigate(path), path);
 		}
 		
 	};
@@ -530,7 +532,7 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 		
 		unresolved: function (namespaceLocator) {
 			var ns = this.resolve(namespaceLocator);
-			return ns.namespace.unresolvedWatchers();
+			return ns.namespace.unresolvedWatchers(ns.path);
 		}
 		
 	};
@@ -543,7 +545,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '9.9436381745302',
+	version: '9.9436392609879',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -556,8 +558,9 @@ Public = Public.upgrade();
 Public.exports();
 	return Public;
 }).call(this);
+
 /*!
-betajs - v1.0.15 - 2015-11-28
+betajs - v1.0.25 - 2015-12-23
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -570,7 +573,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '435.1448752595890'
+		version: '449.1450889499906'
 	};
 });
 
@@ -1020,6 +1023,10 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 			return obj && Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
 		},
 		
+		is_pure_json: function (obj) {
+			return obj && Types.is_object(obj) && !this.is_class_instance(obj);
+		},
+		
 		is_instance_of: function (obj) {
 			return obj && this.is_class_instance(obj) && obj.instance_of(this);
 		},
@@ -1069,7 +1076,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		if (this.__auto_destroy_list) {
 			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
 				if ("destroy" in this.__auto_destroy_list[i])
-					this.__auto_destroy_list[i].destroy();
+					this.__auto_destroy_list[i].weakDestroy();
 			}
 		}
 		var cid = this.cid();
@@ -1129,6 +1136,39 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		return this.cls.ancestor_of(cls);
 	};
 	
+	Class.prototype.inspect = function () {
+		return {
+			header: {
+				cid: this.cid(),
+				classname: this.cls.classname,
+				destroyed: this.destroyed()
+			},
+			attributes: {
+				attributes_public: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				attributes_protected: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				attributes_private: Objs.filter(this, function (value, key) {
+					return !Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			},
+			methods: {
+				methods_public: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") !== 0;
+				}, this),
+				methods_protected: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("_") === 0 && key.indexOf("__") !== 0;
+				}, this),
+				method_private: Objs.filter(this, function (value, key) {
+					return Types.is_function(value) && key.indexOf("__") === 0;
+				}, this)
+			}
+		};
+	};
+
+	
 	// Legacy Methods
 	
 	Class.prototype._auto_destroy = function(obj) {
@@ -1138,7 +1178,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	Class.prototype._inherited = function (cls, func) {
 		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 	};
-		
+	
 	return Class;
 
 });
@@ -1555,61 +1595,7 @@ Scoped.define("module:Classes.ContextRegistry", [
 
 
 
-Scoped.define("module:Classes.ConditionalInstance", [
-	 "module:Class",
-	 "module:Objs"
-], function (Class, Objs, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			constructor: function (options) {
-				inherited.constructor.call(this);
-				this._options = this.cls._initializeOptions(options);
-			}
-			
-		};
-	}, {
-		
-		_initializeOptions: function (options) {
-			return options;
-		},
-		
-		supported: function (options) {
-			return false;
-		}
-		
-	}, {
 
-		__registry: [],
-		
-		register: function (cls, priority) {
-			this.__registry.push({
-				cls: cls,
-				priority: priority
-			});
-		},
-		
-		match: function (options) {
-			options = this._initializeOptions(options);
-			var bestMatch = null;
-			Objs.iter(this.__registry, function (entry) {
-				if ((!bestMatch || bestMatch.priority < entry.priority) && entry.cls.supported(options))
-					bestMatch = entry;				
-			}, this);
-			return bestMatch;
-		},
-		
-		create: function (options) {
-			var match = this.match(options);
-			return match ? new match.cls(options) : null;
-		},
-		
-		anySupport: function (options) {
-			return this.match(options) !== null;
-		}
-		
-	});	
-});
 
 Scoped.define("module:Collections.Collection", [
 	    "module:Class",
@@ -1620,8 +1606,9 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Ids",
 	    "module:Properties.Properties",
 	    "module:Iterators.ArrayIterator",
+	    "module:Iterators.FilteredIterator",
 	    "module:Types"
-	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, Types, scoped) {
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -1802,6 +1789,12 @@ Scoped.define("module:Collections.Collection", [
 			
 			iterator: function () {
 				return ArrayIterator.byIterate(this.iterate, this);
+			},
+			
+			query: function (subset) {
+				return new FilteredIterator(this.iterator(), function (prop) {
+					return prop.isSupersetOf(subset); 
+				});
 			},
 			
 			clear: function () {
@@ -2152,7 +2145,13 @@ Scoped.define("module:Events.EventsMixin", [
 				if (!this.__events_mixin_events[event])
 					this._notify("register_event", event);
 				this.__events_mixin_events[event] = this.__events_mixin_events[event] || new LinkedList();
-				this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
+				var event_object = this.__create_event_object(callback, context, options);
+				this.__events_mixin_events[event].add(event_object);
+				if (this.__events_mixin_persistent_events && this.__events_mixin_persistent_events[event]) {
+					var argss = this.__events_mixin_persistent_events[event];
+					for (var i = 0; i < argss.length; ++i)
+						this.__call_event_object(event_object, argss[i]);
+				}
 			}
 			return this;
 		},
@@ -2204,6 +2203,10 @@ Scoped.define("module:Events.EventsMixin", [
 		},
 
 		trigger: function(events) {
+			if (this.__suspendedEvents > 0) {
+				this.__suspendedEventsQueue.push(arguments);
+				return this;
+			}
 			var self = this;
 			events = events.split(this.EVENT_SPLITTER);
 			var rest = Functions.getArguments(arguments, 1);
@@ -2221,6 +2224,17 @@ Scoped.define("module:Events.EventsMixin", [
 					});
 			}, this);
 			return this;
+		},
+		
+		persistentTrigger: function (events) {
+			this.trigger.apply(this, arguments);
+			events = events.split(this.EVENT_SPLITTER);
+			var rest = Functions.getArguments(arguments, 1);
+			this.__events_mixin_persistent_events = this.__events_mixin_persistent_events || [];
+			Objs.iter(events, function (event) {
+				this.__events_mixin_persistent_events[event] = this.__events_mixin_persistent_events[event] || [];
+				this.__events_mixin_persistent_events[event].push(rest);
+			}, this);
 		},
 
 		once: function (events, callback, context, options) {
@@ -2266,6 +2280,23 @@ Scoped.define("module:Events.EventsMixin", [
 				if (chain && chain.chainedTrigger)
 					chain.chainedTrigger(eventName, data);
 			}
+	    },
+	    
+	    __suspendedEvents: 0,
+	    __suspendedEventsQueue: [],
+	    
+	    suspendEvents: function () {
+	    	this.__suspendedEvents++;
+	    },
+	    
+	    resumeEvents: function () {
+	    	this.__suspendedEvents--;
+	    	if (this.__suspendedEvents !== 0)
+	    		return;
+	    	Objs.iter(this.__suspendedEventsQueue, function (ev) {
+	    		this.trigger.apply(this, ev);
+	    	}, this);
+	    	this.__suspendedEventsQueue = [];
 	    }
 
 	};
@@ -3771,6 +3802,19 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 			return c;
 		},
+		
+		subset_of: function (a, b) {
+			a = Types.is_array(a) ? this.objectify(a) : a;
+			b = Types.is_array(b) ? this.objectify(b) : b;
+			for (var key in a)
+				if (a[key] != b[key])
+					return false;
+			return true;
+		},
+		
+		superset_of: function (a, b) {
+			return this.subset_of(b, a);
+		},
 
 		contains_key: function (obj, key) {
 			if (Types.is_array(obj))
@@ -4021,8 +4065,13 @@ Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Ob
 });
 
 
-Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Async"], function (Types, Functions, Async) {
-	return {		
+Scoped.define("module:Promise", [
+    "module:Types",
+    "module:Functions",
+    "module:Async",
+    "module:Objs"
+], function (Types, Functions, Async, Objs) {
+	var Promise = {		
 			
 		Promise: function (value, error, finished) {
 			this.__value = error ? null : (value || null);
@@ -4193,13 +4242,8 @@ Scoped.define("module:Promise", ["module:Types", "module:Functions", "module:Asy
 		}
 		
 	};
-});
-
-
-Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Functions"], function (Promise, Functions) {
 	
-	return {
-		
+	Objs.extend(Promise.Promise.prototype, {
 		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
 		
 		success: function (f, context, options) {
@@ -4353,10 +4397,12 @@ Scoped.extend("module:Promise.Promise.prototype", ["module:Promise", "module:Fun
 			var result = Promise.and(this);
 			return result.and(promises);
 		}
-			
-	};
+	});
 	
+	return Promise;
 });
+
+
 Scoped.define("module:Properties.PropertiesMixin", [
     "module:Objs.Scopes",
     "module:Objs",
@@ -4440,6 +4486,16 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			resolved.props.set(resolved.key, value);
 		},
 		
+		uncomputeProp: function (key) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.uncompute(resolved.key);
+		},
+		
+		computeProp: function (key, func) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.compute(resolved.key, func);
+		},
+
 		get: function (key) {
 			return Scopes.get(key, this.__properties.data);
 		},
@@ -4562,7 +4618,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			BetaJS.Objs.iter(deps, function (dep) {
+			Objs.iter(deps, function (dep) {
 				var value = dep.properties.get(dep.key);
 				// Ugly way of checking whether an EventsMixin is present - please improve in the future on this
 				if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
@@ -4798,6 +4854,14 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		
 		pid: function () {
 			return this.cid();
+		},
+		
+		isSubsetOf: function (props) {
+			return Objs.subset_of(this.data(), props.data ? props.data() : props);
+		},
+		
+		isSupersetOf: function (props) {
+			return Objs.superset_of(this.data(), props.data ? props.data() : props);
 		}
 		
 	};
@@ -5212,7 +5276,7 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 
 			constructor : function(routes) {
 				inherited.constructor.call(this);
-				this.routes = [];
+				this.routes = {};
 				Objs.iter(routes, function(route, key) {
 					this.bind(key, route);
 				}, this);
@@ -5414,11 +5478,14 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 
 			constructor : function(router, stateHost, options) {
 				this._stateHost = stateHost;
-				this._options = options || {};
+				options = Objs.extend({
+					capitalizeStates: false
+				}, options);
+				this._options = options;
 				this._routeToState = new RouteMap({
 					map : this._options.routeToState || function (name, args) {
 						return {
-							name: Strings.capitalize(name),
+							name: options.capitalizeStates ? Strings.capitalize(name) : name,
 							args: args
 						};
 					},
@@ -5456,7 +5523,7 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 
 			register: function (name, route, extension) {
 				this._router.bind(name, route);
-				this._stateHost.register(Strings.capitalize(name), extension);
+				this._stateHost.register(this._options.capitalizeStates ? Strings.capitalize(name) : name, extension);
 				return this;
 			},			
 
@@ -5795,10 +5862,12 @@ Scoped.define("module:States.State", [
 					this["_" + this._persistents[i]] = args[this._persistents[i]];
 					used[this._locals[i]] = true;
 				}
+				host.suspendEvents();
 				Objs.iter(args, function (value, key) {
 					if (!used[key])
 						host.set(key, value);
 				}, this);
+				host.resumeEvents();
 			},
 			
 			allAttr: function () {
@@ -7499,6 +7568,8 @@ Scoped.define("module:Types", function () {
 				return parseInt(x, 10);
 			if (type == "date" || type == "time" || type == "datetime")
 				return parseInt(x, 10);
+			if (type == "float" || type == "double")
+				return parseFloat(x);
 			return x;
 		},
 		
@@ -7511,6 +7582,143 @@ Scoped.define("module:Types", function () {
 		
 		
 	};
+});
+
+Scoped.define("module:Classes.ConditionalInstance", [
+	 "module:Class",
+	 "module:Objs"
+], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				this._options = this.cls._initializeOptions(options);
+			}
+			
+		};
+	}, {
+		
+		_initializeOptions: function (options) {
+			return options;
+		},
+		
+		supported: function (options) {
+			return false;
+		}
+		
+	}, {
+
+		__registry: [],
+		
+		register: function (cls, priority) {
+			this.__registry.push({
+				cls: cls,
+				priority: priority
+			});
+		},
+		
+		match: function (options) {
+			options = this._initializeOptions(options);
+			var bestMatch = null;
+			Objs.iter(this.__registry, function (entry) {
+				if ((!bestMatch || bestMatch.priority < entry.priority) && entry.cls.supported(options))
+					bestMatch = entry;				
+			}, this);
+			return bestMatch;
+		},
+		
+		create: function (options) {
+			var match = this.match(options);
+			return match ? new match.cls(options) : null;
+		},
+		
+		anySupport: function (options) {
+			return this.match(options) !== null;
+		}
+		
+	});	
+});
+
+
+
+
+Scoped.define("module:Classes.OptimisticConditionalInstance", [
+	"module:Class",
+	"module:Objs",
+	"module:Promise"
+], function (Class, Objs, Promise, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options, transitionals) {
+				inherited.constructor.call(this);
+				this._transitionals = {};
+			},
+			
+			_initializer: function () {
+				// returns a promise
+			},
+			
+			_initialize: function () {
+				return this._initializer().success(function () {
+					this._afterInitialize();
+				}, this);
+			},
+			
+			transitionals: function () {
+				return this._transitionals;
+			},
+			
+			_afterInitialize: function () {
+				// setup
+			}
+		
+		};
+	}, {}, {
+		
+		__registry: [],
+		
+		register: function (cls, priority) {
+			this.__registry.push({
+				cls: cls,
+				priority: priority
+			});
+		},
+		
+		create: function (options) {
+			var promise = Promise.create();
+			var reg = Objs.clone(this.__registry, 1);
+			var transitionals = {};
+			var next = function () {
+				if (!reg.length) {
+					promise.asyncError(true);
+					return;
+				}
+				var p = -1;
+				var j = -1;
+				for (var i = 0; i < reg.length; ++i) {
+					if (reg[i].priority > p) {
+						p = reg[i].priority;
+						j = i;
+					}
+				}
+				var cls = reg[j].cls;
+				reg.splice(j, 1);
+				var instance = new cls(options, transitionals);
+				instance._initialize().error(function () {
+					transitionals = instance.transitionals();
+					instance.destroy();
+					next.call(this);
+				}, this).success(function () {
+					promise.asyncSuccess(instance);
+				});
+			};
+			next.call(this);
+			return promise;
+		}
+		
+	});	
 });
 
 Scoped.define("module:Classes.Taggable", [
@@ -7534,12 +7742,20 @@ Scoped.define("module:Classes.Taggable", [
 			return this;
 		},
 		
+		removeTags: function (tags) {
+			Objs.iter(tags, this.removeTag, this);
+		},
+		
 		addTag: function (tag) {
 			this.__tags[tag] = true;
 			this._notify("tags-changed");
 			return this;
 		},
 		
+		addTags: function (tags) {
+			Objs.iter(tags, this.addTag, this);
+		},
+
 		tagIntersect: function (tags) {
 			return Objs.filter(tags, this.hasTag, this);
 		}
@@ -7626,6 +7842,50 @@ Scoped.define("module:Classes.StringTable", [
 
 		};
 	}]);
+});
+
+
+
+Scoped.define("module:Classes.LocaleTable", [
+	"module:Classes.StringTable"
+], function (StringTable, scoped) {
+	return StringTable.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			__locale: null,
+			
+			_localeTags: function (locale) {
+				if (!locale)
+					return null;
+				var result = [];
+				result.push("language:" + locale);
+				if (locale.indexOf("-") > 0)
+					result.push("language:" + locale.substring(0, locale.indexOf("-")));
+				return result;
+			},
+
+			clearLocale: function () {
+				this.removeTags(this._localeTags(this.__locale));
+				this.__locale = null;
+			},
+			
+			setLocale: function (locale) {
+				this.clearLocale();
+				this.__locale = this._localeTags(locale);
+				this.addTags(this.__locale);
+			},
+			
+			isLocaleSet: function () {
+				return !!this.__locale;
+			},
+			
+			setWeakLocale: function (locale) {
+				if (!this.isLocaleSet())
+					this.setLocale(locale);
+			}
+			
+		};
+	});
 });
 Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], function (Exception, scoped) {
 	return Exception.extend({scoped: scoped}, function (inherited) {
