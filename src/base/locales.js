@@ -1,3 +1,11 @@
+/*
+ * 
+ * This module is deprecated and will be removed in future versions.
+ * 
+ * Use StringTable instead.
+ * 
+ */
+
 Scoped.define("module:Locales", function () {
 	return {
 		

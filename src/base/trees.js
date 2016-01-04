@@ -51,8 +51,8 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__query = query;
 				this.__result = {};
 				this.__partials = {};
-				this.__register(node, 0, {});
 				this.__ids = 0;
+				this.__register(node, 0, {});
 			},
 
 			destroy: function () {

@@ -8,13 +8,13 @@ Create a Collection:
 
 Create a Collection with Data inside:
 ```
-	var collection = new BetaJS.Collections.Collection(
-		{
-			item1: "This is Item 1";
-			item2: 2;
-			item3: 3;
-		}
-	);
+	var collection = new BetaJS.Collections.Collection({
+		objects: [{
+			{title: "This is Item 1"},
+			{title: "This is Item 2"},
+			{title: "This is Item 3"}
+		}]
+	});
 ```
 
 You can add, remove and access items as follows:
