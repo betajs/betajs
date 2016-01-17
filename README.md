@@ -1,4 +1,4 @@
-# betajs 1.0.18
+# betajs 1.0.27
 
 BetaJS is a general-purpose JavaScript framework for doing awesome things.
 
@@ -58,7 +58,7 @@ Active, Production ready
 
 ## License
 
-MIT
+Apache 2.0
 
 
 ## Credits

@@ -165,9 +165,9 @@ Scoped.define("module:Types", function () {
 		parseBool : function(x) {
 			if (this.is_boolean(x))
 				return x;
-			if (x == "true")
+			if (x === "true" || x === "")
 				return true;
-			if (x == "false")
+			if (x === "false")
 				return false;
 			return null;
 		},

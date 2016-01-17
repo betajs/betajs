@@ -1,7 +1,7 @@
 /*!
-betajs - v1.0.25 - 2015-12-23
+betajs - v1.0.27 - 2016-01-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
-MIT Software License.
+Apache 2.0 Software License.
 */
 /*!
 betajs-scoped - v0.0.2 - 2015-07-08
@@ -560,9 +560,9 @@ Public.exports();
 }).call(this);
 
 /*!
-betajs - v1.0.25 - 2015-12-23
+betajs - v1.0.27 - 2016-01-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
-MIT Software License.
+Apache 2.0 Software License.
 */
 (function () {
 
@@ -573,7 +573,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '449.1450889499906'
+		version: '450.1453059334650'
 	};
 });
 
@@ -7538,9 +7538,9 @@ Scoped.define("module:Types", function () {
 		parseBool : function(x) {
 			if (this.is_boolean(x))
 				return x;
-			if (x == "true")
+			if (x === "true" || x === "")
 				return true;
-			if (x == "false")
+			if (x === "false")
 				return false;
 			return null;
 		},
