@@ -217,7 +217,7 @@ module.exports = function(grunt) {
 									"browsers": [
 									    {"os": "ios", "os_version": "9.1"}, 
 									    {"os": "ios", "os_version": "7.0"},
-									    {"os": "android", "os_version": "5.0"},
+									    {"os": "android", "os_version": "4.4"},
 									    {"os": "android", "os_version": "4.0"}
 						            ]
 								}
