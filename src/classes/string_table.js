@@ -124,43 +124,28 @@ Scoped.define("module:Classes.StringTable", [
 
 
 Scoped.define("module:Classes.LocaleTable", [
-	"module:Classes.StringTable"
-], function (StringTable, scoped) {
-	return StringTable.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			__locale: null,
-			
-			_localeTags: function (locale) {
-				if (!locale)
-					return null;
-				var result = [];
-				result.push("language:" + locale);
-				if (locale.indexOf("-") > 0)
-					result.push("language:" + locale.substring(0, locale.indexOf("-")));
-				return result;
-			},
+	"module:Classes.StringTable",
+	"module:Classes.LocaleMixin"
+], function (StringTable, LocaleMixin, scoped) {
+	return StringTable.extend({scoped: scoped}, [LocaleMixin, {
 
-			clearLocale: function () {
-				this.removeTags(this._localeTags(this.__locale));
-				this.__locale = null;
-			},
+		_localeTags: function (locale) {
+			if (!locale)
+				return null;
+			var result = [];
+			result.push("language:" + locale);
+			if (locale.indexOf("-") > 0)
+				result.push("language:" + locale.substring(0, locale.indexOf("-")));
+			return result;
+		},
+
+		_clearLocale: function () {
+			this.removeTags(this._localeTags(this.getLocale()));
+		},
+
+		_setLocale: function (locale) {
+			this.addTags(this._localeTags(locale));
+		}
 			
-			setLocale: function (locale) {
-				this.clearLocale();
-				this.__locale = this._localeTags(locale);
-				this.addTags(this.__locale);
-			},
-			
-			isLocaleSet: function () {
-				return !!this.__locale;
-			},
-			
-			setWeakLocale: function (locale) {
-				if (!this.isLocaleSet())
-					this.setLocale(locale);
-			}
-			
-		};
-	});
+	}]);
 });
