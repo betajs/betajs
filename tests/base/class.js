@@ -182,3 +182,12 @@ test("test inheritance", function() {
 	ok(instance.y == 1);
 	ok(instance.x == 1);
 });
+
+
+test("test weak destroy", function () {	
+	var obj = new BetaJS.Class();
+	QUnit.equal(obj.destroyed(), false);
+	obj.weakDestroy();
+	QUnit.equal(obj.destroyed(), true);
+	obj.weakDestroy();
+});
