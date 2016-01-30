@@ -1,7 +1,7 @@
 /*!
-betajs - v1.0.25 - 2015-12-23
+betajs - v1.0.29 - 2016-01-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
-MIT Software License.
+Apache 2.0 Software License.
 */
 (function () {
 
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '449.1450889499906'
+		version: '454.1454100371350'
 	};
 });
 
@@ -6977,9 +6977,9 @@ Scoped.define("module:Types", function () {
 		parseBool : function(x) {
 			if (this.is_boolean(x))
 				return x;
-			if (x == "true")
+			if (x === "true" || x === "")
 				return true;
-			if (x == "false")
+			if (x === "false")
 				return false;
 			return null;
 		},
@@ -7160,6 +7160,73 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 	});	
 });
 
+Scoped.define("module:Classes.LocaleMixin", function () {
+    return {
+
+        _clearLocale: function () {},
+        _setLocale: function (locale) {},
+
+        getLocale: function () {
+            return this.__locale;
+        },
+
+        clearLocale: function () {
+            this._clearLocale();
+            this.__locale = null;
+        },
+
+        setLocale: function (locale) {
+            this.clearLocale();
+            this.__locale = locale;
+            this._setLocale(locale);
+        },
+
+        isLocaleSet: function () {
+            return !!this.__locale;
+        },
+
+        setWeakLocale: function (locale) {
+            if (!this.isLocaleSet())
+                this.setLocale(locale);
+        }
+
+    };
+});
+
+
+
+Scoped.define("module:Classes.LocaleAggregator", [
+    "module:Class",
+    "module:Classes.LocaleMixin",
+    "module:Objs"
+], function (Class, LocaleMixin, Objs, scoped) {
+    return Class.extend({scoped: scoped}, [LocaleMixin, function (inherited) {
+        return {
+
+            constructor: function () {
+                inherited.constructor.call(this);
+                this.__locales = [];
+            },
+
+            register: function (obj) {
+                this.__locales.push(obj);
+            },
+
+            _clearLocale: function () {
+                Objs.iter(this.__locales, function (obj) {
+                    obj.clearLocale();
+                }, this);
+            },
+
+            _setLocale: function (locale) {
+                Objs.iter(this.__locales, function (obj) {
+                    obj.setLocale(locale);
+                }, this);
+            }
+
+        };
+    }]);
+});
 Scoped.define("module:Classes.Taggable", [
     "module:Objs"
 ], function (Objs) {
@@ -7218,8 +7285,11 @@ Scoped.define("module:Classes.StringTable", [
 				}
 			},
 			
-			__strings: {},
-			__cache: {},
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__cache = {};
+				this.__strings = {};
+			},
 			
 			__resolveKey: function (key, prefix) {
 				if (prefix)
@@ -7286,75 +7356,60 @@ Scoped.define("module:Classes.StringTable", [
 
 
 Scoped.define("module:Classes.LocaleTable", [
-	"module:Classes.StringTable"
-], function (StringTable, scoped) {
-	return StringTable.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			__locale: null,
-			
-			_localeTags: function (locale) {
-				if (!locale)
-					return null;
-				var result = [];
-				result.push("language:" + locale);
-				if (locale.indexOf("-") > 0)
-					result.push("language:" + locale.substring(0, locale.indexOf("-")));
-				return result;
-			},
+	"module:Classes.StringTable",
+	"module:Classes.LocaleMixin"
+], function (StringTable, LocaleMixin, scoped) {
+	return StringTable.extend({scoped: scoped}, [LocaleMixin, {
 
-			clearLocale: function () {
-				this.removeTags(this._localeTags(this.__locale));
-				this.__locale = null;
-			},
+		_localeTags: function (locale) {
+			if (!locale)
+				return null;
+			var result = [];
+			result.push("language:" + locale);
+			if (locale.indexOf("-") > 0)
+				result.push("language:" + locale.substring(0, locale.indexOf("-")));
+			return result;
+		},
+
+		_clearLocale: function () {
+			this.removeTags(this._localeTags(this.getLocale()));
+		},
+
+		_setLocale: function (locale) {
+			this.addTags(this._localeTags(locale));
+		}
 			
-			setLocale: function (locale) {
-				this.clearLocale();
-				this.__locale = this._localeTags(locale);
-				this.addTags(this.__locale);
-			},
-			
-			isLocaleSet: function () {
-				return !!this.__locale;
-			},
-			
-			setWeakLocale: function (locale) {
-				if (!this.isLocaleSet())
-					this.setLocale(locale);
-			}
-			
-		};
-	});
+	}]);
 });
 Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], function (Exception, scoped) {
 	return Exception.extend({scoped: scoped}, function (inherited) {
 		return {
-		
+
 			constructor: function (status_code, status_text, data) {
 				inherited.constructor.call(this, status_code + ": " + status_text);
 				this.__status_code = status_code;
 				this.__status_text = status_text;
 				this.__data = data;
 			},
-			
+
 			status_code: function () {
 				return this.__status_code;
 			},
-			
+
 			status_text: function () {
 				return this.__status_text;
 			},
-			
+
 			data: function () {
 				return this.__data;
 			},
-			
+
 			json: function () {
 				var obj = inherited.json.call(this);
 				obj.data = this.data();
 				return obj;
 			}
-		
+
 		};
 	});
 });
@@ -7369,85 +7424,65 @@ Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], funct
  * 
  */
 
-Scoped.define("module:Net.AbstractAjax", ["module:Class", "module:Objs", "module:Net.AjaxException", "module:Net.Uri"], function (Class, Objs, AjaxException, Uri, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
+Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "module:Net.Uri" ], function(Class, Objs, Uri, scoped) {
+	return Class.extend({ scoped : scoped }, function(inherited) {
 		return {
 
-			constructor: function (options) {
+			constructor : function(options) {
 				inherited.constructor.call(this);
 				this.__options = Objs.extend({
-					"method": "GET",
-					"data": {}
+					"method" : "GET",
+					"data" : {}
 				}, options);
 			},
-			
-			syncCall: function (options) {
-				try {
-          if (this._shouldMap(options)) {
-            options = this._mapPutToPost(options);
-          }
 
-					return this._syncCall(Objs.extend(Objs.clone(this.__options, 1), options));
-				} catch (e) {
-					throw AjaxException.ensure(e);
-				}
-			},
-			
-			asyncCall: function (options) {
-
-        if (this._shouldMap(options)) {
-          options = this._mapPutToPost(options);
-        }
-
-				return this._asyncCall(Objs.extend(Objs.clone(this.__options, 1), options));
-			},
-			
-			_syncCall: function (options) {
-				throw "Unsupported";
-			},
-		
-			_asyncCall: function (options) {
-				throw "Unsupported";
+			asyncCall : function(options) {
+				if (this._shouldMap(options))
+					options = this._mapPutToPost(options);
+				return this._asyncCall(Objs.extend(Objs
+						.clone(this.__options, 1), options));
 			},
 
-      /**
-       * @method _shouldMap
-       *
-       * Check if should even attempt a mapping. Important to not assume
-       * that the method option is always specified.
-       *
-       * @return Boolean
-       */
-      _shouldMap: function (options) {
-        return this.__options.mapPutToPost &&
-          options.method && options.method.toLowerCase() === "put";
+			_asyncCall : function(options) {
+				throw "Abstract";
+			},
 
-      },
+			/**
+			 * @method _shouldMap
+			 * 
+			 * Check if should even attempt a mapping. Important to not assume
+			 * that the method option is always specified.
+			 * 
+			 * @return Boolean
+			 */
+			_shouldMap : function(options) {
+				return this.__options.mapPutToPost && options.method && options.method.toLowerCase() === "put";
+			},
 
-      /**
-       * @method _mapPutToPost
-       *
-       * Some implementations of PUT to not supporting sending data with the PUT
-       * request. This fix converts the Request to use POST, so the data is
-       * sent, but the server still thinks it is receiving a PUT request.
-       *
-       * @param {object} options
-       *
-       * @return {object}
-       */
-      _mapPutToPost: function(options) {
-        options.method = "POST";
-        options.uri = Uri.appendUriParams(
-          options.uri, {
-          _method: "PUT"
-        });
+			/**
+			 * @method _mapPutToPost
+			 * 
+			 * Some implementations of PUT to not supporting sending data with
+			 * the PUT request. This fix converts the Request to use POST, so
+			 * the data is sent, but the server still thinks it is receiving a
+			 * PUT request.
+			 * 
+			 * @param {object}
+			 *            options
+			 * 
+			 * @return {object}
+			 */
+			_mapPutToPost : function(options) {
+				options.method = "POST";
+				options.uri = Uri.appendUriParams(options.uri, {
+					_method : "PUT"
+				});
 
-        return options;
-      }
+				return options;
+			}
 		};
 	});
 });
-
 
 Scoped.define("module:Net.SocketSenderChannel", ["module:Channels.Sender", "module:Types"], function (Sender, Types, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {

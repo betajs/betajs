@@ -1,4 +1,4 @@
-# betajs 1.0.18
+# betajs 1.0.28
 
 BetaJS is a general-purpose JavaScript framework for doing awesome things.
 
@@ -19,10 +19,11 @@ Active, Production ready
 | Target | Versions |
 | :----- | -------: |
 | Firefox | 4 - Latest |
-| Chrome | 14 - Latest |
+| Chrome | 15 - Latest |
 | Safari | 4 - Latest |
 | Opera | 12 - Latest |
 | Internet Explorer | 6 - Latest |
+| Edge | 12 - Latest |
 | iOS | 7.0 - Latest |
 | Android | 4.0 - Latest |
 | NodeJS | 0.10 - Latest |
@@ -58,7 +59,7 @@ Active, Production ready
 
 ## License
 
-MIT
+Apache 2.0
 
 
 ## Credits

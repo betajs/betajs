@@ -128,7 +128,15 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"README.md" : ["readme.tpl"]
+							"README.md" : ["compile/readme.tpl"]
+						}
+					},
+					"license" : {
+						options : {
+							data: grunt.file.readJSON('package.json')
+						},
+						files : {
+							"LICENSE" : ["compile/license.tpl"]
 						}
 					},
 					"jsdoc": {
@@ -165,7 +173,7 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"jsdoc.conf.json": ["json.tpl"]
+							"jsdoc.conf.json": ["compile/json.tpl"]
 						}
 					},
 					"browserstack-desktop" : {
@@ -179,11 +187,12 @@ module.exports = function(grunt) {
 						              	'firefox_latest',
 									    'firefox_4',
 						                'chrome_latest',
-							            'chrome_14',
+							            'chrome_15',
 						                'safari_latest',
 							            'safari_4',
 						                'opera_latest', 
 									    'opera_12_15',
+									    "edge_latest",
 						                'ie_11',
 						                'ie_10',
 						                'ie_9',
@@ -195,7 +204,7 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"browserstack.json" : ["json.tpl"]
+							"browserstack.json" : ["compile/json.tpl"]
 						}
 					},
 					"browserstack-mobile" : {
@@ -206,7 +215,7 @@ module.exports = function(grunt) {
 									"test_framework" : "qunit",
 									"timeout": 10 * 60,
 									"browsers": [
-									    {"os": "ios", "os_version": "8.0"}, 
+									    {"os": "ios", "os_version": "9.1"}, 
 									    {"os": "ios", "os_version": "7.0"},
 									    {"os": "android", "os_version": "4.4"},
 									    {"os": "android", "os_version": "4.0"}
@@ -215,7 +224,7 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"browserstack.json" : ["json.tpl"]
+							"browserstack.json" : ["compile/json.tpl"]
 						}
 					}			
 				}
@@ -246,5 +255,6 @@ module.exports = function(grunt) {
 	grunt.registerTask('browserstack-desktop', [ 'template:browserstack-desktop', 'shell:browserstack', 'clean:browserstack' ]);
 	grunt.registerTask('browserstack-mobile', [ 'template:browserstack-mobile', 'shell:browserstack', 'clean:browserstack' ]);
 	grunt.registerTask('readme', [ 'template:readme' ]);
+	grunt.registerTask('license', [ 'template:license' ]);
 
 };
