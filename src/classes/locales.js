@@ -1,8 +1,6 @@
 Scoped.define("module:Classes.LocaleMixin", function () {
     return {
 
-        __locale: null,
-
         _clearLocale: function () {},
         _setLocale: function (locale) {},
 

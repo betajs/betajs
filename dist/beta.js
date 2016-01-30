@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.28 - 2016-01-25
+betajs - v1.0.29 - 2016-01-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -608,7 +608,7 @@ var Scoped = function () {
 }.call(this);
 
 /*!
-betajs - v1.0.28 - 2016-01-25
+betajs - v1.0.29 - 2016-01-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -621,7 +621,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '451.1453765252275'
+		version: '454.1454100371350'
 	};
 });
 
@@ -7772,8 +7772,6 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 Scoped.define("module:Classes.LocaleMixin", function () {
     return {
 
-        __locale: null,
-
         _clearLocale: function () {},
         _setLocale: function (locale) {},
 
@@ -7896,8 +7894,11 @@ Scoped.define("module:Classes.StringTable", [
 				}
 			},
 			
-			__strings: {},
-			__cache: {},
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__cache = {};
+				this.__strings = {};
+			},
 			
 			__resolveKey: function (key, prefix) {
 				if (prefix)

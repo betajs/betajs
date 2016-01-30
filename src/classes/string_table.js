@@ -56,8 +56,11 @@ Scoped.define("module:Classes.StringTable", [
 				}
 			},
 			
-			__strings: {},
-			__cache: {},
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__cache = {};
+				this.__strings = {};
+			},
 			
 			__resolveKey: function (key, prefix) {
 				if (prefix)
