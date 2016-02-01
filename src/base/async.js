@@ -40,6 +40,11 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Ty
 				clearTimeout(timer);
 				args.func.apply(args.context || this, args.params || []);
 			}, args.time || 0);
+			return timer;
+		},
+		
+		clearEventually: function (ev) {
+			clearTimeout(ev);
 		},
 		
 		eventuallyOnce: function (func, params, context) {
@@ -56,7 +61,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Ty
 			this.__eventuallyOnceIdx++;
 			var index = this.__eventuallyOnceIdx;
 			this.__eventuallyOnce[index] = data;
-			this.eventually(function () {
+			return this.eventually(function () {
 				delete this.__eventuallyOnce[index];
 				func.apply(context || this, params || []);
 			}, this);

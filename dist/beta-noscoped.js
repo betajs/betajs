@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.29 - 2016-01-29
+betajs - v1.0.30 - 2016-01-31
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '454.1454100371350'
+		version: '455.1454268108075'
 	};
 });
 
@@ -62,6 +62,11 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Ty
 				clearTimeout(timer);
 				args.func.apply(args.context || this, args.params || []);
 			}, args.time || 0);
+			return timer;
+		},
+		
+		clearEventually: function (ev) {
+			clearTimeout(ev);
 		},
 		
 		eventuallyOnce: function (func, params, context) {
@@ -78,7 +83,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Ty
 			this.__eventuallyOnceIdx++;
 			var index = this.__eventuallyOnceIdx;
 			this.__eventuallyOnce[index] = data;
-			this.eventually(function () {
+			return this.eventually(function () {
 				delete this.__eventuallyOnce[index];
 				func.apply(context || this, params || []);
 			}, this);
@@ -1790,7 +1795,10 @@ Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], functi
 Scoped.define("module:Events.Listen", ["module:Class", "module:Events.ListenMixin"], function (Class, Mixin, scoped) {
 	return Class.extend({scoped: scoped}, Mixin);
 });
-Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, scoped) {
+Scoped.define("module:Exceptions.Exception", [
+    "module:Class",
+    "module:Comparators"
+], function (Class, Comparators, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1822,7 +1830,11 @@ Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, 
 					classname: this.cls.classname,
 					message: this.message()
 				};
-			}
+			},
+			
+			equals: function (other) {
+				return other && this.cls === other.cls && Comparators.deepEqual(this.json(), other.json(), -1);
+			}			
 			
 		};
 	});
@@ -7381,7 +7393,10 @@ Scoped.define("module:Classes.LocaleTable", [
 			
 	}]);
 });
-Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+Scoped.define("module:Net.AjaxException", [
+    "module:Exceptions.Exception",
+    "module:Objs"
+], function (Exception, Objs, scoped) {
 	return Exception.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -7405,11 +7420,13 @@ Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], funct
 			},
 
 			json: function () {
-				var obj = inherited.json.call(this);
-				obj.data = this.data();
-				return obj;
+				return Objs.extend({
+					data: this.data(),
+					status_code: this.status_code(),
+					status_text: this.status_text()
+				}, inherited.json.call(this));
 			}
-
+			
 		};
 	});
 });
