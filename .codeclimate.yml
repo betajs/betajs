@@ -12,8 +12,10 @@ ratings:
   - src/**/*.js
 exclude_paths:
 - dist/**/*
+- dist/*
 - compile/**/*
 - vendors/**/*
+- vendors/*
 - docsrc/**/*
 - demos/**/*
 - tests/**/*
