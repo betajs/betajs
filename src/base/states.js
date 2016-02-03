@@ -22,6 +22,8 @@ Scoped.define("module:States.Host", [
 						var split = Strings.splitLast(initial_state, ".");
 						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(split.head)));
 						initial_state = split.tail;
+					} else if (!Types.is_string(initial_state)) {
+						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(initial_state.classname, ".").head)));
 					} else
 						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(this.cls.classname, ".").head)));
 				}

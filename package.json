@@ -1,6 +1,6 @@
 {
 	"name": "betajs",
-	"version": "1.0.30",
+	"version": "1.0.31",
 	"description": "BetaJS is a general-purpose JavaScript framework for doing awesome things.",
 	"homepage": "http://betajs.com",
 	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],

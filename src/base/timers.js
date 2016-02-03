@@ -13,6 +13,7 @@ Scoped.define("module:Timers.Timer", [
 			 * object context (optional): for fire
 			 * bool start (optional, default true): should it start immediately
 			 * bool real_time (default false)
+			 * int duration (optiona, default null)
 			 * 
 			 */
 			constructor: function (options) {
@@ -23,15 +24,19 @@ Scoped.define("module:Timers.Timer", [
 					fire: null,
 					context: this,
 					destroy_on_fire: false,
-					real_time: false
+					destroy_on_stop: false,
+					real_time: false,
+					duration: null
 				}, options);
 				this.__delay = options.delay;
 				this.__destroy_on_fire = options.destroy_on_fire;
+				this.__destroy_on_stop = options.destroy_on_stop;
 				this.__once = options.once;
 				this.__fire = options.fire;
 				this.__context = options.context;
 				this.__started = false;
 				this.__real_time = options.real_time;
+				this.__end_time = options.duration !== null ? Time.now() + options.duration : null;
 				if (options.start)
 					this.start();
 			},
@@ -54,8 +59,10 @@ Scoped.define("module:Timers.Timer", [
 						}
 					}
 				}
+				if (this.__end_time !== null && Time.now() + this.__delay > this.__end_time)
+					this.stop();
 				if (this.__destroy_on_fire)
-					this.destroy();
+					this.weakDestroy();
 			},
 			
 			stop: function () {
@@ -66,6 +73,8 @@ Scoped.define("module:Timers.Timer", [
 				else
 					clearInterval(this.__timer);
 				this.__started = false;
+				if (this.__destroy_on_stop)
+					this.weakDestroy();
 			},
 			
 			start: function () {
