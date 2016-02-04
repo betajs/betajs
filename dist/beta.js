@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.29 - 2016-01-29
+betajs - v1.0.29 - 2016-01-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -608,7 +608,7 @@ var Scoped = function () {
 }.call(this);
 
 /*!
-betajs - v1.0.29 - 2016-01-29
+betajs - v1.0.29 - 2016-01-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -621,7 +621,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '454.1454100371350'
+		version: '459.1454134890267'
 	};
 });
 
