@@ -1,4 +1,5 @@
 module.banner = '/*!\n<%= pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\nCopyright (c) <%= pkg.contributors %>\n<%= pkg.license %> Software License.\n*/\n';
+module.compile = "node_modules/betajs-compile";
 
 module.exports = function(grunt) {
 
@@ -63,7 +64,7 @@ module.exports = function(grunt) {
 					source : [ "./src/*/*.js" ],
 					dist : [ "./dist/beta-noscoped.js", "./dist/beta.js" ],
 					gruntfile : [ "./Gruntfile.js" ],
-					tests : [ "./tests/base/*.js" ]
+					tests : [ "./tests/*/*.js" ]
 				},
 				wget : {
 					dependencies : {
@@ -91,7 +92,7 @@ module.exports = function(grunt) {
 				},
 				jsdoc : {
 					dist : {
-						src : [ './README.md', './src/base/*.js' ],					
+						src : [ './README.md', './src/*/*.js' ],					
 						options : {
 							destination : 'docs',
 							template : "node_modules/grunt-betajs-docs-compile",
@@ -104,7 +105,7 @@ module.exports = function(grunt) {
 				'node-qunit' : {
 					dist : {
 						code : './dist/beta.js',
-						tests : grunt.file.expand("./tests/base/*.js"),
+						tests : grunt.file.expand("./tests/*/*.js"),
 						done : function(err, res) {
 							publishResults("node", res, this.async());
 						}
@@ -128,7 +129,7 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"README.md" : ["compile/readme.tpl"]
+							"README.md" : [module.compile + "/templates/docs/main-readme.tpl"]
 						}
 					},
 					"license" : {
@@ -136,7 +137,7 @@ module.exports = function(grunt) {
 							data: grunt.file.readJSON('package.json')
 						},
 						files : {
-							"LICENSE" : ["compile/license.tpl"]
+							"LICENSE" : [module.compile + "/templates/docs/apache-license.tpl"]
 						}
 					},
 					"jsdoc": {
@@ -173,7 +174,7 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"jsdoc.conf.json": ["compile/json.tpl"]
+							"jsdoc.conf.json": [module.compile + "/templates/json/json.tpl"]
 						}
 					},
 					"browserstack-desktop" : {
@@ -204,7 +205,7 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"browserstack.json" : ["compile/json.tpl"]
+							"browserstack.json" : [module.compile + "/templates/json/json.tpl"]
 						}
 					},
 					"browserstack-mobile" : {
@@ -224,7 +225,7 @@ module.exports = function(grunt) {
 							}
 						},
 						files : {
-							"browserstack.json" : ["compile/json.tpl"]
+							"browserstack.json" : [module.compile + "/templates/json/json.tpl"]
 						}
 					}			
 				}

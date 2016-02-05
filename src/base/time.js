@@ -169,7 +169,9 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 		},
 		
 		monthString: function (month) {
-			return (d = new Date(), d.setMonth(month), d).toDateString().substring(4,7);
+			var d = new Date();
+			d.setMonth(month);
+			return d.toDateString().substring(4,7);
 		}
 		
 	};
