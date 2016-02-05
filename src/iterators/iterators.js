@@ -15,6 +15,18 @@ Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", 
 
 Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"], function (Class, Functions, scoped) {
 	return Class.extend({scoped: scoped}, {
+		
+		hasNext: function () {
+			return false;
+		},
+		
+		next: function () {
+			return null;
+		},
+		
+		nextOrNull: function () {
+			return this.hasNext() ? this.next() : null;
+		},
 
 		asArray: function () {
 			var arr = [];

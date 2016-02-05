@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.31 - 2016-02-05
+betajs - v1.0.32 - 2016-02-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '466.1454658728586'
+		version: '469.1454696259278'
 	};
 });
 
@@ -1043,415 +1043,6 @@ Scoped.define("module:Classes.ContextRegistry", [
 
 
 
-Scoped.define("module:Collections.Collection", [
-	    "module:Class",
-	    "module:Events.EventsMixin",
-	    "module:Objs",
-	    "module:Functions",
-	    "module:Lists.ArrayList",
-	    "module:Ids",
-	    "module:Properties.Properties",
-	    "module:Iterators.ArrayIterator",
-	    "module:Iterators.FilteredIterator",
-	    "module:Types"
-	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, Types, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
-		return {
-
-			constructor : function(options) {
-				inherited.constructor.call(this);
-				if (Types.is_array(options)) {
-					options = {
-						objects: options
-					};
-				}
-				options = options || {};
-				this.__indices = {};
-				if (options.indices)
-					Objs.iter(options.indices, this.add_secondary_index, this);
-				var list_options = {};
-				if ("compare" in options)
-					list_options.compare = options.compare;
-				list_options.get_ident = Functions.as_method(this.get_ident, this);
-				this.__data = new ArrayList([], list_options);
-				var self = this;
-				this.__data._ident_changed = function (object, index) {
-					self._index_changed(object, index);
-				};
-				this.__data._re_indexed = function (object) {
-					self._re_indexed(object);
-				};
-				this.__data._sorted = function () {
-					self._sorted();
-				};
-				if ("objects" in options)
-					this.add_objects(options.objects);
-			},
-			
-			add_secondary_index: function (key) {
-				this.__indices[key] = {};
-				this.iterate(function (object) {
-					this.__indices[key][object.get(key)] = object;
-				}, this);
-			},
-			
-			get_by_secondary_index: function (key, value) {
-				return this.__indices[key][value];
-			},
-			
-			get_ident: function (obj) {
-				return Ids.objectId(obj);
-			},
-			
-			set_compare: function (compare) {
-				this.__data.set_compare(compare);
-			},
-			
-			get_compare: function () {
-				this.__data.get_compare();
-			},
-		
-			destroy: function () {
-				this.__data.iterate(function (object) {
-					if ("off" in object)
-						object.off(null, null, this);
-				}, this);
-				this.__data.destroy();
-				this.trigger("destroy");
-				inherited.destroy.call(this);
-			},
-			
-			count: function () {
-				return this.__data.count();
-			},
-			
-			_index_changed: function (object, index) {
-				this.trigger("index", object, index);
-			},
-			
-			_re_indexed: function (object) {
-				this.trigger("reindexed", object);
-			},
-			
-			_sorted: function () {
-				this.trigger("sorted");
-			},
-			
-			_object_changed: function (object, key, value) {
-				this.trigger("update");
-				this.trigger("change", object, key, value);
-				this.trigger("change:" + key, object, value);
-				this.__data.re_index(this.getIndex(object));
-			},
-			
-			add: function (object) {
-				if (!Class.is_class_instance(object))
-					object = new Properties(object);
-				if (this.exists(object))
-					return null;
-				var ident = this.__data.add(object);
-				if (ident !== null) {
-					Objs.iter(this.__indices, function (entry, key) {
-						entry[object.get(key)] = object;
-					}, this);
-					this.trigger("add", object);
-					this.trigger("update");
-					if ("on" in object)
-						object.on("change", function (key, value, oldvalue) {
-							this._object_changed(object, key, value, oldvalue);
-						}, this);
-				}
-				return ident;
-			},
-			
-			replace_objects: function (objects) {
-				var ids = {};
-				Objs.iter(objects, function (oriObject) {
-					var is_prop = Class.is_class_instance(oriObject);
-					var object = is_prop ? oriObject : new Properties(oriObject);
-					ids[this.get_ident(object)] = true;
-					if (this.exists(object)) {
-						var existing = this.getById(this.get_ident(object));
-						if (is_prop) {
-							this.remove(existing);
-							this.add(object);
-						} else
-							existing.setAll(oriObject);
-					} else
-						this.add(object);
-				}, this);
-				var iterator = this.iterator();
-				while (iterator.hasNext()) {
-					var object = iterator.next();
-					var ident = this.get_ident(object);
-					if (!(ident in ids))
-						this.remove(object);
-				}
-				iterator.destroy();
-			},
-			
-			add_objects: function (objects) {
-				var count = 0;
-				Objs.iter(objects, function (object) {
-					if (this.add(object))
-						count++;
-				}, this);		
-				return count;
-			},
-			
-			exists: function (object) {
-				return this.__data.exists(object);
-			},
-			
-			remove: function (object) {
-				if (!this.exists(object))
-					return null;
-				Objs.iter(this.__indices, function (entry, key) {
-					delete entry[object.get(key)];
-				}, this);
-				var result = this.__data.remove(object);
-				if ("off" in object)
-					object.off(null, null, this);
-				this.trigger("remove", object);
-				this.trigger("update");
-				return result;
-			},
-			
-			getByIndex: function (index) {
-				return this.__data.get(index);
-			},
-			
-			getById: function (id) {
-				return this.__data.get(this.__data.ident_by_id(id));
-			},
-			
-			getIndex: function (object) {
-				return this.__data.get_ident(object);
-			},
-			
-			iterate: function (cb, context) {
-				this.__data.iterate(cb, context);
-			},
-			
-			iterator: function () {
-				return ArrayIterator.byIterate(this.iterate, this);
-			},
-			
-			query: function (subset) {
-				return new FilteredIterator(this.iterator(), function (prop) {
-					return prop.isSupersetOf(subset); 
-				});
-			},
-			
-			clear: function () {
-				this.iterate(function (obj) {
-					this.remove(obj);
-				}, this);
-			}
-			
-		};
-	}]);
-});
-
-
-Scoped.define("module:Collections.FilteredCollection", [
-	    "module:Collections.Collection"
-	], function (Collection, scoped) {
-	return Collection.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor : function(parent, options) {
-				this.__parent = parent;
-				options = options || {};
-				delete options.objects;
-				options.compare = options.compare || parent.get_compare();
-				inherited.constructor.call(this, options);
-				this.__parent.on("add", this.add, this);
-				this.__parent.on("remove", this.__selfRemove, this);
-				this.setFilter(options.filter, options.context);
-			},
-			
-			filter: function (object) {
-				return !this.__filter || this.__filter.call(this.__filterContext || this, object);
-			},
-			
-			setFilter: function (filterFunction, filterContext) {
-				this.__filterContext = filterContext;
-				this.__filter = filterFunction;
-				this.iterate(function (obj) {
-					if (!this.filter(obj))
-						this.__selfRemove(obj);
-				}, this);
-				this.__parent.iterate(function (object) {
-					if (!this.exists(object) && this.filter(object))
-						this.__selfAdd(object);
-					return true;
-				}, this);
-			},
-			
-			_object_changed: function (object, key, value) {
-				inherited._object_changed.call(this, object, key, value);
-				if (!this.filter(object))
-					this.__selfRemove(object);
-			},
-			
-			destroy: function () {
-				this.__parent.off(null, null, this);
-				inherited.destroy.call(this);
-			},
-			
-			__selfAdd: function (object) {
-				return inherited.add.call(this, object);
-			},
-			
-			add: function (object) {
-				if (this.exists(object) || !this.filter(object))
-					return null;
-				var id = this.__selfAdd(object);
-				this.__parent.add(object);
-				return id;
-			},
-			
-			__selfRemove: function (object) {
-				return inherited.remove.call(this, object);
-			},
-		
-			remove: function (object) {
-				if (!this.exists(object))
-					return null;
-				var result = this.__selfRemove(object);
-				if (!result)
-					return null;
-				return this.__parent.remove(object);
-			}
-			
-		};	
-	});
-});
-
-
-Scoped.define("module:Collections.MappedCollection", [
-    "module:Collections.Collection",
-    "module:Functions"
-], function (Collection, Functions, scoped) {
-	return Collection.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor : function(parent, options) {
-				this.__parent = parent;
-				this.__parentToThis = {};
-				this.__thisToParent = {};
-				options = options || {};
-				delete options.objects;
-				options.compare = Functions.as_method(this.__compareByParent, this);
-				inherited.constructor.call(this, options);
-				this._mapFunction = options.map;
-				this._mapCtx = options.context;
-				parent.on("add", this.__parentAdd, this);
-				parent.on("remove", this.__parentRemove, this);
-				parent.on("change", this.__parentUpdate, this);
-				parent.iterate(this.__parentAdd, this);		
-			},
-			
-			destroy: function () {
-				this.__parent.off(null, null, this);
-				inherited.destroy.call(this);
-			},
-
-			__compareByParent: function (item1, item2) {
-				return this.__parent.getIndex(this.__thisToParent[item1.cid()]) - this.__parent.getIndex(this.__thisToParent[item2.cid()]);
-			},
-			
-			__mapItem: function (parentItem, thisItem) {
-				return this._mapFunction.call(this._mapCtx || this, parentItem, thisItem);
-			},
-			
-			__parentAdd: function (item) {
-				var mapped = this.__mapItem(item);
-				this.__parentToThis[item.cid()] = mapped;
-				this.__thisToParent[mapped.cid()] = item;
-				this.add(mapped);
-			},
-			
-			__parentUpdate: function (item) {
-				this.__mapItem(item, this.__parentToThis[item.cid()]);
-			},
-			
-			__parentRemove: function (item) {
-				var mapped = this.__parentToThis[item.cid()];
-				delete this.__parentToThis[item.cid()];
-				delete this.__thisToParent[mapped.cid()];
-				this.remove(mapped);
-			}
-		
-		};	
-	});
-});
-
-
-Scoped.define("module:Collections.ConcatCollection", [
-    "module:Collections.Collection",
-    "module:Objs",
-    "module:Functions"
-], function (Collection, Objs, Functions, scoped) {
-	return Collection.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor : function (parents, options) {
-				this.__parents = {};
-				this.__itemToParent = {};
-				options = options || {};
-				delete options.objects;
-				options.compare = Functions.as_method(this.__compareByParent, this);
-				inherited.constructor.call(this, options);				
-				var idx = 0;
-				Objs.iter(parents, function (parent) {
-					this.__parents[parent.cid()] = {
-						idx: idx,
-						parent: parent
-					};
-					parent.iterate(function (item) {
-						this.__parentAdd(parent, item);
-					}, this);
-					parent.on("add", function (item) {
-						this.__parentAdd(parent, item);
-					}, this);
-					parent.on("remove", function (item) {
-						this.__parentRemove(parent, item);
-					}, this);
-					idx++;
-				}, this);
-			},
-			
-			destroy: function () {
-				Objs.iter(this.__parents, function (parent) {
-					parent.parent.off(null, null, this);
-				}, this);
-				inherited.destroy.call(this);
-			},
-			
-			__parentAdd: function (parent, item) {
-				this.__itemToParent[item.cid()] = parent;
-				this.add(item);
-			},
-			
-			__parentRemove: function (parent, item) {
-				delete this.__itemToParent[item.cid()];
-				this.remove(item);
-			},
-			
-			__compareByParent: function (item1, item2) {
-				var parent1 = this.__itemToParent[item1.cid()];
-				var parent2 = this.__itemToParent[item2.cid()];
-				if (parent1 === parent2)
-					return parent1.getIndex(item1) - parent2.getIndex(item2);
-				return this.__parents[parent1.cid()].idx - this.__parents[parent2.cid()].idx;
-			}			
-		
-		};	
-	});
-});
-
 Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properties"], function (Types, Properties) {
 	return {		
 		
@@ -2103,419 +1694,6 @@ Scoped.define("module:IdGenerators.TimedIdGenerator", ["module:IdGenerators.IdGe
 	});
 });
 
-
-Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", "module:Iterators.ArrayIterator"], function (Types, Iterator, ArrayIterator) {
-	return {
-		ensure: function (mixed) {
-			if (mixed === null)
-				return new ArrayIterator([]);
-			if (mixed.instance_of(Iterator))
-				return mixed;
-			if (Types.is_array(mixed))
-				return new ArrayIterator(mixed);
-			return new ArrayIterator([mixed]);
-		}		
-	};
-});
-
-
-Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"], function (Class, Functions, scoped) {
-	return Class.extend({scoped: scoped}, {
-
-		asArray: function () {
-			var arr = [];
-			while (this.hasNext())
-				arr.push(this.next());
-			return arr;
-		},
-
-		asArrayDelegate: function (f) {
-			var arr = [];
-			while (this.hasNext()) {
-				var obj = this.next();			
-				arr.push(obj[f].apply(obj, Functions.getArguments(arguments, 1)));
-			}
-			return arr;
-		},
-
-		iterate: function (callback, context) {
-			while (this.hasNext())
-				callback.call(context || this, this.next());
-		}
-
-	});
-});
-
-
-Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (arr) {
-				inherited.constructor.call(this);
-				this.__array = arr;
-				this.__i = 0;
-			},
-
-			hasNext: function () {
-				return this.__i < this.__array.length;
-			},
-
-			next: function () {
-				var ret = this.__array[this.__i];
-				this.__i++;
-				return ret;
-			}
-		};
-	}, {
-
-		byIterate: function (iterate_func, iterate_func_ctx) {
-			var result = [];
-			iterate_func.call(iterate_func_ctx || this, function (item) {
-				result.push(item);
-			}, this);
-			return new this(result);
-		}
-	});
-});
-
-
-Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
-	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (obj) {
-				inherited.constructor.call(this, Objs.keys(obj));
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Iterators.ObjectValuesIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
-	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (obj) {
-				inherited.constructor.call(this, Objs.values(obj));
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Iterators.MappedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (iterator, map, context) {
-				inherited.constructor.call(this);
-				this.__iterator = iterator;
-				this.__map = map;
-				this.__context = context || this;
-			},
-
-			hasNext: function () {
-				return this.__iterator.hasNext();
-			},
-
-			next: function () {
-				return this.hasNext() ? this.__map.call(this.__context, this.__iterator.next()) : null;
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Iterators.FilteredIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (iterator, filter, context) {
-				inherited.constructor.call(this);
-				this.__iterator = iterator;
-				this.__filter = filter;
-				this.__context = context || this;
-				this.__next = null;
-			},
-
-			hasNext: function () {
-				this.__crawl();
-				return this.__next !== null;
-			},
-
-			next: function () {
-				this.__crawl();
-				var item = this.__next;
-				this.__next = null;
-				return item;
-			},
-
-			__crawl: function () {
-				while (!this.__next && this.__iterator.hasNext()) {
-					var item = this.__iterator.next();
-					if (this.__filter_func(item))
-						this.__next = item;
-				}
-			},
-
-			__filter_func: function (item) {
-				return this.__filter.apply(this.__context, [item]);
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Iterators.SkipIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (iterator, skip) {
-				inherited.constructor.call(this);
-				this.__iterator = iterator;
-				while (skip > 0) {
-					iterator.next();
-					skip--;
-				}
-			},
-
-			hasNext: function () {
-				return this.__iterator.hasNext();
-			},
-
-			next: function () {
-				return this.__iterator.next();
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Iterators.LimitIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (iterator, limit) {
-				inherited.constructor.call(this);
-				this.__iterator = iterator;
-				this.__limit = limit;
-			},
-
-			hasNext: function () {
-				return this.__limit > 0 && this.__iterator.hasNext();
-			},
-
-			next: function () {
-				if (this.__limit <= 0)
-					return null;
-				this.__limit--;
-				return this.__iterator.next();
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (iterator, compare) {
-				inherited.constructor.call(this);
-				this.__array = iterator.asArray();
-				this.__array.sort(compare);
-				this.__i = 0;
-			},
-
-			hasNext: function () {
-				return this.__i < this.__array.length;
-			},
-
-			next: function () {
-				var ret = this.__array[this.__i];
-				this.__i++;
-				return ret;
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function () {
-				inherited.constructor.call(this);
-				this.__finished = false;
-				this.__initialized = false;
-				this.__current = null;
-				this.__has_current = false;
-			},
-
-			_initialize: function () {},
-
-			_next: function () {},
-
-			_finished: function () {
-				this.__finished = true;
-			},
-
-			_current: function (result) {
-				this.__current = result;
-				this.__has_current = true;
-			},
-
-			__touch: function () {
-				if (!this.__initialized)
-					this._initialize();
-				this.__initialized = true;
-				if (!this.__has_current && !this.__finished)
-					this._next();
-			},
-
-			hasNext: function () {
-				this.__touch();
-				return this.__has_current;
-			},
-
-			next: function () {
-				this.__touch();
-				this.__has_current = false;
-				return this.__current;
-			}
-
-		};
-	});
-});
-
-Scoped.define("module:Iterators.SortedOrIterator", [
-                                                    "module:Iterators.LazyIterator",
-                                                    "module:Structures.TreeMap",
-                                                    "module:Objs"
-                                                    ], function (Iterator, TreeMap, Objs, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (iterators, compare) {
-				this.__iterators = iterators;
-				this.__map = TreeMap.empty(compare);
-				inherited.constructor.call(this);
-			},
-
-			__process: function (iter) {
-				if (iter.hasNext()) {
-					var n = iter.next();
-					var value = TreeMap.find(n, this.__map);
-					if (value)
-						value.push(iter);
-					else 
-						this.__map = TreeMap.add(n, [iter], this.__map);
-				}
-			},
-
-			_initialize: function () {
-				Objs.iter(this.__iterators, this.__process, this);
-				if (TreeMap.is_empty(this.__map))
-					this._finished();
-			},
-
-			_next: function () {
-				var ret = TreeMap.take_min(this.__map);
-				this._current(ret[0].key);
-				this.__map = ret[1];
-				Objs.iter(ret[0].value, this.__process, this);
-				if (TreeMap.is_empty(this.__map))
-					this._finished();
-			}
-
-		};
-	});
-});
-
-
-
-Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (iterator, compare, partial_same) {
-				inherited.constructor.call(this);
-				this.__compare = compare;
-				this.__partial_same = partial_same;
-				this.__iterator = iterator;
-				this.__head = [];
-				this.__tail = [];
-			},
-
-			__cache: function () {
-				if (this.__head.length > 0 || !this.__iterator.hasNext())
-					return;
-				this.__head = this.__tail;
-				this.__tail = [];
-				if (this.__head.length === 0)
-					this.__head.push(this.__iterator.next());
-				while (this.__iterator.hasNext()) {
-					var n = this.__iterator.next();
-					if (!this.__partial_same(this.__head[0], n)) {
-						this.__tail.push(n);
-						break;
-					}
-				}
-				this.__head.sort(this.__compare);
-			},
-
-			hasNext: function () {
-				this.__cache();
-				return this.__head.length > 0;
-			},
-
-			next: function () {
-				this.__cache();
-				return this.__head.shift();
-			}
-
-		};
-	});		
-});
-
-
-Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.LazyIterator"], function (Iterator, scoped) {
-	return Iterator.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (next_callback, next_context) {
-				inherited.constructor.call(this);
-				this.__next_callback = next_callback;
-				this.__next_context = next_context;
-				this.__array = null;
-				this.__i = 0;
-			},
-
-			_next: function () {
-				if (this.__array === null || this.__i >= this.__array.length) {
-					this.__array = this.__next_callback.apply(this.__next_context);
-					this.__i = 0;
-				}
-				if (this.__array !== null) {
-					var ret = this.__array[this.__i];
-					this.__i++;
-					return ret;
-				} else
-					this._finished();
-			}
-
-		};
-	});
-});
 
 Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
 	return {
@@ -6470,7 +5648,9 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 		},
 		
 		monthString: function (month) {
-			return (d = new Date(), d.setMonth(month), d).toDateString().substring(4,7);
+			var d = new Date();
+			d.setMonth(month);
+			return d.toDateString().substring(4,7);
 		}
 		
 	};
@@ -7408,6 +6588,940 @@ Scoped.define("module:Classes.LocaleTable", [
 			
 	}]);
 });
+Scoped.define("module:Collections.Collection", [
+	    "module:Class",
+	    "module:Events.EventsMixin",
+	    "module:Objs",
+	    "module:Functions",
+	    "module:Lists.ArrayList",
+	    "module:Ids",
+	    "module:Properties.Properties",
+	    "module:Iterators.ArrayIterator",
+	    "module:Iterators.FilteredIterator",
+	    "module:Iterators.ObjectValuesIterator",
+	    "module:Types",
+	    "module:Promise"
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		return {
+
+			constructor : function(options) {
+				inherited.constructor.call(this);
+				if (Types.is_array(options)) {
+					options = {
+						objects: options
+					};
+				}
+				options = options || {};
+				this.__indices = {};
+				if (options.indices)
+					Objs.iter(options.indices, this.add_secondary_index, this);
+				var list_options = {};
+				if ("compare" in options)
+					list_options.compare = options.compare;
+				list_options.get_ident = Functions.as_method(this.get_ident, this);
+				this.__data = new ArrayList([], list_options);
+				var self = this;
+				this.__data._ident_changed = function (object, index) {
+					self._index_changed(object, index);
+				};
+				this.__data._re_indexed = function (object) {
+					self._re_indexed(object);
+				};
+				this.__data._sorted = function () {
+					self._sorted();
+				};
+				if ("objects" in options)
+					this.add_objects(options.objects);
+			},
+			
+			add_secondary_index: function (key) {
+				this.__indices[key] = {};
+				this.iterate(function (object) {
+					var value = object.get(key);
+					this.__indices[key][value] = this.__indices[key][value] || {};
+					this.__indices[key][value][this.get_ident(object)] = object;
+				}, this);
+			},
+			
+			get_by_secondary_index: function (key, value) {
+				return this.__indices[key][value];
+			},
+			
+			get_ident: function (obj) {
+				return Ids.objectId(obj);
+			},
+			
+			set_compare: function (compare) {
+				this.__data.set_compare(compare);
+			},
+			
+			get_compare: function () {
+				this.__data.get_compare();
+			},
+		
+			destroy: function () {
+				this.__data.iterate(function (object) {
+					if ("off" in object)
+						object.off(null, null, this);
+				}, this);
+				this.__data.destroy();
+				this.trigger("destroy");
+				inherited.destroy.call(this);
+			},
+			
+			count: function () {
+				return this.__data.count();
+			},
+			
+			_index_changed: function (object, index) {
+				this.trigger("index", object, index);
+			},
+			
+			_re_indexed: function (object) {
+				this.trigger("reindexed", object);
+			},
+			
+			_sorted: function () {
+				this.trigger("sorted");
+			},
+			
+			_object_changed: function (object, key, value) {
+				this.trigger("update");
+				this.trigger("change", object, key, value);
+				this.trigger("change:" + key, object, value);
+				this.__data.re_index(this.getIndex(object));
+			},
+			
+			add: function (object) {
+				if (!Class.is_class_instance(object))
+					object = new Properties(object);
+				if (this.exists(object))
+					return null;
+				var ident = this.__data.add(object);
+				if (ident !== null) {
+					Objs.iter(this.__indices, function (entries, key) {
+						var value = object.get(key);
+						entries[value] = entries[value] || {};
+						entries[value][this.get_ident(object)] = object;
+					}, this);
+					this.trigger("add", object);
+					this.trigger("update");
+					if ("on" in object)
+						object.on("change", function (key, value, oldvalue) {
+							this._object_changed(object, key, value, oldvalue);
+						}, this);
+				}
+				return ident;
+			},
+			
+			replace_objects: function (objects) {
+				var ids = {};
+				Objs.iter(objects, function (oriObject) {
+					var is_prop = Class.is_class_instance(oriObject);
+					var object = is_prop ? oriObject : new Properties(oriObject);
+					ids[this.get_ident(object)] = true;
+					if (this.exists(object)) {
+						var existing = this.getById(this.get_ident(object));
+						if (is_prop) {
+							this.remove(existing);
+							this.add(object);
+						} else
+							existing.setAll(oriObject);
+					} else
+						this.add(object);
+				}, this);
+				var iterator = this.iterator();
+				while (iterator.hasNext()) {
+					var object = iterator.next();
+					var ident = this.get_ident(object);
+					if (!(ident in ids))
+						this.remove(object);
+				}
+				iterator.destroy();
+			},
+			
+			add_objects: function (objects) {
+				var count = 0;
+				Objs.iter(objects, function (object) {
+					if (this.add(object))
+						count++;
+				}, this);		
+				return count;
+			},
+			
+			exists: function (object) {
+				return this.__data.exists(object);
+			},
+			
+			remove: function (object) {
+				if (!this.exists(object))
+					return null;
+				Objs.iter(this.__indices, function (entry, key) {
+					var value = object.get(key);
+					if (entry[value]) {
+						delete entry[value][this.get_ident(object)];
+						if (Types.is_empty(entry[value]))
+							delete entry[value];
+					}
+				}, this);
+				var result = this.__data.remove(object);
+				if ("off" in object)
+					object.off(null, null, this);
+				this.trigger("remove", object);
+				this.trigger("update");
+				return result;
+			},
+			
+			getByIndex: function (index) {
+				return this.__data.get(index);
+			},
+			
+			getById: function (id) {
+				return this.__data.get(this.__data.ident_by_id(id));
+			},
+			
+			getIndex: function (object) {
+				return this.__data.get_ident(object);
+			},
+			
+			iterate: function (cb, context) {
+				this.__data.iterate(cb, context);
+			},
+			
+			iterator: function () {
+				return ArrayIterator.byIterate(this.iterate, this);
+			},
+			
+			iterateSecondaryIndexValue: function (key, value) {
+				return new ObjectValuesIterator(this.__indices[key][value]);
+			},
+			
+			query: function (subset) {
+				var iterator = null;
+				for (var index_key in this.__indices) {
+					if (index_key in subset) {
+						iterator = this.iterateSecondaryIndexValue(index_key, subset[index_key]);
+						break;
+					}
+				}
+				return new FilteredIterator(iterator || this.iterator(), function (prop) {
+					return prop.isSupersetOf(subset); 
+				});
+			},
+			
+			clear: function () {
+				this.iterate(function (obj) {
+					this.remove(obj);
+				}, this);
+			},
+			
+			increase_forwards: function (steps) {
+				return Promise.error(true);
+			}
+			
+		};
+	}]);
+});
+
+Scoped.define("module:Collections.ConcatCollection", [
+    "module:Collections.Collection",
+    "module:Objs",
+    "module:Functions"
+], function (Collection, Objs, Functions, scoped) {
+	return Collection.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor : function (parents, options) {
+				this.__parents = {};
+				this.__itemToParent = {};
+				options = options || {};
+				delete options.objects;
+				options.compare = Functions.as_method(this.__compareByParent, this);
+				inherited.constructor.call(this, options);				
+				var idx = 0;
+				Objs.iter(parents, function (parent) {
+					this.__parents[parent.cid()] = {
+						idx: idx,
+						parent: parent
+					};
+					parent.iterate(function (item) {
+						this.__parentAdd(parent, item);
+					}, this);
+					parent.on("add", function (item) {
+						this.__parentAdd(parent, item);
+					}, this);
+					parent.on("remove", function (item) {
+						this.__parentRemove(parent, item);
+					}, this);
+					idx++;
+				}, this);
+			},
+			
+			destroy: function () {
+				Objs.iter(this.__parents, function (parent) {
+					parent.parent.off(null, null, this);
+				}, this);
+				inherited.destroy.call(this);
+			},
+			
+			__parentAdd: function (parent, item) {
+				this.__itemToParent[item.cid()] = parent;
+				this.add(item);
+			},
+			
+			__parentRemove: function (parent, item) {
+				delete this.__itemToParent[item.cid()];
+				this.remove(item);
+			},
+			
+			__compareByParent: function (item1, item2) {
+				var parent1 = this.__itemToParent[item1.cid()];
+				var parent2 = this.__itemToParent[item2.cid()];
+				if (parent1 === parent2)
+					return parent1.getIndex(item1) - parent2.getIndex(item2);
+				return this.__parents[parent1.cid()].idx - this.__parents[parent2.cid()].idx;
+			}			
+		
+		};	
+	});
+});
+
+Scoped.define("module:Collections.FilteredCollection", [
+	    "module:Collections.Collection"
+	], function (Collection, scoped) {
+	return Collection.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor : function(parent, options) {
+				this.__parent = parent;
+				options = options || {};
+				delete options.objects;
+				options.compare = options.compare || parent.get_compare();
+				inherited.constructor.call(this, options);
+				this.__parent.on("add", this.add, this);
+				this.__parent.on("remove", this.__selfRemove, this);
+				this.setFilter(options.filter, options.context);
+			},
+			
+			filter: function (object) {
+				return !this.__filter || this.__filter.call(this.__filterContext || this, object);
+			},
+			
+			setFilter: function (filterFunction, filterContext) {
+				this.__filterContext = filterContext;
+				this.__filter = filterFunction;
+				this.iterate(function (obj) {
+					if (!this.filter(obj))
+						this.__selfRemove(obj);
+				}, this);
+				this.__parent.iterate(function (object) {
+					if (!this.exists(object) && this.filter(object))
+						this.__selfAdd(object);
+					return true;
+				}, this);
+			},
+			
+			_object_changed: function (object, key, value) {
+				inherited._object_changed.call(this, object, key, value);
+				if (!this.filter(object))
+					this.__selfRemove(object);
+			},
+			
+			destroy: function () {
+				this.__parent.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+			
+			__selfAdd: function (object) {
+				return inherited.add.call(this, object);
+			},
+			
+			add: function (object) {
+				if (this.exists(object) || !this.filter(object))
+					return null;
+				var id = this.__selfAdd(object);
+				this.__parent.add(object);
+				return id;
+			},
+			
+			__selfRemove: function (object) {
+				return inherited.remove.call(this, object);
+			},
+		
+			remove: function (object) {
+				if (!this.exists(object))
+					return null;
+				var result = this.__selfRemove(object);
+				if (!result)
+					return null;
+				return this.__parent.remove(object);
+			}
+			
+		};	
+	});
+});
+
+Scoped.define("module:Collections.GroupedCollection", [
+    "module:Collections.Collection",
+    "module:Objs",
+    "module:Properties.Properties"
+], function (Collection, Objs, Properties, scoped) {
+	return Collection.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor : function(parent, options) {
+				this.__parent = parent;
+				options = options || {};
+				delete options.objects;
+				this.__groupby = options.groupby;
+				this.__insertCallback = options.insert;
+				this.__removeCallback = options.remove;
+				this.__callbackContext = options.context || this;
+				inherited.constructor.call(this, options);
+				Objs.iter(this.__groupby, this.add_secondary_index, this);
+				this.__parent.iterate(this.__addParentObject, this);
+				this.__parent.on("add", this.__addParentObject, this);
+				this.__parent.on("remove", this.__removeParentObject, this);
+			},
+			
+			destroy: function () {
+				this.__parent.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+			
+			__addParentObject: function (object) {
+				var group = this.__objectToGroup(object);
+				if (!group) {
+					group = new Properties();
+					group.objects = {};
+					group.object_count = 0;
+					Objs.iter(this.__groupby, function (key) {
+						group.set(key, object.get(key));
+					});
+					this.__addObjectToGroup(object, group);
+					this.add(group);
+				} else
+					this.__addObjectToGroup(object, group);
+			},
+			
+			__removeParentObject: function (object) {
+				var group = this.__objectToGroup(object);
+				if (group) {
+					this.__removeObjectFromGroup(object, group);
+					if (group.object_count === 0)
+						this.remove(group);
+				}
+			},
+			
+			__objectToGroup: function (object) {
+				var query = {};
+				Objs.iter(this.__groupby, function (key) {
+					query[key] = object.get(key);
+				});
+				return this.query(query).nextOrNull();
+			},
+			
+			__addObjectToGroup: function (object, group) {
+				group.objects[this.__parent.get_ident(object)] = object;
+				group.object_count++;
+				this.__insertCallback.call(this.__callbackContext, object, group);
+			},
+			
+			__removeObjectFromGroup: function (object, group) {
+				if (!(this.__parent.get_ident(object) in group.objects))
+					return;
+				delete group.objects[this.__parent.get_ident(object)];
+				group.object_count--;
+				if (group.object_count > 0)
+					this.__removeCallback.call(this.__callbackContext, object, group);
+			},
+			
+			increase_forwards: function (steps) {
+				return this.__parent.increase_forwards(steps);
+			}
+			
+		};	
+	});
+});
+
+Scoped.define("module:Collections.MappedCollection", [
+    "module:Collections.Collection",
+    "module:Functions"
+], function (Collection, Functions, scoped) {
+	return Collection.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor : function(parent, options) {
+				this.__parent = parent;
+				this.__parentToThis = {};
+				this.__thisToParent = {};
+				options = options || {};
+				delete options.objects;
+				options.compare = Functions.as_method(this.__compareByParent, this);
+				inherited.constructor.call(this, options);
+				this._mapFunction = options.map;
+				this._mapCtx = options.context;
+				parent.on("add", this.__parentAdd, this);
+				parent.on("remove", this.__parentRemove, this);
+				parent.on("change", this.__parentUpdate, this);
+				parent.iterate(this.__parentAdd, this);		
+			},
+			
+			destroy: function () {
+				this.__parent.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+
+			__compareByParent: function (item1, item2) {
+				return this.__parent.getIndex(this.__thisToParent[item1.cid()]) - this.__parent.getIndex(this.__thisToParent[item2.cid()]);
+			},
+			
+			__mapItem: function (parentItem, thisItem) {
+				return this._mapFunction.call(this._mapCtx || this, parentItem, thisItem);
+			},
+			
+			__parentAdd: function (item) {
+				var mapped = this.__mapItem(item);
+				this.__parentToThis[item.cid()] = mapped;
+				this.__thisToParent[mapped.cid()] = item;
+				this.add(mapped);
+			},
+			
+			__parentUpdate: function (item) {
+				this.__mapItem(item, this.__parentToThis[item.cid()]);
+			},
+			
+			__parentRemove: function (item) {
+				var mapped = this.__parentToThis[item.cid()];
+				delete this.__parentToThis[item.cid()];
+				delete this.__thisToParent[mapped.cid()];
+				this.remove(mapped);
+			}
+		
+		};	
+	});
+});
+
+Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (arr) {
+				inherited.constructor.call(this);
+				this.__array = arr;
+				this.__i = 0;
+			},
+
+			hasNext: function () {
+				return this.__i < this.__array.length;
+			},
+
+			next: function () {
+				var ret = this.__array[this.__i];
+				this.__i++;
+				return ret;
+			}
+		};
+	}, {
+
+		byIterate: function (iterate_func, iterate_func_ctx) {
+			var result = [];
+			iterate_func.call(iterate_func_ctx || this, function (item) {
+				result.push(item);
+			}, this);
+			return new this(result);
+		}
+	});
+});
+
+
+Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
+	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (obj) {
+				inherited.constructor.call(this, Objs.keys(obj));
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.ObjectValuesIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
+	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (obj) {
+				inherited.constructor.call(this, Objs.values(obj));
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.LazyIterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (next_callback, next_context) {
+				inherited.constructor.call(this);
+				this.__next_callback = next_callback;
+				this.__next_context = next_context;
+				this.__array = null;
+				this.__i = 0;
+			},
+
+			_next: function () {
+				if (this.__array === null || this.__i >= this.__array.length) {
+					this.__array = this.__next_callback.apply(this.__next_context);
+					this.__i = 0;
+				}
+				if (this.__array !== null) {
+					var ret = this.__array[this.__i];
+					this.__i++;
+					return ret;
+				} else
+					this._finished();
+			}
+
+		};
+	});
+});
+
+Scoped.define("module:Iterators.MappedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, map, context) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				this.__map = map;
+				this.__context = context || this;
+			},
+
+			hasNext: function () {
+				return this.__iterator.hasNext();
+			},
+
+			next: function () {
+				return this.hasNext() ? this.__map.call(this.__context, this.__iterator.next()) : null;
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.FilteredIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, filter, context) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				this.__filter = filter;
+				this.__context = context || this;
+				this.__next = null;
+			},
+
+			hasNext: function () {
+				this.__crawl();
+				return this.__next !== null;
+			},
+
+			next: function () {
+				this.__crawl();
+				var item = this.__next;
+				this.__next = null;
+				return item;
+			},
+
+			__crawl: function () {
+				while (!this.__next && this.__iterator.hasNext()) {
+					var item = this.__iterator.next();
+					if (this.__filter_func(item))
+						this.__next = item;
+				}
+			},
+
+			__filter_func: function (item) {
+				return this.__filter.apply(this.__context, [item]);
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.SkipIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, skip) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				while (skip > 0) {
+					iterator.next();
+					skip--;
+				}
+			},
+
+			hasNext: function () {
+				return this.__iterator.hasNext();
+			},
+
+			next: function () {
+				return this.__iterator.next();
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.LimitIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, limit) {
+				inherited.constructor.call(this);
+				this.__iterator = iterator;
+				this.__limit = limit;
+			},
+
+			hasNext: function () {
+				return this.__limit > 0 && this.__iterator.hasNext();
+			},
+
+			next: function () {
+				if (this.__limit <= 0)
+					return null;
+				this.__limit--;
+				return this.__iterator.next();
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.SortedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, compare) {
+				inherited.constructor.call(this);
+				this.__array = iterator.asArray();
+				this.__array.sort(compare);
+				this.__i = 0;
+			},
+
+			hasNext: function () {
+				return this.__i < this.__array.length;
+			},
+
+			next: function () {
+				var ret = this.__array[this.__i];
+				this.__i++;
+				return ret;
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.LazyIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__finished = false;
+				this.__initialized = false;
+				this.__current = null;
+				this.__has_current = false;
+			},
+
+			_initialize: function () {},
+
+			_next: function () {},
+
+			_finished: function () {
+				this.__finished = true;
+			},
+
+			_current: function (result) {
+				this.__current = result;
+				this.__has_current = true;
+			},
+
+			__touch: function () {
+				if (!this.__initialized)
+					this._initialize();
+				this.__initialized = true;
+				if (!this.__has_current && !this.__finished)
+					this._next();
+			},
+
+			hasNext: function () {
+				this.__touch();
+				return this.__has_current;
+			},
+
+			next: function () {
+				this.__touch();
+				this.__has_current = false;
+				return this.__current;
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.SortedOrIterator", ["module:Iterators.LazyIterator", "module:Structures.TreeMap", "module:Objs"], function (Iterator, TreeMap, Objs, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterators, compare) {
+				this.__iterators = iterators;
+				this.__map = TreeMap.empty(compare);
+				inherited.constructor.call(this);
+			},
+
+			__process: function (iter) {
+				if (iter.hasNext()) {
+					var n = iter.next();
+					var value = TreeMap.find(n, this.__map);
+					if (value)
+						value.push(iter);
+					else 
+						this.__map = TreeMap.add(n, [iter], this.__map);
+				}
+			},
+
+			_initialize: function () {
+				Objs.iter(this.__iterators, this.__process, this);
+				if (TreeMap.is_empty(this.__map))
+					this._finished();
+			},
+
+			_next: function () {
+				var ret = TreeMap.take_min(this.__map);
+				this._current(ret[0].key);
+				this.__map = ret[1];
+				Objs.iter(ret[0].value, this.__process, this);
+				if (TreeMap.is_empty(this.__map))
+					this._finished();
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (iterator, compare, partial_same) {
+				inherited.constructor.call(this);
+				this.__compare = compare;
+				this.__partial_same = partial_same;
+				this.__iterator = iterator;
+				this.__head = [];
+				this.__tail = [];
+			},
+
+			__cache: function () {
+				if (this.__head.length > 0 || !this.__iterator.hasNext())
+					return;
+				this.__head = this.__tail;
+				this.__tail = [];
+				if (this.__head.length === 0)
+					this.__head.push(this.__iterator.next());
+				while (this.__iterator.hasNext()) {
+					var n = this.__iterator.next();
+					if (!this.__partial_same(this.__head[0], n)) {
+						this.__tail.push(n);
+						break;
+					}
+				}
+				this.__head.sort(this.__compare);
+			},
+
+			hasNext: function () {
+				this.__cache();
+				return this.__head.length > 0;
+			},
+
+			next: function () {
+				this.__cache();
+				return this.__head.shift();
+			}
+
+		};
+	});		
+});
+
+Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", "module:Iterators.ArrayIterator"], function (Types, Iterator, ArrayIterator) {
+	return {
+		ensure: function (mixed) {
+			if (mixed === null)
+				return new ArrayIterator([]);
+			if (mixed.instance_of(Iterator))
+				return mixed;
+			if (Types.is_array(mixed))
+				return new ArrayIterator(mixed);
+			return new ArrayIterator([mixed]);
+		}		
+	};
+});
+
+
+Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"], function (Class, Functions, scoped) {
+	return Class.extend({scoped: scoped}, {
+		
+		hasNext: function () {
+			return false;
+		},
+		
+		next: function () {
+			return null;
+		},
+		
+		nextOrNull: function () {
+			return this.hasNext() ? this.next() : null;
+		},
+
+		asArray: function () {
+			var arr = [];
+			while (this.hasNext())
+				arr.push(this.next());
+			return arr;
+		},
+
+		asArrayDelegate: function (f) {
+			var arr = [];
+			while (this.hasNext()) {
+				var obj = this.next();			
+				arr.push(obj[f].apply(obj, Functions.getArguments(arguments, 1)));
+			}
+			return arr;
+		},
+
+		iterate: function (callback, context) {
+			while (this.hasNext())
+				callback.call(context || this, this.next());
+		}
+
+	});
+});
+
 Scoped.define("module:Net.AjaxException", [
     "module:Exceptions.Exception",
     "module:Objs"

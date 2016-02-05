@@ -182,4 +182,10 @@ test("test collection query", function () {
 		objects: objs
     });
 	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 1);
+	list.add(new BetaJS.Properties.Properties({"text": "C Example X"}));
+	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 2);
+	list.add_secondary_index("text");
+	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 2);
+	list.add(new BetaJS.Properties.Properties({"text": "C Example X"}));
+	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 3);
 });

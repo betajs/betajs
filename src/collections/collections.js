@@ -8,9 +8,10 @@ Scoped.define("module:Collections.Collection", [
 	    "module:Properties.Properties",
 	    "module:Iterators.ArrayIterator",
 	    "module:Iterators.FilteredIterator",
+	    "module:Iterators.ObjectValuesIterator",
 	    "module:Types",
 	    "module:Promise"
-	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, Types, Promise, scoped) {
+	], function (Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -47,7 +48,9 @@ Scoped.define("module:Collections.Collection", [
 			add_secondary_index: function (key) {
 				this.__indices[key] = {};
 				this.iterate(function (object) {
-					this.__indices[key][object.get(key)] = object;
+					var value = object.get(key);
+					this.__indices[key][value] = this.__indices[key][value] || {};
+					this.__indices[key][value][this.get_ident(object)] = object;
 				}, this);
 			},
 			
@@ -107,8 +110,10 @@ Scoped.define("module:Collections.Collection", [
 					return null;
 				var ident = this.__data.add(object);
 				if (ident !== null) {
-					Objs.iter(this.__indices, function (entry, key) {
-						entry[object.get(key)] = object;
+					Objs.iter(this.__indices, function (entries, key) {
+						var value = object.get(key);
+						entries[value] = entries[value] || {};
+						entries[value][this.get_ident(object)] = object;
 					}, this);
 					this.trigger("add", object);
 					this.trigger("update");
@@ -163,7 +168,12 @@ Scoped.define("module:Collections.Collection", [
 				if (!this.exists(object))
 					return null;
 				Objs.iter(this.__indices, function (entry, key) {
-					delete entry[object.get(key)];
+					var value = object.get(key);
+					if (entry[value]) {
+						delete entry[value][this.get_ident(object)];
+						if (Types.is_empty(entry[value]))
+							delete entry[value];
+					}
 				}, this);
 				var result = this.__data.remove(object);
 				if ("off" in object)
@@ -193,8 +203,19 @@ Scoped.define("module:Collections.Collection", [
 				return ArrayIterator.byIterate(this.iterate, this);
 			},
 			
+			iterateSecondaryIndexValue: function (key, value) {
+				return new ObjectValuesIterator(this.__indices[key][value]);
+			},
+			
 			query: function (subset) {
-				return new FilteredIterator(this.iterator(), function (prop) {
+				var iterator = null;
+				for (var index_key in this.__indices) {
+					if (index_key in subset) {
+						iterator = this.iterateSecondaryIndexValue(index_key, subset[index_key]);
+						break;
+					}
+				}
+				return new FilteredIterator(iterator || this.iterator(), function (prop) {
 					return prop.isSupersetOf(subset); 
 				});
 			},
