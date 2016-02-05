@@ -1,24 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="239f3401-6ed8-4cc2-8448-48b5b457f8ba" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.codeclimate.yml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.travis.yml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/compile/readme.tpl" afterPath="$PROJECT_DIR$/compile/readme.tpl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta-noscoped.js" afterPath="$PROJECT_DIR$/dist/beta-noscoped.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta-noscoped.min.js" afterPath="$PROJECT_DIR$/dist/beta-noscoped.min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta.js" afterPath="$PROJECT_DIR$/dist/beta.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta.min.js" afterPath="$PROJECT_DIR$/dist/beta.min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/package.json" afterPath="$PROJECT_DIR$/package.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/async.js" afterPath="$PROJECT_DIR$/src/base/async.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/classes.js" afterPath="$PROJECT_DIR$/src/base/classes.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/comparators.js" afterPath="$PROJECT_DIR$/src/base/comparators.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/exceptions.js" afterPath="$PROJECT_DIR$/src/base/exceptions.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/states.js" afterPath="$PROJECT_DIR$/src/base/states.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/timers.js" afterPath="$PROJECT_DIR$/src/base/timers.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/net/ajax.js" afterPath="$PROJECT_DIR$/src/net/ajax.js" />
-    </list>
+    <list default="true" id="239f3401-6ed8-4cc2-8448-48b5b457f8ba" name="Default" comment="" />
     <ignored path="betajs.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -78,7 +61,7 @@
         <entry file="file://$PROJECT_DIR$/src/base/timers.js">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.5734407">
-              <caret line="19" column="15" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
+              <caret line="19" column="12" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
               <folding />
             </state>
           </provider>
@@ -345,7 +328,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32908162" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33035713" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33035713" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -646,7 +629,7 @@
     <entry file="file://$PROJECT_DIR$/src/base/timers.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.5734407">
-          <caret line="19" column="15" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
+          <caret line="19" column="12" selection-start-line="19" selection-start-column="12" selection-end-line="19" selection-end-column="12" />
           <folding />
         </state>
       </provider>
