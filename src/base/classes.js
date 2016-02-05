@@ -246,7 +246,7 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 
 			constructor: function (classes, lowercase) {
 				inherited.constructor.call(this);
-				this._classes = classes || {};
+				this._classes = Types.is_array(classes) ? classes : [classes || {}];
 				this._lowercase = lowercase;
 			},
 			
@@ -255,20 +255,22 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 			},
 			
 			register: function (key, cls) {
-				this._classes[this._sanitize(key)] = cls;
+				this._classes[this._classes.length - 1][this._sanitize(key)] = cls;
 			},
 			
 			get: function (key) {
-				return Types.is_object(key) ? key : this._classes[this._sanitize(key)];
+				if (!Types.is_string(key))
+					return key;
+				key = this._sanitize(key);
+				for (var i = this._classes.length - 1; i >= 0; --i)
+					if (key in this._classes[i])
+						return this._classes[i][key];
+				return null;
 			},
 			
 			create: function (key) {
 				var cons = Functions.newClassFunc(this.get(key));
 				return cons.apply(this, Functions.getArguments(arguments, 1));
-			},
-			
-			classes: function () {
-				return this._classes;
 			}
 			
 		};

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.29 - 2016-01-30
+betajs - v1.0.31 - 2016-02-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '459.1454134890267'
+		version: '460.1454585708327'
 	};
 });
 
@@ -62,6 +62,11 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Ty
 				clearTimeout(timer);
 				args.func.apply(args.context || this, args.params || []);
 			}, args.time || 0);
+			return timer;
+		},
+		
+		clearEventually: function (ev) {
+			clearTimeout(ev);
 		},
 		
 		eventuallyOnce: function (func, params, context) {
@@ -78,7 +83,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Ty
 			this.__eventuallyOnceIdx++;
 			var index = this.__eventuallyOnceIdx;
 			this.__eventuallyOnce[index] = data;
-			this.eventually(function () {
+			return this.eventually(function () {
 				delete this.__eventuallyOnce[index];
 				func.apply(context || this, params || []);
 			}, this);
@@ -870,7 +875,7 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 
 			constructor: function (classes, lowercase) {
 				inherited.constructor.call(this);
-				this._classes = classes || {};
+				this._classes = Types.is_array(classes) ? classes : [classes || {}];
 				this._lowercase = lowercase;
 			},
 			
@@ -879,20 +884,22 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 			},
 			
 			register: function (key, cls) {
-				this._classes[this._sanitize(key)] = cls;
+				this._classes[this._classes.length - 1][this._sanitize(key)] = cls;
 			},
 			
 			get: function (key) {
-				return Types.is_object(key) ? key : this._classes[this._sanitize(key)];
+				if (!Types.is_string(key))
+					return key;
+				key = this._sanitize(key);
+				for (var i = this._classes.length - 1; i >= 0; --i)
+					if (key in this._classes[i])
+						return this._classes[i][key];
+				return null;
 			},
 			
 			create: function (key) {
 				var cons = Functions.newClassFunc(this.get(key));
 				return cons.apply(this, Functions.getArguments(arguments, 1));
-			},
-			
-			classes: function () {
-				return this._classes;
 			}
 			
 		};
@@ -1487,6 +1494,8 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
 						return false;
 				return true;
 			} else if (Types.is_object(a) && Types.is_object(b)) {
+				if ((a && !b) || (b && !a))
+					return a || b;
 				for (var key in a)
 					if (!this.deepEqual(a[key], b[key], depth - 1))
 						return false;
@@ -1790,7 +1799,10 @@ Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], functi
 Scoped.define("module:Events.Listen", ["module:Class", "module:Events.ListenMixin"], function (Class, Mixin, scoped) {
 	return Class.extend({scoped: scoped}, Mixin);
 });
-Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, scoped) {
+Scoped.define("module:Exceptions.Exception", [
+    "module:Class",
+    "module:Comparators"
+], function (Class, Comparators, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1822,7 +1834,11 @@ Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, 
 					classname: this.cls.classname,
 					message: this.message()
 				};
-			}
+			},
+			
+			equals: function (other) {
+				return other && this.cls === other.cls && Comparators.deepEqual(this.json(), other.json(), -1);
+			}			
 			
 		};
 	});
@@ -5168,6 +5184,8 @@ Scoped.define("module:States.Host", [
 						var split = Strings.splitLast(initial_state, ".");
 						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(split.head)));
 						initial_state = split.tail;
+					} else if (!Types.is_string(initial_state)) {
+						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(initial_state.classname, ".").head)));
 					} else
 						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(this.cls.classname, ".").head)));
 				}
@@ -6474,6 +6492,7 @@ Scoped.define("module:Timers.Timer", [
 			 * object context (optional): for fire
 			 * bool start (optional, default true): should it start immediately
 			 * bool real_time (default false)
+			 * int duration (optiona, default null)
 			 * 
 			 */
 			constructor: function (options) {
@@ -6484,15 +6503,19 @@ Scoped.define("module:Timers.Timer", [
 					fire: null,
 					context: this,
 					destroy_on_fire: false,
-					real_time: false
+					destroy_on_stop: false,
+					real_time: false,
+					duration: null
 				}, options);
 				this.__delay = options.delay;
 				this.__destroy_on_fire = options.destroy_on_fire;
+				this.__destroy_on_stop = options.destroy_on_stop;
 				this.__once = options.once;
 				this.__fire = options.fire;
 				this.__context = options.context;
 				this.__started = false;
 				this.__real_time = options.real_time;
+				this.__end_time = options.duration !== null ? Time.now() + options.duration : null;
 				if (options.start)
 					this.start();
 			},
@@ -6515,8 +6538,10 @@ Scoped.define("module:Timers.Timer", [
 						}
 					}
 				}
+				if (this.__end_time !== null && Time.now() + this.__delay > this.__end_time)
+					this.stop();
 				if (this.__destroy_on_fire)
-					this.destroy();
+					this.weakDestroy();
 			},
 			
 			stop: function () {
@@ -6527,6 +6552,8 @@ Scoped.define("module:Timers.Timer", [
 				else
 					clearInterval(this.__timer);
 				this.__started = false;
+				if (this.__destroy_on_stop)
+					this.weakDestroy();
 			},
 			
 			start: function () {
@@ -7381,7 +7408,10 @@ Scoped.define("module:Classes.LocaleTable", [
 			
 	}]);
 });
-Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+Scoped.define("module:Net.AjaxException", [
+    "module:Exceptions.Exception",
+    "module:Objs"
+], function (Exception, Objs, scoped) {
 	return Exception.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -7405,11 +7435,13 @@ Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], funct
 			},
 
 			json: function () {
-				var obj = inherited.json.call(this);
-				obj.data = this.data();
-				return obj;
+				return Objs.extend({
+					data: this.data(),
+					status_code: this.status_code(),
+					status_text: this.status_text()
+				}, inherited.json.call(this));
 			}
-
+			
 		};
 	});
 });

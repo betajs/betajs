@@ -1,4 +1,7 @@
-Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+Scoped.define("module:Net.AjaxException", [
+    "module:Exceptions.Exception",
+    "module:Objs"
+], function (Exception, Objs, scoped) {
 	return Exception.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -22,11 +25,13 @@ Scoped.define("module:Net.AjaxException", ["module:Exceptions.Exception"], funct
 			},
 
 			json: function () {
-				var obj = inherited.json.call(this);
-				obj.data = this.data();
-				return obj;
+				return Objs.extend({
+					data: this.data(),
+					status_code: this.status_code(),
+					status_text: this.status_text()
+				}, inherited.json.call(this));
 			}
-
+			
 		};
 	});
 });

@@ -1,4 +1,7 @@
-Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, scoped) {
+Scoped.define("module:Exceptions.Exception", [
+    "module:Class",
+    "module:Comparators"
+], function (Class, Comparators, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -30,7 +33,11 @@ Scoped.define("module:Exceptions.Exception", ["module:Class"], function (Class, 
 					classname: this.cls.classname,
 					message: this.message()
 				};
-			}
+			},
+			
+			equals: function (other) {
+				return other && this.cls === other.cls && Comparators.deepEqual(this.json(), other.json(), -1);
+			}			
 			
 		};
 	});
