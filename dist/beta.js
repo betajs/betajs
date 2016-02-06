@@ -1,29 +1,29 @@
 /*!
-betajs - v1.0.32 - 2016-02-05
+betajs - v1.0.33 - 2016-02-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
 /*!
-betajs-scoped - v0.0.6 - 2016-01-25
+betajs-scoped - v0.0.6 - 2016-02-03
 Copyright (c) Oliver Friedmann
 Apache 2.0 Software License.
 */
 var Scoped = function () {
 	var Globals = {
 
-		get: function (key) {
+		get: function (key /* : string */) {
 			if (typeof window !== "undefined") return window[key];
 			if (typeof global !== "undefined") return global[key];
 			return null;
 		},
 
-		set: function (key, value) {
+		set: function (key /* : string */, value) {
 			if (typeof window !== "undefined") window[key] = value;
 			if (typeof global !== "undefined") global[key] = value;
 			return value;
 		},
 
-		setPath: function (path, value) {
+		setPath: function (path /* : string */, value) {
 			var args = path.split(".");
 			if (args.length == 1) return this.set(path, value);
 			var current = this.get(args[0]) || this.set(args[0], {});
@@ -35,7 +35,7 @@ var Scoped = function () {
 			return value;
 		},
 
-		getPath: function (path) {
+		getPath: function (path /* : string */) {
 			var args = path.split(".");
 			if (args.length == 1) return this.get(path);
 			var current = this.get(args[0]);
@@ -47,6 +47,11 @@ var Scoped = function () {
 		}
 
 	};
+	/*::
+ declare module Helper {
+ 	declare function extend<A, B>(a: A, b: B): A & B;
+ }
+ */
 
 	var Helper = {
 
@@ -98,7 +103,7 @@ var Scoped = function () {
 		__namespace: "Scoped",
 		__revert: null,
 
-		upgrade: function (namespace) {
+		upgrade: function (namespace /* : ?string */) {
 			var current = Globals.get(namespace || Attach.__namespace);
 			if (current && Helper.typeOf(current) == "object" && current.guid == this.guid && Helper.typeOf(current.version) == "string") {
 				var my_version = this.version.split(".");
@@ -112,7 +117,7 @@ var Scoped = function () {
 			} else return this.attach(namespace);
 		},
 
-		attach: function (namespace) {
+		attach: function (namespace /* : ?string */) {
 			if (namespace) Attach.__namespace = namespace;
 			var current = Globals.get(Attach.__namespace);
 			if (current == this) return this;
@@ -130,7 +135,7 @@ var Scoped = function () {
 			return this;
 		},
 
-		detach: function (forceDetach) {
+		detach: function (forceDetach /* : ?boolean */) {
 			if (forceDetach) Globals.set(Attach.__namespace, null);
 			if (typeof Attach.__revert != "undefined") Globals.set(Attach.__namespace, Attach.__revert);
 			delete Attach.__revert;
@@ -146,15 +151,31 @@ var Scoped = function () {
 
 	};
 
-	function newNamespace(opts) {
+	function newNamespace(opts /* : {tree ?: boolean, global ?: boolean, root ?: Object} */) {
 
-		var options = {
+		var options /* : {
+              tree: boolean,
+              global: boolean,
+              root: Object
+              } */ = {
 			tree: typeof opts.tree === "boolean" ? opts.tree : false,
 			global: typeof opts.global === "boolean" ? opts.global : false,
 			root: typeof opts.root === "object" ? opts.root : {}
 		};
 
-		function initNode(options) {
+		/*::
+  type Node = {
+  	route: ?string,
+  	parent: ?Node,
+  	children: any,
+  	watchers: any,
+  	data: any,
+  	ready: boolean,
+  	lazy: any
+  };
+  */
+
+		function initNode(options) /* : Node */{
 			return {
 				route: typeof options.route === "string" ? options.route : null,
 				parent: typeof options.parent === "object" ? options.parent : null,
@@ -179,7 +200,7 @@ var Scoped = function () {
 			} else nsRoot.data = options.root;
 		}
 
-		function nodeDigest(node) {
+		function nodeDigest(node /* : Node */) {
 			if (node.ready) return;
 			if (node.parent && !node.parent.ready) {
 				nodeDigest(node.parent);
@@ -194,7 +215,7 @@ var Scoped = function () {
 			}
 		}
 
-		function nodeEnforce(node) {
+		function nodeEnforce(node /* : Node */) {
 			if (node.ready) return;
 			if (node.parent && !node.parent.ready) nodeEnforce(node.parent);
 			node.ready = true;
@@ -205,7 +226,7 @@ var Scoped = function () {
 			node.watchers = [];
 		}
 
-		function nodeSetData(node, value) {
+		function nodeSetData(node /* : Node */, value) {
 			if (typeof value == "object" && node.ready) {
 				for (var key in value) node.data[key] = value[key];
 			} else node.data = value;
@@ -218,13 +239,13 @@ var Scoped = function () {
 			for (var k in node.children) nodeDigest(node.children[k]);
 		}
 
-		function nodeClearData(node) {
+		function nodeClearData(node /* : Node */) {
 			if (node.ready && node.data) {
 				for (var key in node.data) delete node.data[key];
 			}
 		}
 
-		function nodeNavigate(path) {
+		function nodeNavigate(path /* : ?String */) {
 			if (!path) return nsRoot;
 			var routes = path.split(".");
 			var current = nsRoot;
@@ -241,7 +262,7 @@ var Scoped = function () {
 			return current;
 		}
 
-		function nodeAddWatcher(node, callback, context) {
+		function nodeAddWatcher(node /* : Node */, callback, context) {
 			if (node.ready) callback.call(context || this, node.data);else {
 				node.watchers.push({
 					callback: callback,
@@ -260,7 +281,7 @@ var Scoped = function () {
 			}
 		}
 
-		function nodeUnresolvedWatchers(node, base, result) {
+		function nodeUnresolvedWatchers(node /* : Node */, base, result) {
 			node = node || nsRoot;
 			result = result || [];
 			if (!node.ready) result.push(base);
@@ -579,7 +600,7 @@ var Scoped = function () {
 	var Public = Helper.extend(rootScope, {
 
 		guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-		version: '32.1453754118896',
+		version: '35.1454518325486',
 
 		upgrade: Attach.upgrade,
 		attach: Attach.attach,
@@ -608,7 +629,7 @@ var Scoped = function () {
 }.call(this);
 
 /*!
-betajs - v1.0.32 - 2016-02-05
+betajs - v1.0.33 - 2016-02-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -621,7 +642,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '469.1454696259278'
+		version: '470.1454800369656'
 	};
 });
 
@@ -4509,344 +4530,6 @@ Scoped.define("module:RMI.Peer", [
 	});
 });
 
-Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
-                                             "module:Objs" ], function(Class, Strings, Objs, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, function(inherited) {
-		return {
-
-			constructor : function(routes) {
-				inherited.constructor.call(this);
-				this.routes = {};
-				Objs.iter(routes, function(route, key) {
-					this.bind(key, route);
-				}, this);
-			},
-
-			parse : function(route) {
-				for ( var key in this.routes) {
-					var entry = this.routes[key];
-					var result = entry.captureRegex.exec(route);
-					if (result) {
-						return {
-							name : entry.name,
-							args : result
-						};
-					}
-				}
-				return null;
-			},
-
-			format : function(name, args) {
-				args = args || {};
-				var entry = this.routes[name];
-				return Strings.regexReplaceGroups(entry.regex,
-						entry.captureRegex.mapBack(args));
-			},
-
-			bind : function(key, route) {
-				this.routes[key] = {
-						name : key,
-						regex : route,
-						captureRegex : Strings.namedCaptureRegex("^" + route + "$")
-				};
-				return this;
-			}
-
-		};
-	});
-});
-
-Scoped.define("module:Router.RouteMap", [ "module:Class", "module:Strings",
-                                          "module:Objs" ], function(Class, Strings, Objs, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, function(inherited) {
-		return {
-
-			constructor : function(options) {
-				inherited.constructor.call(this);
-				options = options || {};
-				this._defaultMap = options.map;
-				this._context = options.context || this;
-				this._bindings = options.bindings || {};
-			},
-
-			map : function(name, args) {
-				var binding = this._bindings[name];
-				if (binding)
-					return binding.call(this._context, name, args);
-				if (this._defaultMap)
-					return this._defaultMap.call(this._context, name, args);
-				return {
-					name : name,
-					args : args
-				};
-			},
-
-			bind : function(name, func) {
-				this._bindings[name] = func;
-				return this;
-			}
-
-		};
-	});
-});
-
-Scoped.define("module:Router.Router", [ "module:Class",
-                                        "module:Events.EventsMixin", "module:Objs",
-                                        "module:Router.RouteParser", "module:Comparators" ], function(Class,
-                                        		EventsMixin, Objs, RouteParser, Comparators, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, [
-	    EventsMixin,
-	    function(inherited) {
-	    	return {
-
-	    		constructor : function() {
-	    			inherited.constructor.call(this);
-	    			this._routeParser = new RouteParser();
-	    			this._current = null;
-	    		},
-
-	    		destroy : function() {
-	    			this._routeParser.destroy();
-	    			inherited.destroy.call(this);
-	    		},
-
-	    		bind : function(key, route, func, ctx) {
-	    			this._routeParser.bind(key, route);
-	    			if (func)
-	    				this.on("dispatch:" + key, func, ctx);
-	    			return this;
-	    		},
-
-	    		current : function() {
-	    			return this._current;
-	    		},
-
-	    		navigate : function(route) {
-	    			this.trigger("navigate", route);
-	    			this.trigger("navigate:" + route);
-	    			var parsed = this._routeParser.parse(route);
-	    			if (parsed)
-	    				this.dispatch(parsed.name, parsed.args, route);
-	    		},
-
-	    		dispatch : function(name, args, route) {
-	    			if (this._current) {
-	    				if (this._current.name === name && Comparators.deepEqual(args, this._current.args, 2))
-	    					return;
-	    				this.trigger("leave", this._current.name,
-	    						this._current.args, this._current);
-	    				this.trigger("leave:" + this._current.name,
-	    						this._current.args, this._current);
-	    			}
-	    			var current = {
-    					route : route || this.format(name, args),
-    					name : name,
-    					args : args
-	    			};
-	    			this.trigger("dispatch", name, args, current);
-	    			this.trigger("dispatch:" + name, args, current);
-	    			this._current = current;
-	    			this.trigger("dispatched", name, args, current);
-	    			this.trigger("dispatched:" + name, args, current);
-	    		},
-
-	    		format : function(name, args) {
-	    			return this._routeParser.format(name, args);
-	    		}
-
-	    	};
-	    } ]);
-});
-
-
-
-Scoped.define("module:Router.RouteBinder", [ "module:Class", "module:Types" ], function(Class, Types, scoped) {
-	return Class.extend({ scoped : scoped
-	}, function(inherited) {
-		return {
-			
-			_setLocalRoute: function (currentRoute) {},
-			
-			_getLocalRoute: function () {},
-			
-			_localRouteChanged: function () {
-				this.setGlobalRoute(this._getLocalRoute());
-			},
-
-			constructor : function(router) {
-				inherited.constructor.call(this);
-				this._router = router;
-				router.on("dispatched", function () {
-					this.setLocalRoute(router.current());
-				}, this);
-				if (router.current())
-					this.setLocalRoute(router.current());
-				else if (this._getLocalRoute())
-					this.setGlobalRoute(this._getLocalRoute());
-			},
-
-			destroy : function() {
-				this._router.off(null, null, this);
-				inherited.destroy.call(this);
-			},
-			
-			setLocalRoute: function (currentRoute) {
-				this._setLocalRoute(currentRoute);
-			},
-			
-			setGlobalRoute: function (route) {
-				if (Types.is_string(route))
-					this._router.navigate(route);
-				else
-					this._router.dispatch(route.name, route.args);
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "module:Objs", "module:Strings",
-                                                  "module:Router.RouteMap" ], function(RouteBinder, Objs, Strings, RouteMap, scoped) {
-	return RouteBinder.extend({ scoped : scoped
-	}, function(inherited) {
-		return {
-
-			constructor : function(router, stateHost, options) {
-				this._stateHost = stateHost;
-				options = Objs.extend({
-					capitalizeStates: false
-				}, options);
-				this._options = options;
-				this._routeToState = new RouteMap({
-					map : this._options.routeToState || function (name, args) {
-						return {
-							name: options.capitalizeStates ? Strings.capitalize(name) : name,
-							args: args
-						};
-					},
-					context : this._options.context
-				});
-				this._stateToRoute = new RouteMap({
-					map : this._options.stateToRoute || function (name, args) {
-						return {
-							name: name.toLowerCase(),
-							args: args
-						};
-					},
-					context : this._options.context
-				});
-				inherited.constructor.call(this, router);
-				stateHost.on("start", this._localRouteChanged, this);
-			},
-
-			destroy : function() {
-				this._routeToState.destroy();
-				this._stateToRoute.destroy();
-				this._stateHost.off(null, null, this);
-				inherited.destroy.call(this);
-			},
-
-			bindRouteToState : function(name, func) {
-				this._routeToState.bind(name, func);
-				return this;
-			},
-
-			bindStateToRoute : function(name, func) {
-				this._stateToRoute.bind(name, func);
-				return this;
-			},
-
-			register: function (name, route, extension) {
-				this._router.bind(name, route);
-				this._stateHost.register(this._options.capitalizeStates ? Strings.capitalize(name) : name, extension);
-				return this;
-			},			
-
-			_setLocalRoute: function (currentRoute) {
-				var mapped = this._routeToState.map(currentRoute.name, currentRoute.args);
-				if (mapped) {
-					this._stateHost.weakNext(mapped.name, mapped.args);
-					/*
-					Objs.iter(args, function (value, key) {
-						this._stateHost.set(key, value);
-					}, this);
-					*/
-				}
-			},
-			
-			_getLocalRoute: function () {
-				if (!this._stateHost.state())
-					return null;
-				var state = this._stateHost.state();
-				return this._stateToRoute.map(state.state_name(), state.allAttr());
-			}			
-
-		};
-	});
-});
-
-Scoped.define("module:Router.RouterHistory", [ "module:Class",
-                                               "module:Events.EventsMixin" ], function(Class, EventsMixin, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, [ EventsMixin, function(inherited) {
-		return {
-
-			constructor : function(router) {
-				inherited.constructor.call(this);
-				this._router = router;
-				this._history = [];
-				router.on("dispatched", function(name, args, current) {
-					this._history.push(current);
-					this.trigger("change", current);
-					this.trigger("insert", current);
-				}, this);
-			},
-
-			destroy : function() {
-				this._router.off(null, null, this);
-				inherited.destroy.call(this);
-			},
-
-			last : function(index) {
-				index = index || 0;
-				return this.get(this.count() - 1 - index);
-			},
-
-			count : function() {
-				return this._history.length;
-			},
-
-			get : function(index) {
-				index = index || 0;
-				return this._history[index];
-			},
-
-			back : function(index) {
-				if (this.count() < 2)
-					return null;
-				index = index || 0;
-				while (index >= 0 && this.count() > 1) {
-					var removed = this._history.pop();
-					this.trigger("remove", removed);
-					--index;
-				}
-				var item = this._history.pop();
-				this.trigger("change", item);
-				return this._router.dispatch(item.name, item.args);
-			}
-
-		};
-	} ]);
-});
-
 Scoped.define("module:Sort", [
 	    "module:Comparators",	    
 	    "module:Types",
@@ -4947,465 +4630,6 @@ Scoped.define("module:Sort", [
 	};
 });
 
-Scoped.define("module:States.Host", [
-                                     "module:Properties.Properties",
-                                     "module:Events.EventsMixin",
-                                     "module:States.State",
-                                     "module:Types",
-                                     "module:Strings",
-                                     "module:Classes.ClassRegistry"
-                                     ], function (Class, EventsMixin, State, Types, Strings, ClassRegistry, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
-		return {
-
-			constructor: function (options) {
-				inherited.constructor.call(this);
-				options = options || {};
-				this._stateRegistry = options.stateRegistry;
-				this._baseState = options.baseState;
-			},
-
-			initialize: function (initial_state, initial_args) {
-				if (!this._stateRegistry) {
-					if (Types.is_string(initial_state) && initial_state.indexOf(".") >= 0) {
-						var split = Strings.splitLast(initial_state, ".");
-						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(split.head)));
-						initial_state = split.tail;
-					} else if (!Types.is_string(initial_state)) {
-						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(initial_state.classname, ".").head)));
-					} else
-						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(this.cls.classname, ".").head)));
-				}
-				this._createState(initial_state, initial_args).start();
-				this._baseState = this._baseState || this._state.cls; 
-			},
-
-			_createState: function (state, args, transitionals) {
-				return this._stateRegistry.create(state, this, args || {}, transitionals || {});
-			},
-
-			finalize: function () {
-				if (this._state)
-					this._state.destroy();
-				this._state = null;    	
-			},
-
-			destroy: function () {
-				this.finalize();
-				inherited.destroy.call(this);
-			},
-
-			state: function () {
-				return this._state;
-			},
-
-			state_name: function () {
-				return this.state().state_name();
-			},
-
-			next: function () {
-				return this.state() ? this.state().next.apply(this.state(), arguments) : this.initialize.apply(this, arguments);
-			},
-			
-			weakNext: function () {
-				return this.state() ? this.state().weakNext.apply(this.state(), arguments) : this.initialize.apply(this, arguments);
-			},
-			
-			_start: function (state) {
-				this._stateEvent(state, "before_start");
-				this._state = state;
-				this.set("name", state.state_name());
-			},
-
-			_afterStart: function (state) {
-				this._stateEvent(state, "start");
-			},
-
-			_end: function (state) {
-				this._stateEvent(state, "end");
-				this._state = null;
-			},
-
-			_afterEnd: function (state) {
-				this._stateEvent(state, "after_end");
-			},
-
-			_next: function (state) {
-				this._stateEvent(state, "next");
-			},
-
-			_afterNext: function (state) {
-				this._stateEvent(state, "after_next");
-			},
-
-			_can_transition_to: function (state) {
-				return true;
-			},
-
-			_stateEvent: function (state, s) {
-				this.trigger("event", s, state.state_name(), state.description());
-				this.trigger(s, state.state_name(), state.description());
-				this.trigger(s + ":" + state.state_name(), state.description());
-			},
-
-			register: function (state_name, parent_state, extend) {
-				if (!Types.is_string(parent_state)) {
-					extend = parent_state;
-					parent_state = null;
-				}
-				if (!this._stateRegistry)
-					this._stateRegistry = this._auto_destroy(new ClassRegistry(Strings.splitLast(this.cls.classname).head));
-				var base = this._baseState ? (Strings.splitLast(this._baseState.classname, ".").head + "." + state_name) : (state_name.indexOf(".") >= 0 ? state_name : null);
-				var cls = (this._stateRegistry.get(parent_state) || this._baseState || State).extend(base, extend);
-				if (!base)
-					cls.classname = state_name;
-				this._stateRegistry.register(Strings.last_after(state_name, "."), cls);
-				return this;
-			}
-
-		};
-	}]);
-});
-
-
-Scoped.define("module:States.State", [
-                                      "module:Class",
-                                      "module:Types",
-                                      "module:Strings",
-                                      "module:Async",
-                                      "module:Objs"
-                                      ], function (Class, Types, Strings, Async, Objs, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			_locals: [],
-			_persistents: [],
-			_defaults: {},
-
-			_white_list: null,
-
-			constructor: function (host, args, transitionals) {
-				inherited.constructor.call(this);
-				this.host = host;
-				this.transitionals = transitionals;
-				this._starting = false;
-				this._started = false;
-				this._stopped = false;
-				this._transitioning = false;
-				this.__next_state = null;
-				this.__suspended = 0;
-				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
-				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
-				var used = {};
-				for (var i = 0; i < this._locals.length; ++i) {
-					this["_" + this._locals[i]] = args[this._locals[i]];
-					used[this._locals[i]] = true;
-				}
-				this._persistents = Types.is_function(this._persistents) ? this._persistents() : this._persistents;
-				for (i = 0; i < this._persistents.length; ++i) {
-					this["_" + this._persistents[i]] = args[this._persistents[i]];
-					used[this._locals[i]] = true;
-				}
-				host.suspendEvents();
-				Objs.iter(args, function (value, key) {
-					if (!used[key])
-						host.set(key, value);
-				}, this);
-				host.resumeEvents();
-			},
-			
-			allAttr: function () {
-				var result = Objs.clone(this.host.data(), 1);
-				Objs.iter(this._locals, function (key) {
-					result[key] = this["_" + key];
-				}, this);
-				Objs.iter(this._persistents, function (key) {
-					result[key] = this["_" + key];
-				}, this);
-				return result;
-			},
-
-			state_name: function () {
-				return Strings.last_after(this.cls.classname, ".");
-			},
-
-			description: function () {
-				return this.state_name();
-			},
-
-			start: function () {
-				if (this._starting)
-					return;
-				this._starting = true;
-				this.host._start(this);
-				this._start();
-				if (this.host) {
-					this.host._afterStart(this);
-					this._started = true;
-				}
-			},
-
-			end: function () {
-				if (this._stopped)
-					return;
-				this._stopped = true;
-				this._end();
-				this.host._end(this);
-				this.host._afterEnd(this);
-				this.destroy();
-			},
-
-			eventualNext: function (state_name, args, transitionals) {
-				this.suspend();
-				this.next(state_name, args, transitionals);
-				this.eventualResume();
-			},
-
-			next: function (state_name, args, transitionals) {
-				if (!this._starting || this._stopped || this.__next_state)
-					return;
-				args = args || {};
-				for (var i = 0; i < this._persistents.length; ++i) {
-					if (!(this._persistents[i] in args))
-						args[this._persistents[i]] = this["_" + this._persistents[i]];
-				}
-				var obj = this.host._createState(state_name, args, transitionals);
-				if (!this.can_transition_to(obj)) {
-					obj.destroy();
-					return;
-				}
-				if (!this._started) {
-					this.host._afterStart(this);
-					this._started = true;
-				}
-				this.__next_state = obj;
-				this._transitioning = true;
-				this._transition();
-				if (this.__suspended <= 0)
-					this.__next();
-			},
-			
-			weakSame: function (state_name, args, transitionals) {
-				var same = true;
-				if (state_name !== this.state_name())
-					same = false;
-				var all = this.allAttr();
-				Objs.iter(args, function (value, key) {
-					if (all[key] !== value)
-						same = false;
-				}, this);
-				return same;
-			},
-			
-			weakNext: function (state_name, args, transitionals) {
-				return this.weakSame.apply(this, arguments) ? this : this.next.apply(this, arguments);
-			},
-
-			__next: function () {
-				var host = this.host;
-				var obj = this.__next_state;
-				host._next(obj);
-				this.end();
-				obj.start();
-				host._afterNext(obj);
-			},
-
-			_transition: function () {
-			},
-
-			suspend: function () {
-				this.__suspended++;
-			},
-
-			eventualResume: function () {
-				Async.eventually(this.resume, this);
-			},
-
-			resume: function () {
-				this.__suspended--;
-				if (this.__suspended === 0 && !this._stopped && this.__next_state)
-					this.__next();
-			},
-
-			can_transition_to: function (state) {
-				return this.host && this.host._can_transition_to(state) && this._can_transition_to(state);
-			},
-
-			_start: function () {},
-
-			_end: function () {},
-
-			_can_transition_to: function (state) {
-				return !Types.is_array(this._white_list) || Objs.contains_value(this._white_list, state.state_name());
-			}
-
-		};
-	}, {
-
-		_extender: {
-			_defaults: function (base, overwrite) {
-				return Objs.extend(Objs.clone(base, 1), overwrite);
-			}
-		}
-
-	});
-});
-
-
-
-Scoped.define("module:States.CompetingComposite", [
-                                                   "module:Class",
-                                                   "module:Objs"
-                                                   ], function (Class, Objs, scoped) {
-	return Class.extend({scoped: scoped}, {
-
-		_register_host: function (competing_host) {
-			this._hosts = this._hosts || [];
-			this._hosts.push(this._auto_destroy(competing_host));
-		},
-
-		other_hosts: function (competing_host) {
-			return Objs.filter(this._hosts || [], function (other) {
-				return other != competing_host;
-			}, this);
-		},
-
-		_next: function (competing_host, state) {
-			var others = this.other_hosts(competing_host);
-			for (var i = 0; i < others.length; ++i) {
-				var other = others[i];
-				var other_state = other.state();
-				if (!other_state.can_coexist_with(state))
-					other_state.retreat_against(state);
-			}
-		}
-
-	});
-});
-
-
-Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (Host, scoped) {
-	return Host.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (composite) {
-				inherited.constructor.call(this);
-				this._composite = composite;
-				if (composite)
-					composite._register_host(this);
-			},
-
-			composite: function () {
-				return this._composite;
-			},
-
-			_can_transition_to: function (state) {
-				if (!this._composite)
-					return true;
-				var others = this._composite.other_hosts(this);
-				for (var i = 0; i < others.length; ++i) {
-					var other = others[i];
-					var other_state = other.state();
-					if (!state.can_coexist_with(other_state) && !state.can_prevail_against(other_state))
-						return false;
-				}
-				return true;
-			},
-
-			_next: function (state) {
-				if (this._composite)
-					this._composite._next(this, state);
-				inherited._next.call(this, state);
-			}
-
-		};
-	});    
-});
-
-
-Scoped.define("module:States.CompetingState", ["module:States.State"], function (State, scoped) {
-	return State.extend({scoped: scoped}, {
-
-		can_coexist_with: function (foreign_state) {
-			return true;
-		},
-
-		can_prevail_against: function (foreign_state) {
-			return false;
-		},
-
-		retreat_against: function (foreign_state) {
-		}
-
-	});
-});
-
-
-Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], function (Class, Objs, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (host) {
-				inherited.constructor.call(this);
-				this._host = host;
-				this._routes = [];
-				this._states = {};
-			},
-
-			registerRoute: function (route, state, mapping) {
-				var descriptor = {
-						key: route,
-						route: new RegExp("^" + route + "$"),
-						state: state,
-						mapping: mapping || []
-				};
-				this._routes.push(descriptor);
-				this._states[state] = descriptor;
-				return this;
-			},
-
-			readRoute: function (stateObject) {
-				var descriptor = this._states[stateObject.state_name()];
-				if (!descriptor)
-					return null;
-				var regex = /\(.*?\)/;
-				var route = descriptor.key;
-				Objs.iter(descriptor.mapping, function (arg) {
-					route = route.replace(regex, stateObject["_" + arg]);
-				}, this);
-				return route;
-			},
-
-			parseRoute: function (route) {
-				for (var i = 0; i < this._routes.length; ++i) {
-					var descriptor = this._routes[i];
-					var result = descriptor.route.exec(route);
-					if (result === null)
-						continue;
-					var args = {};
-					for (var j = 0; j < descriptor.mapping.length; ++j)
-						args[descriptor.mapping[j]] = result[j + 1];
-					return {
-						state: descriptor.state,
-						args: args
-					};
-				}
-				return null;
-			},
-
-			currentRoute: function () {
-				return this.readRoute(this._host.state());
-			},
-
-			navigateRoute: function (route) {
-				var parsed = this.parseRoute(route);
-				if (parsed)
-					this._host.next(parsed.state, parsed.args);
-			}
-
-		};		
-	});
-});
 Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 	/** String Utilities
 	 * @module BetaJS.Strings
@@ -8407,4 +7631,803 @@ Scoped.define("module:Net.Uri", ["module:Objs", "module:Types"], function (Objs,
 	
 	};
 });	
+Scoped.define("module:States.CompetingComposite", [
+                                                   "module:Class",
+                                                   "module:Objs"
+                                                   ], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, {
+
+		_register_host: function (competing_host) {
+			this._hosts = this._hosts || [];
+			this._hosts.push(this._auto_destroy(competing_host));
+		},
+
+		other_hosts: function (competing_host) {
+			return Objs.filter(this._hosts || [], function (other) {
+				return other != competing_host;
+			}, this);
+		},
+
+		_next: function (competing_host, state) {
+			var others = this.other_hosts(competing_host);
+			for (var i = 0; i < others.length; ++i) {
+				var other = others[i];
+				var other_state = other.state();
+				if (!other_state.can_coexist_with(state))
+					other_state.retreat_against(state);
+			}
+		}
+
+	});
+});
+
+
+Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (Host, scoped) {
+	return Host.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (composite) {
+				inherited.constructor.call(this);
+				this._composite = composite;
+				if (composite)
+					composite._register_host(this);
+			},
+
+			composite: function () {
+				return this._composite;
+			},
+
+			_can_transition_to: function (state) {
+				if (!this._composite)
+					return true;
+				var others = this._composite.other_hosts(this);
+				for (var i = 0; i < others.length; ++i) {
+					var other = others[i];
+					var other_state = other.state();
+					if (!state.can_coexist_with(other_state) && !state.can_prevail_against(other_state))
+						return false;
+				}
+				return true;
+			},
+
+			_next: function (state) {
+				if (this._composite)
+					this._composite._next(this, state);
+				inherited._next.call(this, state);
+			}
+
+		};
+	});    
+});
+
+
+Scoped.define("module:States.CompetingState", ["module:States.State"], function (State, scoped) {
+	return State.extend({scoped: scoped}, {
+
+		can_coexist_with: function (foreign_state) {
+			return true;
+		},
+
+		can_prevail_against: function (foreign_state) {
+			return false;
+		},
+
+		retreat_against: function (foreign_state) {
+		}
+
+	});
+});
+
+Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
+                                             "module:Objs" ], function(Class, Strings, Objs, scoped) {
+	return Class.extend({
+		scoped : scoped
+	}, function(inherited) {
+		return {
+
+			constructor : function(routes) {
+				inherited.constructor.call(this);
+				this.routes = {};
+				Objs.iter(routes, function(route, key) {
+					this.bind(key, route);
+				}, this);
+			},
+
+			parse : function(route) {
+				for ( var key in this.routes) {
+					var entry = this.routes[key];
+					var result = entry.captureRegex.exec(route);
+					if (result) {
+						return {
+							name : entry.name,
+							args : result
+						};
+					}
+				}
+				return null;
+			},
+
+			format : function(name, args) {
+				args = args || {};
+				var entry = this.routes[name];
+				return Strings.regexReplaceGroups(entry.regex,
+						entry.captureRegex.mapBack(args));
+			},
+
+			bind : function(key, route) {
+				this.routes[key] = {
+						name : key,
+						regex : route,
+						captureRegex : Strings.namedCaptureRegex("^" + route + "$")
+				};
+				return this;
+			}
+
+		};
+	});
+});
+
+Scoped.define("module:Router.RouteMap", [ "module:Class", "module:Strings",
+                                          "module:Objs" ], function(Class, Strings, Objs, scoped) {
+	return Class.extend({
+		scoped : scoped
+	}, function(inherited) {
+		return {
+
+			constructor : function(options) {
+				inherited.constructor.call(this);
+				options = options || {};
+				this._defaultMap = options.map;
+				this._context = options.context || this;
+				this._bindings = options.bindings || {};
+			},
+
+			map : function(name, args) {
+				var binding = this._bindings[name];
+				if (binding)
+					return binding.call(this._context, name, args);
+				if (this._defaultMap)
+					return this._defaultMap.call(this._context, name, args);
+				return {
+					name : name,
+					args : args
+				};
+			},
+
+			bind : function(name, func) {
+				this._bindings[name] = func;
+				return this;
+			}
+
+		};
+	});
+});
+
+Scoped.define("module:Router.Router", [ "module:Class",
+                                        "module:Events.EventsMixin", "module:Objs",
+                                        "module:Router.RouteParser", "module:Comparators" ], function(Class,
+                                        		EventsMixin, Objs, RouteParser, Comparators, scoped) {
+	return Class.extend({
+		scoped : scoped
+	}, [
+	    EventsMixin,
+	    function(inherited) {
+	    	return {
+
+	    		constructor : function() {
+	    			inherited.constructor.call(this);
+	    			this._routeParser = new RouteParser();
+	    			this._current = null;
+	    		},
+
+	    		destroy : function() {
+	    			this._routeParser.destroy();
+	    			inherited.destroy.call(this);
+	    		},
+
+	    		bind : function(key, route, func, ctx) {
+	    			this._routeParser.bind(key, route);
+	    			if (func)
+	    				this.on("dispatch:" + key, func, ctx);
+	    			return this;
+	    		},
+
+	    		current : function() {
+	    			return this._current;
+	    		},
+
+	    		navigate : function(route) {
+	    			this.trigger("navigate", route);
+	    			this.trigger("navigate:" + route);
+	    			var parsed = this._routeParser.parse(route);
+	    			if (parsed)
+	    				this.dispatch(parsed.name, parsed.args, route);
+	    		},
+
+	    		dispatch : function(name, args, route) {
+	    			if (this._current) {
+	    				if (this._current.name === name && Comparators.deepEqual(args, this._current.args, 2))
+	    					return;
+	    				this.trigger("leave", this._current.name,
+	    						this._current.args, this._current);
+	    				this.trigger("leave:" + this._current.name,
+	    						this._current.args, this._current);
+	    			}
+	    			var current = {
+    					route : route || this.format(name, args),
+    					name : name,
+    					args : args
+	    			};
+	    			this.trigger("dispatch", name, args, current);
+	    			this.trigger("dispatch:" + name, args, current);
+	    			this._current = current;
+	    			this.trigger("dispatched", name, args, current);
+	    			this.trigger("dispatched:" + name, args, current);
+	    		},
+
+	    		format : function(name, args) {
+	    			return this._routeParser.format(name, args);
+	    		}
+
+	    	};
+	    } ]);
+});
+
+
+
+Scoped.define("module:Router.RouteBinder", [ "module:Class", "module:Types" ], function(Class, Types, scoped) {
+	return Class.extend({ scoped : scoped
+	}, function(inherited) {
+		return {
+			
+			_setLocalRoute: function (currentRoute) {},
+			
+			_getLocalRoute: function () {},
+			
+			_localRouteChanged: function () {
+				this.setGlobalRoute(this._getLocalRoute());
+			},
+
+			constructor : function(router) {
+				inherited.constructor.call(this);
+				this._router = router;
+				router.on("dispatched", function () {
+					this.setLocalRoute(router.current());
+				}, this);
+				if (router.current())
+					this.setLocalRoute(router.current());
+				else if (this._getLocalRoute())
+					this.setGlobalRoute(this._getLocalRoute());
+			},
+
+			destroy : function() {
+				this._router.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+			
+			setLocalRoute: function (currentRoute) {
+				this._setLocalRoute(currentRoute);
+			},
+			
+			setGlobalRoute: function (route) {
+				if (Types.is_string(route))
+					this._router.navigate(route);
+				else
+					this._router.dispatch(route.name, route.args);
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "module:Objs", "module:Strings",
+                                                  "module:Router.RouteMap" ], function(RouteBinder, Objs, Strings, RouteMap, scoped) {
+	return RouteBinder.extend({ scoped : scoped
+	}, function(inherited) {
+		return {
+
+			constructor : function(router, stateHost, options) {
+				this._stateHost = stateHost;
+				options = Objs.extend({
+					capitalizeStates: false
+				}, options);
+				this._options = options;
+				this._routeToState = new RouteMap({
+					map : this._options.routeToState || function (name, args) {
+						return {
+							name: options.capitalizeStates ? Strings.capitalize(name) : name,
+							args: args
+						};
+					},
+					context : this._options.context
+				});
+				this._stateToRoute = new RouteMap({
+					map : this._options.stateToRoute || function (name, args) {
+						return {
+							name: name.toLowerCase(),
+							args: args
+						};
+					},
+					context : this._options.context
+				});
+				inherited.constructor.call(this, router);
+				stateHost.on("start", this._localRouteChanged, this);
+			},
+
+			destroy : function() {
+				this._routeToState.destroy();
+				this._stateToRoute.destroy();
+				this._stateHost.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+
+			bindRouteToState : function(name, func) {
+				this._routeToState.bind(name, func);
+				return this;
+			},
+
+			bindStateToRoute : function(name, func) {
+				this._stateToRoute.bind(name, func);
+				return this;
+			},
+
+			register: function (name, route, extension) {
+				this._router.bind(name, route);
+				this._stateHost.register(this._options.capitalizeStates ? Strings.capitalize(name) : name, extension);
+				return this;
+			},			
+
+			_setLocalRoute: function (currentRoute) {
+				var mapped = this._routeToState.map(currentRoute.name, currentRoute.args);
+				if (mapped) {
+					this._stateHost.weakNext(mapped.name, mapped.args);
+					/*
+					Objs.iter(args, function (value, key) {
+						this._stateHost.set(key, value);
+					}, this);
+					*/
+				}
+			},
+			
+			_getLocalRoute: function () {
+				if (!this._stateHost.state())
+					return null;
+				var state = this._stateHost.state();
+				return this._stateToRoute.map(state.state_name(), state.allAttr());
+			}			
+
+		};
+	});
+});
+
+Scoped.define("module:Router.RouterHistory", [ "module:Class",
+                                               "module:Events.EventsMixin" ], function(Class, EventsMixin, scoped) {
+	return Class.extend({
+		scoped : scoped
+	}, [ EventsMixin, function(inherited) {
+		return {
+
+			constructor : function(router) {
+				inherited.constructor.call(this);
+				this._router = router;
+				this._history = [];
+				router.on("dispatched", function(name, args, current) {
+					this._history.push(current);
+					this.trigger("change", current);
+					this.trigger("insert", current);
+				}, this);
+			},
+
+			destroy : function() {
+				this._router.off(null, null, this);
+				inherited.destroy.call(this);
+			},
+
+			last : function(index) {
+				index = index || 0;
+				return this.get(this.count() - 1 - index);
+			},
+
+			count : function() {
+				return this._history.length;
+			},
+
+			get : function(index) {
+				index = index || 0;
+				return this._history[index];
+			},
+
+			back : function(index) {
+				if (this.count() < 2)
+					return null;
+				index = index || 0;
+				while (index >= 0 && this.count() > 1) {
+					var removed = this._history.pop();
+					this.trigger("remove", removed);
+					--index;
+				}
+				var item = this._history.pop();
+				this.trigger("change", item);
+				return this._router.dispatch(item.name, item.args);
+			}
+
+		};
+	} ]);
+});
+
+Scoped.define("module:States.Host", [
+                                     "module:Properties.Properties",
+                                     "module:Events.EventsMixin",
+                                     "module:States.State",
+                                     "module:Types",
+                                     "module:Strings",
+                                     "module:Classes.ClassRegistry"
+                                     ], function (Class, EventsMixin, State, Types, Strings, ClassRegistry, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		return {
+
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				options = options || {};
+				this._stateRegistry = options.stateRegistry;
+				this._baseState = options.baseState;
+			},
+
+			initialize: function (initial_state, initial_args) {
+				if (!this._stateRegistry) {
+					var s = null;
+					if (Types.is_string(initial_state) && initial_state.indexOf(".") >= 0) {
+						var split = Strings.splitLast(initial_state, ".");
+						initial_state = split.tail;
+						s = split.head;
+					} else if (!Types.is_string(initial_state))
+						s = Strings.splitLast(initial_state.classname, ".").head;
+					else
+						s = Strings.splitLast(this.cls.classname, ".").head;
+					this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(s)));
+				}
+				this._createState(initial_state, initial_args).start();
+				this._baseState = this._baseState || this._state.cls; 
+			},
+
+			_createState: function (state, args, transitionals) {
+				return this._stateRegistry.create(state, this, args || {}, transitionals || {});
+			},
+
+			finalize: function () {
+				if (this._state)
+					this._state.destroy();
+				this._state = null;    	
+			},
+
+			destroy: function () {
+				this.finalize();
+				inherited.destroy.call(this);
+			},
+
+			state: function () {
+				return this._state;
+			},
+
+			state_name: function () {
+				return this.state().state_name();
+			},
+
+			next: function () {
+				return this.state() ? this.state().next.apply(this.state(), arguments) : this.initialize.apply(this, arguments);
+			},
+			
+			weakNext: function () {
+				return this.state() ? this.state().weakNext.apply(this.state(), arguments) : this.initialize.apply(this, arguments);
+			},
+			
+			_start: function (state) {
+				this._stateEvent(state, "before_start");
+				this._state = state;
+				this.set("name", state.state_name());
+			},
+
+			_afterStart: function (state) {
+				this._stateEvent(state, "start");
+			},
+
+			_end: function (state) {
+				this._stateEvent(state, "end");
+				this._state = null;
+			},
+
+			_afterEnd: function (state) {
+				this._stateEvent(state, "after_end");
+			},
+
+			_next: function (state) {
+				this._stateEvent(state, "next");
+			},
+
+			_afterNext: function (state) {
+				this._stateEvent(state, "after_next");
+			},
+
+			_can_transition_to: function (state) {
+				return true;
+			},
+
+			_stateEvent: function (state, s) {
+				this.trigger("event", s, state.state_name(), state.description());
+				this.trigger(s, state.state_name(), state.description());
+				this.trigger(s + ":" + state.state_name(), state.description());
+			},
+
+			register: function (state_name, parent_state, extend) {
+				if (!Types.is_string(parent_state)) {
+					extend = parent_state;
+					parent_state = null;
+				}
+				if (!this._stateRegistry)
+					this._stateRegistry = this._auto_destroy(new ClassRegistry(Strings.splitLast(this.cls.classname).head));
+				var base = this._baseState ? (Strings.splitLast(this._baseState.classname, ".").head + "." + state_name) : (state_name.indexOf(".") >= 0 ? state_name : null);
+				var cls = (this._stateRegistry.get(parent_state) || this._baseState || State).extend(base, extend);
+				if (!base)
+					cls.classname = state_name;
+				this._stateRegistry.register(Strings.last_after(state_name, "."), cls);
+				return this;
+			}
+
+		};
+	}]);
+});
+
+
+Scoped.define("module:States.State", [
+                                      "module:Class",
+                                      "module:Types",
+                                      "module:Strings",
+                                      "module:Async",
+                                      "module:Objs"
+                                      ], function (Class, Types, Strings, Async, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			_locals: [],
+			_persistents: [],
+			_defaults: {},
+
+			_white_list: null,
+			
+			_starting: false,
+			_started: false,
+			_stopped: false,
+			_transitioning: false,
+			__next_state: null,
+			__suspended: 0,
+
+			constructor: function (host, args, transitionals) {
+				inherited.constructor.call(this);
+				this.host = host;
+				this.transitionals = transitionals;
+				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
+				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
+				var used = {};
+				for (var i = 0; i < this._locals.length; ++i) {
+					this["_" + this._locals[i]] = args[this._locals[i]];
+					used[this._locals[i]] = true;
+				}
+				this._persistents = Types.is_function(this._persistents) ? this._persistents() : this._persistents;
+				for (i = 0; i < this._persistents.length; ++i) {
+					this["_" + this._persistents[i]] = args[this._persistents[i]];
+					used[this._locals[i]] = true;
+				}
+				host.suspendEvents();
+				Objs.iter(args, function (value, key) {
+					if (!used[key])
+						host.set(key, value);
+				}, this);
+				host.resumeEvents();
+			},
+			
+			allAttr: function () {
+				var result = Objs.clone(this.host.data(), 1);
+				Objs.iter(this._locals, function (key) {
+					result[key] = this["_" + key];
+				}, this);
+				Objs.iter(this._persistents, function (key) {
+					result[key] = this["_" + key];
+				}, this);
+				return result;
+			},
+
+			state_name: function () {
+				return Strings.last_after(this.cls.classname, ".");
+			},
+
+			description: function () {
+				return this.state_name();
+			},
+
+			start: function () {
+				if (this._starting)
+					return;
+				this._starting = true;
+				this.host._start(this);
+				this._start();
+				if (this.host) {
+					this.host._afterStart(this);
+					this._started = true;
+				}
+			},
+
+			end: function () {
+				if (this._stopped)
+					return;
+				this._stopped = true;
+				this._end();
+				this.host._end(this);
+				this.host._afterEnd(this);
+				this.destroy();
+			},
+
+			eventualNext: function (state_name, args, transitionals) {
+				this.suspend();
+				this.next(state_name, args, transitionals);
+				this.eventualResume();
+			},
+
+			next: function (state_name, args, transitionals) {
+				if (!this._starting || this._stopped || this.__next_state)
+					return;
+				args = args || {};
+				for (var i = 0; i < this._persistents.length; ++i) {
+					if (!(this._persistents[i] in args))
+						args[this._persistents[i]] = this["_" + this._persistents[i]];
+				}
+				var obj = this.host._createState(state_name, args, transitionals);
+				if (!this.can_transition_to(obj)) {
+					obj.destroy();
+					return;
+				}
+				if (!this._started) {
+					this.host._afterStart(this);
+					this._started = true;
+				}
+				this.__next_state = obj;
+				this._transitioning = true;
+				this._transition();
+				if (this.__suspended <= 0)
+					this.__next();
+			},
+			
+			weakSame: function (state_name, args, transitionals) {
+				var same = true;
+				if (state_name !== this.state_name())
+					same = false;
+				var all = this.allAttr();
+				Objs.iter(args, function (value, key) {
+					if (all[key] !== value)
+						same = false;
+				}, this);
+				return same;
+			},
+			
+			weakNext: function (state_name, args, transitionals) {
+				return this.weakSame.apply(this, arguments) ? this : this.next.apply(this, arguments);
+			},
+
+			__next: function () {
+				var host = this.host;
+				var obj = this.__next_state;
+				host._next(obj);
+				this.end();
+				obj.start();
+				host._afterNext(obj);
+			},
+
+			_transition: function () {
+			},
+
+			suspend: function () {
+				this.__suspended++;
+			},
+
+			eventualResume: function () {
+				Async.eventually(this.resume, this);
+			},
+
+			resume: function () {
+				this.__suspended--;
+				if (this.__suspended === 0 && !this._stopped && this.__next_state)
+					this.__next();
+			},
+
+			can_transition_to: function (state) {
+				return this.host && this.host._can_transition_to(state) && this._can_transition_to(state);
+			},
+
+			_start: function () {},
+
+			_end: function () {},
+
+			_can_transition_to: function (state) {
+				return !Types.is_array(this._white_list) || Objs.contains_value(this._white_list, state.state_name());
+			}
+
+		};
+	}, {
+
+		_extender: {
+			_defaults: function (base, overwrite) {
+				return Objs.extend(Objs.clone(base, 1), overwrite);
+			}
+		}
+
+	});
+});
+
+
+Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (host) {
+				inherited.constructor.call(this);
+				this._host = host;
+				this._routes = [];
+				this._states = {};
+			},
+
+			registerRoute: function (route, state, mapping) {
+				var descriptor = {
+						key: route,
+						route: new RegExp("^" + route + "$"),
+						state: state,
+						mapping: mapping || []
+				};
+				this._routes.push(descriptor);
+				this._states[state] = descriptor;
+				return this;
+			},
+
+			readRoute: function (stateObject) {
+				var descriptor = this._states[stateObject.state_name()];
+				if (!descriptor)
+					return null;
+				var regex = /\(.*?\)/;
+				var route = descriptor.key;
+				Objs.iter(descriptor.mapping, function (arg) {
+					route = route.replace(regex, stateObject["_" + arg]);
+				}, this);
+				return route;
+			},
+
+			parseRoute: function (route) {
+				for (var i = 0; i < this._routes.length; ++i) {
+					var descriptor = this._routes[i];
+					var result = descriptor.route.exec(route);
+					if (result === null)
+						continue;
+					var args = {};
+					for (var j = 0; j < descriptor.mapping.length; ++j)
+						args[descriptor.mapping[j]] = result[j + 1];
+					return {
+						state: descriptor.state,
+						args: args
+					};
+				}
+				return null;
+			},
+
+			currentRoute: function () {
+				return this.readRoute(this._host.state());
+			},
+
+			navigateRoute: function (route) {
+				var parsed = this.parseRoute(route);
+				if (parsed)
+					this._host.next(parsed.state, parsed.args);
+			}
+
+		};		
+	});
+});
+
 }).call(Scoped);

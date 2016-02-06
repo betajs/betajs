@@ -1,4 +1,4 @@
-# betajs 1.0.32
+# betajs 1.0.33
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
 
@@ -16,6 +16,9 @@ Active, Production ready
 | Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs.git](git://github.com/betajs/betajs.git) |
 | Repository | [http://github.com/betajs/betajs](http://github.com/betajs/betajs) |
+| Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
+| Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
+
 
 
 ## Compatability (Tested)

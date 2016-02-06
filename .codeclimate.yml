@@ -21,4 +21,3 @@ exclude_paths:
 - tests/**/*
 - tasks/**/*
 - docs/**/*
-

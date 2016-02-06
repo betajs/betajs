@@ -1,6 +1,6 @@
 {
 	"name": "betajs",
-	"version": "1.0.32",
+	"version": "1.0.33",
 	"description": "BetaJS is a general-purpose JavaScript framework for doing awesome things.",
 	"homepage": "http://betajs.com",
 	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
@@ -31,6 +31,9 @@
 		"test": "grunt check"
 	},
 	"meta": {
+		"guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
+		"blog": "http://blog.betajs.com",
+		"twitter": "http://twitter.com/thebetajs",
 		"badges": {
 			"codeclimate": true,
 			"travis": true,
