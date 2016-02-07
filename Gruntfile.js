@@ -1,31 +1,32 @@
 module.exports = function(grunt) {
 
 	var pkg = grunt.file.readJSON('package.json');
-	var gruntHelper = require("betajs-compile/grunt.js");
-	
-	gruntHelper.init(pkg, grunt)
+	var gruntHelper = require('betajs-compile/grunt.js');
+	var dist = 'beta';
 
+	gruntHelper.init(pkg, grunt)
+	
 	
     /* Compilation */    
-    .concatTask("concat-raw", ['src/fragments/begin.js-fragment', 'src/**/*.js', 'src/fragments/end.js-fragment'], "dist/beta-raw.js")
-    .preprocessrevisionTask(null, "dist/beta-raw.js", "dist/beta-noscoped.js")
-    .concatTask("concat-scoped", ['vendors/scoped.js', 'dist/beta-noscoped.js'], 'dist/beta.js')
-    .uglifyTask("uglify-noscoped", "dist/beta-noscoped.js", "dist/beta-noscoped.min.js")
-    .uglifyTask("uglify-scoped", "dist/beta.js", "dist/beta.min.js")
+    .concatTask('concat-raw', ['src/fragments/begin.js-fragment', 'src/**/*.js', 'src/fragments/end.js-fragment'], 'dist/' + dist + '-raw.js')
+    .preprocessrevisionTask(null, 'dist/' + dist + '-raw.js', 'dist/' + dist + '-noscoped.js')
+    .concatTask('concat-scoped', ['vendors/scoped.js', 'dist/' + dist + '-noscoped.js'], 'dist/' + dist + '.js')
+    .uglifyTask('uglify-noscoped', 'dist/' + dist + '-noscoped.js', 'dist/' + dist + '-noscoped.min.js')
+    .uglifyTask('uglify-scoped', 'dist/' + dist + '.js', 'dist/' + dist + '.min.js')
 
     /* Testing */
-    .qunitTask(null, "./dist/beta.js", grunt.file.expand("./tests/*/*.js"))
-    .closureTask(null, "dist/beta.js")
-    .browserstackTask(null, "tests/tests.html", {desktop: true, mobile: false})
-    .browserstackTask(null, "tests/tests.html", {desktop: false, mobile: true})
-    .lintTask(null, ["./src/**/*.js", "./dist/beta-noscoped.js", "./dist/beta.js", "./Gruntfile.js", "./tests/**/*.js"])
+    .qunitTask(null, './dist/' + dist + '.js', grunt.file.expand('./tests/*/*.js'))
+    .closureTask(null, 'dist/' + dist + '.js')
+    .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: false})
+    .browserstackTask(null, 'tests/tests.html', {desktop: false, mobile: true})
+    .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js'])
     
     /* External Configurations */
     .codeclimateTask()
     .travisTask()
     
     /* Dependencies */
-    .dependenciesTask(null, { github: ["betajs/betajs-scoped/dist/scoped.js"] })
+    .dependenciesTask(null, { github: ['betajs/betajs-scoped/dist/scoped.js'] })
 
     /* Markdown Files */
 	.readmeTask()
