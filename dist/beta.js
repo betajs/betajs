@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.33 - 2016-02-06
+betajs - v1.0.34 - 2016-02-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -629,7 +629,7 @@ var Scoped = function () {
 }.call(this);
 
 /*!
-betajs - v1.0.33 - 2016-02-06
+betajs - v1.0.34 - 2016-02-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -642,7 +642,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '470.1454800369656'
+		version: '472.1454863113477'
 	};
 });
 
@@ -1499,7 +1499,12 @@ Scoped.define("module:Classes.MultiDelegatable", ["module:Class", "module:Objs"]
 });
 
 
-Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "module:Functions"], function (Class, Types, Functions, scoped) {
+Scoped.define("module:Classes.ClassRegistry", [
+    "module:Class",
+    "module:Types",
+    "module:Functions",
+    "module:Objs"
+], function (Class, Types, Functions, Objs, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -1530,6 +1535,14 @@ Scoped.define("module:Classes.ClassRegistry", ["module:Class", "module:Types", "
 			create: function (key) {
 				var cons = Functions.newClassFunc(this.get(key));
 				return cons.apply(this, Functions.getArguments(arguments, 1));
+			},
+			
+			classes: function () {
+				var result = {};
+				Objs.iter(this._classes, function (classes) {
+					result = Objs.extend(result, classes);
+				});
+				return result;
 			}
 			
 		};
@@ -2852,7 +2865,8 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			for (var key in obj) {
 				if (i <= 0)
 					return key;
-				i--;
+				else
+					--i;
 			}
 			return null;
 		},
@@ -5505,7 +5519,8 @@ Scoped.define("module:Timers.Timer", [
 			 * object context (optional): for fire
 			 * bool start (optional, default true): should it start immediately
 			 * bool real_time (default false)
-			 * int duration (optiona, default null)
+			 * int duration (optional, default null)
+			 * int fire_max (optiona, default null)
 			 * 
 			 */
 			constructor: function (options) {
@@ -5518,7 +5533,8 @@ Scoped.define("module:Timers.Timer", [
 					destroy_on_fire: false,
 					destroy_on_stop: false,
 					real_time: false,
-					duration: null
+					duration: null,
+					fire_max: null
 				}, options);
 				this.__delay = options.delay;
 				this.__destroy_on_fire = options.destroy_on_fire;
@@ -5529,6 +5545,7 @@ Scoped.define("module:Timers.Timer", [
 				this.__started = false;
 				this.__real_time = options.real_time;
 				this.__end_time = options.duration !== null ? Time.now() + options.duration : null;
+				this.__fire_max = options.fire_max;
 				if (options.start)
 					this.start();
 			},
@@ -5536,6 +5553,14 @@ Scoped.define("module:Timers.Timer", [
 			destroy: function () {
 				this.stop();
 				inherited.destroy.call(this);
+			},
+			
+			fire_count: function () {
+				return this.__fire_count;
+			},
+			
+			duration: function () {
+				return Time.now() - this.__start_time;
 			},
 			
 			fire: function () {
@@ -5551,7 +5576,8 @@ Scoped.define("module:Timers.Timer", [
 						}
 					}
 				}
-				if (this.__end_time !== null && Time.now() + this.__delay > this.__end_time)
+				if ((this.__end_time !== null && Time.now() + this.__delay > this.__end_time) ||
+					(this.__fire_max !== null && this.__fire_max <= this.__fire_count))
 					this.stop();
 				if (this.__destroy_on_fire)
 					this.weakDestroy();
@@ -5573,8 +5599,7 @@ Scoped.define("module:Timers.Timer", [
 				if (this.__started)
 					return;
 				var self = this;
-				if (this.__real_time)
-					this.__start_time = Time.now();
+				this.__start_time = Time.now();
 				this.__fire_count = 0;
 				if (this.__once)
 					this.__timer = setTimeout(function () {

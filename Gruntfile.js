@@ -16,7 +16,7 @@ module.exports = function(grunt) {
 
     /* Testing */
     .qunitTask(null, './dist/' + dist + '.js', grunt.file.expand('./tests/*/*.js'))
-    .closureTask(null, 'dist/' + dist + '.js')
+    .closureTask(null, ["./vendors/scoped.js", "./dist/" + dist + "-noscoped.js"])
     .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: false})
     .browserstackTask(null, 'tests/tests.html', {desktop: false, mobile: true})
     .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js'])
@@ -37,7 +37,7 @@ module.exports = function(grunt) {
 
 	grunt.initConfig(gruntHelper.config);	
 
-	grunt.registerTask('default', ['concat-raw', 'preprocessrevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
+	grunt.registerTask('default', ['readme', 'license', 'codeclimate', 'travis', 'concat-raw', 'preprocessrevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
 	grunt.registerTask('check', ['lint', 'qunit']);
 
 };

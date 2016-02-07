@@ -6,7 +6,8 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			for (var key in obj) {
 				if (i <= 0)
 					return key;
-				i--;
+				else
+					--i;
 			}
 			return null;
 		},
