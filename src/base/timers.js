@@ -1,3 +1,4 @@
+
 Scoped.define("module:Timers.Timer", [
     "module:Class",
     "module:Objs",
@@ -13,7 +14,7 @@ Scoped.define("module:Timers.Timer", [
 			 * object context (optional): for fire
 			 * bool start (optional, default true): should it start immediately
 			 * bool real_time (default false)
-			 * int duration (optiona, default null)
+			 * int duration (optional, default null)
 			 * 
 			 */
 			constructor: function (options) {
