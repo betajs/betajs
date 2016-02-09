@@ -1,11 +1,15 @@
 engines:
-  rubocop:
+  scss-lint:
     enabled: true
-  golint:
+  nodesecurity:
     enabled: true
   eslint:
     enabled: true
   csslint:
+    enabled: true
+  fixme:
+    enabled: true
+  duplication:
     enabled: true
 ratings:
   paths:
