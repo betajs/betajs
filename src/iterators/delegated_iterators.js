@@ -245,10 +245,12 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
 			},
 
 			__cache: function () {
-				if (this.__head.length > 0 || !this.__iterator.hasNext())
+				if (this.__head.length > 0)
 					return;
 				this.__head = this.__tail;
 				this.__tail = [];
+				if (!this.__iterator.hasNext())
+					return;
 				if (this.__head.length === 0)
 					this.__head.push(this.__iterator.next());
 				while (this.__iterator.hasNext()) {
@@ -257,6 +259,7 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
 						this.__tail.push(n);
 						break;
 					}
+					this.__head.push(n);
 				}
 				this.__head.sort(this.__compare);
 			},

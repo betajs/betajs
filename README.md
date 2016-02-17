@@ -1,13 +1,17 @@
-# betajs 1.0.35
+# betajs 1.0.36
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
 
 
 BetaJS is a general-purpose JavaScript framework for doing awesome things.
 
-
 ## Status
 Active, Production ready
+
+
+
+
+
 
 
 ## Links

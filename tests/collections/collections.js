@@ -189,3 +189,24 @@ test("test collection query", function () {
 	list.add(new BetaJS.Properties.Properties({"text": "C Example X"}));
 	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 3);
 });
+
+
+
+test("test collection replace objects", function () {
+	var objs = [
+		new BetaJS.Properties.Properties({"text": "A Example Z"}),
+        new BetaJS.Properties.Properties({"text": "D Example W"})
+    ];
+	var list = new BetaJS.Collections.Collection(objs);
+    QUnit.equal(list.count(), 2);
+	list.replace_objects([
+	    new BetaJS.Properties.Properties({"text": "C Example X"}),
+	    new BetaJS.Properties.Properties({"text": "B Example Y"})
+	]);
+    QUnit.equal(list.count(), 2);
+	list.replace_objects([
+        new BetaJS.Properties.Properties({"text": "E Example V"}),
+        new BetaJS.Properties.Properties({"text": "F Example U"})
+  	], true);
+	QUnit.equal(list.count(), 4);
+});

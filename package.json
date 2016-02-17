@@ -1,6 +1,6 @@
 {
 	"name": "betajs",
-	"version": "1.0.35",
+	"version": "1.0.36",
 	"description": "BetaJS is a general-purpose JavaScript framework for doing awesome things.",
 	"homepage": "http://betajs.com",
 	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
@@ -21,6 +21,7 @@
 		"grunt-shell": "",
 		"grunt-template": "",
 	    "grunt-betajs-docs-compile":"",
+	    "betajs-scoped": "",
 	    "betajs-compile": "betajs/betajs-compile"
 	},
 	"repository": {

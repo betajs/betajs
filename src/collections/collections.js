@@ -125,7 +125,7 @@ Scoped.define("module:Collections.Collection", [
 				return ident;
 			},
 			
-			replace_objects: function (objects) {
+			replace_objects: function (objects, keep_others) {
 				var ids = {};
 				Objs.iter(objects, function (oriObject) {
 					var is_prop = Class.is_class_instance(oriObject);
@@ -141,14 +141,16 @@ Scoped.define("module:Collections.Collection", [
 					} else
 						this.add(object);
 				}, this);
-				var iterator = this.iterator();
-				while (iterator.hasNext()) {
-					var object = iterator.next();
-					var ident = this.get_ident(object);
-					if (!(ident in ids))
-						this.remove(object);
+				if (!keep_others) {
+					var iterator = this.iterator();
+					while (iterator.hasNext()) {
+						var object = iterator.next();
+						var ident = this.get_ident(object);
+						if (!(ident in ids))
+							this.remove(object);
+					}
+					iterator.destroy();
 				}
-				iterator.destroy();
 			},
 			
 			add_objects: function (objects) {
