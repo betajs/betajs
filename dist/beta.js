@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.36 - 2016-02-16
+betajs - v1.0.37 - 2016-02-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -634,7 +634,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "474.1455671984550"
+    "version": "475.1455835211437"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6887,6 +6887,8 @@ Scoped.define("module:Collections.GroupedCollection", [
 				this.__insertCallback = options.insert;
 				this.__removeCallback = options.remove;
 				this.__callbackContext = options.context || this;
+				this.__propertiesClass = options.properties || Properties;
+				this.__createProperties = options.create;
 				inherited.constructor.call(this, options);
 				Objs.iter(this.__groupby, this.add_secondary_index, this);
 				this.__parent.iterate(this.__addParentObject, this);
@@ -6902,7 +6904,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 			__addParentObject: function (object) {
 				var group = this.__objectToGroup(object);
 				if (!group) {
-					group = new Properties();
+					group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
 					group.objects = {};
 					group.object_count = 0;
 					Objs.iter(this.__groupby, function (key) {
@@ -6934,7 +6936,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 			__addObjectToGroup: function (object, group) {
 				group.objects[this.__parent.get_ident(object)] = object;
 				group.object_count++;
-				this.__insertCallback.call(this.__callbackContext, object, group);
+				this.__insertObject(object, group);
 			},
 			
 			__removeObjectFromGroup: function (object, group) {
@@ -6943,11 +6945,25 @@ Scoped.define("module:Collections.GroupedCollection", [
 				delete group.objects[this.__parent.get_ident(object)];
 				group.object_count--;
 				if (group.object_count > 0)
-					this.__removeCallback.call(this.__callbackContext, object, group);
+					this.__removeObject(object, group);
 			},
 			
 			increase_forwards: function (steps) {
 				return this.__parent.increase_forwards(steps);
+			},
+			
+			__insertObject: function (object, group) {
+				if (this.__insertCallback)
+					this.__insertCallback.call(this.__callbackContext, object, group);
+				else
+					group.trigger("insert", object);
+			},
+			
+			__removeObject: function (object, group) {
+				if (this.__removeCallback)
+					this.__removeCallback.call(this.__callbackContext, object, group);
+				else
+					group.trigger("remove", object);
 			}
 			
 		};	
