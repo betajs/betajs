@@ -1,17 +1,34 @@
 Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
+		
+		/** ArrayIterator Class
+		 * 
+		 * @class BetaJS.Iterators.ArrayIterator
+		 */
 		return {
 
+			/** Creates an Array Iterator
+			 * 
+			 * @param arr array
+			 */
 			constructor: function (arr) {
 				inherited.constructor.call(this);
 				this.__array = arr;
 				this.__i = 0;
 			},
 
+			/** Determines whether there are more items.
+			 * 
+			 * @return true if there are more items
+			 */
 			hasNext: function () {
 				return this.__i < this.__array.length;
 			},
 
+			/** Returns the next items if there is one.
+			 * 
+			 * @return next item
+			 */
 			next: function () {
 				var ret = this.__array[this.__i];
 				this.__i++;

@@ -32,13 +32,14 @@ module.exports = function(grunt) {
     /* Markdown Files */
 	.readmeTask()
     .licenseTask()
+    .packageTask()
     
     /* Documentation */
     .docsTask();
 
 	grunt.initConfig(gruntHelper.config);	
 
-	grunt.registerTask('default', ['readme', 'license', 'codeclimate', 'travis', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
+	grunt.registerTask('default', ['package', 'readme', 'license', 'codeclimate', 'travis', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
 	grunt.registerTask('check', ['lint', 'qunit']);
 
 };

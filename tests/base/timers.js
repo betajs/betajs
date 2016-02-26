@@ -1,5 +1,10 @@
 function test_timer(options, expected_time, check) {
 	var count = 0;
+	var multiplier = 10;
+	try {
+		if (window && window.BrowserStack)
+			multiplier = 1000;
+	} catch (e) {}
 	
 	var timer = new BetaJS.Timers.Timer(BetaJS.Objs.extend(options, {
 		start: true,
@@ -13,7 +18,7 @@ function test_timer(options, expected_time, check) {
 		QUnit.equal(count, timer.fire_count(), "matching fire count");
 		check(count);
 		start();
-	}, expected_time * 10);
+	}, expected_time * multiplier);
 }
 
 
