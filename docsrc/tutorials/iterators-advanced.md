@@ -29,7 +29,7 @@ For skipping e.g. 10 items, you can use the *SkipIterator*:
 	var iterator = new BetaJS.Iterators.SkipIterator(baseIterator, 10);
 ```
 
-For limit the result to e.g. 50 items, you can use the *LimitIterator*:
+For limiting the result to e.g. 50 items, you can use the *LimitIterator*:
 
 ```
 	var iterator = new BetaJS.Iterators.SkipIterator(baseIterator, 50);

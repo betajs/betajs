@@ -6,6 +6,7 @@ test("test states w register", function() {
 	QUnit.equal(host.state().state_name(), "A");
 	host.state().next("B");
 	QUnit.equal(host.state().state_name(), "B");
+	host.destroy();
 });
 
 test("test states w extend", function() {
@@ -17,6 +18,7 @@ test("test states w extend", function() {
 	QUnit.equal(host.state().state_name(), "A");
 	host.state().next("B");
 	QUnit.equal(host.state().state_name(), "B");
+	host.destroy();
 });
 
 test("test states w router", function () {
@@ -35,4 +37,5 @@ test("test states w router", function () {
 	router.navigateRoute("c");
 	QUnit.equal(host.state().state_name(), "C");
 	QUnit.equal(host.get("x"), 42);
+	host.destroy();
 });

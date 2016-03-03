@@ -24,6 +24,8 @@ Scoped.define("module:Collections.Collection", [
 				}
 				options = options || {};
 				this.__indices = {};
+				if (options.release_references)
+					this.__release_references = true;
 				if (options.indices)
 					Objs.iter(options.indices, this.add_secondary_index, this);
 				var list_options = {};
@@ -63,18 +65,23 @@ Scoped.define("module:Collections.Collection", [
 			},
 			
 			set_compare: function (compare) {
+				this.trigger("set_compare", compare);
 				this.__data.set_compare(compare);
 			},
 			
 			get_compare: function () {
 				this.__data.get_compare();
 			},
+			
+			__unload_item: function (object) {
+				if ("off" in object)
+					object.off(null, null, this);
+				if (this.__release_references)
+					object.releaseReference();
+			},
 		
 			destroy: function () {
-				this.__data.iterate(function (object) {
-					if ("off" in object)
-						object.off(null, null, this);
-				}, this);
+				this.__data.iterate(this.__unload_item, this);
 				this.__data.destroy();
 				this.trigger("destroy");
 				inherited.destroy.call(this);
@@ -178,9 +185,8 @@ Scoped.define("module:Collections.Collection", [
 					}
 				}, this);
 				var result = this.__data.remove(object);
-				if ("off" in object)
-					object.off(null, null, this);
 				this.trigger("remove", object);
+				this.__unload_item(object);
 				this.trigger("update");
 				return result;
 			},

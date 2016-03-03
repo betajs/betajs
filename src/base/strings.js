@@ -10,6 +10,10 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 			return s;
 		},
 		
+		padZeros: function (s, length) {
+			return this.padLeft(s + "", "0", length);
+		},
+		
 		/** Converts a string new lines to html <br /> tags
 		 *
 		 * @param s string
@@ -171,7 +175,7 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 			}
 			for ( i = 0; i < a.length; ++i)
 				a[i] = a[i].substring(len);
-			return this.trim(a.join("\n"));
+			return a.join("\n").trim();
 		},
 	
 		capitalize : function(input) {
@@ -183,10 +187,10 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		email_get_name : function(input) {
 		    input = input || "";
 			var temp = input.split("<");
-			input = this.trim(temp[0]);
+			input = temp[0].trim();
 			if (!input && temp.length > 1) {
 				temp = temp[1].split(">");
-				input = this.trim(temp[0]);
+				input = temp[0].trim();
 			}		
 			input = input.replace(/['"]/g, "").replace(/[\\._@]/g, " ");
 			return this.capitalize(input);
@@ -195,22 +199,18 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		email_get_email : function(input) {
 	        input = input || "";
 			var temp = input.split("<");
-			input = this.trim(temp[0]);
+			input = temp[0].trim();
 			if (temp.length > 1) {
 				temp = temp[1].split(">");
-				input = this.trim(temp[0]);
+				input = temp[0].trim();
 			}
-			input = this.trim(input.replace(/'/g, "").replace(/"/g, ""));
+			input = input.replace(/'/g, "").replace(/"/g, "").trim();
 			return input;
 		},
 	
 		email_get_salutatory_name : function(input) {
 	        input = input || "";
 			return (this.email_get_name(input).split(" "))[0];
-		},
-		
-		trim: function (s) {
-			return String.prototype.trim ? s.trim() : s.replace(/^\s+|\s+$/g, ''); 
 		},
 		
 		regexReplaceGroups: function (regex, args) {

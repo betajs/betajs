@@ -39,7 +39,7 @@ Scoped.define("module:States.Host", [
 
 			finalize: function () {
 				if (this._state)
-					this._state.destroy();
+					this._state.end();
 				this._state = null;    	
 			},
 

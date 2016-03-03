@@ -159,23 +159,15 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 		},
 
 		filter: function (obj, f, context) {
-			var ret = null;
 			f = f || function (x) { return !!x; };
-			if (Types.is_array(obj)) {
-				ret = [];
-				for (var i = 0; i < obj.length; ++i) {
-					if (context ? f.apply(context, [obj[i], i]) : f(obj[i], i))
-						ret.push(obj[i]);
-				}
-				return ret;
-			} else {
-				ret = {};
-				for (var key in obj) {
-					if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
-						ret[key] = obj[key];
-				}
-				return ret;
+			if (Types.is_array(obj))
+				return obj.filter(f, context);
+			var ret = {};
+			for (var key in obj) {
+				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
+					ret[key] = obj[key];
 			}
+			return ret;
 		},
 
 		equals: function (obj1, obj2, depth) {

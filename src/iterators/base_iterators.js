@@ -48,12 +48,12 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 });
 
 
-Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
+Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator"], function (ArrayIterator, scoped) {
 	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
 		return {
 
 			constructor: function (obj) {
-				inherited.constructor.call(this, Objs.keys(obj));
+				inherited.constructor.call(this, Object.keys(obj));
 			}
 
 		};

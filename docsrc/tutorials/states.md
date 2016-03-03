@@ -1,14 +1,13 @@
 The system includes an abstract state machine that can be used for internal business logic as well as in combination with the router.
 
-A state machine consists of a ``state machine host`` instance which holds the ``current state`` instance. States itself are defined
-by subclassing the ``abstract state class``.
+A state machine consists of a ``state machine host`` instance which holds the ``current state`` instance. States itself are defined by subclassing the ``abstract state class``.
 
 To initialize a state machine, simply call:
 ```javascript
    var host = new BetaJS.States.Host();
 ```
 
-There are different ways to define new states. An adhoc way, if the state machine is used a singleton, is as follows:
+There are different ways to define new states. An adhoc way, if the state machine is used as a singleton, is as follows:
 ```javascript
     host.register("A", {});
 ```

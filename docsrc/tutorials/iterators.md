@@ -4,7 +4,7 @@ An iterator is an object that allows you to enumerate items of some list. The mo
 	var iterator = new BetaJS.Iterators.ArrayIterator(["a", "b", "c"]);
 ```
 
-An iterator instance exposes two methods: *hasNext*, telling you whether there are more elements in iterator
+An iterator instance exposes two methods: *hasNext*, telling you whether there are more elements in the iterator
 that you haven't seen yet, and *next*, which returns the next element in the iterator and moves the internal
 position forward.
 

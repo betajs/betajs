@@ -1,90 +1,21 @@
+/*!
+betajs - v1.0.40 - 2016-03-02
+Copyright (c) Oliver Friedmann,Victor Lingenthal
+Apache-2.0 Software License.
+*/
+
 (function () {
 var Scoped = this.subScope();
 Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "475.1455835211437"
+    "version": "477.1456966715651"
 };
 });
 Scoped.require(['module:'], function (mod) {
 	this.exports(typeof module != 'undefined' ? module : null, mod);
 }, this);
-Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Types, Functions) {
-	return {		
-		
-		waitFor: function () {
-			var args = Functions.matchArgs(arguments, {
-				condition: true,
-				conditionCtx: "object",
-				callback: true,
-				callbackCtx: "object",
-				interval: "int"
-			});
-			var h = function () {
-				try {
-					return !!args.condition.apply(args.conditionCtx || args.callbackCtx || this);
-				} catch (e) {
-					
-					return false;
-				}
-			};
-			if (h())
-				args.callback.apply(args.callbackCtx || this);
-			else {
-				var timer = setInterval(function () {
-					if (h()) {
-						clearInterval(timer);
-						args.callback.apply(args.callbackCtx || this);
-					}
-				}, args.interval || 1);
-			}
-		},
-		
-		eventually: function () {
-			var args = Functions.matchArgs(arguments, {
-				func: true,
-				params: "array",
-				context: "object",
-				time: "number"
-			});
-			var timer = setTimeout(function () {
-				clearTimeout(timer);
-				args.func.apply(args.context || this, args.params || []);
-			}, args.time || 0);
-			return timer;
-		},
-		
-		clearEventually: function (ev) {
-			clearTimeout(ev);
-		},
-		
-		eventuallyOnce: function (func, params, context) {
-			var data = {
-				func: func,
-				params: params,
-				context: context
-			};
-			for (var key in this.__eventuallyOnce) {
-				var record = this.__eventuallyOnce[key];
-				if (record.func == func && record.params == params && record.context == context)
-					return;
-			}
-			this.__eventuallyOnceIdx++;
-			var index = this.__eventuallyOnceIdx;
-			this.__eventuallyOnce[index] = data;
-			return this.eventually(function () {
-				delete this.__eventuallyOnce[index];
-				func.apply(context || this, params || []);
-			}, this);
-		},
-		
-		__eventuallyOnce: {},
-		__eventuallyOnceIdx: 1
-		
-	};
-
-});
 Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions", "module:Ids"], function (Types, Objs, Functions, Ids) {
 	var Class = function () {};
 
@@ -394,6 +325,22 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 
 });
 	
+Scoped.define("module:Classes.ReferenceCounterMixin", function () {
+	return {
+		__reference_count: 1,
+		
+		acquireReference: function () {
+			this.__reference_count++;
+		},
+		
+		releaseReference: function () {
+			this.__reference_count--;
+			if (this.__reference_count === 0)
+				this.weakDestroy();
+		}
+	};
+});
+
 Scoped.define("module:Classes.InvokerMixin", ["module:Objs", "module:Types", "module:Functions"], function (Objs, Types, Functions) {
 	return {
 		
@@ -1938,52 +1885,6 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 	});
 });
 
-/*
- * 
- * This module is deprecated and will be removed in future versions.
- * 
- * Use StringTable instead.
- * 
- */
-
-Scoped.define("module:Locales", function () {
-	return {
-		
-		__data: {},
-		
-		language: null,
-		
-		get: function (key) {
-		    if (this.language && (this.language + "." + key) in this.__data)
-		        return this.__data[this.language + "." + key];
-			return key in this.__data ? this.__data[key] : key;
-		},
-		
-		register: function (strings, prefix) {
-			prefix = prefix ? prefix + "." : "";
-			for (var key in strings)
-				this.__data[prefix + key] = strings[key];
-		},
-		
-		view: function (base) {
-			return {
-				context: this,
-				prefix: base,
-				get: function (key) {
-					return this.context.get(this.prefix + "." + key);
-				},
-				view: function (key) {
-					return this.context.view(this.prefix + "." + key);
-				},
-				register: function (strings, prefix) {
-					this.context.register(strings, this.prefix + (prefix ? "." + prefix : ""));
-				}
-			};
-		}
-		
-	};
-	
-});	
 Scoped.define("module:Maths", [], function () {
 	return {
 		
@@ -2155,23 +2056,15 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 		},
 
 		filter: function (obj, f, context) {
-			var ret = null;
 			f = f || function (x) { return !!x; };
-			if (Types.is_array(obj)) {
-				ret = [];
-				for (var i = 0; i < obj.length; ++i) {
-					if (context ? f.apply(context, [obj[i], i]) : f(obj[i], i))
-						ret.push(obj[i]);
-				}
-				return ret;
-			} else {
-				ret = {};
-				for (var key in obj) {
-					if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
-						ret[key] = obj[key];
-				}
-				return ret;
+			if (Types.is_array(obj))
+				return obj.filter(f, context);
+			var ret = {};
+			for (var key in obj) {
+				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
+					ret[key] = obj[key];
 			}
+			return ret;
 		},
 
 		equals: function (obj1, obj2, depth) {
@@ -2476,344 +2369,6 @@ Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Ob
 			
 		};
 	});
-});
-
-
-Scoped.define("module:Promise", [
-    "module:Types",
-    "module:Functions",
-    "module:Async",
-    "module:Objs"
-], function (Types, Functions, Async, Objs) {
-	var Promise = {		
-			
-		Promise: function (value, error, finished) {
-			this.__value = error ? null : (value || null);
-			this.__error = error ? error : null;
-			this.__isFinished = finished;
-			this.__hasError = !!error;
-			this.__resultPromise = null;
-			this.__callbacks = [];
-		},
-		
-		create: function (value, error) {
-			return new this.Promise(value, error, arguments.length > 0);
-		},
-		
-		value: function (value) {
-			return this.is(value) ? value : new this.Promise(value, null, true);
-		},
-		
-		eventualValue: function (value) {
-			var promise = new this.Promise();
-			Async.eventually(function () {
-				promise.asyncSuccess(value);
-			});
-			return promise;
-		},
-	
-		error: function (error) {
-			return this.is(error) ? error : new this.Promise(null, error, true);
-		},
-		
-		box: function (f, ctx, params) {
-			try {
-				var result = f.apply(ctx || this, params || []);
-				return this.is(result) ? result : this.value(result);
-			} catch (e) {
-				return this.error(e);
-			}
-		},
-		
-		tryCatch: function (f, ctx) {
-			try {
-				return this.value(f.apply(ctx || this));
-			} catch (e) {
-				return this.error(e);
-			}
-		},
-		
-		funcCallback: function (ctx, func) {
-			var args  = Functions.getArguments(arguments, 1);
-			if (Types.is_function(ctx)) {
-				args = Functions.getArguments(arguments, 1);
-				func = ctx;
-				ctx = this;
-			} else
-				args = Functions.getArguments(arguments, 2);
-			var promise = this.create();
-			args.push(promise.asyncCallbackFunc());
-			func.apply(ctx, args);
-			return promise;
-		},
-		
-		and: function (promises) {
-			var promise = this.create();
-			promise.__promises = [];
-			promise.__successCount = 0;
-			promise.__values = [];
-			promise.__errorPromise = null;
-			promise.and = function (promises) {
-				promises = promises || [];
-				if (this.__ended)
-					return this;
-				if (!Types.is_array(promises))
-					promises = [promises];
-				var f = function (error, value) {
-					if (error)
-						this.__errorPromise = promises[this.idx];
-					else {
-						this.promise.__successCount++;
-						this.promise.__values[this.idx] = value;
-					}
-					this.promise.results();
-				};
-				for (var i = 0; i < promises.length; ++i) {
-					var last = this.__promises.length;
-					this.__promises.push(promises[i]);
-					this.__values.push(null);
-					if (promises[i].isFinished()) {
-						if (promises[i].hasValue()) {
-							this.__successCount++;
-							this.__values[last] = promises[i].value();
-						} else
-							this.__errorPromise = promises[i];
-					} else {
-						promises[i].callback(f, {promise: this, idx: last});					
-					}
-				}
-				return this;
-			};
-			promise.end = function () {
-				if (this.__ended)
-					return this;
-				this.__ended = true;
-				this.results();
-				return this;
-			};
-			promise.results = function () {
-				if (this.__ended && this.__errorPromise)
-					this.asyncError(this.__errorPromise.err(), this.__errorPromise);
-				else if (this.__ended && this.__successCount == this.__promises.length)
-					this.asyncSuccess(this.__values);
-				return this;
-			};
-			promise.successUnfold = function (f, context, options) {
-				return this.success(function () {
-					return f.apply(context, arguments);
-				}, context, options);
-			};
-			promise.and(promises);
-			return promise;
-		},
-		
-		func: function (func) {
-			var args = Functions.getArguments(arguments, 1);
-			var promises = [];
-			for (var i = 0; i < args.length; ++i) {
-				if (this.is(args[i]))
-					promises.push(args[i]);
-			}
-			var promise = this.create();
-			this.and(promises).end().success(function (values) {
-				var params = [];
-				for (var i = 0; i < args.length; ++i)
-					params[i] = this.is(args[i]) ? args[i].value() : args[i];
-				var result = func.apply(this, params);
-				if (this.is(result))
-					result.forwardCallback(promise);
-				else
-					promise.asyncSuccess(result);
-			}, this).forwardError(promise);
-			return promise;
-		},
-		
-		methodArgs: function (ctx, func, params) {
-			params.unshift(function () {
-				return func.apply(ctx, arguments);
-			});
-			return this.func.apply(this, params);
-		},
-		
-		method: function (ctx, func) {
-			return this.methodArgs(ctx, func, Functions.getArguments(arguments, 2));
-		},
-	
-		newClass: function (cls) {
-			var params = Functions.getArguments(arguments, 1);
-			params.unshift(Functions.newClassFunc(cls));
-			return this.func.apply(this, params);
-		},
-		
-		is: function (obj) {
-			return obj && Types.is_object(obj) && obj.classGuid == this.Promise.prototype.classGuid;
-		},
-		
-		resilience: function (method, context, resilience, args) {
-			return method.apply(context, args).mapError(function (error) {
-				return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
-			}, this);
-		}
-		
-	};
-	
-	Objs.extend(Promise.Promise.prototype, {
-		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
-		
-		success: function (f, context, options) {
-			return this.callback(f, context, options, "success");
-		},
-		
-		error: function (f, context, options) {
-			return this.callback(f, context, options, "error");
-		},
-		
-		callback: function (f, context, options, type) {
-			if ("end" in this)
-				this.end();
-			var record = {
-				type: type || "callback",
-				func: f,
-				options: options || {},
-				context: context
-			};
-			if (this.__isFinished)
-				this.triggerResult(record);
-			else
-				this.__callbacks.push(record);
-			return this;
-		},
-		
-		triggerResult: function (record) {
-			if (!this.__isFinished)
-				return this;
-			if (record) {
-				if (record.type == "success" && !this.__hasError)
-					record.func.call(record.context || this, this.__value, this.__resultPromise || this);
-				else if (record.type == "error" && this.__hasError)
-					record.func.call(record.context || this, this.__error, this.__resultPromise || this);
-				else if (record.type == "callback")
-					record.func.call(record.context || this, this.__error, this.__value, this.__resultPromise || this);
-			} else {
-				var records = this.__callbacks;
-				this.__callbacks = [];
-				for (var i = 0; i < records.length; ++i)
-					this.triggerResult(records[i]);
-			}
-			return this;
-		},
-		
-		value: function () {
-			return this.__value;
-		},
-
-		err: function () {
-			return this.__error;
-		},
-
-		isFinished: function () {
-			return this.__isFinished;
-		},
-
-		hasValue: function () {
-			return this.__isFinished && !this.__hasError;
-		},
-
-		hasError: function () {
-			return this.__isFinished && this.__hasError;
-		},
-
-		asyncSuccess: function (value, promise) {
-			if (this.__isFinished) 
-				return this;
-			this.__resultPromise = promise;
-			this.__error = null;
-			this.__isFinished = true;
-			this.__hasError = false;
-			this.__value = value;
-			return this.triggerResult();
-		},
-
-		forwardSuccess: function (promise) {
-			this.success(promise.asyncSuccess, promise);
-			return this;
-		},
-
-		asyncError: function (error, promise) {
-			if (this.__isFinished) 
-				return this;
-			this.__resultPromise = promise;
-			this.__isFinished = true;
-			this.__hasError = true;
-			this.__error = error;
-			this.__value = null;
-			return this.triggerResult();
-		},
-
-		forwardError: function (promise) {
-			this.error(promise.asyncError, promise);
-			return this;
-		},
-
-		asyncCallback: function (error, value, promise) {
-			if (error)
-				return this.asyncError(error, promise);
-			else
-				return this.asyncSuccess(value, promise);
-		},
-
-		asyncCallbackFunc: function () {
-			return Functions.as_method(this.asyncCallback, this);
-		},
-
-		forwardCallback: function (promise) {
-			this.callback(promise.asyncCallback, promise);
-			return this;
-		},
-
-		mapSuccess: function (func, ctx) {
-			var promise = Promise.create();
-			this.forwardError(promise).success(function (value, pr) {
-				var result = func.call(ctx || promise, value, pr);
-				if (Promise.is(result))
-					result.forwardCallback(promise);
-				else
-					promise.asyncSuccess(result);
-			});
-			return promise;
-		},
-		
-		mapError: function (func, ctx) {
-			var promise = Promise.create();
-			this.forwardSuccess(promise).error(function (err, pr) {
-				var result = func.call(ctx || promise, err, pr);
-				if (Promise.is(result))
-					result.forwardCallback(promise);
-				else
-					promise.asyncError(result);
-			});
-			return promise;
-		},
-
-		mapCallback: function (func, ctx) {
-			var promise = Promise.create();
-			this.callback(function (err, value, pr) {
-				var result = func.call(ctx || promise, err, value, pr);
-				if (Promise.is(result))
-					result.forwardCallback(promise);
-				else
-					promise.asyncCallback(err ? result : err, err ? value : result, pr);
-			});
-			return promise;
-		},
-
-		and: function (promises) {
-			var result = Promise.and(this);
-			return result.and(promises);
-		}
-	});
-	
-	return Promise;
 });
 
 
@@ -3286,9 +2841,10 @@ Scoped.define("module:Properties.Properties", [
 	    "module:Class",
 	    "module:Objs",
 	    "module:Events.EventsMixin",
-	    "module:Properties.PropertiesMixin"
-	], function (Class, Objs, EventsMixin, PropertiesMixin, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, function (inherited) {
+	    "module:Properties.PropertiesMixin",
+	    "module:Classes.ReferenceCounterMixin"
+	], function (Class, Objs, EventsMixin, PropertiesMixin, ReferenceCounterMixin, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, ReferenceCounterMixin, function (inherited) {
 		return {
 			constructor: function (obj, materializes) {
 				inherited.constructor.call(this);
@@ -3303,384 +2859,6 @@ Scoped.define("module:Properties.Properties", [
 		};
 	}]);
 });
-Scoped.define("module:RMI.Stub", [
-                                  "module:Class",
-                                  "module:Classes.InvokerMixin",
-                                  "module:Functions"
-                                  ], function (Class, InvokerMixin, Functions, scoped) {
-	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
-		return {
-
-			intf: [],
-
-			constructor: function () {
-				inherited.constructor.call(this);
-				this.invoke_delegate("invoke", this.intf);
-			},
-
-			destroy: function () {
-				this.invoke("_destroy");
-				inherited.destroy.call(this);
-			},
-
-			invoke: function (message) {
-				return this.__send(message, Functions.getArguments(arguments, 1));
-			}
-
-		};
-	}]);
-});
-
-
-Scoped.define("module:RMI.StubSyncer", [
-                                        "module:Class",
-                                        "module:Classes.InvokerMixin",
-                                        "module:Functions",
-                                        "module:Promise"
-                                        ], function (Class, InvokerMixin, Functions, Promise, scoped) {
-	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
-		return {
-
-			constructor: function (stub) {
-				inherited.constructor.call(this);
-				this.__stub = stub;
-				this.__current = null;
-				this.__queue = [];
-				this.invoke_delegate("invoke", this.__stub.intf);
-			},
-
-			invoke: function () {
-				var object = {
-						args: Functions.getArguments(arguments),
-						promise: Promise.create()
-				};
-				this.__queue.push(object);
-				if (!this.__current)
-					this.__next();
-				return object.promise;		
-			},
-
-			__next: function () {
-				if (this.__queue.length === 0)
-					return;
-				this.__current = this.__queue.shift();
-				this.__stub.invoke.apply(this.__stub, this.__current.args).forwardCallback(this.__current.promise).callback(this.__next, this);
-			}
-
-		};
-	}]);
-});
-
-
-Scoped.define("module:RMI.Skeleton", [
-                                      "module:Class",
-                                      "module:Objs",
-                                      "module:Promise"
-                                      ], function (Class, Objs, Promise, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			_stub: null,
-			intf: [],
-			_intf: {},
-			__superIntf: ["_destroy"],
-
-			constructor: function (options) {
-				this._options = Objs.extend({
-					destroyable: false
-				}, options);
-				inherited.constructor.call(this);
-				this.intf = this.intf.concat(this.__superIntf);
-				for (var i = 0; i < this.intf.length; ++i)
-					this._intf[this.intf[i]] = true;
-			},
-
-			_destroy: function () {
-				if (this._options.destroyable)
-					this.destroy();
-			},
-
-			invoke: function (message, data) {
-				if (!(this._intf[message]))
-					return Promise.error(message);
-				try {
-					var result = this[message].apply(this, data);
-					return Promise.is(result) ? result : Promise.value(result);
-				} catch (e) {
-					return Promise.error(e);
-				}
-			},
-
-			_success: function (result) {
-				return Promise.value(result);
-			},
-
-			_error: function (result) {
-				return Promise.error(result);
-			},
-
-			stub: function () {
-				if (this._stub)
-					return this._stub;
-				var stub = this.cls.classname;
-				return stub.indexOf("Skeleton") >= 0 ? stub.replace("Skeleton", "Stub") : stub;
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:RMI.Server", [
-                                    "module:Class",
-                                    "module:Events.EventsMixin",
-                                    "module:Objs",
-                                    "module:Channels.TransportChannel",
-                                    "module:Lists.ObjectIdList",
-                                    "module:Ids",
-                                    "module:RMI.Skeleton",
-                                    "module:Promise"
-                                    ], function (Class, EventsMixin, Objs, TransportChannel, ObjectIdList, Ids, Skeleton, Promise, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
-		return {
-
-			constructor: function (sender_or_channel_or_null, receiver_or_null) {
-				inherited.constructor.call(this);
-				this.__channels = new ObjectIdList();
-				this.__instances = {};
-				if (sender_or_channel_or_null) {
-					var channel = sender_or_channel_or_null;
-					if (receiver_or_null)
-						channel = this._auto_destroy(new TransportChannel(sender_or_channel_or_null, receiver_or_null));
-					this.registerClient(channel);
-				}
-			},
-
-			destroy: function () {
-				this.__channels.iterate(this.unregisterClient, this);
-				Objs.iter(this.__instances, function (inst) {
-					this.unregisterInstance(inst.instance);
-				}, this);
-				this.__channels.destroy();
-				inherited.destroy.call(this);
-			},
-
-			registerInstance: function (instance, options) {
-				options = options || {};
-				this.__instances[Ids.objectId(instance, options.name)] = {
-						instance: instance,
-						options: options
-				};
-				return instance;
-			},
-
-			unregisterInstance: function (instance) {
-				delete this.__instances[Ids.objectId(instance)];
-				instance.weakDestroy();
-			},
-
-			registerClient: function (channel) {
-				var self = this;
-				this.__channels.add(channel);
-				channel._reply = function (message, data) {
-					var components = message.split(":");
-					if (components.length == 2)
-						return self._invoke(channel, components[0], components[1], data);
-					else
-						return Promise.error(true);
-				};
-			},
-
-			unregisterClient: function (channel) {
-				this.__channels.remove(channel);
-				channel._reply = null;
-			},
-
-			_serializeValue: function (value) {
-				if (Skeleton.is_instance_of(value)) {
-					var registry = this;
-					registry.registerInstance(value);
-					return {
-						__rmi_meta: true,
-						__rmi_stub: value.stub(),
-						__rmi_stub_id: Ids.objectId(value)
-					};
-				} else
-					return value;		
-			},
-
-			_unserializeValue: function (value) {
-				if (value && value.__rmi_meta) {
-					var receiver = this.client;
-					return receiver.acquire(value.__rmi_stub, value.__rmi_stub_id);
-				} else
-					return value;		
-			},
-
-			_invoke: function (channel, instance_id, method, data) {
-				var instance = this.__instances[instance_id];
-				if (!instance) {
-					this.trigger("loadInstance", channel, instance_id);
-					instance = this.__instances[instance_id];
-				}
-				if (!instance)
-					return Promise.error(instance_id);
-				instance = instance.instance;
-				data = Objs.map(data, this._unserializeValue, this);
-				return instance.invoke(method, data, channel).mapSuccess(function (result) {
-					return this._serializeValue(result);
-				}, this);
-			}
-
-		};
-	}]);
-});
-
-
-Scoped.define("module:RMI.Client", [
-                                    "module:Class",
-                                    "module:Objs",
-                                    "module:Channels.TransportChannel",
-                                    "module:Ids",
-                                    "module:RMI.Skeleton",
-                                    "module:Types",
-                                    "module:RMI.Stub"
-                                    ], function (Class, Objs, TransportChannel, Ids, Skeleton, Types, Stub, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {			
-
-			constructor: function (sender_or_channel_or_null, receiver_or_null) {
-				inherited.constructor.call(this);
-				this.__channel = null;
-				this.__instances = {};
-				if (sender_or_channel_or_null) {
-					var channel = sender_or_channel_or_null;
-					if (receiver_or_null)
-						channel = this._auto_destroy(new TransportChannel(sender_or_channel_or_null, receiver_or_null));
-					this.__channel = channel;
-				}
-			},
-
-			destroy: function () {
-				if (this.__channel)
-					this.disconnect();
-				inherited.destroy.call(this);
-			},
-
-			connect: function (channel) {
-				if (this.__channel)
-					return;
-				this.__channel = channel;
-			},
-
-			disconnect: function () {
-				if (!this.__channel)
-					return;
-				this.__channel = null;
-				Objs.iter(this.__instances, function (inst) {
-					this.release(inst);
-				}, this);
-			},
-
-			_serializeValue: function (value) {
-				if (Skeleton.is_instance_of(value)) {
-					var registry = this.server;
-					registry.registerInstance(value);
-					return {
-						__rmi_meta: true,
-						__rmi_stub: value.stub(),
-						__rmi_stub_id: Ids.objectId(value)
-					};
-				} else
-					return value;		
-			},
-
-			_unserializeValue: function (value) {
-				if (value && value.__rmi_meta) {
-					var receiver = this;
-					return receiver.acquire(value.__rmi_stub, value.__rmi_stub_id);
-				} else
-					return value;		
-			},
-
-			acquire: function (class_type, instance_name) {
-				if (this.__instances[instance_name])
-					return this.__instances[instance_name];
-				if (Types.is_string(class_type))
-					class_type = Scoped.getGlobal(class_type);
-				if (!class_type || !class_type.ancestor_of(Stub))
-					return null;
-				var instance = new class_type();
-				this.__instances[Ids.objectId(instance, instance_name)] = instance;
-				var self = this;
-				instance.__send = function (message, data) {
-					if (!self.__channel)
-						return;
-					data = Objs.map(data, self._serializeValue, self);
-					return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
-						return this._unserializeValue(result);
-					}, self);
-				};
-				return instance;		
-			},
-
-			release: function (instance) {
-				var instance_name = Ids.objectId(instance);
-				if (!this.__instances[instance_name])
-					return;
-				instance.weakDestroy();
-				delete this.__instances[instance_name];
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:RMI.Peer", [
-                                  "module:Class",
-                                  "module:Channels.SenderMultiplexer",
-                                  "module:Channels.ReceiverMultiplexer",
-                                  "module:RMI.Client",
-                                  "module:RMI.Server"
-                                  ], function (Class, SenderMultiplexer, ReceiverMultiplexer, Client, Server, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {			
-
-			constructor: function (sender, receiver) {
-				inherited.constructor.call(this);
-				this.__sender = sender;
-				this.__receiver = receiver;
-				this.__client_sender = this._auto_destroy(new SenderMultiplexer(sender, "client"));
-				this.__server_sender = this._auto_destroy(new SenderMultiplexer(sender, "server"));
-				this.__client_receiver = this._auto_destroy(new ReceiverMultiplexer(receiver, "server"));
-				this.__server_receiver = this._auto_destroy(new ReceiverMultiplexer(receiver, "client"));
-				this.client = this._auto_destroy(new Client(this.__client_sender, this.__client_receiver));
-				this.server = this._auto_destroy(new Server(this.__server_sender, this.__server_receiver));
-				this.client.server = this.server;
-				this.server.client = this.client;
-			},	
-
-			acquire: function (class_type, instance_name) {
-				return this.client.acquire(class_type, instance_name);
-			},
-
-			release: function (instance) {
-				this.client.release(instance);
-			},
-
-			registerInstance: function (instance, options) {
-				return this.server.registerInstance(instance, options);
-			},
-
-			unregisterInstance: function (instance) {
-				this.server.unregisterInstance(instance);
-			}
-
-		};
-	});
-});
-
 Scoped.define("module:Sort", [
 	    "module:Comparators",	    
 	    "module:Types",
@@ -3791,6 +2969,10 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 			while (s.length < length)
 				s = padding + s;
 			return s;
+		},
+		
+		padZeros: function (s, length) {
+			return this.padLeft(s + "", "0", length);
 		},
 		
 		/** Converts a string new lines to html <br /> tags
@@ -3954,7 +3136,7 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 			}
 			for ( i = 0; i < a.length; ++i)
 				a[i] = a[i].substring(len);
-			return this.trim(a.join("\n"));
+			return a.join("\n").trim();
 		},
 	
 		capitalize : function(input) {
@@ -3966,10 +3148,10 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		email_get_name : function(input) {
 		    input = input || "";
 			var temp = input.split("<");
-			input = this.trim(temp[0]);
+			input = temp[0].trim();
 			if (!input && temp.length > 1) {
 				temp = temp[1].split(">");
-				input = this.trim(temp[0]);
+				input = temp[0].trim();
 			}		
 			input = input.replace(/['"]/g, "").replace(/[\\._@]/g, " ");
 			return this.capitalize(input);
@@ -3978,22 +3160,18 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		email_get_email : function(input) {
 	        input = input || "";
 			var temp = input.split("<");
-			input = this.trim(temp[0]);
+			input = temp[0].trim();
 			if (temp.length > 1) {
 				temp = temp[1].split(">");
-				input = this.trim(temp[0]);
+				input = temp[0].trim();
 			}
-			input = this.trim(input.replace(/'/g, "").replace(/"/g, ""));
+			input = input.replace(/'/g, "").replace(/"/g, "").trim();
 			return input;
 		},
 	
 		email_get_salutatory_name : function(input) {
 	        input = input || "";
 			return (this.email_get_name(input).split(" "))[0];
-		},
-		
-		trim: function (s) {
-			return String.prototype.trim ? s.trim() : s.replace(/^\s+|\s+$/g, ''); 
 		},
 		
 		regexReplaceGroups: function (regex, args) {
@@ -4501,7 +3679,7 @@ Scoped.define("module:Templates.Template", ["module:Class", "module:Templates"],
 });
 
 
-Scoped.define("module:Time", ["module:Locales"], function (Locales) {
+Scoped.define("module:Time", [], function () {
 	return {
 			
 		/*
@@ -4637,168 +3815,201 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 			return Math[round || "floor"](t / this.__components[key].milliseconds);
 		},
 		
+		timeComponentGet: function (t, key) {
+			return this.__components[key].get(t);
+		},
+		
 		timeModulo: function (t, key, round) {
 			return this.timeComponent(t, key, round) % (this.__components[key].max + 1);
-		},
-		
-		formatTimePeriod: function (t, options) {
-			options = options || {};
-			var components = options.components || ["day", "hour", "minute", "second"];
-			var component = "";
-			var timeComponent = 0;
-			for (var i = 0; i < components.length; ++i) {
-				component = components[i];
-				timeComponent = this.timeComponent(t, component, options.round || "round");
-				if (timeComponent)
-					break;
-			}
-			return timeComponent + " " + Locales.get(component + (timeComponent == 1 ? "" : "s"));
-		},
-		
-		formatTime: function(t, s) {
-			var components = ["hour", "minute", "second"];
-			s = s || "hhh:mm:ss";
-			var replacers = {};
-			for (var i = 0; i < components.length; ++i) {
-				var c = components[i].charAt(0);
-				replacers[c + c + c] = this.timeComponent(t, components[i], "floor");
-				var temp = this.timeModulo(t, components[i], "floor");
-				replacers[c + c] = temp < 10 ? "0" + temp : temp; 
-				replacers[c] = temp;
-			}
-			for (var key in replacers)
-				s = s.replace(key, replacers[key]);
-			return s;
-		},
-		
-		monthString: function (month) {
-			var d = new Date();
-			d.setMonth(month);
-			return d.toDateString().substring(4,7);
 		}
-		
+				
 	};
 
 });
 
-Scoped.define("module:Timers.Timer", [
-    "module:Class",
-    "module:Objs",
-    "module:Time"
-], function (Class, Objs, Time, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
+Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Objs"], function (Time, Strings, Objs) {
+	return {
+		
+		/*
+			HH	Hours; leading zero for single-digit hours (24-hour clock).
+			H	Hours; no leading zero for single-digit hours (24-hour clock).
+			h+  Hours; hours as absolute number
+			hh	Hours; leading zero for single-digit hours (12-hour clock).
+			h	Hours; no leading zero for single-digit hours (12-hour clock).
+			M+  Minutes; minutes as absolute number
+			MM	Minutes; leading zero for single-digit minutes.
+			M	Minutes; no leading zero for single-digit minutes.
+			s+	Seconds; seconds as absolute number
+			ss	Seconds; leading zero for single-digit seconds.
+			s	Seconds; no leading zero for single-digit seconds.
+			mmm	Month as a three-letter abbreviation.
+			mm	Month as digits; leading zero for single-digit months.
+			m	Month as digits; no leading zero for single-digit months.
+			d+	Days; days as absolute number
+			ddd	Day of the week as a three-letter abbreviation.
+			dd	Day of the month as digits; leading zero for single-digit days.
+			d	Day of the month as digits; no leading zero for single-digit days.
+			yy	Year as last two digits; leading zero for years less than 10.
+			yyyyYear represented by four digits.
+			l+  Milliseconds; absolute
+			l   Milliseconds 3 digits
+			L   Milliseconds 2 digits
+			t	Lowercase, single-character time marker string: a or p.
+			tt	Lowercase, two-character time marker string: am or pm.
+			T	Uppercase, single-character time marker string: A or P.
+			TT	Uppercase, two-character time marker string: AM or PM.
+			o	GMT/UTC timezone offset, e.g. -0500 or +0230.
 			
-			/*
-			 * int delay (mandatory): number of milliseconds until it fires
-			 * bool once (optional, default false): should it fire infinitely often
-			 * func fire (optional): will be fired
-			 * object context (optional): for fire
-			 * bool start (optional, default true): should it start immediately
-			 * bool real_time (default false)
-			 * int duration (optional, default null)
-			 * int fire_max (optiona, default null)
-			 * 
-			 */
-			constructor: function (options) {
-				inherited.constructor.call(this);
-				options = Objs.extend({
-					once: false,
-					start: true,
-					fire: null,
-					context: this,
-					destroy_on_fire: false,
-					destroy_on_stop: false,
-					real_time: false,
-					duration: null,
-					fire_max: null
-				}, options);
-				this.__delay = options.delay;
-				this.__destroy_on_fire = options.destroy_on_fire;
-				this.__destroy_on_stop = options.destroy_on_stop;
-				this.__once = options.once;
-				this.__fire = options.fire;
-				this.__context = options.context;
-				this.__started = false;
-				this.__real_time = options.real_time;
-				this.__end_time = options.duration !== null ? Time.now() + options.duration : null;
-				this.__fire_max = options.fire_max;
-				if (options.start)
-					this.start();
+		*/
+		
+		formatMappings: {
+			"HH": function (t) {
+				return Strings.padZeros(Time.timeModulo(t, "hour", "floor"), 2);
 			},
-			
-			destroy: function () {
-				this.stop();
-				inherited.destroy.call(this);
+			"H": function (t) {
+				return Time.timeModulo(t, "hour", "floor");
 			},
-			
-			fire_count: function () {
-				return this.__fire_count;
+			"h+": function (t) {
+				return Time.timeComponent(t, "hour", "floor");
 			},
-			
-			duration: function () {
-				return Time.now() - this.__start_time;
+			"hh": function (t) {
+				var h = Time.timeModulo(t, "hour", "floor");
+				h = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+				return Strings.padZeros(h, " ", 2);
 			},
-			
-			fire: function () {
-				if (this.__once)
-					this.__started = false;
-				if (this.__fire) {
-					this.__fire.call(this.__context, this);
-					this.__fire_count++;
-					if (this.__real_time && !this.__destroy_on_fire && !this.__once) {
-						while ((this.__fire_count + 1) * this.__delay <= Time.now() - this.__start_time) {
-							this.__fire.call(this.__context, this);
-							this.__fire_count++;
-						}
-					}
-				}
-				if ((this.__end_time !== null && Time.now() + this.__delay > this.__end_time) ||
-					(this.__fire_max !== null && this.__fire_max <= this.__fire_count))
-					this.stop();
-				if (this.__destroy_on_fire)
-					this.weakDestroy();
+			"h": function (t) {
+				var h = Time.timeModulo(t, "hour", "floor");
+				h = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+				return h;
 			},
-			
-			stop: function () {
-				if (!this.__started)
-					return;
-				if (this.__once)
-					clearTimeout(this.__timer);
-				else
-					clearInterval(this.__timer);
-				this.__started = false;
-				if (this.__destroy_on_stop)
-					this.weakDestroy();
+			"M+": function (t) {
+				return Time.timeComponent(t, "minute", "floor");
 			},
-			
-			start: function () {
-				if (this.__started)
-					return;
-				var self = this;
-				this.__start_time = Time.now();
-				this.__fire_count = 0;
-				if (this.__once)
-					this.__timer = setTimeout(function () {
-						self.fire();
-					}, this.__delay);
-				else
-					this.__timer = setInterval(function () {
-						self.fire();
-					}, this.__delay);
-				this.__started = true;
+			"MM": function (t) {
+				return Strings.padZeros(Time.timeModulo(t, "minute", "floor"), 2);
 			},
-			
-			restart: function () {
-				this.stop();
-				this.start();
+			"M": function (t) {
+				return Time.timeModulo(t, "minute", "floor");
+			},
+			"s+": function (t) {
+				return Time.timeComponent(t, "second", "floor");
+			},
+			"ss": function (t) {
+				return Strings.padZeros(Time.timeModulo(t, "second", "floor"), 2);
+			},
+			"s": function (t) {
+				return Time.timeModulo(t, "second", "floor");
+			},
+			"mmm": function (t) {
+				return (new Date(t)).toDateString().substring(4,7);
+			},
+			"mm": function (t) {
+				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
+			},
+			"m": function (t) {
+				return Time.timeComponentGet(t, "month");
+			},
+			"d+": function (t) {
+				return Time.timeComponent(t, "day", "floor");
+			},
+			"ddd": function (t) {
+				return (new Date(t)).toDateString().substring(0,3);
+			},
+			"dd": function (t) {
+				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
+			},
+			"d": function (t) {
+				return Time.timeComponentGet(t, "day");
+			},
+			"yyyy": function (t) {
+				return Time.timeComponentGet(t, "year");
+			},
+			"yy": function (t) {
+				return Time.timeComponentGet(t, "year") % 100;
+			},
+			"l+": function (t) {
+				return t;
+			},
+			"l": function (t) {
+				return Time.timeComponent(t, "millisecond", "floor");
+			},
+			"L": function (t) {
+				return Time.timeComponent(t, "millisecond", "floor") % 10;
+			},
+			"tt": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'am' : 'pm';
+			},
+			"t": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'a' : 'p';
+			},
+			"TT": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'AM' : 'PM';
+			},
+			"T": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'A' : 'P';
+			},
+			"o": function (t, bias) {
+				bias = Math.floor(bias / 1000 / 60);
+				return (bias > 0 ? "-" : "+") + Strings.padZeros(Math.floor(Math.abs(bias) / 60) * 100 + Math.abs(bias) % 60, 4);
 			}
 			
-			
-		};
-	});
+		},
+		
+		ELAPSED_HOURS_MINUTES_SECONDS: "h+:MM:ss",
+		ELAPSED_MINUTES_SECONDS: "M+:ss",
+		FULL_YEAR: "yyyy",
+		LETTER_MONTH: "mmm",
+		LETTER_MONTH_AND_DAY: "mmm d",
+		WEEKDAY: "ddd",
+		HOURS_MINUTES_TT: "hh:MM tt",
+		
+		format: function (timeFormat, time, timezone) {
+			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
+			var bias = Time.timezoneBias(timezone);
+			var result = timeFormat;
+			var replacers = [];			
+			Objs.iter(this.formatMappings, function (formatter, key) {
+				if (result.indexOf(key) >= 0) {
+					var i = replacers.length;
+					replacers.push(formatter(timezoneTime, bias));
+					result = result.replace(key, "$" + i + "$");
+				}
+			}, this);
+			for (var i = 0; i < replacers.length; ++i)
+				result = result.replace("$" + i + "$", replacers[i]);
+			return result;
+		},
+		
+		monthString: function (month) {
+			return this.format("mmm", Time.encodePeriod({month: month}));			
+		},
+		
+		weekdayString: function (weekday) {
+			return this.format("ddd", Time.encodePeriod({weekday: weekday}));
+		},
+		
+		formatRelativeMostSignificant: function (time, currentTime, timezone) {
+			currentTime = currentTime || Time.now();
+			var t = Time.decodeTime(time, timezone);
+			var c = Time.decodeTime(currentTime, timezone);
+			// Same day. Return time.
+			if (t.year === c.year && t.month === c.month && t.day === c.day)
+				return this.format(this.HOURS_MINUTES_TT, time, timezone);
+			// Less than 7 days. Return week day.
+			if (currentTime - time < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
+				return this.format(this.WEEKDAY, time, timezone);
+			// Last 2 months?
+			if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
+				return this.format(this.LETTER_MONTH_AND_DAY, time, timezone);
+			// Last 11 month?
+			if (t.year === c.year || (t.year + 1 === c.year && t.month > c.month))
+				return this.format(this.LETTER_MONTH, time, timezone);
+			// Return year
+			return this.format(this.FULL_YEAR, time, timezone);
+		}
+		
+	};
 });
-
 Scoped.define("module:Tokens", function() {
 	/**
 	 * Unique Token Generation
@@ -5076,7 +4287,7 @@ Scoped.define("module:Types", function () {
 		 * @return true if x is an array
 		 */
 		is_array : function(x) {
-			return Object.prototype.toString.call(x) === '[object Array]';
+			return Array.isArray(x);
 		},
 
 		/**
@@ -5723,7 +4934,7 @@ Scoped.define("module:Classes.Taggable", [
 		},
 		
 		getTags: function () {
-			return Objs.keys(this.__tags);
+			return Object.keys(this.__tags);
 		},
 		
 		removeTag: function (tag) {
@@ -5891,6 +5102,8 @@ Scoped.define("module:Collections.Collection", [
 				}
 				options = options || {};
 				this.__indices = {};
+				if (options.release_references)
+					this.__release_references = true;
 				if (options.indices)
 					Objs.iter(options.indices, this.add_secondary_index, this);
 				var list_options = {};
@@ -5930,18 +5143,23 @@ Scoped.define("module:Collections.Collection", [
 			},
 			
 			set_compare: function (compare) {
+				this.trigger("set_compare", compare);
 				this.__data.set_compare(compare);
 			},
 			
 			get_compare: function () {
 				this.__data.get_compare();
 			},
+			
+			__unload_item: function (object) {
+				if ("off" in object)
+					object.off(null, null, this);
+				if (this.__release_references)
+					object.releaseReference();
+			},
 		
 			destroy: function () {
-				this.__data.iterate(function (object) {
-					if ("off" in object)
-						object.off(null, null, this);
-				}, this);
+				this.__data.iterate(this.__unload_item, this);
 				this.__data.destroy();
 				this.trigger("destroy");
 				inherited.destroy.call(this);
@@ -6045,9 +5263,8 @@ Scoped.define("module:Collections.Collection", [
 					}
 				}, this);
 				var result = this.__data.remove(object);
-				if ("off" in object)
-					object.off(null, null, this);
 				this.trigger("remove", object);
+				this.__unload_item(object);
 				this.trigger("update");
 				return result;
 			},
@@ -6398,20 +5615,568 @@ Scoped.define("module:Collections.MappedCollection", [
 	});
 });
 
+Scoped.define("module:Async", ["module:Types", "module:Functions"], function (Types, Functions) {
+	return {		
+		
+		waitFor: function () {
+			var args = Functions.matchArgs(arguments, {
+				condition: true,
+				conditionCtx: "object",
+				callback: true,
+				callbackCtx: "object",
+				interval: "int"
+			});
+			var h = function () {
+				try {
+					return !!args.condition.apply(args.conditionCtx || args.callbackCtx || this);
+				} catch (e) {
+					
+					return false;
+				}
+			};
+			if (h())
+				args.callback.apply(args.callbackCtx || this);
+			else {
+				var timer = setInterval(function () {
+					if (h()) {
+						clearInterval(timer);
+						args.callback.apply(args.callbackCtx || this);
+					}
+				}, args.interval || 1);
+			}
+		},
+		
+		eventually: function () {
+			var args = Functions.matchArgs(arguments, {
+				func: true,
+				params: "array",
+				context: "object",
+				time: "number"
+			});
+			var timer = setTimeout(function () {
+				clearTimeout(timer);
+				args.func.apply(args.context || this, args.params || []);
+			}, args.time || 0);
+			return timer;
+		},
+		
+		clearEventually: function (ev) {
+			clearTimeout(ev);
+		},
+		
+		eventuallyOnce: function (func, params, context) {
+			var data = {
+				func: func,
+				params: params,
+				context: context
+			};
+			for (var key in this.__eventuallyOnce) {
+				var record = this.__eventuallyOnce[key];
+				if (record.func == func && record.params == params && record.context == context)
+					return;
+			}
+			this.__eventuallyOnceIdx++;
+			var index = this.__eventuallyOnceIdx;
+			this.__eventuallyOnce[index] = data;
+			return this.eventually(function () {
+				delete this.__eventuallyOnce[index];
+				func.apply(context || this, params || []);
+			}, this);
+		},
+		
+		__eventuallyOnce: {},
+		__eventuallyOnceIdx: 1
+		
+	};
+
+});
+Scoped.define("module:Promise", [
+    "module:Types",
+    "module:Functions",
+    "module:Async",
+    "module:Objs"
+], function (Types, Functions, Async, Objs) {
+	var Promise = {		
+			
+		Promise: function (value, error, finished) {
+			this.__value = error ? null : (value || null);
+			this.__error = error ? error : null;
+			this.__isFinished = finished;
+			this.__hasError = !!error;
+			this.__resultPromise = null;
+			this.__callbacks = [];
+		},
+		
+		create: function (value, error) {
+			return new this.Promise(value, error, arguments.length > 0);
+		},
+		
+		value: function (value) {
+			return this.is(value) ? value : new this.Promise(value, null, true);
+		},
+		
+		eventualValue: function (value) {
+			var promise = new this.Promise();
+			Async.eventually(function () {
+				promise.asyncSuccess(value);
+			});
+			return promise;
+		},
+	
+		error: function (error) {
+			return this.is(error) ? error : new this.Promise(null, error, true);
+		},
+		
+		box: function (f, ctx, params) {
+			try {
+				var result = f.apply(ctx || this, params || []);
+				return this.is(result) ? result : this.value(result);
+			} catch (e) {
+				return this.error(e);
+			}
+		},
+		
+		tryCatch: function (f, ctx) {
+			try {
+				return this.value(f.apply(ctx || this));
+			} catch (e) {
+				return this.error(e);
+			}
+		},
+		
+		funcCallback: function (ctx, func) {
+			var args  = Functions.getArguments(arguments, 1);
+			if (Types.is_function(ctx)) {
+				args = Functions.getArguments(arguments, 1);
+				func = ctx;
+				ctx = this;
+			} else
+				args = Functions.getArguments(arguments, 2);
+			var promise = this.create();
+			args.push(promise.asyncCallbackFunc());
+			func.apply(ctx, args);
+			return promise;
+		},
+		
+		and: function (promises) {
+			var promise = this.create();
+			promise.__promises = [];
+			promise.__successCount = 0;
+			promise.__values = [];
+			promise.__errorPromise = null;
+			promise.and = function (promises) {
+				promises = promises || [];
+				if (this.__ended)
+					return this;
+				if (!Types.is_array(promises))
+					promises = [promises];
+				var f = function (error, value) {
+					if (error)
+						this.__errorPromise = promises[this.idx];
+					else {
+						this.promise.__successCount++;
+						this.promise.__values[this.idx] = value;
+					}
+					this.promise.results();
+				};
+				for (var i = 0; i < promises.length; ++i) {
+					var last = this.__promises.length;
+					this.__promises.push(promises[i]);
+					this.__values.push(null);
+					if (promises[i].isFinished()) {
+						if (promises[i].hasValue()) {
+							this.__successCount++;
+							this.__values[last] = promises[i].value();
+						} else
+							this.__errorPromise = promises[i];
+					} else {
+						promises[i].callback(f, {promise: this, idx: last});					
+					}
+				}
+				return this;
+			};
+			promise.end = function () {
+				if (this.__ended)
+					return this;
+				this.__ended = true;
+				this.results();
+				return this;
+			};
+			promise.results = function () {
+				if (this.__ended && this.__errorPromise)
+					this.asyncError(this.__errorPromise.err(), this.__errorPromise);
+				else if (this.__ended && this.__successCount == this.__promises.length)
+					this.asyncSuccess(this.__values);
+				return this;
+			};
+			promise.successUnfold = function (f, context, options) {
+				return this.success(function () {
+					return f.apply(context, arguments);
+				}, context, options);
+			};
+			promise.and(promises);
+			return promise;
+		},
+		
+		func: function (func) {
+			var args = Functions.getArguments(arguments, 1);
+			var promises = [];
+			for (var i = 0; i < args.length; ++i) {
+				if (this.is(args[i]))
+					promises.push(args[i]);
+			}
+			var promise = this.create();
+			this.and(promises).end().success(function (values) {
+				var params = [];
+				for (var i = 0; i < args.length; ++i)
+					params[i] = this.is(args[i]) ? args[i].value() : args[i];
+				var result = func.apply(this, params);
+				if (this.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncSuccess(result);
+			}, this).forwardError(promise);
+			return promise;
+		},
+		
+		methodArgs: function (ctx, func, params) {
+			params.unshift(function () {
+				return func.apply(ctx, arguments);
+			});
+			return this.func.apply(this, params);
+		},
+		
+		method: function (ctx, func) {
+			return this.methodArgs(ctx, func, Functions.getArguments(arguments, 2));
+		},
+	
+		newClass: function (cls) {
+			var params = Functions.getArguments(arguments, 1);
+			params.unshift(Functions.newClassFunc(cls));
+			return this.func.apply(this, params);
+		},
+		
+		is: function (obj) {
+			return obj && Types.is_object(obj) && obj.classGuid == this.Promise.prototype.classGuid;
+		},
+		
+		resilience: function (method, context, resilience, args) {
+			return method.apply(context, args).mapError(function (error) {
+				return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
+			}, this);
+		}
+		
+	};
+	
+	Objs.extend(Promise.Promise.prototype, {
+		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
+		
+		success: function (f, context, options) {
+			return this.callback(f, context, options, "success");
+		},
+		
+		error: function (f, context, options) {
+			return this.callback(f, context, options, "error");
+		},
+		
+		callback: function (f, context, options, type) {
+			if ("end" in this)
+				this.end();
+			var record = {
+				type: type || "callback",
+				func: f,
+				options: options || {},
+				context: context
+			};
+			if (this.__isFinished)
+				this.triggerResult(record);
+			else
+				this.__callbacks.push(record);
+			return this;
+		},
+		
+		triggerResult: function (record) {
+			if (!this.__isFinished)
+				return this;
+			if (record) {
+				if (record.type == "success" && !this.__hasError)
+					record.func.call(record.context || this, this.__value, this.__resultPromise || this);
+				else if (record.type == "error" && this.__hasError)
+					record.func.call(record.context || this, this.__error, this.__resultPromise || this);
+				else if (record.type == "callback")
+					record.func.call(record.context || this, this.__error, this.__value, this.__resultPromise || this);
+			} else {
+				var records = this.__callbacks;
+				this.__callbacks = [];
+				for (var i = 0; i < records.length; ++i)
+					this.triggerResult(records[i]);
+			}
+			return this;
+		},
+		
+		value: function () {
+			return this.__value;
+		},
+
+		err: function () {
+			return this.__error;
+		},
+
+		isFinished: function () {
+			return this.__isFinished;
+		},
+
+		hasValue: function () {
+			return this.__isFinished && !this.__hasError;
+		},
+
+		hasError: function () {
+			return this.__isFinished && this.__hasError;
+		},
+
+		asyncSuccess: function (value, promise) {
+			if (this.__isFinished) 
+				return this;
+			this.__resultPromise = promise;
+			this.__error = null;
+			this.__isFinished = true;
+			this.__hasError = false;
+			this.__value = value;
+			return this.triggerResult();
+		},
+
+		forwardSuccess: function (promise) {
+			this.success(promise.asyncSuccess, promise);
+			return this;
+		},
+
+		asyncError: function (error, promise) {
+			if (this.__isFinished) 
+				return this;
+			this.__resultPromise = promise;
+			this.__isFinished = true;
+			this.__hasError = true;
+			this.__error = error;
+			this.__value = null;
+			return this.triggerResult();
+		},
+
+		forwardError: function (promise) {
+			this.error(promise.asyncError, promise);
+			return this;
+		},
+
+		asyncCallback: function (error, value, promise) {
+			if (error)
+				return this.asyncError(error, promise);
+			else
+				return this.asyncSuccess(value, promise);
+		},
+
+		asyncCallbackFunc: function () {
+			return Functions.as_method(this.asyncCallback, this);
+		},
+
+		forwardCallback: function (promise) {
+			this.callback(promise.asyncCallback, promise);
+			return this;
+		},
+
+		mapSuccess: function (func, ctx) {
+			var promise = Promise.create();
+			this.forwardError(promise).success(function (value, pr) {
+				var result = func.call(ctx || promise, value, pr);
+				if (Promise.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncSuccess(result);
+			});
+			return promise;
+		},
+		
+		mapError: function (func, ctx) {
+			var promise = Promise.create();
+			this.forwardSuccess(promise).error(function (err, pr) {
+				var result = func.call(ctx || promise, err, pr);
+				if (Promise.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncError(result);
+			});
+			return promise;
+		},
+
+		mapCallback: function (func, ctx) {
+			var promise = Promise.create();
+			this.callback(function (err, value, pr) {
+				var result = func.call(ctx || promise, err, value, pr);
+				if (Promise.is(result))
+					result.forwardCallback(promise);
+				else
+					promise.asyncCallback(err ? result : err, err ? value : result, pr);
+			});
+			return promise;
+		},
+
+		and: function (promises) {
+			var result = Promise.and(this);
+			return result.and(promises);
+		}
+	});
+	
+	return Promise;
+});
+
+
+Scoped.define("module:Timers.Timer", [
+    "module:Class",
+    "module:Objs",
+    "module:Time"
+], function (Class, Objs, Time, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			/*
+			 * int delay (mandatory): number of milliseconds until it fires
+			 * bool once (optional, default false): should it fire infinitely often
+			 * func fire (optional): will be fired
+			 * object context (optional): for fire
+			 * bool start (optional, default true): should it start immediately
+			 * bool real_time (default false)
+			 * int duration (optional, default null)
+			 * int fire_max (optiona, default null)
+			 * 
+			 */
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				options = Objs.extend({
+					once: false,
+					start: true,
+					fire: null,
+					context: this,
+					destroy_on_fire: false,
+					destroy_on_stop: false,
+					real_time: false,
+					duration: null,
+					fire_max: null
+				}, options);
+				this.__delay = options.delay;
+				this.__destroy_on_fire = options.destroy_on_fire;
+				this.__destroy_on_stop = options.destroy_on_stop;
+				this.__once = options.once;
+				this.__fire = options.fire;
+				this.__context = options.context;
+				this.__started = false;
+				this.__real_time = options.real_time;
+				this.__end_time = options.duration !== null ? Time.now() + options.duration : null;
+				this.__fire_max = options.fire_max;
+				if (options.start)
+					this.start();
+			},
+			
+			destroy: function () {
+				this.stop();
+				inherited.destroy.call(this);
+			},
+			
+			fire_count: function () {
+				return this.__fire_count;
+			},
+			
+			duration: function () {
+				return Time.now() - this.__start_time;
+			},
+			
+			fire: function () {
+				if (this.__once)
+					this.__started = false;
+				if (this.__fire) {
+					this.__fire.call(this.__context, this);
+					this.__fire_count++;
+					if (this.__real_time && !this.__destroy_on_fire && !this.__once) {
+						while ((this.__fire_count + 1) * this.__delay <= Time.now() - this.__start_time) {
+							this.__fire.call(this.__context, this);
+							this.__fire_count++;
+						}
+					}
+				}
+				if ((this.__end_time !== null && Time.now() + this.__delay > this.__end_time) ||
+					(this.__fire_max !== null && this.__fire_max <= this.__fire_count))
+					this.stop();
+				if (this.__destroy_on_fire)
+					this.weakDestroy();
+			},
+			
+			stop: function () {
+				if (!this.__started)
+					return;
+				if (this.__once)
+					clearTimeout(this.__timer);
+				else
+					clearInterval(this.__timer);
+				this.__started = false;
+				if (this.__destroy_on_stop)
+					this.weakDestroy();
+			},
+			
+			start: function () {
+				if (this.__started)
+					return;
+				var self = this;
+				this.__start_time = Time.now();
+				this.__fire_count = 0;
+				if (this.__once)
+					this.__timer = setTimeout(function () {
+						self.fire();
+					}, this.__delay);
+				else
+					this.__timer = setInterval(function () {
+						self.fire();
+					}, this.__delay);
+				this.__started = true;
+			},
+			
+			restart: function () {
+				this.stop();
+				this.start();
+			}
+			
+			
+		};
+	});
+});
+
 Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
+		
+		/** ArrayIterator Class
+		 * 
+		 * @class BetaJS.Iterators.ArrayIterator
+		 */
 		return {
 
+			/** Creates an Array Iterator
+			 * 
+			 * @param arr array
+			 */
 			constructor: function (arr) {
 				inherited.constructor.call(this);
 				this.__array = arr;
 				this.__i = 0;
 			},
 
+			/** Determines whether there are more items.
+			 * 
+			 * @return true if there are more items
+			 */
 			hasNext: function () {
 				return this.__i < this.__array.length;
 			},
 
+			/** Returns the next items if there is one.
+			 * 
+			 * @return next item
+			 */
 			next: function () {
 				var ret = this.__array[this.__i];
 				this.__i++;
@@ -6431,12 +6196,12 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 });
 
 
-Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
+Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator"], function (ArrayIterator, scoped) {
 	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
 		return {
 
 			constructor: function (obj) {
-				inherited.constructor.call(this, Objs.keys(obj));
+				inherited.constructor.call(this, Object.keys(obj));
 			}
 
 		};
@@ -7096,6 +6861,390 @@ Scoped.define("module:Net.Uri", ["module:Objs", "module:Types"], function (Objs,
 	
 	};
 });	
+
+Scoped.define("module:RMI.Client", [
+                                    "module:Class",
+                                    "module:Objs",
+                                    "module:Channels.TransportChannel",
+                                    "module:Ids",
+                                    "module:RMI.Skeleton",
+                                    "module:Types",
+                                    "module:RMI.Stub"
+                                    ], function (Class, Objs, TransportChannel, Ids, Skeleton, Types, Stub, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {			
+
+			constructor: function (sender_or_channel_or_null, receiver_or_null) {
+				inherited.constructor.call(this);
+				this.__channel = null;
+				this.__instances = {};
+				if (sender_or_channel_or_null) {
+					var channel = sender_or_channel_or_null;
+					if (receiver_or_null)
+						channel = this._auto_destroy(new TransportChannel(sender_or_channel_or_null, receiver_or_null));
+					this.__channel = channel;
+				}
+			},
+
+			destroy: function () {
+				if (this.__channel)
+					this.disconnect();
+				inherited.destroy.call(this);
+			},
+
+			connect: function (channel) {
+				if (this.__channel)
+					return;
+				this.__channel = channel;
+			},
+
+			disconnect: function () {
+				if (!this.__channel)
+					return;
+				this.__channel = null;
+				Objs.iter(this.__instances, function (inst) {
+					this.release(inst);
+				}, this);
+			},
+
+			_serializeValue: function (value) {
+				if (Skeleton.is_instance_of(value)) {
+					var registry = this.server;
+					registry.registerInstance(value);
+					return {
+						__rmi_meta: true,
+						__rmi_stub: value.stub(),
+						__rmi_stub_id: Ids.objectId(value)
+					};
+				} else
+					return value;		
+			},
+
+			_unserializeValue: function (value) {
+				if (value && value.__rmi_meta) {
+					var receiver = this;
+					return receiver.acquire(value.__rmi_stub, value.__rmi_stub_id);
+				} else
+					return value;		
+			},
+
+			acquire: function (class_type, instance_name) {
+				if (this.__instances[instance_name])
+					return this.__instances[instance_name];
+				if (Types.is_string(class_type))
+					class_type = Scoped.getGlobal(class_type);
+				if (!class_type || !class_type.ancestor_of(Stub))
+					return null;
+				var instance = new class_type();
+				this.__instances[Ids.objectId(instance, instance_name)] = instance;
+				var self = this;
+				instance.__send = function (message, data) {
+					if (!self.__channel)
+						return;
+					data = Objs.map(data, self._serializeValue, self);
+					return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
+						return this._unserializeValue(result);
+					}, self);
+				};
+				return instance;		
+			},
+
+			release: function (instance) {
+				var instance_name = Ids.objectId(instance);
+				if (!this.__instances[instance_name])
+					return;
+				instance.weakDestroy();
+				delete this.__instances[instance_name];
+			}
+
+		};
+	});
+});
+
+
+
+
+Scoped.define("module:RMI.Peer", [
+                                  "module:Class",
+                                  "module:Channels.SenderMultiplexer",
+                                  "module:Channels.ReceiverMultiplexer",
+                                  "module:RMI.Client",
+                                  "module:RMI.Server"
+                                  ], function (Class, SenderMultiplexer, ReceiverMultiplexer, Client, Server, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {			
+
+			constructor: function (sender, receiver) {
+				inherited.constructor.call(this);
+				this.__sender = sender;
+				this.__receiver = receiver;
+				this.__client_sender = this._auto_destroy(new SenderMultiplexer(sender, "client"));
+				this.__server_sender = this._auto_destroy(new SenderMultiplexer(sender, "server"));
+				this.__client_receiver = this._auto_destroy(new ReceiverMultiplexer(receiver, "server"));
+				this.__server_receiver = this._auto_destroy(new ReceiverMultiplexer(receiver, "client"));
+				this.client = this._auto_destroy(new Client(this.__client_sender, this.__client_receiver));
+				this.server = this._auto_destroy(new Server(this.__server_sender, this.__server_receiver));
+				this.client.server = this.server;
+				this.server.client = this.client;
+			},	
+
+			acquire: function (class_type, instance_name) {
+				return this.client.acquire(class_type, instance_name);
+			},
+
+			release: function (instance) {
+				this.client.release(instance);
+			},
+
+			registerInstance: function (instance, options) {
+				return this.server.registerInstance(instance, options);
+			},
+
+			unregisterInstance: function (instance) {
+				this.server.unregisterInstance(instance);
+			}
+
+		};
+	});
+});
+
+
+
+Scoped.define("module:RMI.Server", [
+                                    "module:Class",
+                                    "module:Events.EventsMixin",
+                                    "module:Objs",
+                                    "module:Channels.TransportChannel",
+                                    "module:Lists.ObjectIdList",
+                                    "module:Ids",
+                                    "module:RMI.Skeleton",
+                                    "module:Promise"
+                                    ], function (Class, EventsMixin, Objs, TransportChannel, ObjectIdList, Ids, Skeleton, Promise, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		return {
+
+			constructor: function (sender_or_channel_or_null, receiver_or_null) {
+				inherited.constructor.call(this);
+				this.__channels = new ObjectIdList();
+				this.__instances = {};
+				if (sender_or_channel_or_null) {
+					var channel = sender_or_channel_or_null;
+					if (receiver_or_null)
+						channel = this._auto_destroy(new TransportChannel(sender_or_channel_or_null, receiver_or_null));
+					this.registerClient(channel);
+				}
+			},
+
+			destroy: function () {
+				this.__channels.iterate(this.unregisterClient, this);
+				Objs.iter(this.__instances, function (inst) {
+					this.unregisterInstance(inst.instance);
+				}, this);
+				this.__channels.destroy();
+				inherited.destroy.call(this);
+			},
+
+			registerInstance: function (instance, options) {
+				options = options || {};
+				this.__instances[Ids.objectId(instance, options.name)] = {
+						instance: instance,
+						options: options
+				};
+				return instance;
+			},
+
+			unregisterInstance: function (instance) {
+				delete this.__instances[Ids.objectId(instance)];
+				instance.weakDestroy();
+			},
+
+			registerClient: function (channel) {
+				var self = this;
+				this.__channels.add(channel);
+				channel._reply = function (message, data) {
+					var components = message.split(":");
+					if (components.length == 2)
+						return self._invoke(channel, components[0], components[1], data);
+					else
+						return Promise.error(true);
+				};
+			},
+
+			unregisterClient: function (channel) {
+				this.__channels.remove(channel);
+				channel._reply = null;
+			},
+
+			_serializeValue: function (value) {
+				if (Skeleton.is_instance_of(value)) {
+					var registry = this;
+					registry.registerInstance(value);
+					return {
+						__rmi_meta: true,
+						__rmi_stub: value.stub(),
+						__rmi_stub_id: Ids.objectId(value)
+					};
+				} else
+					return value;		
+			},
+
+			_unserializeValue: function (value) {
+				if (value && value.__rmi_meta) {
+					var receiver = this.client;
+					return receiver.acquire(value.__rmi_stub, value.__rmi_stub_id);
+				} else
+					return value;		
+			},
+
+			_invoke: function (channel, instance_id, method, data) {
+				var instance = this.__instances[instance_id];
+				if (!instance) {
+					this.trigger("loadInstance", channel, instance_id);
+					instance = this.__instances[instance_id];
+				}
+				if (!instance)
+					return Promise.error(instance_id);
+				instance = instance.instance;
+				data = Objs.map(data, this._unserializeValue, this);
+				return instance.invoke(method, data, channel).mapSuccess(function (result) {
+					return this._serializeValue(result);
+				}, this);
+			}
+
+		};
+	}]);
+});
+
+
+
+
+Scoped.define("module:RMI.Skeleton", [
+                                      "module:Class",
+                                      "module:Objs",
+                                      "module:Promise"
+                                      ], function (Class, Objs, Promise, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			_stub: null,
+			intf: [],
+			_intf: {},
+			__superIntf: ["_destroy"],
+
+			constructor: function (options) {
+				this._options = Objs.extend({
+					destroyable: false
+				}, options);
+				inherited.constructor.call(this);
+				this.intf = this.intf.concat(this.__superIntf);
+				for (var i = 0; i < this.intf.length; ++i)
+					this._intf[this.intf[i]] = true;
+			},
+
+			_destroy: function () {
+				if (this._options.destroyable)
+					this.destroy();
+			},
+
+			invoke: function (message, data) {
+				if (!(this._intf[message]))
+					return Promise.error(message);
+				try {
+					var result = this[message].apply(this, data);
+					return Promise.is(result) ? result : Promise.value(result);
+				} catch (e) {
+					return Promise.error(e);
+				}
+			},
+
+			_success: function (result) {
+				return Promise.value(result);
+			},
+
+			_error: function (result) {
+				return Promise.error(result);
+			},
+
+			stub: function () {
+				if (this._stub)
+					return this._stub;
+				var stub = this.cls.classname;
+				return stub.indexOf("Skeleton") >= 0 ? stub.replace("Skeleton", "Stub") : stub;
+			}
+
+		};
+	});
+});
+
+Scoped.define("module:RMI.Stub", [
+                                  "module:Class",
+                                  "module:Classes.InvokerMixin",
+                                  "module:Functions"
+                                  ], function (Class, InvokerMixin, Functions, scoped) {
+	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
+		return {
+
+			intf: [],
+
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.invoke_delegate("invoke", this.intf);
+			},
+
+			destroy: function () {
+				this.invoke("_destroy");
+				inherited.destroy.call(this);
+			},
+
+			invoke: function (message) {
+				return this.__send(message, Functions.getArguments(arguments, 1));
+			}
+
+		};
+	}]);
+});
+
+
+Scoped.define("module:RMI.StubSyncer", [
+                                        "module:Class",
+                                        "module:Classes.InvokerMixin",
+                                        "module:Functions",
+                                        "module:Promise"
+                                        ], function (Class, InvokerMixin, Functions, Promise, scoped) {
+	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
+		return {
+
+			constructor: function (stub) {
+				inherited.constructor.call(this);
+				this.__stub = stub;
+				this.__current = null;
+				this.__queue = [];
+				this.invoke_delegate("invoke", this.__stub.intf);
+			},
+
+			invoke: function () {
+				var object = {
+						args: Functions.getArguments(arguments),
+						promise: Promise.create()
+				};
+				this.__queue.push(object);
+				if (!this.__current)
+					this.__next();
+				return object.promise;		
+			},
+
+			__next: function () {
+				if (this.__queue.length === 0)
+					return;
+				this.__current = this.__queue.shift();
+				this.__stub.invoke.apply(this.__stub, this.__current.args).forwardCallback(this.__current.promise).callback(this.__next, this);
+			}
+
+		};
+	}]);
+});
+
+
 Scoped.define("module:States.CompetingComposite", [
                                                    "module:Class",
                                                    "module:Objs"
@@ -7562,7 +7711,7 @@ Scoped.define("module:States.Host", [
 
 			finalize: function () {
 				if (this._state)
-					this._state.destroy();
+					this._state.end();
 				this._state = null;    	
 			},
 
