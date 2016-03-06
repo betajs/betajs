@@ -4,6 +4,7 @@
 	"description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
 	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
 	"devDependencies": {
+		"lodash": "",
 		"grunt": "",
 		"grunt-contrib-jshint": "",
 		"grunt-contrib-concat": "",
