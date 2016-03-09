@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.40 - 2016-03-02
+betajs - v1.0.41 - 2016-03-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "477.1456966715651"
+    "version": "480.1457402587842"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -841,6 +841,12 @@ Scoped.define("module:Events.EventsMixin", [
                                             ], function (Timer, Async, LinkedList, Functions, Types, Objs) {
 
 	return {
+
+		_notifications: {
+			"destroy": function () {
+				this.off(null, null, null);
+			} 
+		},
 
 		EVENT_SPLITTER: /\s+/,
 
@@ -5210,21 +5216,28 @@ Scoped.define("module:Collections.Collection", [
 				return ident;
 			},
 			
+			replace_object: function (oriObject) {
+				var is_prop = Class.is_class_instance(oriObject);
+				var object = is_prop ? oriObject : new Properties(oriObject);
+				if (this.exists(object)) {
+					var existing = this.getById(this.get_ident(object));
+					if (is_prop) {
+						this.remove(existing);
+						this.add(object);
+					} else {
+						existing.setAll(oriObject);
+						return existing;
+					}
+				} else
+					this.add(object);
+				return object;
+			},
+			
 			replace_objects: function (objects, keep_others) {
 				var ids = {};
 				Objs.iter(objects, function (oriObject) {
-					var is_prop = Class.is_class_instance(oriObject);
-					var object = is_prop ? oriObject : new Properties(oriObject);
+					var object = this.replace_object(oriObject);
 					ids[this.get_ident(object)] = true;
-					if (this.exists(object)) {
-						var existing = this.getById(this.get_ident(object));
-						if (is_prop) {
-							this.remove(existing);
-							this.add(object);
-						} else
-							existing.setAll(oriObject);
-					} else
-						this.add(object);
 				}, this);
 				if (!keep_others) {
 					var iterator = this.iterator();
@@ -6182,6 +6195,7 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 				this.__i++;
 				return ret;
 			}
+			
 		};
 	}, {
 
@@ -6546,7 +6560,7 @@ Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", 
 });
 
 
-Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"], function (Class, Functions, scoped) {
+Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions", "module:Async"], function (Class, Functions, Async, scoped) {
 	return Class.extend({scoped: scoped}, {
 		
 		hasNext: function () {
@@ -6577,9 +6591,23 @@ Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"],
 			return arr;
 		},
 
-		iterate: function (callback, context) {
-			while (this.hasNext())
-				callback.call(context || this, this.next());
+		iterate: function (cb, ctx) {
+			while (this.hasNext()) {
+				var result = cb.call(ctx || this, this.next());
+				if (result === false)
+					return;
+			}
+		},
+		
+		asyncIterate: function (cb, ctx, time) {
+			if (this.hasNext()) {
+				var result = cb.call(ctx || this, this.next());
+				if (result === false)
+					return;
+				Async.eventually(function () {
+					this.asyncIterate(cb, ctx, time);
+				}, this, time);
+			}
 		}
 
 	});

@@ -13,7 +13,7 @@ Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", 
 });
 
 
-Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"], function (Class, Functions, scoped) {
+Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions", "module:Async"], function (Class, Functions, Async, scoped) {
 	return Class.extend({scoped: scoped}, {
 		
 		hasNext: function () {
@@ -44,9 +44,23 @@ Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions"],
 			return arr;
 		},
 
-		iterate: function (callback, context) {
-			while (this.hasNext())
-				callback.call(context || this, this.next());
+		iterate: function (cb, ctx) {
+			while (this.hasNext()) {
+				var result = cb.call(ctx || this, this.next());
+				if (result === false)
+					return;
+			}
+		},
+		
+		asyncIterate: function (cb, ctx, time) {
+			if (this.hasNext()) {
+				var result = cb.call(ctx || this, this.next());
+				if (result === false)
+					return;
+				Async.eventually(function () {
+					this.asyncIterate(cb, ctx, time);
+				}, this, time);
+			}
 		}
 
 	});

@@ -34,6 +34,7 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 				this.__i++;
 				return ret;
 			}
+			
 		};
 	}, {
 

@@ -9,6 +9,12 @@ Scoped.define("module:Events.EventsMixin", [
 
 	return {
 
+		_notifications: {
+			"destroy": function () {
+				this.off(null, null, null);
+			} 
+		},
+
 		EVENT_SPLITTER: /\s+/,
 
 		__create_event_object: function (callback, context, options) {

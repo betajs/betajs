@@ -132,21 +132,28 @@ Scoped.define("module:Collections.Collection", [
 				return ident;
 			},
 			
+			replace_object: function (oriObject) {
+				var is_prop = Class.is_class_instance(oriObject);
+				var object = is_prop ? oriObject : new Properties(oriObject);
+				if (this.exists(object)) {
+					var existing = this.getById(this.get_ident(object));
+					if (is_prop) {
+						this.remove(existing);
+						this.add(object);
+					} else {
+						existing.setAll(oriObject);
+						return existing;
+					}
+				} else
+					this.add(object);
+				return object;
+			},
+			
 			replace_objects: function (objects, keep_others) {
 				var ids = {};
 				Objs.iter(objects, function (oriObject) {
-					var is_prop = Class.is_class_instance(oriObject);
-					var object = is_prop ? oriObject : new Properties(oriObject);
+					var object = this.replace_object(oriObject);
 					ids[this.get_ident(object)] = true;
-					if (this.exists(object)) {
-						var existing = this.getById(this.get_ident(object));
-						if (is_prop) {
-							this.remove(existing);
-							this.add(object);
-						} else
-							existing.setAll(oriObject);
-					} else
-						this.add(object);
 				}, this);
 				if (!keep_others) {
 					var iterator = this.iterator();
