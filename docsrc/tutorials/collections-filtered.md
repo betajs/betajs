@@ -9,14 +9,13 @@ You can then define the filtered collection as follows:
 
 ```
 	var filtered_collection = new BetaJS.Collections.FilteredCollection(collection, function (item) {
-
 		// return true if item should be contained in this collection.
 	}, optional_context);
 ```
 
 The filtered collection updates automatically when the parent collection is updated, and vice versa.
 
-####Example:
+#### Example:
 
 ```
 	var collection = new BetaJS.Collections.Collection(
@@ -37,12 +36,12 @@ The filtered collection updates automatically when the parent collection is upda
 	);
 
 	var filtered_collection = new BetaJS.Collections.FilteredCollection(collection, function (item) {
-		return item.value == 2
-		//The new collection will contain only item2 from the collection above
+		return item.get("value") === 2;
+		// The new collection will only contain item2 from the collection above.
 		// i.e. filtered_collection.count() == 1
 	}, optional_context);
 
-	//However if you now add an item to the collection that has also a value of 2 it will also be in the filtered collection i.e.
+	// However if you now add an item to the original collection that has also a value of 2, it will also be in the filtered collection, i.e.:
 	collection.add({
 		string : "This is a fourth Item also with value 2",
 		value : 2

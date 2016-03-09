@@ -1,4 +1,4 @@
-Scoped.define("module:Time", ["module:Locales"], function (Locales) {
+Scoped.define("module:Time", [], function () {
 	return {
 			
 		/*
@@ -134,44 +134,14 @@ Scoped.define("module:Time", ["module:Locales"], function (Locales) {
 			return Math[round || "floor"](t / this.__components[key].milliseconds);
 		},
 		
+		timeComponentGet: function (t, key) {
+			return this.__components[key].get(t);
+		},
+		
 		timeModulo: function (t, key, round) {
 			return this.timeComponent(t, key, round) % (this.__components[key].max + 1);
-		},
-		
-		formatTimePeriod: function (t, options) {
-			options = options || {};
-			var components = options.components || ["day", "hour", "minute", "second"];
-			var component = "";
-			var timeComponent = 0;
-			for (var i = 0; i < components.length; ++i) {
-				component = components[i];
-				timeComponent = this.timeComponent(t, component, options.round || "round");
-				if (timeComponent)
-					break;
-			}
-			return timeComponent + " " + Locales.get(component + (timeComponent == 1 ? "" : "s"));
-		},
-		
-		formatTime: function(t, s) {
-			var components = ["hour", "minute", "second"];
-			s = s || "hhh:mm:ss";
-			var replacers = {};
-			for (var i = 0; i < components.length; ++i) {
-				var c = components[i].charAt(0);
-				replacers[c + c + c] = this.timeComponent(t, components[i], "floor");
-				var temp = this.timeModulo(t, components[i], "floor");
-				replacers[c + c] = temp < 10 ? "0" + temp : temp; 
-				replacers[c] = temp;
-			}
-			for (var key in replacers)
-				s = s.replace(key, replacers[key]);
-			return s;
-		},
-		
-		monthString: function (month) {
-			return (d = new Date(), d.setMonth(month), d).toDateString().substring(4,7);
 		}
-		
+				
 	};
 
 });

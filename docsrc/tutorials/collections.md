@@ -38,6 +38,6 @@ It implements the Events Mixin and emits change events whenever items are added,
 	});
 	
 	collection.on("update", function (item, key, value) {
-		// TODO: item has been added
+		// TODO: item has been updated
 	});	
 ```

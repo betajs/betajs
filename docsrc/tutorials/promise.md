@@ -16,7 +16,7 @@ You would consume it as follows:
 
 Promises try to disconnect this as follows:
 ```javascript
-   function emitter(callback) {
+   function emitter() {
       var promise = BetaJS.Promise.create();
       // some code that ends up calling promise.asyncSuccess();
       return promise;

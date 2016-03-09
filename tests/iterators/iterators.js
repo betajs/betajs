@@ -24,3 +24,14 @@ test("test filtered iterator", function() {
 		s += iter.next();
 	ok(s == "2468");
 });
+
+
+test("test partially sorted iterator", function() {
+	var base = new BetaJS.Iterators.ArrayIterator([[1, 2], [1, 1], [2, 1], [2, 2]]);
+	var iter = new BetaJS.Iterators.PartiallySortedIterator(base, function (x, y) {
+		return x[0] === y[0] ? (x[1] - y[1]) : (x[0] - y[0]);
+	}, function (x, y) {
+		return x[0] === y[0];
+	});
+	QUnit.deepEqual(iter.asArray(), [[1, 1], [1, 2], [2, 1], [2, 2]]);
+});

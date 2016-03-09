@@ -22,7 +22,7 @@ Scoped.define("module:Types", function () {
 		 * @return true if x is an array
 		 */
 		is_array : function(x) {
-			return Object.prototype.toString.call(x) === '[object Array]';
+			return Array.isArray(x);
 		},
 
 		/**

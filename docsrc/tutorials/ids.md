@@ -1,4 +1,4 @@
-The BetaJS system has a small library for generating unique this. This can be used for all kinds of purposes, but primarily for uniquely identifiying objects.
+The BetaJS system has a small library for generating unique IDs. This can be used for all kinds of purposes, but primarily for uniquely identifiying objects.
 
 Since JavaScript has no notion of using pointers (to objects) as keys in hashes, it is impossible to save an identifier to an object without artificial ids.
 

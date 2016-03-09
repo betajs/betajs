@@ -234,6 +234,46 @@ Scoped.define("module:Structures.TreeMap", ["module:Structures.AvlTree"], functi
 				return t.compare(key, to_key) * (reverse ? -1 : 1) <= 0 && callback.call(context, key, value) !== false;
 			}, this, reverse);
 		},
+
+		/*
+		__downpath: function (current, reverse, path) {
+			path = path || [];
+			while (current) {
+				path.push(current);
+				current = reverse ? current.right : current.left
+			}
+			return path;
+		},
+		
+		iteratorInit: function (t, reverse) {
+			return {
+				path: this.__downpath(t.root, reverse),
+				reverse: reverse
+			};
+		},
+		
+		iteratorHasNext: function (iter) {
+			return iter.path.length > 0;
+		},
+		
+		iteratorNext: function (iter) {
+			var current = iter.path[iter.path.length - 1];
+			var data = current.data;
+			var next = iter.reverse ? current.left : current.right;
+			if (next)
+				iter.path = this.__downpath(next, iter.reverse, iter.path);
+			else {
+				while (iter.path.length > 0) {
+					var child = iter.path.pop();
+					current = iter.path[iter.path.length - 1];
+					next = iter.reverse ? current.left : current.right;
+					if (current !== next)
+						break;
+				}
+			}
+			return data;
+		},
+		*/
 		
 		take_min: function (t) {
 			var a = AvlTree.take_min(t.root);

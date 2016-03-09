@@ -3,21 +3,21 @@
 
 ```js
 
-	var property_a = new BetaJS.Properties.Properties();
+	var properties_a = new BetaJS.Properties.Properties();
 
-	var x = property_a.get("value_1");
+	var x = properties_a.get("value_1");
 	// x === undefined
 
-	var property_b = new BetaJS.Properties.Properties({
+	var properties_b = new BetaJS.Properties.Properties({
 		value_2: "This is Value 2"
 	});
 
-	var x = property_b.get("value_2");
+	var x = properties_b.get("value_2");
 	// x === "This is Value 2"
 
-	property_a.set("value_1", "Some Property Value");
+	properties_a.set("value_1", "Some Property Value");
 	
-	var x = property_a.get("value_1");
+	var x = properties_a.get("value_1");
 	// x === "Some Property Value"
 
 ```
@@ -26,11 +26,11 @@
 
 ```js
 
-	var property = new BetaJS.Properties.Properties();
+	var properties = new BetaJS.Properties.Properties();
 
-	property.set("prop.value_a","This is value_a");
+	properties.set("prop.value_a","This is value_a");
 
-	var x = property.get("prop.value_a");
+	var x = properties.get("prop.value_a");
 	// x === "This is value_a"
 
 ```
@@ -51,7 +51,7 @@ This is done automatically by the Events System.
 
 	properties.compute("computed_value", function () {
 		return "The Values are: " + this.get("value1") + ", " + this.get("value2");
-	},["value1"],["value2"]);
+	},["value1", "value2"]);
 	properties.get("computed_value");
 	//Will compute to: "The Values are: This is value 1, This is value 2"
 

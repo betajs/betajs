@@ -18,14 +18,16 @@ Scoped.define("module:States.Host", [
 
 			initialize: function (initial_state, initial_args) {
 				if (!this._stateRegistry) {
+					var s = null;
 					if (Types.is_string(initial_state) && initial_state.indexOf(".") >= 0) {
 						var split = Strings.splitLast(initial_state, ".");
-						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(split.head)));
 						initial_state = split.tail;
-					} else if (!Types.is_string(initial_state)) {
-						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(initial_state.classname, ".").head)));
-					} else
-						this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(Strings.splitLast(this.cls.classname, ".").head)));
+						s = split.head;
+					} else if (!Types.is_string(initial_state))
+						s = Strings.splitLast(initial_state.classname, ".").head;
+					else
+						s = Strings.splitLast(this.cls.classname, ".").head;
+					this._stateRegistry = this._auto_destroy(new ClassRegistry(Scoped.getGlobal(s)));
 				}
 				this._createState(initial_state, initial_args).start();
 				this._baseState = this._baseState || this._state.cls; 
@@ -37,7 +39,7 @@ Scoped.define("module:States.Host", [
 
 			finalize: function () {
 				if (this._state)
-					this._state.destroy();
+					this._state.end();
 				this._state = null;    	
 			},
 
@@ -134,17 +136,18 @@ Scoped.define("module:States.State", [
 			_defaults: {},
 
 			_white_list: null,
+			
+			_starting: false,
+			_started: false,
+			_stopped: false,
+			_transitioning: false,
+			__next_state: null,
+			__suspended: 0,
 
 			constructor: function (host, args, transitionals) {
 				inherited.constructor.call(this);
 				this.host = host;
 				this.transitionals = transitionals;
-				this._starting = false;
-				this._started = false;
-				this._stopped = false;
-				this._transitioning = false;
-				this.__next_state = null;
-				this.__suspended = 0;
 				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
 				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 				var used = {};
@@ -297,95 +300,6 @@ Scoped.define("module:States.State", [
 			_defaults: function (base, overwrite) {
 				return Objs.extend(Objs.clone(base, 1), overwrite);
 			}
-		}
-
-	});
-});
-
-
-
-Scoped.define("module:States.CompetingComposite", [
-                                                   "module:Class",
-                                                   "module:Objs"
-                                                   ], function (Class, Objs, scoped) {
-	return Class.extend({scoped: scoped}, {
-
-		_register_host: function (competing_host) {
-			this._hosts = this._hosts || [];
-			this._hosts.push(this._auto_destroy(competing_host));
-		},
-
-		other_hosts: function (competing_host) {
-			return Objs.filter(this._hosts || [], function (other) {
-				return other != competing_host;
-			}, this);
-		},
-
-		_next: function (competing_host, state) {
-			var others = this.other_hosts(competing_host);
-			for (var i = 0; i < others.length; ++i) {
-				var other = others[i];
-				var other_state = other.state();
-				if (!other_state.can_coexist_with(state))
-					other_state.retreat_against(state);
-			}
-		}
-
-	});
-});
-
-
-Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (Host, scoped) {
-	return Host.extend({scoped: scoped}, function (inherited) {
-		return {
-
-			constructor: function (composite) {
-				inherited.constructor.call(this);
-				this._composite = composite;
-				if (composite)
-					composite._register_host(this);
-			},
-
-			composite: function () {
-				return this._composite;
-			},
-
-			_can_transition_to: function (state) {
-				if (!this._composite)
-					return true;
-				var others = this._composite.other_hosts(this);
-				for (var i = 0; i < others.length; ++i) {
-					var other = others[i];
-					var other_state = other.state();
-					if (!state.can_coexist_with(other_state) && !state.can_prevail_against(other_state))
-						return false;
-				}
-				return true;
-			},
-
-			_next: function (state) {
-				if (this._composite)
-					this._composite._next(this, state);
-				inherited._next.call(this, state);
-			}
-
-		};
-	});    
-});
-
-
-Scoped.define("module:States.CompetingState", ["module:States.State"], function (State, scoped) {
-	return State.extend({scoped: scoped}, {
-
-		can_coexist_with: function (foreign_state) {
-			return true;
-		},
-
-		can_prevail_against: function (foreign_state) {
-			return false;
-		},
-
-		retreat_against: function (foreign_state) {
 		}
 
 	});

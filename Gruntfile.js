@@ -1,260 +1,45 @@
-module.banner = '/*!\n<%= pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\nCopyright (c) <%= pkg.contributors %>\n<%= pkg.license %> Software License.\n*/\n';
-
 module.exports = function(grunt) {
 
-	grunt
-			.initConfig({
-				pkg : grunt.file.readJSON('package.json'),
-				'revision-count' : {
-					options : {
-						property : 'revisioncount',
-						ref : 'HEAD'
-					}
-				},
-				concat : {
-					options : {
-						banner : module.banner
-					},
-					dist_raw : {
-						dest : 'dist/beta-raw.js',
-						src : [ 'src/fragments/begin.js-fragment',
-								'src/**/*.js', 'src/fragments/end.js-fragment' ]
-					},
-					dist_scoped : {
-						dest : 'dist/beta.js',
-						src : [ 'vendors/scoped.js', 'dist/beta-noscoped.js' ]
-					}
-				},
-				preprocess : {
-					options : {
-						context : {
-							MAJOR_VERSION : '<%= revisioncount %>',
-							MINOR_VERSION : (new Date()).getTime()
-						}
-					},
-					dist : {
-						src : 'dist/beta-raw.js',
-						dest : 'dist/beta-noscoped.js'
-					}
-				},
-				clean : {
-					raw : "dist/beta-raw.js",
-					closure : "dist/beta-closure.js",
-					browserstack : [ "./browserstack.json", "BrowserStackLocal" ],
-					jsdoc : ['./jsdoc.conf.json']
-				},
-				uglify : {
-					options : {
-						banner : module.banner
-					},
-					dist : {
-						files : {
-							'dist/beta-noscoped.min.js' : [ 'dist/beta-noscoped.js' ],
-							'dist/beta.min.js' : [ 'dist/beta.js' ]
-						}
-					}
-				},
-				jshint : {
-					options : {
-						es5 : false,
-						es3 : true,
-						smarttabs: true
-					},
-					source : [ "./src/*/*.js" ],
-					dist : [ "./dist/beta-noscoped.js", "./dist/beta.js" ],
-					gruntfile : [ "./Gruntfile.js" ],
-					tests : [ "./tests/base/*.js" ]
-				},
-				wget : {
-					dependencies : {
-						options : {
-							overwrite : true
-						},
-						files : {
-							"./vendors/scoped.js" : "https://raw.githubusercontent.com/betajs/betajs-scoped/master/dist/scoped.js"
-						}
-					}
-				},
-				closureCompiler : {
-					options : {
-						compilerFile : process.env.CLOSURE_PATH + "/compiler.jar",
-						compilerOpts : {
-							compilation_level : 'ADVANCED_OPTIMIZATIONS',
-							warning_level : 'verbose',
-							externs : [ "./src/fragments/closure.js-fragment" ]
-						}
-					},
-					dist : {
-						src : "./dist/beta.js",
-						dest : "./dist/beta-closure.js"
-					}
-				},
-				jsdoc : {
-					dist : {
-						src : [ './README.md', './src/base/*.js' ],					
-						options : {
-							destination : 'docs',
-							template : "node_modules/grunt-betajs-docs-compile",
-							configure : "./jsdoc.conf.json",
-							tutorials: "./docsrc/tutorials",
-							recurse: true
-						}
-					}
-				},
-				'node-qunit' : {
-					dist : {
-						code : './dist/beta.js',
-						tests : grunt.file.expand("./tests/base/*.js"),
-						done : function(err, res) {
-							publishResults("node", res, this.async());
-						}
-					}
-				},
-				shell : {
-					browserstack : {
-						command : 'browserstack-runner',
-						options : {
-							stdout : true,
-							stderr : true
-						}
-					}
-				},
-				template : {
-					"readme" : {
-						options : {
-							data: {
-								indent: "",
-								framework: grunt.file.readJSON('package.json')
-							}
-						},
-						files : {
-							"README.md" : ["compile/readme.tpl"]
-						}
-					},
-					"license" : {
-						options : {
-							data: grunt.file.readJSON('package.json')
-						},
-						files : {
-							"LICENSE" : ["compile/license.tpl"]
-						}
-					},
-					"jsdoc": {
-						options: {
-							data: {
-								data: {
-									"tags": {
-										"allowUnknownTags": true
-									},
-									"plugins": ["plugins/markdown"],
-									"templates": {
-										"cleverLinks": false,
-										"monospaceLinks": false,
-										"dateFormat": "ddd MMM Do YYYY",
-										"outputSourceFiles": true,
-										"outputSourcePath": true,
-										"systemName": "BetaJS",
-										"footer": "",
-										"copyright": "BetaJS (c) - MIT License",
-										"navType": "vertical",
-										"theme": "cerulean",
-										"linenums": true,
-										"collapseSymbols": false,
-										"inverseNav": true,
-										"highlightTutorialCode": true,
-										"protocol": "fred://",
-										"singleTutorials": true
-									},
-									"markdown": {
-										"parser": "gfm",
-										"hardwrap": true
-									}
-								}
-							}
-						},
-						files : {
-							"jsdoc.conf.json": ["compile/json.tpl"]
-						}
-					},
-					"browserstack-desktop" : {
-						options : {
-							data: {
-								data: {
-									"test_path" : "tests/tests.html",
-									"test_framework" : "qunit",
-									"timeout": 10 * 60,
-									"browsers": [
-						              	'firefox_latest',
-									    'firefox_4',
-						                'chrome_latest',
-							            'chrome_15',
-						                'safari_latest',
-							            'safari_4',
-						                'opera_latest', 
-									    'opera_12_15',
-									    "edge_latest",
-						                'ie_11',
-						                'ie_10',
-						                'ie_9',
-						                'ie_8',
-						                'ie_7',
-						                'ie_6'
-						            ]
-								}
-							}
-						},
-						files : {
-							"browserstack.json" : ["compile/json.tpl"]
-						}
-					},
-					"browserstack-mobile" : {
-						options : {
-							data: {
-								data: {
-									"test_path" : "tests/tests.html",
-									"test_framework" : "qunit",
-									"timeout": 10 * 60,
-									"browsers": [
-									    {"os": "ios", "os_version": "9.1"}, 
-									    {"os": "ios", "os_version": "7.0"},
-									    {"os": "android", "os_version": "4.4"},
-									    {"os": "android", "os_version": "4.0"}
-						            ]
-								}
-							}
-						},
-						files : {
-							"browserstack.json" : ["compile/json.tpl"]
-						}
-					}			
-				}
-			});
+	var pkg = grunt.file.readJSON('package.json');
+	var gruntHelper = require('betajs-compile/grunt.js');
+	var dist = 'beta';
 
-	grunt.loadNpmTasks('grunt-contrib-concat');
-	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-git-revision-count');
-	grunt.loadNpmTasks('grunt-preprocess');
-	grunt.loadNpmTasks('grunt-contrib-clean');
-	grunt.loadNpmTasks('grunt-wget');
-	grunt.loadNpmTasks('grunt-closure-tools');
-	grunt.loadNpmTasks('grunt-contrib-jshint');
-	grunt.loadNpmTasks('grunt-node-qunit');
-	grunt.loadNpmTasks('grunt-jsdoc');
-	grunt.loadNpmTasks('grunt-shell');
-	grunt.loadNpmTasks('grunt-template');
+	gruntHelper.init(pkg, grunt)
+	
+	
+    /* Compilation */    
+	.scopedclosurerevisionTask(null, "src/**/*.js", "dist/" + dist + "-noscoped.js", {
+		"module": "global:BetaJS"
+    }, null, true)	
+    .concatTask('concat-scoped', ['vendors/scoped.js', 'dist/' + dist + '-noscoped.js'], 'dist/' + dist + '.js')
+    .uglifyTask('uglify-noscoped', 'dist/' + dist + '-noscoped.js', 'dist/' + dist + '-noscoped.min.js')
+    .uglifyTask('uglify-scoped', 'dist/' + dist + '.js', 'dist/' + dist + '.min.js')
 
-	grunt.registerTask('default', [ 'revision-count', 'concat:dist_raw',
-			'preprocess', 'clean:raw', 'concat:dist_scoped', 'uglify' ]);
-	grunt.registerTask('docs', ['template:jsdoc', 'jsdoc', 'clean:jsdoc']);
-	grunt.registerTask('qunit', [ 'node-qunit' ]);
-	grunt.registerTask('lint', [ 'jshint:source', 'jshint:dist',
-			'jshint:tests', 'jshint:gruntfile' ]);
-	grunt.registerTask('check', [ 'lint', 'qunit' ]);
-	grunt.registerTask('dependencies', [ 'wget:dependencies' ]);
-	grunt.registerTask('closure', [ 'closureCompiler', 'clean:closure' ]);
-	grunt.registerTask('browserstack-desktop', [ 'template:browserstack-desktop', 'shell:browserstack', 'clean:browserstack' ]);
-	grunt.registerTask('browserstack-mobile', [ 'template:browserstack-mobile', 'shell:browserstack', 'clean:browserstack' ]);
-	grunt.registerTask('readme', [ 'template:readme' ]);
-	grunt.registerTask('license', [ 'template:license' ]);
+    /* Testing */
+    .qunitTask(null, './dist/' + dist + '.js', grunt.file.expand('./tests/*/*.js'))
+    .closureTask(null, ["./vendors/scoped.js", "./dist/" + dist + "-noscoped.js"])
+    .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: false})
+    .browserstackTask(null, 'tests/tests.html', {desktop: false, mobile: true})
+    .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js'])
+    
+    /* External Configurations */
+    .codeclimateTask()
+    .travisTask()
+    
+    /* Dependencies */
+    .dependenciesTask(null, { github: ['betajs/betajs-scoped/dist/scoped.js'] })
+
+    /* Markdown Files */
+	.readmeTask()
+    .licenseTask()
+    .packageTask()
+    
+    /* Documentation */
+    .docsTask();
+
+	grunt.initConfig(gruntHelper.config);	
+
+	grunt.registerTask('default', ['package', 'readme', 'license', 'codeclimate', 'travis', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
+	grunt.registerTask('check', ['lint', 'qunit']);
 
 };

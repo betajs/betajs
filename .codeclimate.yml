@@ -1,24 +1,29 @@
 engines:
-  rubocop:
-    enabled: true
-  golint:
+  scss-lint:
     enabled: true
   eslint:
     enabled: true
   csslint:
     enabled: true
+  fixme:
+    enabled: true
 ratings:
   paths:
   - src/**/*.js
 exclude_paths:
-- dist/**/*
 - dist/*
+- dist/**/*
+- compile/*
 - compile/**/*
-- vendors/**/*
 - vendors/*
+- vendors/**/*
+- docsrc/*
 - docsrc/**/*
+- demos/*
 - demos/**/*
+- tests/*
 - tests/**/*
+- tasks/*
 - tasks/**/*
+- docs/*
 - docs/**/*
-

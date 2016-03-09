@@ -10,7 +10,7 @@ Scoped.define("module:Classes.Taggable", [
 		},
 		
 		getTags: function () {
-			return Objs.keys(this.__tags);
+			return Object.keys(this.__tags);
 		},
 		
 		removeTag: function (tag) {

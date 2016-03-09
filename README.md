@@ -1,12 +1,126 @@
-# betajs 1.0.31
+# betajs 1.0.40
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
 
-BetaJS is a general-purpose JavaScript framework for doing awesome things.
+
+BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.
 
 
-## Status
-Active, Production ready
+
+## Getting Started
+
+
+You can use the library in the browser, in your NodeJS project and compile it as well.
+
+#### Browser
+
+```javascript
+	<script src="betajs/dist/betajs.min.js"></script>
+``` 
+
+#### NodeJS
+
+```javascript
+	var BetaJS = require('betajs/dist/beta.js');
+```
+
+#### Compile
+
+```javascript
+	git clone https://github.com/betajs/betajs.git
+	npm install
+	grunt
+```
+
+
+
+## Basic Usage
+
+
+The BetaJS module contains a variety of low-level helper libraries, particularly:
+- Asynchronous behaviour and Promises
+- Object Orientation
+- Event Handling
+- Dynamic Lists and Collections
+- Dynamic Properties
+- Remote Method Invocation
+- String Manipulation and Templating
+- Binary Search Trees
+- Timers and Time
+- Iterators
+- Uris
+- State Machine and Abstract Routing
+
+#### Properties
+
+```js
+
+	var properties = new BetaJS.Properties.Properties({foobar: "initial value"});
+
+	properties.set("foobar", "second value");
+
+	var value = properties.get("foobar");
+	// value === "second value"
+	
+	properties.of('change:foobar', function(newValue, oldValue) {
+		console.log('The value of foobar has been changed from', oldValue, 'to', newValue);
+	});
+
+```
+
+
+#### Object Orientation
+
+```javascript
+  TestClass = BetaJS.Class.extend(null, {
+  
+    y: 0,
+  
+    fooBar: function (x) {
+      console.log("Test Class Instance", "fooBar", x, y);
+    }
+    
+  }, {
+  
+    staticFooBar: function (x) {
+      console.log("Test Class", "staticFooBar", x);
+    }
+    
+  });
+```
+
+```javascript
+  TestClass.staticFooBar(5);
+  var first = new TestClass();
+  first.y = 1;
+  first.foobar(2);
+  var second = new TestClass();
+  second.y = 3;
+  second.foobar(4);
+```
+
+```
+  Test Class  staticFooBar  5
+  Test Class Instance  fooBar  2  1
+  Test Class Instance  fooBar  4  3
+```
+
+
+#### Events
+
+
+```javascript
+	var events = new BetaJS.Events.Events();
+
+	events.trigger("event_name", event_data1, event_data2);
+
+	events.on("event_name", function (event_arg1, event_arg2) {
+		// Do something
+	}, function_context);
+
+	events.off("event_name", null, function_context);
+```
+
 
 
 ## Links
@@ -15,9 +129,12 @@ Active, Production ready
 | Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs.git](git://github.com/betajs/betajs.git) |
 | Repository | [http://github.com/betajs/betajs](http://github.com/betajs/betajs) |
+| Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
+| Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
 
 
-## Compatability (Tested)
+
+## Compatability
 | Target | Versions |
 | :----- | -------: |
 | Firefox | 4 - Latest |
@@ -61,7 +178,7 @@ Active, Production ready
 
 ## License
 
-Apache 2.0
+Apache-2.0
 
 
 ## Credits

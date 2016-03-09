@@ -9,12 +9,12 @@ Instances of type Properties allow setting and getting of arbitrary attributes (
 	properties.set("a", "second value");
 	
 	var x = properties.get("a");
-	// x === "other value"
+	// x === "second value"
 ```
 
 It implements the Events Mixin and emits change events whenever attributes are introduced, changed or removed.
 ```
-	properties.on("change:a", function (value) {
+	properties.on("change:a", function (value, oldValue) {
 		console.log("a has been changed: ", value);
 	});
 	

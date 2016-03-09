@@ -15,6 +15,10 @@ Scoped.define("module:Timers.Timer", [
 			 * bool start (optional, default true): should it start immediately
 			 * bool real_time (default false)
 			 * int duration (optional, default null)
+<<<<<<< HEAD:src/base/timers.js
+=======
+			 * int fire_max (optiona, default null)
+>>>>>>> d9727dbfc8a6a5bc48673d0c9196fa3e6c4d5084:src/flow/timers.js
 			 * 
 			 */
 			constructor: function (options) {
@@ -27,7 +31,8 @@ Scoped.define("module:Timers.Timer", [
 					destroy_on_fire: false,
 					destroy_on_stop: false,
 					real_time: false,
-					duration: null
+					duration: null,
+					fire_max: null
 				}, options);
 				this.__delay = options.delay;
 				this.__destroy_on_fire = options.destroy_on_fire;
@@ -38,6 +43,7 @@ Scoped.define("module:Timers.Timer", [
 				this.__started = false;
 				this.__real_time = options.real_time;
 				this.__end_time = options.duration !== null ? Time.now() + options.duration : null;
+				this.__fire_max = options.fire_max;
 				if (options.start)
 					this.start();
 			},
@@ -45,6 +51,14 @@ Scoped.define("module:Timers.Timer", [
 			destroy: function () {
 				this.stop();
 				inherited.destroy.call(this);
+			},
+			
+			fire_count: function () {
+				return this.__fire_count;
+			},
+			
+			duration: function () {
+				return Time.now() - this.__start_time;
 			},
 			
 			fire: function () {
@@ -60,7 +74,8 @@ Scoped.define("module:Timers.Timer", [
 						}
 					}
 				}
-				if (this.__end_time !== null && Time.now() + this.__delay > this.__end_time)
+				if ((this.__end_time !== null && Time.now() + this.__delay > this.__end_time) ||
+					(this.__fire_max !== null && this.__fire_max <= this.__fire_count))
 					this.stop();
 				if (this.__destroy_on_fire)
 					this.weakDestroy();
@@ -82,8 +97,7 @@ Scoped.define("module:Timers.Timer", [
 				if (this.__started)
 					return;
 				var self = this;
-				if (this.__real_time)
-					this.__start_time = Time.now();
+				this.__start_time = Time.now();
 				this.__fire_count = 0;
 				if (this.__once)
 					this.__timer = setTimeout(function () {
