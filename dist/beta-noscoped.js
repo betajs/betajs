@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.41 - 2016-03-07
+betajs - v1.0.43 - 2016-03-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "480.1457402587842"
+    "version": "481.1457987736751"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6560,7 +6560,12 @@ Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", 
 });
 
 
-Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions", "module:Async"], function (Class, Functions, Async, scoped) {
+Scoped.define("module:Iterators.Iterator", [
+    "module:Class",
+    "module:Functions",
+    "module:Async",
+    "module:Promise"
+], function (Class, Functions, Async, Promise, scoped) {
 	return Class.extend({scoped: scoped}, {
 		
 		hasNext: function () {
@@ -6600,14 +6605,16 @@ Scoped.define("module:Iterators.Iterator", ["module:Class", "module:Functions", 
 		},
 		
 		asyncIterate: function (cb, ctx, time) {
-			if (this.hasNext()) {
-				var result = cb.call(ctx || this, this.next());
-				if (result === false)
-					return;
-				Async.eventually(function () {
-					this.asyncIterate(cb, ctx, time);
-				}, this, time);
-			}
+			if (!this.hasNext())
+				return Promise.value(true);
+			var result = cb.call(ctx || this, this.next());
+			if (result === false)
+				return Promise.value(true);
+			var promise = Promise.create();
+			Async.eventually(function () {
+				this.asyncIterate(cb, ctx, time).forwardCallback(promise);
+			}, this, time);
+			return promise;
 		}
 
 	});
