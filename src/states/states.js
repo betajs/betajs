@@ -134,6 +134,7 @@ Scoped.define("module:States.State", [
 			_locals: [],
 			_persistents: [],
 			_defaults: {},
+			_clonedDefaults: {},
 
 			_white_list: null,
 			
@@ -148,7 +149,7 @@ Scoped.define("module:States.State", [
 				inherited.constructor.call(this);
 				this.host = host;
 				this.transitionals = transitionals;
-				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
+				args = Objs.extend(Objs.extend(Objs.clone(this._clonedDefaults || {}, -1), Objs.clone(this._defaults || {}, 1)), args);
 				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 				var used = {};
 				for (var i = 0; i < this._locals.length; ++i) {

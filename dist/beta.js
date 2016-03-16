@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.43 - 2016-03-14
+betajs - v1.0.44 - 2016-03-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -629,7 +629,7 @@ var Scoped = function () {
 }.call(this);
 
 /*!
-betajs - v1.0.43 - 2016-03-14
+betajs - v1.0.44 - 2016-03-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -640,7 +640,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "481.1457987736751"
+    "version": "482.1458164243138"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -8471,6 +8471,7 @@ Scoped.define("module:States.State", [
 			_locals: [],
 			_persistents: [],
 			_defaults: {},
+			_clonedDefaults: {},
 
 			_white_list: null,
 			
@@ -8485,7 +8486,7 @@ Scoped.define("module:States.State", [
 				inherited.constructor.call(this);
 				this.host = host;
 				this.transitionals = transitionals;
-				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
+				args = Objs.extend(Objs.extend(Objs.clone(this._clonedDefaults || {}, -1), Objs.clone(this._defaults || {}, 1)), args);
 				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 				var used = {};
 				for (var i = 0; i < this._locals.length; ++i) {
