@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.44 - 2016-03-16
+betajs - v1.0.45 - 2016-03-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "482.1458164243138"
+    "version": "483.1458604882661"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -7327,6 +7327,8 @@ Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (H
 			},
 
 			_can_transition_to: function (state) {
+				if (!inherited._can_transition_to.call(this, state))
+					return false;
 				if (!this._composite)
 					return true;
 				var others = this._composite.other_hosts(this);
@@ -7463,9 +7465,9 @@ Scoped.define("module:Router.Router", [ "module:Class",
 	    function(inherited) {
 	    	return {
 
-	    		constructor : function() {
+	    		constructor : function(routes) {
 	    			inherited.constructor.call(this);
-	    			this._routeParser = new RouteParser();
+	    			this._routeParser = new RouteParser(routes);
 	    			this._current = null;
 	    		},
 
@@ -7721,6 +7723,7 @@ Scoped.define("module:States.Host", [
 				options = options || {};
 				this._stateRegistry = options.stateRegistry;
 				this._baseState = options.baseState;
+				this._enabled = true;
 			},
 
 			initialize: function (initial_state, initial_args) {
@@ -7753,6 +7756,14 @@ Scoped.define("module:States.Host", [
 			destroy: function () {
 				this.finalize();
 				inherited.destroy.call(this);
+			},
+			
+			enable: function () {
+				this._enabled = true;
+			},
+			
+			disable: function () {
+				this._enabled = false;
 			},
 
 			state: function () {
@@ -7799,7 +7810,7 @@ Scoped.define("module:States.Host", [
 			},
 
 			_can_transition_to: function (state) {
-				return true;
+				return this._enabled;
 			},
 
 			_stateEvent: function (state, s) {

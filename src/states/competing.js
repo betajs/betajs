@@ -45,6 +45,8 @@ Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (H
 			},
 
 			_can_transition_to: function (state) {
+				if (!inherited._can_transition_to.call(this, state))
+					return false;
 				if (!this._composite)
 					return true;
 				var others = this._composite.other_hosts(this);
