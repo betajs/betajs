@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.46 - 2016-03-27
+betajs - v1.0.47 - 2016-04-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "484.1459099481601"
+    "version": "485.1460411287918"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -47,8 +47,8 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 				result = obj.constructor;
 		});
 		var has_constructor = Types.is_defined(result);
-		if (!Types.is_defined(result))
-			result = function () { parent.apply(this, arguments); };
+		if (!has_constructor)
+			result = function () { parent.prototype.constructor.apply(this, arguments); };
 	
 		// Add Parent Statics
 		Objs.extend(result, parent);
@@ -613,6 +613,10 @@ Scoped.define("module:Events.EventsMixin", [
 	return {
 
 		_notifications: {
+			"construct": function () {
+			    this.__suspendedEvents = 0;
+			    this.__suspendedEventsQueue = [];			    				
+			},
 			"destroy": function () {
 				this.off(null, null, null);
 			} 
@@ -823,9 +827,6 @@ Scoped.define("module:Events.EventsMixin", [
 					chain.chainedTrigger(eventName, data);
 			}
 	    },
-	    
-	    __suspendedEvents: 0,
-	    __suspendedEventsQueue: [],
 	    
 	    suspendEvents: function () {
 	    	this.__suspendedEvents++;

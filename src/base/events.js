@@ -10,6 +10,10 @@ Scoped.define("module:Events.EventsMixin", [
 	return {
 
 		_notifications: {
+			"construct": function () {
+			    this.__suspendedEvents = 0;
+			    this.__suspendedEventsQueue = [];			    				
+			},
 			"destroy": function () {
 				this.off(null, null, null);
 			} 
@@ -220,9 +224,6 @@ Scoped.define("module:Events.EventsMixin", [
 					chain.chainedTrigger(eventName, data);
 			}
 	    },
-	    
-	    __suspendedEvents: 0,
-	    __suspendedEventsQueue: [],
 	    
 	    suspendEvents: function () {
 	    	this.__suspendedEvents++;
