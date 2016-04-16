@@ -191,6 +191,8 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	
 	Class.prototype.__class_instance_guid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
 	
+	//Class.prototype.supportsGc = false;
+	
 	Class.prototype.constructor = function () {
 		this._notify("construct");
 	};
@@ -215,12 +217,30 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	};
 	
 	Class.prototype.weakDestroy = function () {
-		if (!this.destroyed())
+		if (!this.destroyed()) {
+			if (this.__gc) {
+				this.__gc.queue(this);
+				return;
+			}
 			this.destroy();
+		}
 	};
 
 	Class.prototype.__destroyedDestroy = function () {
 		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
+	};
+	
+	Class.prototype.enableGc = function (gc) {
+		if (this.supportsGc)
+			this.__gc = gc; 
+	};
+	
+	Class.prototype.dependDestroy = function (other) {
+		if (other.destroyed)
+			return;
+		if (this.__gc)
+			other.enableGc();
+		other.weakDestroy();
 	};
 	
 	Class.prototype.cid = function () {

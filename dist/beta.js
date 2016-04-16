@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.48 - 2016-04-15
+betajs - v1.0.49 - 2016-04-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -629,7 +629,7 @@ var Scoped = function () {
 }.call(this);
 
 /*!
-betajs - v1.0.48 - 2016-04-15
+betajs - v1.0.49 - 2016-04-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -640,7 +640,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "486.1460752650354"
+    "version": "487.1460827623866"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -839,6 +839,8 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	
 	Class.prototype.__class_instance_guid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
 	
+	//Class.prototype.supportsGc = false;
+	
 	Class.prototype.constructor = function () {
 		this._notify("construct");
 	};
@@ -863,12 +865,30 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	};
 	
 	Class.prototype.weakDestroy = function () {
-		if (!this.destroyed())
+		if (!this.destroyed()) {
+			if (this.__gc) {
+				this.__gc.queue(this);
+				return;
+			}
 			this.destroy();
+		}
 	};
 
 	Class.prototype.__destroyedDestroy = function () {
 		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
+	};
+	
+	Class.prototype.enableGc = function (gc) {
+		if (this.supportsGc)
+			this.__gc = gc; 
+	};
+	
+	Class.prototype.dependDestroy = function (other) {
+		if (other.destroyed)
+			return;
+		if (this.__gc)
+			other.enableGc();
+		other.weakDestroy();
 	};
 	
 	Class.prototype.cid = function () {
@@ -4928,6 +4948,70 @@ Scoped.define("module:Channels.ReceiverSender", ["module:Channels.Sender"], func
 	});
 });
 
+
+Scoped.define("module:Classes.AbstractGarbageCollector", [
+    "module:Class"    
+], function (Class, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__classes = {};
+				this.__queue = [];
+			},
+			
+			queue: function (obj) {
+				if (!obj || obj.destroyed() || this.__classes[obj.cid()])
+					return;
+				this.__queue.push(obj);
+				this.__classes[obj.cid()] = obj;
+			},
+			
+			hasNext: function () {
+				return this.__queue.length > 0;
+			},
+			
+			destroyNext: function () {
+				var obj = this.__queue.shift();
+				delete this.__classes[obj.cid()];
+				if (!obj.destroyed())
+					obj.destroy();
+				delete obj.__gc;
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Classes.DefaultGarbageCollector", [
+    "module:Classes.AbstractGarbageCollector",
+    "module:Timers.Timer",
+    "module:Time"
+], function (Class, Timer, Time, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (delay, duration) {
+				inherited.constructor.call(this);
+				this.__duration = duration || 5;
+				this.auto_destroy(new Timer({
+					fire: this.__fire,
+					context: this,
+					delay: delay || 100
+				}));
+			},
+			
+			__fire: function () {
+				var t = Time.now() + this.__duration;
+				while (Time.now() < t && this.hasNext())
+					this.destroyNext();
+			}		
+
+		};
+	});
+});
 
 Scoped.define("module:Channels.SenderMultiplexer", ["module:Channels.Sender"], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
