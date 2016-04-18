@@ -1,13 +1,18 @@
 Scoped.define("module:Functions", ["module:Types"], function (Types) {
-	/** Function and Function Argument Support
+	
+	/**
+	 * Function and Function Argument Support
+	 * 
 	 * @module BetaJS.Functions
 	 */
 	return {
 	
-	    /** Takes a function and an instance and returns the method call as a function
+		
+	    /**
+	     * Takes a function and an instance and returns the method call as a function
 	     * 
-	     * @param func function
-	     * @param instance instance
+	     * @param {function} func function
+	     * @param {object} instance instance
 	     * @return method call 
 	     */
 		as_method: function (func, instance) {
@@ -16,9 +21,11 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 			};
 		},
 		
-	    /** Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call. In other words a lazy function cache.
+		
+	    /**
+	     * Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call. In other words a lazy function cache.
 	     * 
-	     * @param func function
+	     * @param {function} func function
 	     * @return cached function 
 	     */
 		once: function (func) {
@@ -34,21 +41,26 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 			};
 		},
 		
-	    /** Converts some other function's arguments to an array
+		
+	    /**
+	     * Converts some other function's arguments to an array
 	     * 
 	     * @param args function arguments
-	     * @param slice number of arguments to be omitted (default: 0)
-	     * @return arguments as array 
+	     * @param {integer} slice number of arguments to be omitted (default: 0)
+	     * @return {array} arguments as array 
 	     */	
 		getArguments: function (args, slice) {
 			return Array.prototype.slice.call(args, slice || 0);
 		},
 		
-	    /** Matches functions arguments against some pattern
+		
+	    /**
+	     * Matches functions arguments against some pattern
 	     * 
 	     * @param args function arguments
-	     * @param pattern typed pattern
-	     * @return matched arguments as associative array 
+	     * @param {integer} skip number of arguments to be omitted (default: 0) 
+	     * @param {object} pattern typed pattern
+	     * @return {object} matched arguments as associative array 
 	     */	
 		matchArgs: function (args, skip, pattern) {
 			if (arguments.length < 3) {
@@ -73,7 +85,14 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 			return result;
 		},
 		
-		/** @suppress {checkTypes} */
+		
+		/**
+		 * Creates a function for creating new instances of a class.
+		 *  
+		 * @param {object} cls Class
+		 * @return {function} class instantiation function 
+		 * @suppress {checkTypes}
+		 */
 		newClassFunc: function (cls) {
 			return function () {
 				var args = arguments;
@@ -85,10 +104,25 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 			};
 		},
 		
+
+		/**
+		 * Creates a new class instance with arguments.
+		 *  
+		 * @param {object} cls Class
+		 * @return {function} class instance 
+		 */
 		newClass: function (cls) {
 			return this.newClassFunc(cls).apply(this, this.getArguments(arguments, 1));
 		},
 		
+
+		/**
+		 * Call an object method.
+		 *  
+		 * @param {object} context object instance
+		 * @param method function or string of method
+		 * @return result of function call 
+		 */
 		callWithin: function (context, method) {
 			if (Types.is_string(method))
 				method = context[method];

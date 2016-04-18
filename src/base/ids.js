@@ -1,25 +1,32 @@
 Scoped.define("module:Ids", function () {
-	/** Id Generation
+	
+	/**
+	 * Id Generation
+	 * 
 	 * @module BetaJS.Ids
 	 */
 	return {
 	
 		__uniqueId: 0,
 		
-	    /** Returns a unique identifier
+		
+	    /**
+	     * Returns a unique identifier
 	     * 
-	     * @param prefix a prefix string for the identifier (optional)
-	     * @return unique identifier
+	     * @param {string} prefix a prefix string for the identifier (optional)
+	     * @return {string} unique identifier
 	     */
 		uniqueId: function (prefix) {
 			return (prefix || "") + (this.__uniqueId++);
 		},
 		
-	    /** Returns the object's unique identifier or sets it
+		
+	    /**
+	     * Returns the object's unique identifier or sets it
 	     * 
-	     * @param object the object
-	     * @param id (optional)
-	     * @return object's unique identifier
+	     * @param {object} object the object
+	     * @param {string} id (optional)
+	     * @return {string} object's unique identifier
 	     */
 		objectId: function (object, id) {
 			if (typeof id != "undefined")
