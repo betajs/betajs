@@ -14,6 +14,7 @@ Scoped.define("module:States.Host", [
 				options = options || {};
 				this._stateRegistry = options.stateRegistry;
 				this._baseState = options.baseState;
+				this._enabled = true;
 			},
 
 			initialize: function (initial_state, initial_args) {
@@ -46,6 +47,14 @@ Scoped.define("module:States.Host", [
 			destroy: function () {
 				this.finalize();
 				inherited.destroy.call(this);
+			},
+			
+			enable: function () {
+				this._enabled = true;
+			},
+			
+			disable: function () {
+				this._enabled = false;
 			},
 
 			state: function () {
@@ -92,7 +101,7 @@ Scoped.define("module:States.Host", [
 			},
 
 			_can_transition_to: function (state) {
-				return true;
+				return this._enabled;
 			},
 
 			_stateEvent: function (state, s) {
@@ -134,6 +143,7 @@ Scoped.define("module:States.State", [
 			_locals: [],
 			_persistents: [],
 			_defaults: {},
+			_clonedDefaults: {},
 
 			_white_list: null,
 			
@@ -148,7 +158,7 @@ Scoped.define("module:States.State", [
 				inherited.constructor.call(this);
 				this.host = host;
 				this.transitionals = transitionals;
-				args = Objs.extend(Objs.clone(this._defaults || {}, 1), args);
+				args = Objs.extend(Objs.extend(Objs.clone(this._clonedDefaults || {}, -1), Objs.clone(this._defaults || {}, 1)), args);
 				this._locals = Types.is_function(this._locals) ? this._locals() : this._locals;
 				var used = {};
 				for (var i = 0; i < this._locals.length; ++i) {

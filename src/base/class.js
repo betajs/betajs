@@ -29,8 +29,8 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 				result = obj.constructor;
 		});
 		var has_constructor = Types.is_defined(result);
-		if (!Types.is_defined(result))
-			result = function () { parent.apply(this, arguments); };
+		if (!has_constructor)
+			result = function () { parent.prototype.constructor.apply(this, arguments); };
 	
 		// Add Parent Statics
 		Objs.extend(result, parent);
@@ -191,6 +191,8 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	
 	Class.prototype.__class_instance_guid = "e6b0ed30-80ee-4b28-af02-7d52430ba45f";
 	
+	//Class.prototype.supportsGc = false;
+	
 	Class.prototype.constructor = function () {
 		this._notify("construct");
 	};
@@ -215,12 +217,30 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	};
 	
 	Class.prototype.weakDestroy = function () {
-		if (!this.destroyed())
+		if (!this.destroyed()) {
+			if (this.__gc) {
+				this.__gc.queue(this);
+				return;
+			}
 			this.destroy();
+		}
 	};
 
 	Class.prototype.__destroyedDestroy = function () {
 		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
+	};
+	
+	Class.prototype.enableGc = function (gc) {
+		if (this.supportsGc)
+			this.__gc = gc; 
+	};
+	
+	Class.prototype.dependDestroy = function (other) {
+		if (other.destroyed)
+			return;
+		if (this.__gc)
+			other.enableGc();
+		other.weakDestroy();
 	};
 	
 	Class.prototype.cid = function () {
@@ -234,13 +254,15 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	};
 	
 	Class.prototype.auto_destroy = function (obj) {
-		if (!this.__auto_destroy_list)
-			this.__auto_destroy_list = [];
-		var target = obj;
-		if (!Types.is_array(target))
-		   target = [target];
-		for (var i = 0; i < target.length; ++i)
-		   this.__auto_destroy_list.push(target[i]);
+		if (obj) {
+			if (!this.__auto_destroy_list)
+				this.__auto_destroy_list = [];
+			var target = obj;
+			if (!Types.is_array(target))
+			   target = [target];
+			for (var i = 0; i < target.length; ++i)
+			   this.__auto_destroy_list.push(target[i]);
+		}
 		return obj;
 	};
 	

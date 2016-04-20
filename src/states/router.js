@@ -94,9 +94,9 @@ Scoped.define("module:Router.Router", [ "module:Class",
 	    function(inherited) {
 	    	return {
 
-	    		constructor : function() {
+	    		constructor : function(routes) {
 	    			inherited.constructor.call(this);
-	    			this._routeParser = new RouteParser();
+	    			this._routeParser = new RouteParser(routes);
 	    			this._current = null;
 	    		},
 

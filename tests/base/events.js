@@ -27,6 +27,21 @@ test("test empty events", function() {
 });
 
 
+test("test suspended events", function() {
+	var e = new BetaJS.Events.Events();
+	var i = 0;
+	e.on("test", function () {
+		i++;
+	});
+	e.suspendEvents();
+	e.trigger("test");
+	QUnit.equal(i, 0);
+	e.resumeEvents();
+	QUnit.equal(i, 1);
+});
+
+
+
 test("chained events", function () {
 	
 	var a = new BetaJS.Events.Events();
