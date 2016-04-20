@@ -2,81 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="239f3401-6ed8-4cc2-8448-48b5b457f8ba" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/docsrc/common/install.md" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/docsrc/common/summary.md" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/package-source.json" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/base/time_format.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/channels/channels.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/channels/multiplexer.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/channels/simulator.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/collections/collections.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/collections/concat.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/collections/filtered.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/collections/grouped.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/collections/mapped.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/iterators/base_iterators.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/iterators/iterators.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/rmi/client.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/rmi/peer.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/rmi/server.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/rmi/skeleton.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/rmi/stub.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/states/competing.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/base/timers.js" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/compile/json.tpl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/compile/license.tpl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/compile/readme.tpl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/docsrc/tutorials/framework_introduction.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/docsrc/tutorials/module_introduction.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/base/collections.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/base/locales.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/base/rmi.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/base/timers.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/fragments/begin.js-fragment" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/fragments/closure.js-fragment" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/fragments/end.js-fragment" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/base/async.js" afterPath="$PROJECT_DIR$/src/flow/async.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/base/channels.js" afterPath="$PROJECT_DIR$/src/channels/transport.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/base/iterators.js" afterPath="$PROJECT_DIR$/src/iterators/delegated_iterators.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/base/promise.js" afterPath="$PROJECT_DIR$/src/flow/promise.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/base/router.js" afterPath="$PROJECT_DIR$/src/states/router.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/base/states.js" afterPath="$PROJECT_DIR$/src/states/states.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/tests/base/collections.js" afterPath="$PROJECT_DIR$/tests/collections/collections.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/tests/base/iterators.js" afterPath="$PROJECT_DIR$/tests/iterators/iterators.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/tests/base/router.js" afterPath="$PROJECT_DIR$/tests/states/router.js" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/tests/base/states.js" afterPath="$PROJECT_DIR$/tests/states/states.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.codeclimate.yml" afterPath="$PROJECT_DIR$/.codeclimate.yml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.travis.yml" afterPath="$PROJECT_DIR$/.travis.yml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Gruntfile.js" afterPath="$PROJECT_DIR$/Gruntfile.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta-noscoped.js" afterPath="$PROJECT_DIR$/dist/beta-noscoped.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta-noscoped.min.js" afterPath="$PROJECT_DIR$/dist/beta-noscoped.min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta.js" afterPath="$PROJECT_DIR$/dist/beta.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/beta.min.js" afterPath="$PROJECT_DIR$/dist/beta.min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/collections-filtered.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/collections-filtered.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/collections.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/collections.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/ids.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/ids.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/iterators-advanced.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/iterators-advanced.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/iterators.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/iterators.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/promise.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/promise.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/properties.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/properties.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/router.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/router.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/states.md" afterPath="$PROJECT_DIR$/docsrc/tutorials/states.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docsrc/tutorials/tutorials.json" afterPath="$PROJECT_DIR$/docsrc/tutorials/tutorials.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/package.json" afterPath="$PROJECT_DIR$/package.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/classes.js" afterPath="$PROJECT_DIR$/src/base/classes.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/objs.js" afterPath="$PROJECT_DIR$/src/base/objs.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/properties.js" afterPath="$PROJECT_DIR$/src/base/properties.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/strings.js" afterPath="$PROJECT_DIR$/src/base/strings.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/structures.js" afterPath="$PROJECT_DIR$/src/base/structures.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/time.js" afterPath="$PROJECT_DIR$/src/base/time.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/base/types.js" afterPath="$PROJECT_DIR$/src/base/types.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/classes/string_table.js" afterPath="$PROJECT_DIR$/src/classes/string_table.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/flow/timers.js" afterPath="$PROJECT_DIR$/src/flow/timers.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/tests.html" afterPath="$PROJECT_DIR$/tests/tests.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/vendors/scoped.js" afterPath="$PROJECT_DIR$/vendors/scoped.js" />
     </list>
     <ignored path="betajs.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -97,10 +23,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="tutorials.json" pinned="false" current-in-tab="false">
+      <file leaf-file-name="tutorials.json" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/docsrc/tutorials/tutorials.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.625">
+            <state vertical-scroll-proportion="0.03368421">
               <caret line="11" column="14" selection-start-line="11" selection-start-column="14" selection-end-line="11" selection-end-column="14" />
               <folding />
             </state>
@@ -110,7 +36,7 @@
       <file leaf-file-name="time_format.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/base/time_format.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-39.703705">
+            <state vertical-scroll-proportion="0.0">
               <caret line="174" column="28" selection-start-line="174" selection-start-column="28" selection-end-line="174" selection-end-column="28" />
               <folding />
             </state>
@@ -127,10 +53,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="delegated_iterators.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="delegated_iterators.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/iterators/delegated_iterators.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.33199194">
+            <state vertical-scroll-proportion="0.0">
               <caret line="11" column="34" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
               <folding />
             </state>
@@ -151,7 +77,7 @@
         <entry file="file://$PROJECT_DIR$/package.json">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="18" column="25" selection-start-line="18" selection-start-column="25" selection-end-line="18" selection-end-column="25" />
+              <caret line="19" column="21" selection-start-line="19" selection-start-column="21" selection-end-line="19" selection-end-column="21" />
               <folding />
             </state>
           </provider>
@@ -159,27 +85,27 @@
       </file>
       <file leaf-file-name="promise-advanced.md" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/docsrc/tutorials/promise-advanced.md">
-          <provider editor-type-id="MarkdownPreviewEditor">
-            <state />
-          </provider>
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
+          <provider editor-type-id="MarkdownPreviewEditor">
+            <state />
+          </provider>
         </entry>
       </file>
       <file leaf-file-name="properties-advanced.md" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md">
-          <provider editor-type-id="MarkdownPreviewEditor">
-            <state />
-          </provider>
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
               <folding />
             </state>
+          </provider>
+          <provider editor-type-id="MarkdownPreviewEditor">
+            <state />
           </provider>
         </entry>
       </file>
@@ -319,8 +245,8 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="Scratches" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -406,7 +332,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33035713" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32951653" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -463,63 +389,25 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/docsrc/tutorials/promise-advanced.md">
-      <provider editor-type-id="MarkdownPreviewEditor">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md">
       <provider editor-type-id="MarkdownPreviewEditor">
         <state />
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
           <folding />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/tutorials.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="11" column="14" selection-start-line="11" selection-start-column="14" selection-end-line="11" selection-end-column="14" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Gruntfile.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/promise-advanced.md">
       <provider editor-type-id="MarkdownPreviewEditor">
         <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md">
-      <provider editor-type-id="MarkdownPreviewEditor">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
-          <folding />
-        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/docsrc/tutorials/tutorials.json">
@@ -545,6 +433,9 @@
           <folding />
         </state>
       </provider>
+      <provider editor-type-id="MarkdownPreviewEditor">
+        <state />
+      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md">
       <provider selected="true" editor-type-id="text-editor">
@@ -552,6 +443,9 @@
           <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="MarkdownPreviewEditor">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/docsrc/tutorials/tutorials.json">
@@ -588,16 +482,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/docsrc/tutorials/tutorials.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.625">
+        <state vertical-scroll-proportion="0.0">
           <caret line="11" column="14" selection-start-line="11" selection-start-column="14" selection-end-line="11" selection-end-column="14" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/promise-advanced.md">
-      <provider editor-type-id="MarkdownPreviewEditor">
-        <state />
+    <entry file="file://$PROJECT_DIR$/Gruntfile.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/promise-advanced.md">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -606,9 +505,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md">
-      <provider editor-type-id="MarkdownPreviewEditor">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
@@ -623,35 +519,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Gruntfile.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="44" column="2" selection-start-line="44" selection-start-column="2" selection-end-line="44" selection-end-column="2" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/package.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="18" column="25" selection-start-line="18" selection-start-column="25" selection-end-line="18" selection-end-column="25" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/base/strings.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/base/time_format.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-39.703705">
-          <caret line="174" column="28" selection-start-line="174" selection-start-column="28" selection-end-line="174" selection-end-column="28" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -659,7 +530,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -667,7 +537,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -675,7 +544,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -683,7 +551,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -691,7 +558,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -699,6 +565,21 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/tutorials.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.03368421">
+          <caret line="11" column="14" selection-start-line="11" selection-start-column="14" selection-end-line="11" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/base/time_format.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="174" column="28" selection-start-line="174" selection-start-column="28" selection-end-line="174" selection-end-column="28" />
           <folding />
         </state>
       </provider>
@@ -713,10 +594,48 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/iterators/delegated_iterators.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.33199194">
+        <state vertical-scroll-proportion="0.0">
           <caret line="11" column="34" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
           <folding />
         </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Gruntfile.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="44" column="2" selection-start-line="44" selection-start-column="2" selection-end-line="44" selection-end-column="2" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/package.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="19" column="21" selection-start-line="19" selection-start-column="21" selection-end-line="19" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/promise-advanced.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+      <provider editor-type-id="MarkdownPreviewEditor">
+        <state />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docsrc/tutorials/properties-advanced.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+      <provider editor-type-id="MarkdownPreviewEditor">
+        <state />
       </provider>
     </entry>
   </component>

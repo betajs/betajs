@@ -9,11 +9,11 @@ Create a Collection:
 Create a Collection with Data inside:
 ```
 	var collection = new BetaJS.Collections.Collection({
-		objects: [{
+		objects: [
 			{title: "This is Item 1"},
 			{title: "This is Item 2"},
 			{title: "This is Item 3"}
-		}]
+		]
 	});
 ```
 
