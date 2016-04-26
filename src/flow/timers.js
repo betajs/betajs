@@ -15,10 +15,7 @@ Scoped.define("module:Timers.Timer", [
 			 * bool start (optional, default true): should it start immediately
 			 * bool real_time (default false)
 			 * int duration (optional, default null)
-<<<<<<< HEAD:src/base/timers.js
-=======
-			 * int fire_max (optiona, default null)
->>>>>>> d9727dbfc8a6a5bc48673d0c9196fa3e6c4d5084:src/flow/timers.js
+			 * int fire_max (optional, default null)
 			 * 
 			 */
 			constructor: function (options) {

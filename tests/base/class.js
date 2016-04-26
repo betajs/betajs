@@ -191,3 +191,10 @@ test("test weak destroy", function () {
 	QUnit.equal(obj.destroyed(), true);
 	obj.weakDestroy();
 });
+
+test("test implements", function () {
+	var obj = new BetaJS.Class();
+	QUnit.equal(obj.impl(BetaJS.Events.EventsMixin), false);
+	obj = new BetaJS.Properties.Properties();
+	QUnit.equal(obj.impl(BetaJS.Events.EventsMixin), true);
+});
