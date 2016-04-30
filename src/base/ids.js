@@ -1,4 +1,7 @@
-Scoped.define("module:Ids", function () {
+Scoped.define("module:Ids", [
+    "module:Types",
+    "module:Objs"
+], function (Types, Objs) {
 	
 	/**
 	 * Id Generation
@@ -34,6 +37,25 @@ Scoped.define("module:Ids", function () {
 			else if (!object.__cid)
 				object.__cid = this.uniqueId("cid_");
 			return object.__cid;
+		},
+		
+		/**
+		 * Returns a unique key for any given value of any type.
+		 * This is not a hash value.
+		 * 
+		 * @param value a value to generate a unique key
+		 * @param {int} depth optional depth for exploring by value instead of by reference
+		 * @return unique key
+		 */
+		uniqueKey: function (value, depth) {
+			if (depth && depth > 0 && (Types.is_object(value) || Types.is_array(value))) {
+				return JSON.stringify(Objs.map(value, function (x) {
+					return this.uniqueKey(x, depth - 1);
+				}, this));
+			}
+			if (Types.is_object(value) || Types.is_array(value) || Types.is_function(value))
+				return this.objectId(value);
+			return value;
 		}
 	
 	};

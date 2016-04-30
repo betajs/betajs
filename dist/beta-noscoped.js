@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.51 - 2016-04-26
+betajs - v1.0.52 - 2016-04-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "496.1461691891323"
+    "version": "497.1462024414602"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1202,7 +1202,10 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 	};
 });
 
-Scoped.define("module:Ids", function () {
+Scoped.define("module:Ids", [
+    "module:Types",
+    "module:Objs"
+], function (Types, Objs) {
 	
 	/**
 	 * Id Generation
@@ -1238,6 +1241,25 @@ Scoped.define("module:Ids", function () {
 			else if (!object.__cid)
 				object.__cid = this.uniqueId("cid_");
 			return object.__cid;
+		},
+		
+		/**
+		 * Returns a unique key for any given value of any type.
+		 * This is not a hash value.
+		 * 
+		 * @param value a value to generate a unique key
+		 * @param {int} depth optional depth for exploring by value instead of by reference
+		 * @return unique key
+		 */
+		uniqueKey: function (value, depth) {
+			if (depth && depth > 0 && (Types.is_object(value) || Types.is_array(value))) {
+				return JSON.stringify(Objs.map(value, function (x) {
+					return this.uniqueKey(x, depth - 1);
+				}, this));
+			}
+			if (Types.is_object(value) || Types.is_array(value) || Types.is_function(value))
+				return this.objectId(value);
+			return value;
 		}
 	
 	};
@@ -3862,6 +3884,11 @@ Scoped.define("module:Time", [], function () {
 
 
 Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Objs"], function (Time, Strings, Objs) {
+	/**
+	 * Module for formatting Time / Date
+	 * 
+	 * @module BetaJS.TimeFormat
+	 */
 	return {
 		
 		/*
@@ -3997,6 +4024,16 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 		WEEKDAY: "ddd",
 		HOURS_MINUTES_TT: "hh:MM tt",
 		
+		
+		/**
+		 * Format a given time w.r.t. a given time format
+		 * 
+		 * @param {string} timeFormat a time format string
+		 * @param {int} time time as integer to be formatted
+		 * @param {int} timezone timezone bias (optional)
+		 * @return {string} formatted time
+		 * 
+		 */
 		format: function (timeFormat, time, timezone) {
 			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
 			var bias = Time.timezoneBias(timezone);
@@ -4014,14 +4051,34 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 			return result;
 		},
 		
+		/**
+		 * Format the month as a three letter string
+		 * 
+		 * @param {int} month month as an int
+		 * @return {string} three letter month string
+		 */
 		monthString: function (month) {
 			return this.format("mmm", Time.encodePeriod({month: month}));			
 		},
 		
+		/**
+		 * Format the weekday as a three letter string
+		 * 
+		 * @param {int} weekday weekday as an int
+		 * @return {string} three letter weekday string
+		 */
 		weekdayString: function (weekday) {
 			return this.format("ddd", Time.encodePeriod({weekday: weekday}));
 		},
 		
+		/**
+		 * Format most significant part of date / time relative to current time
+		 * 
+		 * @param {int} time date/time to be formatted
+		 * @param {int} currentTime relative to current time (optional)
+		 * @param {int} timezone time zone bias (optional)
+		 * @return {string} formatted time
+		 */
 		formatRelativeMostSignificant: function (time, currentTime, timezone) {
 			currentTime = currentTime || Time.now();
 			var t = Time.decodeTime(time, timezone);
@@ -4053,11 +4110,10 @@ Scoped.define("module:Tokens", function() {
 	return {
 
 		/**
-		 * Returns a new token
+		 * Generates a random token
 		 * 
-		 * @param length
-		 *            optional length of token, default is 16
-		 * @return token
+		 * @param {integer} length optional length of token, default is 16
+		 * @return {string} generated token
 		 */
 		generate_token : function(length) {
 			length = length || 16;
@@ -4067,7 +4123,13 @@ Scoped.define("module:Tokens", function() {
 			return s.substr(0, length);
 		},
 
-		// http://jsperf.com/string-hashing-methods
+		/**
+		 * Generated a simple hash value from a string.
+		 * 
+		 * @param {string} input string
+		 * @return {integer} simple hash value
+		 * @see http://jsperf.com/string-hashing-methods 
+		 */
 		simple_hash : function(s) {
 			var nHash = 0;
 			if (!s.length)

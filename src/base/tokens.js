@@ -7,11 +7,10 @@ Scoped.define("module:Tokens", function() {
 	return {
 
 		/**
-		 * Returns a new token
+		 * Generates a random token
 		 * 
-		 * @param length
-		 *            optional length of token, default is 16
-		 * @return token
+		 * @param {integer} length optional length of token, default is 16
+		 * @return {string} generated token
 		 */
 		generate_token : function(length) {
 			length = length || 16;
@@ -21,7 +20,13 @@ Scoped.define("module:Tokens", function() {
 			return s.substr(0, length);
 		},
 
-		// http://jsperf.com/string-hashing-methods
+		/**
+		 * Generated a simple hash value from a string.
+		 * 
+		 * @param {string} input string
+		 * @return {integer} simple hash value
+		 * @see http://jsperf.com/string-hashing-methods 
+		 */
 		simple_hash : function(s) {
 			var nHash = 0;
 			if (!s.length)

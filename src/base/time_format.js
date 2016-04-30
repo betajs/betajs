@@ -1,5 +1,10 @@
 
 Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Objs"], function (Time, Strings, Objs) {
+	/**
+	 * Module for formatting Time / Date
+	 * 
+	 * @module BetaJS.TimeFormat
+	 */
 	return {
 		
 		/*
@@ -135,6 +140,16 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 		WEEKDAY: "ddd",
 		HOURS_MINUTES_TT: "hh:MM tt",
 		
+		
+		/**
+		 * Format a given time w.r.t. a given time format
+		 * 
+		 * @param {string} timeFormat a time format string
+		 * @param {int} time time as integer to be formatted
+		 * @param {int} timezone timezone bias (optional)
+		 * @return {string} formatted time
+		 * 
+		 */
 		format: function (timeFormat, time, timezone) {
 			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
 			var bias = Time.timezoneBias(timezone);
@@ -152,14 +167,34 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 			return result;
 		},
 		
+		/**
+		 * Format the month as a three letter string
+		 * 
+		 * @param {int} month month as an int
+		 * @return {string} three letter month string
+		 */
 		monthString: function (month) {
 			return this.format("mmm", Time.encodePeriod({month: month}));			
 		},
 		
+		/**
+		 * Format the weekday as a three letter string
+		 * 
+		 * @param {int} weekday weekday as an int
+		 * @return {string} three letter weekday string
+		 */
 		weekdayString: function (weekday) {
 			return this.format("ddd", Time.encodePeriod({weekday: weekday}));
 		},
 		
+		/**
+		 * Format most significant part of date / time relative to current time
+		 * 
+		 * @param {int} time date/time to be formatted
+		 * @param {int} currentTime relative to current time (optional)
+		 * @param {int} timezone time zone bias (optional)
+		 * @return {string} formatted time
+		 */
 		formatRelativeMostSignificant: function (time, currentTime, timezone) {
 			currentTime = currentTime || Time.now();
 			var t = Time.decodeTime(time, timezone);
