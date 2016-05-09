@@ -1,10 +1,24 @@
 Scoped.define("module:Sort", [
-	    "module:Comparators",	    
-	    "module:Types",
-	    "module:Objs"
-	], function (Comparators, Types, Objs) {
+    "module:Comparators",	    
+    "module:Types",
+    "module:Objs"
+], function (Comparators, Types, Objs) {
+	
+	/**
+	 * Sort objects and arrays.
+	 * 
+	 * @module BetaJS.Sort
+	 */
 	return {		
 	
+		/**
+		 * Sort keys in an object according to a comparator. 
+		 * 
+		 * @param {object} object object to be sorted
+		 * @param {function} f comparator comparator for sorting, accepting keys first and then optionally values
+		 * 
+		 * @return {object} sorted object
+		 */
 		sort_object : function(object, f) {
 			var a = [];
 			for (var key in object)
@@ -21,6 +35,14 @@ Scoped.define("module:Sort", [
 			return o;
 		},
 		
+		/**
+		 * Deep sorting an object according to a comparator. 
+		 * 
+		 * @param {object} object object to be sorted
+		 * @param {function} f comparator comparator for sorting, accepting keys first and then optionally values
+		 * 
+		 * @return {object} sorted object
+		 */
 		deep_sort: function (object, f) {
 			f = f || Comparators.byValue;
 			if (Types.is_array(object)) {
@@ -35,6 +57,16 @@ Scoped.define("module:Sort", [
 				return object;
 		},
 	
+		/**
+		 * Sort an array of items with inter-dependency specifiers s.t. every item in the resulting array has all its dependencies come before.
+		 * 
+		 * @param {array} items list of items with inter-dependency specifiers
+		 * @param {string|function} identifier function / key mapping an item to its unique identifier
+		 * @param {string|function} before function / key mapping an item to its array of dependencies
+		 * @param {string|function} after function / key mapping an item to its array of depending items
+		 * 
+		 * @return {array} sorted array
+		 */
 		dependency_sort : function(items, identifier, before, after) {
 			var identifierf = Types.is_string(identifier) ? function(obj) {
 				return obj[identifier];

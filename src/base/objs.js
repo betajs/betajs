@@ -343,6 +343,15 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			for (var i = 0; i < arguments.length; ++i)
 				result[arguments[i][0]] = arguments[i][1];
 			return result;
+		},
+		
+		specialize: function (ordinary, concrete, keys) {
+			var result = {};
+			var iterateOver = keys ? ordinary : concrete;
+			for (var key in iterateOver)
+				if (!(key in ordinary) || ordinary[key] != conrete[key])
+					result[key] = conrete[key];
+			return result;
 		}
 
 	};

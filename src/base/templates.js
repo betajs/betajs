@@ -4,8 +4,20 @@
  */
 
 Scoped.define("module:Templates", ["module:Types", "module:Strings"], function (Types, Strings) {
+	/**
+     * A very simple templating engine.
+     *
+	 * @module BetaJS.Templates
+	 */
 	return {
 		
+		/**
+		 * Tokenizes a string comprised of escaped javascript code and normal text.
+		 * 
+		 * @param {string} s input string
+         *
+		 * @return {array} array of token objects
+		 */
 		tokenize: function (s) {
 			// Already tokenized?
 			if (Types.is_array(s))
@@ -31,10 +43,12 @@ Scoped.define("module:Templates", ["module:Types", "module:Strings"], function (
 			return tokens;
 		},
 		
-		/*
-		 * options
-		 *  - start_index: token start index
-		 *  - end_index: token end index
+		/**
+		 * Compiles a template string into a function that evaluates the template w.r.t. a given environment.
+		 * 
+		 * @param {string} s input string
+		 * @param {object} options options hash, allowing to specify start_index and end_index within the input string (optional)
+		 * @return {function} evaluation function
 		 */
 		compile: function(source, options) {
 			if (Types.is_string(source))
