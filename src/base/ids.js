@@ -32,7 +32,9 @@ Scoped.define("module:Ids", [
 	     * @return {string} object's unique identifier
 	     */
 		objectId: function (object, id) {
-			if (typeof id != "undefined")
+			if (!object)
+				return undefined;
+			if (id !== undefined)
 				object.__cid = id;
 			else if (!object.__cid)
 				object.__cid = this.uniqueId("cid_");
@@ -53,7 +55,7 @@ Scoped.define("module:Ids", [
 					return this.uniqueKey(x, depth - 1);
 				}, this));
 			}
-			if (Types.is_object(value) || Types.is_array(value) || Types.is_function(value))
+			if ((value !== null && Types.is_object(value)) || Types.is_array(value) || Types.is_function(value))
 				return this.objectId(value);
 			return value;
 		}

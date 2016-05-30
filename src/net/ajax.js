@@ -60,7 +60,7 @@ Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "modul
 
 			asyncCall : function(options) {
 				if (this._shouldMap(options))
-					options = this._mapPutToPost(options);
+					options = this._mapToPost(options);
 				return this._asyncCall(Objs.extend(Objs
 						.clone(this.__options, 1), options));
 			},
@@ -78,28 +78,28 @@ Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "modul
 			 * @return Boolean
 			 */
 			_shouldMap : function(options) {
-				return this.__options.mapPutToPost && options.method && options.method.toLowerCase() === "put";
+				return (this.__options.mapPutToPost && options.method && options.method.toLowerCase() === "put") ||
+				       (this.__options.mapDestroyToPost && options.method && options.method.toLowerCase() === "destroy");
 			},
 
 			/**
 			 * @method _mapPutToPost
 			 * 
-			 * Some implementations of PUT to not supporting sending data with
-			 * the PUT request. This fix converts the Request to use POST, so
+			 * Some implementations do not supporting sending data with
+			 * the non-standard request. This fix converts the Request to use POST, so
 			 * the data is sent, but the server still thinks it is receiving a
-			 * PUT request.
+			 * non-standard request.
 			 * 
 			 * @param {object}
 			 *            options
 			 * 
 			 * @return {object}
 			 */
-			_mapPutToPost : function(options) {
-				options.method = "POST";
+			_mapToPost : function(options) {
 				options.uri = Uri.appendUriParams(options.uri, {
-					_method : "PUT"
+					_method : options.method.toUpperCase()
 				});
-
+				options.method = "POST";
 				return options;
 			}
 		};

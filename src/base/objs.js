@@ -349,8 +349,8 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			var result = {};
 			var iterateOver = keys ? ordinary : concrete;
 			for (var key in iterateOver)
-				if (!(key in ordinary) || ordinary[key] != conrete[key])
-					result[key] = conrete[key];
+				if (!(key in ordinary) || ordinary[key] != concrete[key])
+					result[key] = concrete[key];
 			return result;
 		}
 

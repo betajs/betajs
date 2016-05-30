@@ -75,16 +75,19 @@ Scoped.define("module:Types", function () {
 		 * @return true if x is empty
 		 */
 		is_empty : function(x) {
-			if (this.is_none(x))
-				return true;
-			if (this.is_array(x))
-				return x.length === 0;
-			if (this.is_object(x)) {
-				for ( var key in x)
-					return false;
-				return true;
-			}
-			return false;
+			return this.is_none(x) || (this.is_array(x) && x.length === 0) || (this.is_object(x) && this.is_empty_object(x));
+		},
+		
+		/**
+		 * Returns whether object argument is empty
+		 * 
+		 * @param x object argument
+		 * @return true if x is empty
+		 */
+		is_empty_object: function (x) {
+			for (var key in x)
+				return false;
+			return true;
 		},
 
 		/**

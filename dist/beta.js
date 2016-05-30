@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.52 - 2016-05-09
+betajs - v1.0.53 - 2016-05-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.52 - 2016-05-09
+betajs - v1.0.53 - 2016-05-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "498.1462803536527"
+    "version": "499.1464633246540"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1946,7 +1946,9 @@ Scoped.define("module:Ids", [
 	     * @return {string} object's unique identifier
 	     */
 		objectId: function (object, id) {
-			if (typeof id != "undefined")
+			if (!object)
+				return undefined;
+			if (id !== undefined)
 				object.__cid = id;
 			else if (!object.__cid)
 				object.__cid = this.uniqueId("cid_");
@@ -1967,7 +1969,7 @@ Scoped.define("module:Ids", [
 					return this.uniqueKey(x, depth - 1);
 				}, this));
 			}
-			if (Types.is_object(value) || Types.is_array(value) || Types.is_function(value))
+			if ((value !== null && Types.is_object(value)) || Types.is_array(value) || Types.is_function(value))
 				return this.objectId(value);
 			return value;
 		}
@@ -2929,8 +2931,8 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			var result = {};
 			var iterateOver = keys ? ordinary : concrete;
 			for (var key in iterateOver)
-				if (!(key in ordinary) || ordinary[key] != conrete[key])
-					result[key] = conrete[key];
+				if (!(key in ordinary) || ordinary[key] != concrete[key])
+					result[key] = concrete[key];
 			return result;
 		}
 
@@ -5215,16 +5217,19 @@ Scoped.define("module:Types", function () {
 		 * @return true if x is empty
 		 */
 		is_empty : function(x) {
-			if (this.is_none(x))
-				return true;
-			if (this.is_array(x))
-				return x.length === 0;
-			if (this.is_object(x)) {
-				for ( var key in x)
-					return false;
-				return true;
-			}
-			return false;
+			return this.is_none(x) || (this.is_array(x) && x.length === 0) || (this.is_object(x) && this.is_empty_object(x));
+		},
+		
+		/**
+		 * Returns whether object argument is empty
+		 * 
+		 * @param x object argument
+		 * @return true if x is empty
+		 */
+		is_empty_object: function (x) {
+			for (var key in x)
+				return false;
+			return true;
 		},
 
 		/**
@@ -5395,70 +5400,6 @@ Scoped.define("module:Channels.ReceiverSender", ["module:Channels.Sender"], func
 	});
 });
 
-
-Scoped.define("module:Classes.AbstractGarbageCollector", [
-    "module:Class"    
-], function (Class, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			constructor: function () {
-				inherited.constructor.call(this);
-				this.__classes = {};
-				this.__queue = [];
-			},
-			
-			queue: function (obj) {
-				if (!obj || obj.destroyed() || this.__classes[obj.cid()])
-					return;
-				this.__queue.push(obj);
-				this.__classes[obj.cid()] = obj;
-			},
-			
-			hasNext: function () {
-				return this.__queue.length > 0;
-			},
-			
-			destroyNext: function () {
-				var obj = this.__queue.shift();
-				delete this.__classes[obj.cid()];
-				if (!obj.destroyed())
-					obj.destroy();
-				delete obj.__gc;
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Classes.DefaultGarbageCollector", [
-    "module:Classes.AbstractGarbageCollector",
-    "module:Timers.Timer",
-    "module:Time"
-], function (Class, Timer, Time, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			constructor: function (delay, duration) {
-				inherited.constructor.call(this);
-				this.__duration = duration || 5;
-				this.auto_destroy(new Timer({
-					fire: this.__fire,
-					context: this,
-					delay: delay || 100
-				}));
-			},
-			
-			__fire: function () {
-				var t = Time.now() + this.__duration;
-				while (Time.now() < t && this.hasNext())
-					this.destroyNext();
-			}		
-
-		};
-	});
-});
 
 Scoped.define("module:Channels.SenderMultiplexer", ["module:Channels.Sender"], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
@@ -5793,6 +5734,70 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 		}
 		
 	});	
+});
+
+Scoped.define("module:Classes.AbstractGarbageCollector", [
+    "module:Class"    
+], function (Class, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__classes = {};
+				this.__queue = [];
+			},
+			
+			queue: function (obj) {
+				if (!obj || obj.destroyed() || this.__classes[obj.cid()])
+					return;
+				this.__queue.push(obj);
+				this.__classes[obj.cid()] = obj;
+			},
+			
+			hasNext: function () {
+				return this.__queue.length > 0;
+			},
+			
+			destroyNext: function () {
+				var obj = this.__queue.shift();
+				delete this.__classes[obj.cid()];
+				if (!obj.destroyed())
+					obj.destroy();
+				delete obj.__gc;
+			}
+
+		};
+	});
+});
+
+
+Scoped.define("module:Classes.DefaultGarbageCollector", [
+    "module:Classes.AbstractGarbageCollector",
+    "module:Timers.Timer",
+    "module:Time"
+], function (Class, Timer, Time, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (delay, duration) {
+				inherited.constructor.call(this);
+				this.__duration = duration || 5;
+				this.auto_destroy(new Timer({
+					fire: this.__fire,
+					context: this,
+					delay: delay || 100
+				}));
+			},
+			
+			__fire: function () {
+				var t = Time.now() + this.__duration;
+				while (Time.now() < t && this.hasNext())
+					this.destroyNext();
+			}		
+
+		};
+	});
 });
 
 Scoped.define("module:Classes.LocaleMixin", function () {
@@ -7858,7 +7863,7 @@ Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "modul
 
 			asyncCall : function(options) {
 				if (this._shouldMap(options))
-					options = this._mapPutToPost(options);
+					options = this._mapToPost(options);
 				return this._asyncCall(Objs.extend(Objs
 						.clone(this.__options, 1), options));
 			},
@@ -7876,28 +7881,28 @@ Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "modul
 			 * @return Boolean
 			 */
 			_shouldMap : function(options) {
-				return this.__options.mapPutToPost && options.method && options.method.toLowerCase() === "put";
+				return (this.__options.mapPutToPost && options.method && options.method.toLowerCase() === "put") ||
+				       (this.__options.mapDestroyToPost && options.method && options.method.toLowerCase() === "destroy");
 			},
 
 			/**
 			 * @method _mapPutToPost
 			 * 
-			 * Some implementations of PUT to not supporting sending data with
-			 * the PUT request. This fix converts the Request to use POST, so
+			 * Some implementations do not supporting sending data with
+			 * the non-standard request. This fix converts the Request to use POST, so
 			 * the data is sent, but the server still thinks it is receiving a
-			 * PUT request.
+			 * non-standard request.
 			 * 
 			 * @param {object}
 			 *            options
 			 * 
 			 * @return {object}
 			 */
-			_mapPutToPost : function(options) {
-				options.method = "POST";
+			_mapToPost : function(options) {
 				options.uri = Uri.appendUriParams(options.uri, {
-					_method : "PUT"
+					_method : options.method.toUpperCase()
 				});
-
+				options.method = "POST";
 				return options;
 			}
 		};
@@ -7981,6 +7986,11 @@ Scoped.define("module:Net.SocketReceiverChannel", ["module:Channels.Receiver"], 
 });
 
 Scoped.define("module:Net.HttpHeader", function () {
+	/**
+	 * Http Header Codes and Functions
+	 * 
+	 * @module BetaJS.Net.HttpHeader
+	 */
 	return {
 		
 		HTTP_STATUS_OK : 200,
@@ -7991,6 +8001,15 @@ Scoped.define("module:Net.HttpHeader", function () {
 		HTTP_STATUS_PRECONDITION_FAILED : 412,
 		HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
 		
+		
+		/**
+		 * Formats a HTTP status code to a string.
+		 * 
+		 * @param {integer} code the http status code
+		 * @param {boolean} prepend_code should the integer status code be prepended (default false)
+		 * 
+		 * @return HTTP status code as a string.
+		 */
 		format: function (code, prepend_code) {
 			var ret = "";
 			if (code == this.HTTP_STATUS_OK)

@@ -1,4 +1,9 @@
 Scoped.define("module:Net.HttpHeader", function () {
+	/**
+	 * Http Header Codes and Functions
+	 * 
+	 * @module BetaJS.Net.HttpHeader
+	 */
 	return {
 		
 		HTTP_STATUS_OK : 200,
@@ -9,6 +14,15 @@ Scoped.define("module:Net.HttpHeader", function () {
 		HTTP_STATUS_PRECONDITION_FAILED : 412,
 		HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
 		
+		
+		/**
+		 * Formats a HTTP status code to a string.
+		 * 
+		 * @param {integer} code the http status code
+		 * @param {boolean} prepend_code should the integer status code be prepended (default false)
+		 * 
+		 * @return HTTP status code as a string.
+		 */
 		format: function (code, prepend_code) {
 			var ret = "";
 			if (code == this.HTTP_STATUS_OK)
