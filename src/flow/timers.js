@@ -14,6 +14,7 @@ Scoped.define("module:Timers.Timer", [
 			 * object context (optional): for fire
 			 * bool start (optional, default true): should it start immediately
 			 * bool real_time (default false)
+			 * bool immediate (optional, default false): zero time until first fire
 			 * int duration (optional, default null)
 			 * int fire_max (optional, default null)
 			 * 
@@ -29,8 +30,10 @@ Scoped.define("module:Timers.Timer", [
 					destroy_on_stop: false,
 					real_time: false,
 					duration: null,
-					fire_max: null
+					fire_max: null,
+					immediate: false
 				}, options);
+				this.__immediate = options.immediate;
 				this.__delay = options.delay;
 				this.__destroy_on_fire = options.destroy_on_fire;
 				this.__destroy_on_stop = options.destroy_on_stop;
@@ -80,7 +83,7 @@ Scoped.define("module:Timers.Timer", [
 			
 			stop: function () {
 				if (!this.__started)
-					return;
+					return this;
 				if (this.__once)
 					clearTimeout(this.__timer);
 				else
@@ -88,11 +91,12 @@ Scoped.define("module:Timers.Timer", [
 				this.__started = false;
 				if (this.__destroy_on_stop)
 					this.weakDestroy();
+				return this;
 			},
 			
 			start: function () {
 				if (this.__started)
-					return;
+					return this;
 				var self = this;
 				this.__start_time = Time.now();
 				this.__fire_count = 0;
@@ -105,11 +109,15 @@ Scoped.define("module:Timers.Timer", [
 						self.fire();
 					}, this.__delay);
 				this.__started = true;
+				if (this.__immediate)
+					this.fire();
+				return this;
 			},
 			
 			restart: function () {
 				this.stop();
 				this.start();
+				return this;
 			}
 			
 			

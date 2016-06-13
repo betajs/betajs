@@ -165,6 +165,16 @@ Scoped.define("module:Types", function () {
 		},
 
 		/**
+		 * Parses an array of type "foo,bar"
+		 * 
+		 * @param x array as a string
+		 * @return array
+		 */
+		parseArray : function(x) {
+			return x.split(",");
+		},
+
+		/**
 		 * Returns the type of a given expression
 		 * 
 		 * @param x expression
@@ -195,6 +205,10 @@ Scoped.define("module:Types", function () {
 				return parseInt(x, 10);
 			if (type == "float" || type == "double")
 				return parseFloat(x);
+			if (type == "array")
+				return this.parseArray(x);
+			if (type == "object")
+				return JSON.parse(x);
 			return x;
 		},
 		

@@ -20,7 +20,9 @@ module.exports = function(grunt) {
     .closureTask(null, ["./vendors/scoped.js", "./dist/" + dist + "-noscoped.js"])
     .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: false})
     .browserstackTask(null, 'tests/tests.html', {desktop: false, mobile: true})
-    .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js'])
+    .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js', "./benchmarks/**/*.js"])
+    .benchmarkTask("benchmark-general", ['benchmarks/common/init.js', 'benchmarks/general/*.js'])
+    .benchmarkTask("benchmark-compare", ['benchmarks/common/init.js', 'benchmarks/compare/*.js'])
     
     /* External Configurations */
     .codeclimateTask()
@@ -36,7 +38,7 @@ module.exports = function(grunt) {
     
     /* Documentation */
     .docsTask();
-
+	
 	grunt.initConfig(gruntHelper.config);	
 
 	grunt.registerTask('default', ['package', 'readme', 'license', 'codeclimate', 'travis', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);

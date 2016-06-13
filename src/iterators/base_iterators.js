@@ -49,6 +49,31 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 });
 
 
+Scoped.define("module:Iterators.NativeMapIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
+	return Iterator.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function (map) {
+				inherited.constructor.call(this);
+				this.__iter = map.values();
+				this.__next = this.__iter.next();
+			},
+
+			hasNext: function () {
+				return !this.__next.done;
+			},
+
+			next: function () {
+				var value = this.__next.value;
+				this.__next = this.__iter.next();
+				return value;
+			}
+			
+		};
+	});
+});
+
+
 Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator"], function (ArrayIterator, scoped) {
 	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
 		return {
