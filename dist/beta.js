@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "501.1466392420171"
+    "version": "502.1466393152696"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5489,7 +5489,7 @@ Scoped.define("module:Types", function () {
 		 * @return {boolean} true if pure
 		 */
 		is_pure_object: function (obj) {
-			return this.is_object(obj) && obj.toString().toLowerCase() === '[object]';
+			return this.is_object(obj) && (obj.toString().toLowerCase() === '[object]' || obj.toString().toLowerCase() === '[object object]');
 		}
 		
 	};

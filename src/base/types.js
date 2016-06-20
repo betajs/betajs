@@ -232,7 +232,7 @@ Scoped.define("module:Types", function () {
 		 * @return {boolean} true if pure
 		 */
 		is_pure_object: function (obj) {
-			return this.is_object(obj) && obj.toString().toLowerCase() === '[object]';
+			return this.is_object(obj) && (obj.toString().toLowerCase() === '[object]' || obj.toString().toLowerCase() === '[object object]');
 		}
 		
 	};
