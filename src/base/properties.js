@@ -469,8 +469,7 @@ Scoped.define("module:Properties.Properties", [
 	    "module:Class",
 	    "module:Objs",
 	    "module:Events.EventsMixin",
-	    "module:Properties.PropertiesMixin",
-	    "module:Classes.ReferenceCounterMixin"
+	    "module:Properties.PropertiesMixin"
 	], function (Class, Objs, EventsMixin, PropertiesMixin, ReferenceCounterMixin, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, ReferenceCounterMixin, function (inherited) {
 		return {

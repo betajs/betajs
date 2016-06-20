@@ -157,7 +157,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		},
 		
 		is_pure_json: function (obj) {
-			return obj && Types.is_object(obj) && !this.is_class_instance(obj);
+			return obj && Types.is_object(obj) && !this.is_class_instance(obj) && Types.is_pure_object(obj);
 		},
 		
 		is_instance_of: function (obj) {

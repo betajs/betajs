@@ -122,6 +122,8 @@ Scoped.define("module:Router.Router", [ "module:Class",
 	    			var parsed = this._routeParser.parse(route);
 	    			if (parsed)
 	    				this.dispatch(parsed.name, parsed.args, route);
+	    			else
+	    				this.trigger("notfound", route);
 	    		},
 
 	    		dispatch : function(name, args, route) {

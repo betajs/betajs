@@ -221,10 +221,19 @@ Scoped.define("module:Types", function () {
 		objectType: function (obj) {
 			if (!this.is_object(obj))
 				return null;
-			var matcher = obj.match(/\[object (.*)\]/);
+			var matcher = obj.toString().match(/\[object (.*)\]/);
 			return matcher ? matcher[1] : null;
-		}
+		},
 		
+		/**
+		 * Returns whether a given object is a pure object
+		 * 
+		 * @param {object} obj an object instance
+		 * @return {boolean} true if pure
+		 */
+		is_pure_object: function (obj) {
+			return this.is_object(obj) && obj.toString().toLowerCase() === '[object]';
+		}
 		
 	};
 });

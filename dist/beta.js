@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.54 - 2016-06-13
+betajs - v1.0.55 - 2016-06-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.54 - 2016-06-13
+betajs - v1.0.55 - 2016-06-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "500.1465822070104"
+    "version": "501.1466392420171"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -885,7 +885,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		},
 		
 		is_pure_json: function (obj) {
-			return obj && Types.is_object(obj) && !this.is_class_instance(obj);
+			return obj && Types.is_object(obj) && !this.is_class_instance(obj) && Types.is_pure_object(obj);
 		},
 		
 		is_instance_of: function (obj) {
@@ -1082,22 +1082,6 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 
 });
 	
-Scoped.define("module:Classes.ReferenceCounterMixin", function () {
-	return {
-		__reference_count: 1,
-		
-		acquireReference: function () {
-			this.__reference_count++;
-		},
-		
-		releaseReference: function () {
-			this.__reference_count--;
-			if (this.__reference_count === 0)
-				this.weakDestroy();
-		}
-	};
-});
-
 Scoped.define("module:Classes.InvokerMixin", ["module:Objs", "module:Types", "module:Functions"], function (Objs, Types, Functions) {
 	return {
 		
@@ -3537,8 +3521,7 @@ Scoped.define("module:Properties.Properties", [
 	    "module:Class",
 	    "module:Objs",
 	    "module:Events.EventsMixin",
-	    "module:Properties.PropertiesMixin",
-	    "module:Classes.ReferenceCounterMixin"
+	    "module:Properties.PropertiesMixin"
 	], function (Class, Objs, EventsMixin, PropertiesMixin, ReferenceCounterMixin, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, ReferenceCounterMixin, function (inherited) {
 		return {
@@ -5495,10 +5478,19 @@ Scoped.define("module:Types", function () {
 		objectType: function (obj) {
 			if (!this.is_object(obj))
 				return null;
-			var matcher = obj.match(/\[object (.*)\]/);
+			var matcher = obj.toString().match(/\[object (.*)\]/);
 			return matcher ? matcher[1] : null;
-		}
+		},
 		
+		/**
+		 * Returns whether a given object is a pure object
+		 * 
+		 * @param {object} obj an object instance
+		 * @return {boolean} true if pure
+		 */
+		is_pure_object: function (obj) {
+			return this.is_object(obj) && obj.toString().toLowerCase() === '[object]';
+		}
 		
 	};
 });
@@ -6013,6 +6005,44 @@ Scoped.define("module:Classes.LocaleAggregator", [
         };
     }]);
 });
+Scoped.define("module:Classes.ObjectCache", [
+    "module:Class",
+    "module:Objs"
+], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (keyFunction, keyFunctionCtx) {
+				inherited.constructor.call(this);
+				this.__keyFunction = keyFunction;
+				this.__keyFunctionCtx = keyFunctionCtx;
+				this.__cache = {};
+			},
+			
+			destroy: function () {
+				Objs.iter(this.__cache, function (obj) {
+					obj.off(null, null, this);
+				}, this);
+			},
+			
+			get: function (key) {
+				return this.__cache[key];
+			},
+			
+			register: function (obj) {
+				var key = this.__keyFunction.call(this.__keyFunctionCtx || this, obj);
+				if (this.__cache[key] && !this.__cache[key].destroyed())
+					this.__cache[key].off(null, null, this);
+				this.__cache[key] = obj;
+				obj.on("destroy", function () {
+					delete this.__cache[key];
+				}, this);
+			}
+			
+		};
+	});
+});
+
 Scoped.define("module:Classes.ClassRegistry", [
     "module:Class",
     "module:Types",
@@ -6443,7 +6473,7 @@ Scoped.define("module:Collections.Collection", [
 				if ("off" in object)
 					object.off(null, null, this);
 				if (this.__release_references)
-					object.releaseReference();
+					object.decreaseRef();
 			},
 		
 			destroy: function () {
@@ -6498,39 +6528,39 @@ Scoped.define("module:Collections.Collection", [
 				return ident;
 			},
 			
-			replace_object: function (oriObject) {
-				var is_prop = Class.is_class_instance(oriObject);
-				var object = is_prop ? oriObject : new Properties(oriObject);
-				if (this.exists(object)) {
-					var existing = this.getById(this.get_ident(object));
-					if (is_prop) {
-						this.remove(existing);
-						this.add(object);
-					} else {
-						existing.setAll(oriObject);
-						return existing;
-					}
-				} else
-					this.add(object);
-				return object;
-			},
-			
 			replace_objects: function (objects, keep_others) {
+				var addQueue = [];
 				var ids = {};
 				Objs.iter(objects, function (oriObject) {
-					var object = this.replace_object(oriObject);
-					ids[this.get_ident(object)] = true;
+					var is_prop = Class.is_class_instance(oriObject);
+					var obj = is_prop ? oriObject : new Properties(oriObject);
+					var id = this.get_ident(obj);
+					ids[id] = true;
+					var old = this.getById(id);
+					if (!old)
+						addQueue.push(obj);
+					else if (is_prop) {
+						this.remove(old);
+						this.add(obj);
+					} else {
+						obj.destroy();
+						old.setAll(oriObject);
+					}
 				}, this);
 				if (!keep_others) {
 					var iterator = this.iterator();
 					while (iterator.hasNext()) {
 						var object = iterator.next();
-						var ident = this.get_ident(object);
-						if (!(ident in ids))
+						if (!ids[this.get_ident(object)]) {
 							this.remove(object);
+							if (addQueue.length > 0)
+								this.add(addQueue.shift());
+						}
 					}
 					iterator.destroy();
 				}
+				while (addQueue.length > 0)
+					this.add(addQueue.shift());
 			},
 			
 			add_objects: function (objects) {
@@ -8908,6 +8938,8 @@ Scoped.define("module:Router.Router", [ "module:Class",
 	    			var parsed = this._routeParser.parse(route);
 	    			if (parsed)
 	    				this.dispatch(parsed.name, parsed.args, route);
+	    			else
+	    				this.trigger("notfound", route);
 	    		},
 
 	    		dispatch : function(name, args, route) {

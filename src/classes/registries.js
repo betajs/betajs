@@ -1,3 +1,41 @@
+Scoped.define("module:Classes.ObjectCache", [
+    "module:Class",
+    "module:Objs"
+], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (keyFunction, keyFunctionCtx) {
+				inherited.constructor.call(this);
+				this.__keyFunction = keyFunction;
+				this.__keyFunctionCtx = keyFunctionCtx;
+				this.__cache = {};
+			},
+			
+			destroy: function () {
+				Objs.iter(this.__cache, function (obj) {
+					obj.off(null, null, this);
+				}, this);
+			},
+			
+			get: function (key) {
+				return this.__cache[key];
+			},
+			
+			register: function (obj) {
+				var key = this.__keyFunction.call(this.__keyFunctionCtx || this, obj);
+				if (this.__cache[key] && !this.__cache[key].destroyed())
+					this.__cache[key].off(null, null, this);
+				this.__cache[key] = obj;
+				obj.on("destroy", function () {
+					delete this.__cache[key];
+				}, this);
+			}
+			
+		};
+	});
+});
+
 Scoped.define("module:Classes.ClassRegistry", [
     "module:Class",
     "module:Types",

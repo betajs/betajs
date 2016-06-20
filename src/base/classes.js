@@ -1,19 +1,3 @@
-Scoped.define("module:Classes.ReferenceCounterMixin", function () {
-	return {
-		__reference_count: 1,
-		
-		acquireReference: function () {
-			this.__reference_count++;
-		},
-		
-		releaseReference: function () {
-			this.__reference_count--;
-			if (this.__reference_count === 0)
-				this.weakDestroy();
-		}
-	};
-});
-
 Scoped.define("module:Classes.InvokerMixin", ["module:Objs", "module:Types", "module:Functions"], function (Objs, Types, Functions) {
 	return {
 		
