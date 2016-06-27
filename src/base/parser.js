@@ -1,20 +1,49 @@
-Scoped.define("module:Parser.LexerException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+Scoped.define("module:Parser.LexerException", [
+    "module:Exceptions.Exception"
+], function (Exception, scoped) {
 	return Exception.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Lexer Exception Class
+		 * 
+		 * @class BetaJS.Parser.LexerException
+		 */
 		return {
+		
+			/**
+			 * Instantiates a Lexer Exception
+			 * 
+			 * @param {string} head head string that has been parsed
+			 * @param {string} tail tail string that is not parsed yet
+			 * 
+			 */
 			constructor: function (head, tail) {
 				inherited.constructor.call(this, "Lexer error: Unrecognized identifier at " + head.length + ".");
 				this.__head = head;
 				this.__tail = tail;
 			}
+		
 		};
 	});
 });
 
 
-Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Objs", "module:Parser.LexerException"], function (Class, Types, Objs, LexerException, scoped) {
+Scoped.define("module:Parser.Lexer", [
+    "module:Class", "module:Types", "module:Objs", "module:Parser.LexerException"
+], function (Class, Types, Objs, LexerException, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Simple Lexer Class for Parsing Strings
+		 * 
+		 * @class BetaJS.Parser.Lexer
+		 */
 		return {
 
+			/**
+			 * Instantiates a Lexer
+			 * 
+			 * @param {object} patterns a mapping from regular expressions to token identifiers or value preservers
+			 */
 			constructor: function (patterns) {
 				inherited.constructor.call(this);
 				this.__patterns = [];
@@ -26,6 +55,12 @@ Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Ob
 				}, this);
 			},
 			
+			/**
+			 * Lexes a string w.r.t. the initialised patterns.
+			 * 
+			 * @param {string} source source string
+			 * @return {array} array of parsed tokens
+			 */
 			lex: function (source) {
 				var result = [];
 				var head = "";
