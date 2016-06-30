@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.55 - 2016-06-19
+betajs - v1.0.55 - 2016-06-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "502.1466393152696"
+    "version": "508.1467316359947"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -671,6 +671,115 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
 			
 	};
 });
+Scoped.define("module:Compress", function () {
+	
+	/**
+	 * Compress Module
+	 * 
+	 * Contains simple and reasonably fast LZW Like Encode / Decode Functions
+	 * 
+	 * Differs from standard LZW in the following sense:
+     *
+	 *   - If input contains characters not included in the initial dictionary, output stream sends:
+	 *       (1) dictionary.size + 1 (2) the input character
+	 *       
+	 *   - If dictionary size exceeds 2 bytes, the dictionary is reset
+	 * 
+	 * @module BetaJS.Compress
+	 */
+	return {
+		
+		/**
+		 * LZW Like Encode Function
+		 * 
+		 * @param {string} input input string
+		 * @param {int} dict initial dictionary size, default is 1 byte
+		 * 
+		 * @param {string} UTF-8 encoded compressed string
+		 */
+		lzw_like_encode: function (input, dict) {
+			if (dict === undefined)
+				dict = 256;
+			var dictionary = new Map();
+			var output = [];
+			for (var i = 0; i < dict; ++i)
+				dictionary.set(String.fromCharCode(i), i);
+			var acc = "";
+			for (var j = 0; j < input.length; ++j) {
+				var c = input.charAt(j);
+				if (!dictionary.has(c)) {
+					if (acc)
+						output.push(dictionary.get(acc));
+					dictionary.set(c, dictionary.size);
+					output.push(dictionary.size + 1);
+					output.push(input.charCodeAt(j));
+					acc = "";
+				} else if (dictionary.has(acc + c)) {
+					acc += c;
+				} else {
+					output.push(dictionary.get(acc));
+					dictionary.set(acc + c, dictionary.size);
+					acc = c;
+					if (dictionary.size >= 256 * 256 - 1) {
+						dictionary = new Map();
+						for (i = 0; i < dict; ++i)
+							dictionary.set(String.fromCharCode(i), i);
+						acc = "";
+						j--;
+					}
+				}
+			}
+			if (acc)
+				output.push(dictionary.get(acc));
+			return output.map(function (i) {
+				return String.fromCharCode(i);
+			}).join("");
+		},
+
+		/**
+		 * LZW Like Decode Function
+		 * 
+		 * @param {string} input UTF-8 encoded compressed input string
+		 * @param {int} dict initial dictionary size, default is 1 byte
+		 * 
+		 * @param {string} decompressed string
+		 */
+		lzw_like_decode: function (input, dict) {
+			if (dict === undefined)
+				dict = 256;
+			var dictionary = [];
+			var output = [];
+			for (var i = 0; i < dict; ++i)
+				dictionary.push(String.fromCharCode(i));
+			var last = "";
+			for (var j = 0; j < input.length; ++j) {
+				var code = input.charCodeAt(j);
+				if (code > dictionary.length) {
+					j++;
+					code = input.charCodeAt(j);
+					output.push(String.fromCharCode(code));
+					dictionary.push(String.fromCharCode(code));
+					last = "";
+				} else {
+					var cur = code < dictionary.length ? dictionary[code] : (last + last.charAt(0));
+					output.push(cur);
+					if (last) 
+						dictionary.push(last + cur.charAt(0));
+					last = cur;
+					if (dictionary.length >= 256 * 256 - 2) {
+						dictionary = [];
+						for (i = 0; i < dict; ++i)
+							dictionary.push(String.fromCharCode(i));
+						last = "";
+					}
+				}
+			}
+			return output.join("");
+		}
+		
+	};
+});
+
 
 Scoped.define("module:Events.EventsMixin", [
                                             "module:Timers.Timer",
@@ -2276,23 +2385,52 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 	};
 });
 
-Scoped.define("module:Parser.LexerException", ["module:Exceptions.Exception"], function (Exception, scoped) {
+Scoped.define("module:Parser.LexerException", [
+    "module:Exceptions.Exception"
+], function (Exception, scoped) {
 	return Exception.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Lexer Exception Class
+		 * 
+		 * @class BetaJS.Parser.LexerException
+		 */
 		return {
+		
+			/**
+			 * Instantiates a Lexer Exception
+			 * 
+			 * @param {string} head head string that has been parsed
+			 * @param {string} tail tail string that is not parsed yet
+			 * 
+			 */
 			constructor: function (head, tail) {
 				inherited.constructor.call(this, "Lexer error: Unrecognized identifier at " + head.length + ".");
 				this.__head = head;
 				this.__tail = tail;
 			}
+		
 		};
 	});
 });
 
 
-Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Objs", "module:Parser.LexerException"], function (Class, Types, Objs, LexerException, scoped) {
+Scoped.define("module:Parser.Lexer", [
+    "module:Class", "module:Types", "module:Objs", "module:Parser.LexerException"
+], function (Class, Types, Objs, LexerException, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Simple Lexer Class for Parsing Strings
+		 * 
+		 * @class BetaJS.Parser.Lexer
+		 */
 		return {
 
+			/**
+			 * Instantiates a Lexer
+			 * 
+			 * @param {object} patterns a mapping from regular expressions to token identifiers or value preservers
+			 */
 			constructor: function (patterns) {
 				inherited.constructor.call(this);
 				this.__patterns = [];
@@ -2304,6 +2442,12 @@ Scoped.define("module:Parser.Lexer", ["module:Class", "module:Types", "module:Ob
 				}, this);
 			},
 			
+			/**
+			 * Lexes a string w.r.t. the initialised patterns.
+			 * 
+			 * @param {string} source source string
+			 * @return {array} array of parsed tokens
+			 */
 			lex: function (source) {
 				var result = [];
 				var head = "";
@@ -4831,14 +4975,28 @@ Scoped.define("module:Channels.ReceiverSender", ["module:Channels.Sender"], func
 
 Scoped.define("module:Channels.SenderMultiplexer", ["module:Channels.Sender"], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Channel Sender Multiplexer Class
+		 * 
+		 * @class BetaJS.Channels.SenderMultiplexer
+		 * 
+		 */
 		return {
 			
+			/**
+			 * Instantiates the Multiplexer Sender
+			 * 
+			 * @param {object} sender sender channel
+			 * @param {string} prefix prefix string for multiplexing
+			 * 
+			 */
 			constructor: function (sender, prefix) {
 				inherited.constructor.call(this);
 				this.__sender = sender;
 				this.__prefix = prefix;
 			},
-			
+						
 			_send: function (message, data) {
 				this.__sender.send(this.__prefix + ":" + message, data);
 			}
@@ -4850,8 +5008,22 @@ Scoped.define("module:Channels.SenderMultiplexer", ["module:Channels.Sender"], f
 
 Scoped.define("module:Channels.ReceiverMultiplexer", ["module:Channels.Receiver", "module:Strings"], function (Receiver, Strings, scoped) {
 	return Receiver.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * Channel Receiver Multiplexer Class
+		 * 
+		 * @class BetaJS.Channels.ReceiverMultiplexer
+		 * 
+		 */
 		return {
 
+			/**
+			 * Instantiates the Multiplexer Receiver
+			 * 
+			 * @param {object} receiver receiver channel
+			 * @param {string} prefix prefix string for de-multiplexing
+			 * 
+			 */
 			constructor: function (receiver, prefix) {
 				inherited.constructor.call(this);
 				this.__receiver = receiver;
@@ -4866,12 +5038,32 @@ Scoped.define("module:Channels.ReceiverMultiplexer", ["module:Channels.Receiver"
 	});
 });
 
-Scoped.define("module:Channels.SimulatorSender", ["module:Channels.Sender"], function (Sender, scoped) {
+Scoped.define("module:Channels.SimulatorSender", [
+    "module:Channels.Sender"
+], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Sender Simulating Online / Offline behavior
+		 * 
+		 * @class BetaJS.Channels.SimulatorSender
+		 */
 		return {
 			
+			/**
+			 * Attribute for setting / online offline
+			 * 
+			 * @member {boolean} online online / offline setting
+			 */
 			online: true,
 
+			/**
+			 * Create a new instance given an inner sender channel.
+			 * 
+			 * @param {object} sender sender instance
+			 * 
+			 * @return {object} simulated sender instance
+			 */
 			constructor: function (sender) {
 				inherited.constructor.call(this);
 				this.__sender = sender;
@@ -4895,8 +5087,21 @@ Scoped.define("module:Channels.TransportChannel", [
 	    "module:Promise"
 	], function (Class, Objs, Timer, Time, Promise, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Transport Channel for reliable transmission of data.
+		 * 
+		 * @class BetaJS.Channels.TransportChannel
+		 */
 		return {
 					
+			/**
+			 * Instantiates TransportChannel
+			 * 
+			 * @param {object} sender Sender Channel
+			 * @param {object} receiver Receiver Channel
+			 * @param {object} options options (timeout, tries, timer) for configuring the Transport Channel
+			 */
 			constructor: function (sender, receiver, options) {
 				inherited.constructor.call(this);
 				this.__sender = sender;
@@ -4922,9 +5127,25 @@ Scoped.define("module:Channels.TransportChannel", [
 				}));
 			},
 			
-			// Returns Promise
+			/**
+			 * Callback function for replying to a message. Needs to be overwritten from the outside.
+			 * 
+			 * @param {string} message message string
+			 * @param {object} data data object
+			 * 
+			 * @return {object} promise object containin the reply data or an error
+			 */
 			_reply: function (message, data) {},
 			
+			/**
+			 * Send a message through the channel.
+			 * 
+			 * @param {string} message message string
+			 * @param {object} data data object
+			 * @param {object} options options (stateless) for sending the message
+			 * 
+			 * @return {object} promise object
+			 */
 			send: function (message, data, options) {
 				var promise = Promise.create();
 				options = options || {};
@@ -5168,31 +5389,56 @@ Scoped.define("module:Classes.AbstractGarbageCollector", [
     "module:Class"    
 ], function (Class, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Abstract Garbage Collector
+		 * 
+		 * @class BetaJS.Classes.AbstractGarbageCollector
+		 */
 		return {
 			
+			/**
+			 * Instantiate garbage collector.
+			 * 
+			 */
 			constructor: function () {
 				inherited.constructor.call(this);
 				this.__classes = {};
 				this.__queue = [];
 			},
 			
+			/**
+			 * Add an object to the garbage collection queue.
+			 * 
+			 * @param {object} obj object to be destroyed
+			 */
 			queue: function (obj) {
 				if (!obj || obj.destroyed() || this.__classes[obj.cid()])
-					return;
+					return this;
 				this.__queue.push(obj);
 				this.__classes[obj.cid()] = obj;
+				return this;
 			},
 			
+			/**
+			 * Are there objects in the garbage collection queue?
+			 * 
+			 * @return {boolean} true if the queue is not empty
+			 */
 			hasNext: function () {
 				return this.__queue.length > 0;
 			},
 			
+			/**
+			 * Destroy the next object in the queue.
+			 * 
+			 */
 			destroyNext: function () {
 				var obj = this.__queue.shift();
 				delete this.__classes[obj.cid()];
 				if (!obj.destroyed())
 					obj.destroy();
 				delete obj.__gc;
+				return this;
 			}
 
 		};
@@ -5206,8 +5452,19 @@ Scoped.define("module:Classes.DefaultGarbageCollector", [
     "module:Time"
 ], function (Class, Timer, Time, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Default Garbage Collector
+		 * 
+		 * @class BetaJS.Classes.DefaultGarbageCollector
+		 */
 		return {
 			
+			/**
+			 * Instantiate garbage collector.
+			 * 
+			 * @param {integer} delay how long should be the delay between garbage collection
+			 * @param {integer} duration how long should garbage collection be executed
+			 */
 			constructor: function (delay, duration) {
 				inherited.constructor.call(this);
 				this.__duration = duration || 5;
