@@ -6,8 +6,21 @@ Scoped.define("module:Channels.TransportChannel", [
 	    "module:Promise"
 	], function (Class, Objs, Timer, Time, Promise, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Transport Channel for reliable transmission of data.
+		 * 
+		 * @class BetaJS.Channels.TransportChannel
+		 */
 		return {
 					
+			/**
+			 * Instantiates TransportChannel
+			 * 
+			 * @param {object} sender Sender Channel
+			 * @param {object} receiver Receiver Channel
+			 * @param {object} options options (timeout, tries, timer) for configuring the Transport Channel
+			 */
 			constructor: function (sender, receiver, options) {
 				inherited.constructor.call(this);
 				this.__sender = sender;
@@ -33,9 +46,25 @@ Scoped.define("module:Channels.TransportChannel", [
 				}));
 			},
 			
-			// Returns Promise
+			/**
+			 * Callback function for replying to a message. Needs to be overwritten from the outside.
+			 * 
+			 * @param {string} message message string
+			 * @param {object} data data object
+			 * 
+			 * @return {object} promise object containin the reply data or an error
+			 */
 			_reply: function (message, data) {},
 			
+			/**
+			 * Send a message through the channel.
+			 * 
+			 * @param {string} message message string
+			 * @param {object} data data object
+			 * @param {object} options options (stateless) for sending the message
+			 * 
+			 * @return {object} promise object
+			 */
 			send: function (message, data, options) {
 				var promise = Promise.create();
 				options = options || {};
