@@ -1,6 +1,22 @@
-Scoped.define("module:Objs", ["module:Types"], function (Types) {
+Scoped.define("module:Objs", [
+    "module:Types"
+], function (Types) {
+	
+	/**
+	 * Object and Array Manipulation Routines
+	 * 
+	 * @module BetaJS.Objs
+	 */
 	return {
 
+		/**
+		 * Return the i-th key of an object.
+		 * 
+		 * @param {object} obj the object
+		 * @param {int} i index of the i-th key (default: 0)
+		 * 
+		 * @return {string} i-th key
+		 */
 		ithKey: function (obj, i) {
 			i = i || 0;
 			for (var key in obj) {
@@ -12,6 +28,13 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			return null;
 		},
 
+		/**
+		 * Returns the number of elements of an object or array.
+		 * 
+		 * @param obj object or array
+		 * 
+		 * @return {int} number of elements
+		 */
 		count: function (obj) {
 			if (Types.is_array(obj))
 				return obj.length;
@@ -23,6 +46,14 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 			}
 		},
 
+		/**
+		 * Clone an object or array up to a certain depth.
+		 * 
+		 * @param item object or array
+		 * @param {int} depth depth until to clone it (default 0)
+		 * 
+		 * @return cloned object or array
+		 */
 		clone: function (item, depth) {
 			if (!depth || depth === 0)
 				return item;
@@ -147,8 +178,15 @@ Scoped.define("module:Objs", ["module:Types"], function (Types) {
 				result = {};
 				for (var key in obj)
 					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-					return result;
+				return result;
 			}
+		},
+
+		keyMap: function (obj, f, context) {
+			result = {};
+			for (var key in obj)
+				result[f.call(context || this, obj[key], key)] = obj[key];
+			return result;
 		},
 
 		values: function (obj) {

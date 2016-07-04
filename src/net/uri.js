@@ -1,4 +1,8 @@
-Scoped.define("module:Net.Uri", ["module:Objs", "module:Types"], function (Objs, Types) {
+Scoped.define("module:Net.Uri", [
+    "module:Objs",
+    "module:Types",
+    "module:Strings"
+], function (Objs, Types, Strings) {
 	
 	var parse_strict_regex = /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
 	var parse_loose_regex = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
@@ -57,6 +61,23 @@ Scoped.define("module:Net.Uri", ["module:Objs", "module:Types"], function (Objs,
 			return res.join("&");
 		},
 		
+		
+		/**
+		 * Decode a uri query parameter string
+		 * 
+		 * @param {string} res encoded query parameters
+		 * 
+		 * @return {object} key-value set of query parameters
+		 */
+		decodeUriParams: function (res) {
+			var arr = {};
+			res.split("&").forEach(function (kv) {
+				var kvsplit = Strings.splitFirst(kv, "=");
+				arr[kvsplit.head] = decodeURIComponent(kvsplit.tail);
+			});
+			return arr;
+		},
+
 		
 		/**
 		 * Append a set of uri query parameters to a URI.
