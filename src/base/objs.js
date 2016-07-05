@@ -65,22 +65,37 @@ Scoped.define("module:Objs", [
 				return item;
 		},
 
-		acyclic_clone: function (object, def) {
+		/**
+		 * Acyclicly clone an object.
+		 * 
+		 * @param {object} object source object
+		 * 
+		 * @return acyclic cloned object
+		 */
+		acyclic_clone: function (object) {
 			if (object === null || ! Types.is_object(object))
 				return object;
 			var s = "__acyclic_cloned";
 			if (object[s])
-				return def || "CYCLE";
-			object[s] = true;
+				return object[s];
 			var result = {};
-			for (var key in object) {
-				if (key != s)
-					result[key] = this.acyclic_clone(object[key], def);
-			}
+			object[s] = result;
+			for (var key in object)
+				if (key !== s)
+					result[key] = this.acyclic_clone(object[key]);
 			delete object[s];
 			return result;
 		},
 
+		/**
+		 * Extend target object by source object, modifying target object in-place.
+		 * 
+		 * @param {object} target target object
+		 * @param {object} source source object
+		 * @param {int} depth optional depth for cloning source values
+		 * 
+		 * @return {object} target object
+		 */
 		extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -90,6 +105,16 @@ Scoped.define("module:Objs", [
 			return target;
 		},
 
+		/**
+		 * Weakly extend target object by source object, modifying target object in-place.
+		 * If a key already exists within the target object, it is not overwritten by source.
+		 * 
+		 * @param {object} target target object
+		 * @param {object} source source object
+		 * @param {int} depth optional depth for cloning source values
+		 * 
+		 * @return {object} target object
+		 */
 		weak_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -101,6 +126,15 @@ Scoped.define("module:Objs", [
 			return target;
 		},
 
+		/**
+		 * Extend target object by source object recursively, modifying target object in-place.
+		 * 
+		 * @param {object} target target object
+		 * @param {object} source source object
+		 * @param {int} depth optional depth for cloning source values
+		 * 
+		 * @return {object} target object
+		 */
 		tree_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -114,6 +148,31 @@ Scoped.define("module:Objs", [
 			return target;
 		},
 
+		/**
+		 * Returns the keys of an object.
+		 * If mapped is given, an object is returned with all keys mapped to mapped. Otherwise, an array is returned.
+		 * 
+		 * @param {object} object source object
+		 * @param mapped optional value
+		 * 
+		 * @return keys as array or as an object
+		 */
+		keys: function(obj, mapped) {
+			var result = null;
+			var key = null;
+			if (Types.is_undefined(mapped)) {
+				result = [];
+				for (key in obj)
+					result.push(key);
+				return result;
+			} else {
+				result = {};
+				for (key in obj)
+					result[key] = mapped;
+				return result;
+			}
+		},
+
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -125,8 +184,8 @@ Scoped.define("module:Objs", [
 					if (key in primary || key in secondary) {
 						if (opt == "primary")
 							result[key] = key in primary ? primary[key] : secondary[key];
-							else
-								result[key] = key in secondary ? secondary[key] : primary[key];
+						else
+							result[key] = key in secondary ? secondary[key] : primary[key];
 					}			
 				}
 				else if (Types.is_function(opt))
@@ -149,22 +208,6 @@ Scoped.define("module:Objs", [
 					result[key] = key in primary ? primary[key] : secondary[key];
 			}
 			return result;
-		},
-
-		keys: function(obj, mapped) {
-			var result = null;
-			var key = null;
-			if (Types.is_undefined(mapped)) {
-				result = [];
-				for (key in obj)
-					result.push(key);
-				return result;
-			} else {
-				result = {};
-				for (key in obj)
-					result[key] = mapped;
-				return result;
-			}
 		},
 
 		map: function (obj, f, context) {
