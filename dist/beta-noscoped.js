@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.57 - 2016-07-03
+betajs - v1.0.58 - 2016-07-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "509.1467601969435"
+    "version": "511.1467902089577"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2030,22 +2030,37 @@ Scoped.define("module:Objs", [
 				return item;
 		},
 
-		acyclic_clone: function (object, def) {
+		/**
+		 * Acyclicly clone an object.
+		 * 
+		 * @param {object} object source object
+		 * 
+		 * @return acyclic cloned object
+		 */
+		acyclic_clone: function (object) {
 			if (object === null || ! Types.is_object(object))
 				return object;
 			var s = "__acyclic_cloned";
 			if (object[s])
-				return def || "CYCLE";
-			object[s] = true;
+				return object[s];
 			var result = {};
-			for (var key in object) {
-				if (key != s)
-					result[key] = this.acyclic_clone(object[key], def);
-			}
+			object[s] = result;
+			for (var key in object)
+				if (key !== s)
+					result[key] = this.acyclic_clone(object[key]);
 			delete object[s];
 			return result;
 		},
 
+		/**
+		 * Extend target object by source object, modifying target object in-place.
+		 * 
+		 * @param {object} target target object
+		 * @param {object} source source object
+		 * @param {int} depth optional depth for cloning source values
+		 * 
+		 * @return {object} target object
+		 */
 		extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -2055,6 +2070,16 @@ Scoped.define("module:Objs", [
 			return target;
 		},
 
+		/**
+		 * Weakly extend target object by source object, modifying target object in-place.
+		 * If a key already exists within the target object, it is not overwritten by source.
+		 * 
+		 * @param {object} target target object
+		 * @param {object} source source object
+		 * @param {int} depth optional depth for cloning source values
+		 * 
+		 * @return {object} target object
+		 */
 		weak_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -2066,6 +2091,15 @@ Scoped.define("module:Objs", [
 			return target;
 		},
 
+		/**
+		 * Extend target object by source object recursively, modifying target object in-place.
+		 * 
+		 * @param {object} target target object
+		 * @param {object} source source object
+		 * @param {int} depth optional depth for cloning source values
+		 * 
+		 * @return {object} target object
+		 */
 		tree_extend: function (target, source, depth) {
 			target = target || {};
 			if (source) {
@@ -2079,6 +2113,31 @@ Scoped.define("module:Objs", [
 			return target;
 		},
 
+		/**
+		 * Returns the keys of an object.
+		 * If mapped is given, an object is returned with all keys mapped to mapped. Otherwise, an array is returned.
+		 * 
+		 * @param {object} object source object
+		 * @param mapped optional value
+		 * 
+		 * @return keys as array or as an object
+		 */
+		keys: function(obj, mapped) {
+			var result = null;
+			var key = null;
+			if (Types.is_undefined(mapped)) {
+				result = [];
+				for (key in obj)
+					result.push(key);
+				return result;
+			} else {
+				result = {};
+				for (key in obj)
+					result[key] = mapped;
+				return result;
+			}
+		},
+
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -2090,8 +2149,8 @@ Scoped.define("module:Objs", [
 					if (key in primary || key in secondary) {
 						if (opt == "primary")
 							result[key] = key in primary ? primary[key] : secondary[key];
-							else
-								result[key] = key in secondary ? secondary[key] : primary[key];
+						else
+							result[key] = key in secondary ? secondary[key] : primary[key];
 					}			
 				}
 				else if (Types.is_function(opt))
@@ -2114,22 +2173,6 @@ Scoped.define("module:Objs", [
 					result[key] = key in primary ? primary[key] : secondary[key];
 			}
 			return result;
-		},
-
-		keys: function(obj, mapped) {
-			var result = null;
-			var key = null;
-			if (Types.is_undefined(mapped)) {
-				result = [];
-				for (key in obj)
-					result.push(key);
-				return result;
-			} else {
-				result = {};
-				for (key in obj)
-					result[key] = mapped;
-				return result;
-			}
 		},
 
 		map: function (obj, f, context) {
@@ -4967,7 +5010,10 @@ Scoped.define("module:Types", function () {
 	};
 });
 
-Scoped.define("module:Channels.Sender", ["module:Class", "module:Events.EventsMixin"], function (Class, EventsMixin, scoped) {
+Scoped.define("module:Channels.Sender", [
+    "module:Class",
+    "module:Events.EventsMixin"
+], function (Class, EventsMixin, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, {
 		
 		send: function (message, data) {
@@ -4981,7 +5027,10 @@ Scoped.define("module:Channels.Sender", ["module:Class", "module:Events.EventsMi
 });
 
 
-Scoped.define("module:Channels.Receiver", ["module:Class", "module:Events.EventsMixin"], function (Class, EventsMixin, scoped) {
+Scoped.define("module:Channels.Receiver", [
+    "module:Class",
+    "module:Events.EventsMixin"
+], function (Class, EventsMixin, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, {
 			
 		_receive: function (message, data) {
@@ -4993,17 +5042,62 @@ Scoped.define("module:Channels.Receiver", ["module:Class", "module:Events.Events
 });
 
 
-Scoped.define("module:Channels.ReceiverSender", ["module:Channels.Sender"], function (Sender, scoped) {
+Scoped.define("module:Channels.ReceiverSender", [
+    "module:Channels.Sender",
+    "module:Async"
+], function (Sender, Async, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
 		return {
 
-			constructor: function (receiver) {
+			constructor: function (receiver, async, delay) {
 				inherited.constructor.call(this);
 				this.__receiver = receiver;
+				this.__async = async;
+				this.__delay = delay;
 			},
 			
 			_send: function (message, data) {
-				this.__receiver._receive(message, data);
+				if (this.__async) {
+					Async.eventually(function () {
+						this.__receiver._receive(message, data);
+					}, this, this.__delay);
+				} else
+					this.__receiver._receive(message, data);
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Channels.ReadySender", [
+    "module:Channels.Sender"
+], function (Sender, scoped) {
+	return Sender.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (sender) {
+				inherited.constructor.call(this);
+				this.__cache = [];
+				this.__sender = sender;
+			},
+			
+			_send: function (message, data) {
+				if (this.__ready)
+					this.__sender.send(message, data);
+				else
+					this.__cache.push({message: message, data: data});
+			},
+			
+			ready: function () {
+				this.__ready = true;
+				for (var i = 0; i < this.__cache.length; ++i)
+					this.__sender.send(this.__cache[i].message, this.__cache[i].data);
+				this.__cache = [];
+			},
+			
+			unready: function () {
+			    this.__ready = false;			
 			}
 			
 		};
@@ -7109,6 +7203,48 @@ Scoped.define("module:Timers.Timer", [
 	});
 });
 
+Scoped.define("module:Channels.WorkerSenderChannel", [
+    "module:Channels.Sender"
+], function (Sender, scoped) {
+	return Sender.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (worker) {
+				inherited.constructor.call(this);
+				this.__worker = worker || self;
+			},
+			
+			_send: function (message, data) {
+				this.__worker.postMessage({
+					message: message,
+					data: data
+				});
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Channels.WorkerReceiverChannel", [
+    "module:Channels.Receiver"
+], function (Receiver, scoped) {
+	return Receiver.extend({scoped: scoped}, function (inherited) {
+		return {
+						
+			constructor: function (worker) {
+				inherited.constructor.call(this);
+				this.__worker = worker || self;
+				var _this = this;
+				this.__worker.addEventListener("message", function (data) {
+					_this._receive(data.data.message, data.data.data);
+				});
+		    }
+	
+		};
+	});
+});
+
 Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		
@@ -7703,42 +7839,23 @@ Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "modul
 	});
 });
 
-Scoped.define("module:Net.SocketSenderChannel", ["module:Channels.Sender", "module:Types"], function (Sender, Types, scoped) {
+Scoped.define("module:Net.SocketSenderChannel", [
+    "module:Channels.Sender"
+], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
 		return {
 			
-			constructor: function (socket, message, ready) {
+			constructor: function (socket, message) {
 				inherited.constructor.call(this);
 				this.__socket = socket;
 				this.__message = message;
-				this.__ready = Types.is_defined(ready) ? ready : true;
-				this.__cache = [];
 			},
 			
-			/** @suppress {missingProperties} */
 			_send: function (message, data) {
-				if (this.__ready) {
-					this.__socket.emit(this.__message, {
-						message: message,
-						data: data
-					});
-				} else {
-					this.__cache.push({
-						message: message,
-						data: data
-					});
-				}
-			},
-			
-			ready: function () {
-				this.__ready = true;
-				for (var i = 0; i < this.__cache.length; ++i)
-					this._send(this.__cache[i].message, this.__cache[i].data);
-				this.__cache = [];
-			},
-			
-			unready: function () {
-			    this.__ready = false;
+				this.__socket.emit(this.__message, {
+					message: message,
+					data: data
+				});
 			},
 			
 			socket: function () {

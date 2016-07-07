@@ -1,39 +1,20 @@
-Scoped.define("module:Net.SocketSenderChannel", ["module:Channels.Sender", "module:Types"], function (Sender, Types, scoped) {
+Scoped.define("module:Net.SocketSenderChannel", [
+    "module:Channels.Sender"
+], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
 		return {
 			
-			constructor: function (socket, message, ready) {
+			constructor: function (socket, message) {
 				inherited.constructor.call(this);
 				this.__socket = socket;
 				this.__message = message;
-				this.__ready = Types.is_defined(ready) ? ready : true;
-				this.__cache = [];
 			},
 			
-			/** @suppress {missingProperties} */
 			_send: function (message, data) {
-				if (this.__ready) {
-					this.__socket.emit(this.__message, {
-						message: message,
-						data: data
-					});
-				} else {
-					this.__cache.push({
-						message: message,
-						data: data
-					});
-				}
-			},
-			
-			ready: function () {
-				this.__ready = true;
-				for (var i = 0; i < this.__cache.length; ++i)
-					this._send(this.__cache[i].message, this.__cache[i].data);
-				this.__cache = [];
-			},
-			
-			unready: function () {
-			    this.__ready = false;
+				this.__socket.emit(this.__message, {
+					message: message,
+					data: data
+				});
 			},
 			
 			socket: function () {
