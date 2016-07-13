@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.58 - 2016-07-07
+betajs - v1.0.59 - 2016-07-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "511.1467902089577"
+    "version": "514.1468377758690"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5014,13 +5014,32 @@ Scoped.define("module:Channels.Sender", [
     "module:Class",
     "module:Events.EventsMixin"
 ], function (Class, EventsMixin, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, {
+	return Class.extend({scoped: scoped}, [EventsMixin, 
+        
+        /**
+         * Abstract Sender Channel Class
+         * 
+         * @class BetaJS.Channels.Sender
+         */	                                       
+        {
 		
+		/**
+		 * Sends a message into the channel.
+		 * 
+		 * @param {string} message Message string
+		 * @param data Custom message data
+		 */
 		send: function (message, data) {
 			this.trigger("send", message, data);
 			this._send(message, data);
 		},
 		
+		/**
+		 * Protected function for sending the message.
+		 * 
+		 * @param {string} message Message string
+		 * @param data Custom message data
+		 */
 		_send: function (message, data) {}
 	
 	}]);
@@ -5031,8 +5050,21 @@ Scoped.define("module:Channels.Receiver", [
     "module:Class",
     "module:Events.EventsMixin"
 ], function (Class, EventsMixin, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, {
+	return Class.extend({scoped: scoped}, [EventsMixin,
+	                                       
+       /**
+        * Abstract Receiver Channel Class
+        * 
+        * @class BetaJS.Channels.Receiver
+        */	                                       
+        {
 			
+		/**
+		 * Protected function for receiving the message.
+		 * 
+		 * @param {string} message Message string
+		 * @param data Custom message data
+		 */
 		_receive: function (message, data) {
 			this.trigger("receive", message, data);
 			this.trigger("receive:" + message, data);
@@ -5047,8 +5079,21 @@ Scoped.define("module:Channels.ReceiverSender", [
     "module:Async"
 ], function (Sender, Async, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
+
+		/**
+         * ReceiverSender Class, directly connecting this sender to a receiver.
+         * 
+         * @class BetaJS.Channels.ReceiverSender
+         */	                                       
 		return {
 
+			/**
+			 * TODO
+			 * 
+			 * @param {object} receiver TODO
+			 * @param {boolean} async TODO
+			 * @param {int} delay TODO
+			 */
 			constructor: function (receiver, async, delay) {
 				inherited.constructor.call(this);
 				this.__receiver = receiver;
@@ -5074,8 +5119,19 @@ Scoped.define("module:Channels.ReadySender", [
     "module:Channels.Sender"
 ], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
+
+        /**
+         * ReadySender class that buffers messages until sender is ready.
+         * 
+         * @class BetaJS.Channels.ReadySender
+         */	                                       
 		return {
 			
+			/**
+			 * Instantiates a Ready Sender instance.
+			 * 
+			 * @param {object} sender sender instance that should be used as delegate
+			 */
 			constructor: function (sender) {
 				inherited.constructor.call(this);
 				this.__cache = [];
@@ -5089,6 +5145,10 @@ Scoped.define("module:Channels.ReadySender", [
 					this.__cache.push({message: message, data: data});
 			},
 			
+			/**
+			 * Allow all messages to be flushed directly to the sender delegate.
+			 * 
+			 */
 			ready: function () {
 				this.__ready = true;
 				for (var i = 0; i < this.__cache.length; ++i)
@@ -5096,6 +5156,10 @@ Scoped.define("module:Channels.ReadySender", [
 				this.__cache = [];
 			},
 			
+			/**
+			 * Stop all messages being flushed.
+			 * 
+			 */
 			unready: function () {
 			    this.__ready = false;			
 			}
@@ -7843,8 +7907,20 @@ Scoped.define("module:Net.SocketSenderChannel", [
     "module:Channels.Sender"
 ], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Socket Sender Channel Class
+		 * 
+		 * @class BetaJS.Net.SocketSenderChannel
+		 */
 		return {
 			
+			/**
+			 * Instantiates Socket Sender Channel
+			 * 
+			 * @param {object} socket initial socket
+			 * @param {string} message message string to be used on the socket
+			 */
 			constructor: function (socket, message) {
 				inherited.constructor.call(this);
 				this.__socket = socket;
@@ -7858,6 +7934,13 @@ Scoped.define("module:Net.SocketSenderChannel", [
 				});
 			},
 			
+			/**
+			 * Returns current socket or sets currents socket.
+			 * 
+			 * @param {object} socket new socket (optional)
+			 * 
+			 * @return {object} current socket
+			 */
 			socket: function () {
 			    if (arguments.length > 0)
 			        this.__socket = arguments[0];
@@ -7871,14 +7954,33 @@ Scoped.define("module:Net.SocketSenderChannel", [
 
 Scoped.define("module:Net.SocketReceiverChannel", ["module:Channels.Receiver"], function (Receiver, scoped) {
 	return Receiver.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * Socket Receiver Channel Class
+		 * 
+		 * @class SocketReceiverChannel
+		 */
 		return {
 						
+			/**
+			 * Instantiates Socket Receiver Channel
+			 * 
+			 * @param {object} socket initial socket
+			 * @param {string} message message string to be used on the socket
+			 */
 			constructor: function (socket, message) {
 				inherited.constructor.call(this);
 				this.__message = message;
 				this.socket(socket);
 			},
 			
+			/**
+			 * Returns current socket or sets currents socket.
+			 * 
+			 * @param {object} socket new socket (optional)
+			 * 
+			 * @return {object} current socket
+			 */
 		    socket: function () {
 		        if (arguments.length > 0) {
 		            this.__socket = arguments[0];
@@ -8483,8 +8585,8 @@ Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (H
 	return Host.extend({scoped: scoped}, function (inherited) {
 		return {
 
-			constructor: function (composite) {
-				inherited.constructor.call(this);
+			constructor: function (composite, options) {
+				inherited.constructor.call(this, options);
 				this._composite = composite;
 				if (composite)
 					composite._register_host(this);

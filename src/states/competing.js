@@ -33,8 +33,8 @@ Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (H
 	return Host.extend({scoped: scoped}, function (inherited) {
 		return {
 
-			constructor: function (composite) {
-				inherited.constructor.call(this);
+			constructor: function (composite, options) {
+				inherited.constructor.call(this, options);
 				this._composite = composite;
 				if (composite)
 					composite._register_host(this);
