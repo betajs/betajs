@@ -83,15 +83,14 @@ Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "modul
 			},
 
 			/**
-			 * @method _mapPutToPost
+			 * @method _mapToPost
 			 * 
 			 * Some implementations do not supporting sending data with
 			 * the non-standard request. This fix converts the Request to use POST, so
 			 * the data is sent, but the server still thinks it is receiving a
 			 * non-standard request.
 			 * 
-			 * @param {object}
-			 *            options
+			 * @param {object} options
 			 * 
 			 * @return {object}
 			 */
