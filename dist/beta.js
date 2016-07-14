@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.59 - 2016-07-12
+betajs - v1.0.60 - 2016-07-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.59 - 2016-07-12
+betajs - v1.0.60 - 2016-07-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "514.1468377758690"
+    "version": "516.1468528664792"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4979,11 +4979,12 @@ Scoped.define("module:Time", [], function () {
 		 * 
 		 * @param {int} t time
 		 * @param {string} key component key
+		 * @param {int} timezone timezone (optional)
 		 * 
 		 * @return {int} value of time
 		 */
-		timeComponentGet: function (t, key) {
-			return this.__components[key].get(t);
+		timeComponentGet: function (t, key, timezone) {
+			return this.__components[key].get(this.timeToTimezoneBasedDate(t, timezone));
 		},
 		
 		/**
@@ -5028,6 +5029,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 			mm	Month as digits; leading zero for single-digit months.
 			m	Month as digits; no leading zero for single-digit months.
 			d+	Days; days as absolute number
+			ddddDay of the week as string.
 			ddd	Day of the week as a three-letter abbreviation.
 			dd	Day of the month as digits; leading zero for single-digit days.
 			d	Day of the month as digits; no leading zero for single-digit days.
@@ -5093,6 +5095,10 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 			},
 			"d+": function (t) {
 				return Time.timeComponent(t, "day", "floor");
+			},
+			"dddd": function (t) {
+				var map = {2: "s", 3: "nes", 4: "rs", 6: "ur"};
+				return (new Date(t)).toDateString().substring(0,3) + (map[Time.timeComponentGet(t, "weekday")] || "") + "day";
 			},
 			"ddd": function (t) {
 				return (new Date(t)).toDateString().substring(0,3);
@@ -8590,15 +8596,14 @@ Scoped.define("module:Net.AbstractAjax", [ "module:Class", "module:Objs", "modul
 			},
 
 			/**
-			 * @method _mapPutToPost
+			 * @method _mapToPost
 			 * 
 			 * Some implementations do not supporting sending data with
 			 * the non-standard request. This fix converts the Request to use POST, so
 			 * the data is sent, but the server still thinks it is receiving a
 			 * non-standard request.
 			 * 
-			 * @param {object}
-			 *            options
+			 * @param {object} options
 			 * 
 			 * @return {object}
 			 */
@@ -8980,15 +8985,27 @@ Scoped.define("module:RMI.Client", [
 
 
 Scoped.define("module:RMI.Peer", [
-                                  "module:Class",
-                                  "module:Channels.SenderMultiplexer",
-                                  "module:Channels.ReceiverMultiplexer",
-                                  "module:RMI.Client",
-                                  "module:RMI.Server"
-                                  ], function (Class, SenderMultiplexer, ReceiverMultiplexer, Client, Server, scoped) {
+  "module:Class",
+  "module:Channels.SenderMultiplexer",
+  "module:Channels.ReceiverMultiplexer",
+  "module:RMI.Client",
+  "module:RMI.Server"
+], function (Class, SenderMultiplexer, ReceiverMultiplexer, Client, Server, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * RMI Peer Class, combining Sender and Receiver into bidirectional Client and Server
+		 * 
+		 * @class BetaJS.RMI.Peer
+		 */
 		return {			
 
+			/**
+			 * Instantiates Peer Class
+			 * 
+			 * @param {object} sender Sender Channel
+			 * @param {object} receiver Receiver Channel
+			 */
 			constructor: function (sender, receiver) {
 				inherited.constructor.call(this);
 				this.__sender = sender;
@@ -9003,18 +9020,44 @@ Scoped.define("module:RMI.Peer", [
 				this.server.client = this.client;
 			},	
 
+			/**
+			 * Acquires an instance.
+			 * 
+			 * @param {string} class_type Type of Class
+			 * @param {string} instance_name Name of Instance
+			 * 
+			 * @return {object} acquired instance
+			 */
 			acquire: function (class_type, instance_name) {
 				return this.client.acquire(class_type, instance_name);
 			},
 
+			/**
+			 * Releases an instance.
+			 * 
+			 * @param {object} instance Previously acquired instance
+			 */
 			release: function (instance) {
 				this.client.release(instance);
 			},
 
+			/**
+			 * Register an instance.
+			 * 
+			 * @param {object} instance Object instance
+			 * @param {object} options Registration options
+			 * 
+			 * @return {object} Registered instance
+			 */
 			registerInstance: function (instance, options) {
 				return this.server.registerInstance(instance, options);
 			},
 
+			/**
+			 * Unregister an instance.
+			 * 
+			 * @param {object} instance Previously registered instance
+			 */
 			unregisterInstance: function (instance) {
 				this.server.unregisterInstance(instance);
 			}
@@ -9192,25 +9235,45 @@ Scoped.define("module:RMI.Skeleton", [
 });
 
 Scoped.define("module:RMI.Stub", [
-                                  "module:Class",
-                                  "module:Classes.InvokerMixin",
-                                  "module:Functions"
-                                  ], function (Class, InvokerMixin, Functions, scoped) {
+  "module:Class",
+  "module:Classes.InvokerMixin",
+  "module:Functions"
+], function (Class, InvokerMixin, Functions, scoped) {
 	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
+		
+		/**
+		 * Abstract Stub Class
+		 * 
+		 * @class BetaJS.RMI.Stub
+		 */
 		return {
 
+			/**
+			 * 
+			 * @member {array} intf abstract interface list, needs to be overwritten in subclasses
+			 */
 			intf: [],
 
+			/**
+			 * Instantiates the stub.
+			 * 
+			 */
 			constructor: function () {
 				inherited.constructor.call(this);
 				this.invoke_delegate("invoke", this.intf);
 			},
 
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.invoke("_destroy");
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * @override
+			 */
 			invoke: function (message) {
 				return this.__send(message, Functions.getArguments(arguments, 1));
 			}
@@ -9221,14 +9284,25 @@ Scoped.define("module:RMI.Stub", [
 
 
 Scoped.define("module:RMI.StubSyncer", [
-                                        "module:Class",
-                                        "module:Classes.InvokerMixin",
-                                        "module:Functions",
-                                        "module:Promise"
-                                        ], function (Class, InvokerMixin, Functions, Promise, scoped) {
+	"module:Class",
+	"module:Classes.InvokerMixin",
+	"module:Functions",
+	"module:Promise"
+], function (Class, InvokerMixin, Functions, Promise, scoped) {
 	return Class.extend({scoped: scoped}, [InvokerMixin, function (inherited) {
+
+		/**
+		 * Stub Syncer class for executing RMI methods one after the other.
+		 * 
+		 * @class BetaJS.RMI.StubSyncer
+		 */
 		return {
 
+			/**
+			 * Instantiates the stub syncer.
+			 * 
+			 * @param {object} stub stub object
+			 */
 			constructor: function (stub) {
 				inherited.constructor.call(this);
 				this.__stub = stub;
@@ -9237,6 +9311,9 @@ Scoped.define("module:RMI.StubSyncer", [
 				this.invoke_delegate("invoke", this.__stub.intf);
 			},
 
+			/**
+			 * @override
+			 */
 			invoke: function () {
 				var object = {
 						args: Functions.getArguments(arguments),
@@ -9248,6 +9325,9 @@ Scoped.define("module:RMI.StubSyncer", [
 				return object.promise;		
 			},
 
+			/**
+			 * @private
+			 */
 			__next: function () {
 				if (this.__queue.length === 0)
 					return;
