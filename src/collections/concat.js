@@ -4,9 +4,22 @@ Scoped.define("module:Collections.ConcatCollection", [
     "module:Functions"
 ], function (Collection, Objs, Functions, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * A Concat Collection allows you to dynamically concatinate Collections 
+		 * 
+		 * @class BetaJS.Collections.ConcatCollection
+		 */
 		return {
 
-			constructor : function (parents, options) {
+			/**
+			 * Instantiate a Concat Collection.
+			 * 
+			 * @param {array} parents List of parent collections
+			 * @param {object} options Collection options
+			 * 
+			 */
+			constructor: function (parents, options) {
 				this.__parents = {};
 				this.__itemToParent = {};
 				options = options || {};
@@ -32,6 +45,9 @@ Scoped.define("module:Collections.ConcatCollection", [
 				}, this);
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				Objs.iter(this.__parents, function (parent) {
 					parent.parent.off(null, null, this);
