@@ -1,4 +1,4 @@
-Scoped.define("module:Channels.WorkerSenderChannel", [
+Scoped.define("module:Workers.WorkerSenderChannel", [
     "module:Channels.Sender"
 ], function (Sender, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
@@ -21,7 +21,7 @@ Scoped.define("module:Channels.WorkerSenderChannel", [
 });
 
 
-Scoped.define("module:Channels.WorkerReceiverChannel", [
+Scoped.define("module:Workers.WorkerReceiverChannel", [
     "module:Channels.Receiver"
 ], function (Receiver, scoped) {
 	return Receiver.extend({scoped: scoped}, function (inherited) {

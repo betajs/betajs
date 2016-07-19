@@ -171,9 +171,12 @@ Scoped.define("module:States.State", [
 					used[this._locals[i]] = true;
 				}
 				host.suspendEvents();
+				this.__hostArgs = {};
 				Objs.iter(args, function (value, key) {
-					if (!used[key])
+					if (!used[key]) {
+						this.__hostArgs[key] = true;
 						host.set(key, value);
+					}
 				}, this);
 				host.resumeEvents();
 			},
@@ -271,6 +274,12 @@ Scoped.define("module:States.State", [
 				host._next(obj);
 				this.end();
 				obj.start();
+				host.suspendEvents();
+				Objs.iter(this.__hostArgs, function (dummy, key) {
+					if (!obj.__hostArgs[key])
+						host.unset(key);
+				}, this);
+				host.resumeEvents();
 				host._afterNext(obj);
 			},
 

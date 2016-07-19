@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.61 - 2016-07-18
+betajs - v1.0.62 - 2016-07-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "519.1468897093915"
+    "version": "520.1468962769342"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6528,8 +6528,20 @@ Scoped.define("module:Collections.FilteredCollection", [
 	    "module:Collections.Collection"
 	], function (Collection, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * The FilteredCollection Class allows you to create a dynamic sub collection based on another Collection instance and a filter function.
+		 * 
+		 * @class BetaJS.Collections.FilteredCollection
+		 */
 		return {
-
+			
+			/**
+			 * Instantiates a FilteredCollection.
+			 * 
+			 * @param {object} parent Parent Collection
+			 * @param {object} options Standard Collection options, plus filter and context
+			 */
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				options = options || {};
@@ -6541,10 +6553,23 @@ Scoped.define("module:Collections.FilteredCollection", [
 				this.setFilter(options.filter, options.context);
 			},
 			
+			/**
+			 * Determines whether an item satisfies the filter of this collection.
+			 * 
+			 * @param {object} object Properties instance to be checked
+			 * 
+			 * @return {boolean} True if object satisfies current filter
+			 */
 			filter: function (object) {
 				return !this.__filter || this.__filter.call(this.__filterContext || this, object);
 			},
 			
+			/**
+			 * Sets the current filter
+			 * 
+			 * @param {function} filterFunction Filter function to be used for checking items
+			 * @param {object} filterContext Optional filter function context
+			 */
 			setFilter: function (filterFunction, filterContext) {
 				this.__filterContext = filterContext;
 				this.__filter = filterFunction;
@@ -6559,12 +6584,18 @@ Scoped.define("module:Collections.FilteredCollection", [
 				}, this);
 			},
 			
+			/**
+			 * @override
+			 */
 			_object_changed: function (object, key, value) {
 				inherited._object_changed.call(this, object, key, value);
 				if (!this.filter(object))
 					this.__selfRemove(object);
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__parent.off(null, null, this);
 				inherited.destroy.call(this);
@@ -6574,6 +6605,9 @@ Scoped.define("module:Collections.FilteredCollection", [
 				return inherited.add.call(this, object);
 			},
 			
+			/**
+			 * @override
+			 */
 			add: function (object) {
 				if (this.exists(object) || !this.filter(object))
 					return null;
@@ -6586,6 +6620,9 @@ Scoped.define("module:Collections.FilteredCollection", [
 				return inherited.remove.call(this, object);
 			},
 		
+			/**
+			 * @override
+			 */
 			remove: function (object) {
 				if (!this.exists(object))
 					return null;
@@ -7336,48 +7373,6 @@ Scoped.define("module:Timers.Timer", [
 			}
 			
 			
-		};
-	});
-});
-
-Scoped.define("module:Channels.WorkerSenderChannel", [
-    "module:Channels.Sender"
-], function (Sender, scoped) {
-	return Sender.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			constructor: function (worker) {
-				inherited.constructor.call(this);
-				this.__worker = worker || self;
-			},
-			
-			_send: function (message, data) {
-				this.__worker.postMessage({
-					message: message,
-					data: data
-				});
-			}
-			
-		};
-	});
-});
-
-
-Scoped.define("module:Channels.WorkerReceiverChannel", [
-    "module:Channels.Receiver"
-], function (Receiver, scoped) {
-	return Receiver.extend({scoped: scoped}, function (inherited) {
-		return {
-						
-			constructor: function (worker) {
-				inherited.constructor.call(this);
-				this.__worker = worker || self;
-				var _this = this;
-				this.__worker.addEventListener("message", function (data) {
-					_this._receive(data.data.message, data.data.data);
-				});
-		    }
-	
 		};
 	});
 });
@@ -9296,9 +9291,12 @@ Scoped.define("module:States.State", [
 					used[this._locals[i]] = true;
 				}
 				host.suspendEvents();
+				this.__hostArgs = {};
 				Objs.iter(args, function (value, key) {
-					if (!used[key])
+					if (!used[key]) {
+						this.__hostArgs[key] = true;
 						host.set(key, value);
+					}
 				}, this);
 				host.resumeEvents();
 			},
@@ -9396,6 +9394,12 @@ Scoped.define("module:States.State", [
 				host._next(obj);
 				this.end();
 				obj.start();
+				host.suspendEvents();
+				Objs.iter(this.__hostArgs, function (dummy, key) {
+					if (!obj.__hostArgs[key])
+						host.unset(key);
+				}, this);
+				host.resumeEvents();
 				host._afterNext(obj);
 			},
 
@@ -9504,6 +9508,97 @@ Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], func
 			}
 
 		};		
+	});
+});
+
+Scoped.define("module:Workers.PseudoWorker", [
+    "module:Class",
+    "module:Events.EventsMixin"
+], function (Class, EventsMixin, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, {
+		
+		bind: function (peerWorker) {
+			this.__peer = peerWorker;
+		},
+		
+		postMessage: function (data) {
+			this.__peer.triggerAsync("message", data);
+		},
+		
+		addEventListener: function (event, callback) {
+			if (event === "message") {
+				this.on(event, function (data) {
+					callback.call(this, {data : data});
+				}, this);
+			} else {
+				this.on(event, callback);
+			}
+		}
+
+	}], {		
+		
+		createWorker: function (url) {
+			try {
+				return new Worker(url);
+			} catch (e) {
+				return null;
+			}
+		},
+		
+		createPseudoWorker: function (workerFactory, workerFactoryCtx) {
+			var clientWorker = new this();
+			var serverWorker = clientWorker.auto_destroy(new this());
+			clientWorker.bind(serverWorker);
+			serverWorker.bind(clientWorker);
+			workerFactory.call(workerFactoryCtx || this, serverWorker);
+			return clientWorker;
+		},
+		
+		createAsFallback: function (url, workerFactory, workerFactoryCtx) {
+			return this.createWorker(url) || this.createPseudoWorker(workerFactory, workerFactoryCtx);
+		}
+		
+	});
+});
+Scoped.define("module:Workers.WorkerSenderChannel", [
+    "module:Channels.Sender"
+], function (Sender, scoped) {
+	return Sender.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (worker) {
+				inherited.constructor.call(this);
+				this.__worker = worker || self;
+			},
+			
+			_send: function (message, data) {
+				this.__worker.postMessage({
+					message: message,
+					data: data
+				});
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Workers.WorkerReceiverChannel", [
+    "module:Channels.Receiver"
+], function (Receiver, scoped) {
+	return Receiver.extend({scoped: scoped}, function (inherited) {
+		return {
+						
+			constructor: function (worker) {
+				inherited.constructor.call(this);
+				this.__worker = worker || self;
+				var _this = this;
+				this.__worker.addEventListener("message", function (data) {
+					_this._receive(data.data.message, data.data.data);
+				});
+		    }
+	
+		};
 	});
 });
 
