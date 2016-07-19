@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.60 - 2016-07-14
+betajs - v1.0.61 - 2016-07-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.60 - 2016-07-14
+betajs - v1.0.61 - 2016-07-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "516.1468528664792"
+    "version": "519.1468897093915"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6398,30 +6398,60 @@ Scoped.define("module:Classes.DefaultGarbageCollector", [
 });
 
 Scoped.define("module:Classes.LocaleMixin", function () {
+	
+	/**
+	 * Locale Mixin for adding Locale access to a Class
+	 * 
+	 * @mixin BetaJS.Classes.LocaleMixin
+	 */
     return {
 
         _clearLocale: function () {},
         _setLocale: function (locale) {},
 
+        /**
+         * Returns the current locale.
+         * 
+         * @return {object} current locale
+         */
         getLocale: function () {
             return this.__locale;
         },
 
+        /**
+         * Clears the current locale.
+         * 
+         */
         clearLocale: function () {
             this._clearLocale();
             this.__locale = null;
         },
 
+        /**
+         * Sets the current locale
+         * 
+         * @param {object} locale New locale
+         */
         setLocale: function (locale) {
             this.clearLocale();
             this.__locale = locale;
             this._setLocale(locale);
         },
 
+        /**
+         * Returns whether a locale is set.
+         * 
+         * @return {boolean} true if locale is set
+         */
         isLocaleSet: function () {
             return !!this.__locale;
         },
 
+        /**
+         * Sets a locale if not locale is set.
+         * 
+         * @param {object} locale New weak locale
+         */
         setWeakLocale: function (locale) {
             if (!this.isLocaleSet())
                 this.setLocale(locale);
@@ -6438,23 +6468,44 @@ Scoped.define("module:Classes.LocaleAggregator", [
     "module:Objs"
 ], function (Class, LocaleMixin, Objs, scoped) {
     return Class.extend({scoped: scoped}, [LocaleMixin, function (inherited) {
-        return {
+    	
+    	/**
+    	 * Locale Aggregator Class for combining multiple locales into one.
+    	 * 
+    	 * @class BetaJS.Classes.LocaleAggregator
+    	 */
+    	return {
 
+            /**
+             * Create a Locale Aggregator instance.
+             * 
+             */
             constructor: function () {
                 inherited.constructor.call(this);
                 this.__locales = [];
             },
 
+            /**
+             * Registers a new locale.
+             * 
+             * @return {object} Locale
+             */
             register: function (obj) {
                 this.__locales.push(obj);
             },
 
+            /**
+             * @override
+             */
             _clearLocale: function () {
                 Objs.iter(this.__locales, function (obj) {
                     obj.clearLocale();
                 }, this);
             },
 
+            /**
+             * @override
+             */
             _setLocale: function (locale) {
                 Objs.iter(this.__locales, function (obj) {
                     obj.setLocale(locale);
@@ -7110,9 +7161,22 @@ Scoped.define("module:Collections.ConcatCollection", [
     "module:Functions"
 ], function (Collection, Objs, Functions, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * A Concat Collection allows you to dynamically concatinate Collections 
+		 * 
+		 * @class BetaJS.Collections.ConcatCollection
+		 */
 		return {
 
-			constructor : function (parents, options) {
+			/**
+			 * Instantiate a Concat Collection.
+			 * 
+			 * @param {array} parents List of parent collections
+			 * @param {object} options Collection options
+			 * 
+			 */
+			constructor: function (parents, options) {
 				this.__parents = {};
 				this.__itemToParent = {};
 				options = options || {};
@@ -7138,6 +7202,9 @@ Scoped.define("module:Collections.ConcatCollection", [
 				}, this);
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				Objs.iter(this.__parents, function (parent) {
 					parent.parent.off(null, null, this);
@@ -8723,11 +8790,24 @@ Scoped.define("module:Net.HttpHeader", function () {
 		
 		HTTP_STATUS_OK : 200,
 		HTTP_STATUS_CREATED : 201,
+		HTTP_STATUS_UNAUTHORIZED: 401,
 		HTTP_STATUS_PAYMENT_REQUIRED : 402,
 		HTTP_STATUS_FORBIDDEN : 403,
 		HTTP_STATUS_NOT_FOUND : 404,
 		HTTP_STATUS_PRECONDITION_FAILED : 412,
 		HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+		
+		STRINGS: {
+			0: "Unknown Error",
+			200: "OK",
+			201: "Created",
+			401: "Unauthorized",
+			402: "Payment Required",
+			403: "Forbidden",
+			404: "Not found",
+			412: "Precondition Failed",
+			500: "Internal Server Error"
+		},
 		
 		
 		/**
@@ -8739,23 +8819,7 @@ Scoped.define("module:Net.HttpHeader", function () {
 		 * @return HTTP status code as a string.
 		 */
 		format: function (code, prepend_code) {
-			var ret = "";
-			if (code == this.HTTP_STATUS_OK)
-				ret = "OK";
-			else if (code == this.HTTP_STATUS_CREATED)
-				ret = "Created";
-			else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
-				ret = "Payment Required";
-			else if (code == this.HTTP_STATUS_FORBIDDEN)
-				ret = "Forbidden";
-			else if (code == this.HTTP_STATUS_NOT_FOUND)
-				ret = "Not found";
-			else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
-				ret = "Precondition Failed";
-			else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-				ret = "Internal Server Error";
-			else
-				ret = "Other Error";
+			var ret = this.STRINGS[code in this.STRINGS ? code : 0];
 			return prepend_code ? (code + " " + ret) : ret;
 		}
 		
