@@ -4,8 +4,20 @@ Scoped.define("module:Collections.GroupedCollection", [
     "module:Properties.Properties"
 ], function (Collection, Objs, Properties, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * The GroupedCollection Class allows you to create a dynamic sub collection based on another Collection instance by grouping together single items.
+		 * 
+		 * @class BetaJS.Collections.GroupedCollection
+		 */
 		return {
 
+			/**
+			 * Instantiates a GroupedCollection.
+			 * 
+			 * @param {object} parent Parent Collection
+			 * @param {object} options Standard Collection options, plus groupby, insert, remove, context, properties and create
+			 */
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				options = options || {};
@@ -23,6 +35,9 @@ Scoped.define("module:Collections.GroupedCollection", [
 				this.__parent.on("remove", this.__removeParentObject, this);
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__parent.off(null, null, this);
 				inherited.destroy.call(this);
@@ -75,6 +90,9 @@ Scoped.define("module:Collections.GroupedCollection", [
 					this.__removeObject(object, group);
 			},
 			
+			/**
+			 * @override
+			 */
 			increase_forwards: function (steps) {
 				return this.__parent.increase_forwards(steps);
 			},

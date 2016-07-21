@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.62 - 2016-07-19
+betajs - v1.0.63 - 2016-07-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.62 - 2016-07-19
+betajs - v1.0.63 - 2016-07-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "520.1468962769342"
+    "version": "522.1469105192226"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4878,7 +4878,6 @@ Scoped.define("module:Time", [], function () {
 		 * Encode time period data from components to milliseconds
 		 * 
 		 * @param {object} data component data
-		 * @param {int} timezone timezone (optional)
 		 * 
 		 * @return {int} encoded milliseconds
 		 */
@@ -7352,8 +7351,20 @@ Scoped.define("module:Collections.GroupedCollection", [
     "module:Properties.Properties"
 ], function (Collection, Objs, Properties, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * The GroupedCollection Class allows you to create a dynamic sub collection based on another Collection instance by grouping together single items.
+		 * 
+		 * @class BetaJS.Collections.GroupedCollection
+		 */
 		return {
 
+			/**
+			 * Instantiates a GroupedCollection.
+			 * 
+			 * @param {object} parent Parent Collection
+			 * @param {object} options Standard Collection options, plus groupby, insert, remove, context, properties and create
+			 */
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				options = options || {};
@@ -7371,6 +7382,9 @@ Scoped.define("module:Collections.GroupedCollection", [
 				this.__parent.on("remove", this.__removeParentObject, this);
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__parent.off(null, null, this);
 				inherited.destroy.call(this);
@@ -7423,6 +7437,9 @@ Scoped.define("module:Collections.GroupedCollection", [
 					this.__removeObject(object, group);
 			},
 			
+			/**
+			 * @override
+			 */
 			increase_forwards: function (steps) {
 				return this.__parent.increase_forwards(steps);
 			},
@@ -7450,8 +7467,20 @@ Scoped.define("module:Collections.MappedCollection", [
     "module:Functions"
 ], function (Collection, Functions, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * The MappedCollection Class allows you to create a dynamic sub collection based on another Collection instance and a mapping function.
+		 * 
+		 * @class BetaJS.Collections.MappedCollection
+		 */
 		return {
 
+			/**
+			 * Instantiates a MappedCollection.
+			 * 
+			 * @param {object} parent Parent Collection
+			 * @param {object} options Standard Collection options, plus map and context
+			 */
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				this.__parentToThis = {};
@@ -7468,6 +7497,9 @@ Scoped.define("module:Collections.MappedCollection", [
 				parent.iterate(this.__parentAdd, this);		
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__parent.off(null, null, this);
 				inherited.destroy.call(this);
@@ -10102,10 +10134,12 @@ Scoped.define("module:States.State", [
 				var host = this.host;
 				var obj = this.__next_state;
 				host._next(obj);
+				var hostArgs = this.__hostArgs;
 				this.end();
 				obj.start();
 				host.suspendEvents();
-				Objs.iter(this.__hostArgs, function (dummy, key) {
+				obj = host.state();
+				Objs.iter(hostArgs, function (dummy, key) {
 					if (!obj.__hostArgs[key])
 						host.unset(key);
 				}, this);

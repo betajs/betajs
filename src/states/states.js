@@ -272,10 +272,12 @@ Scoped.define("module:States.State", [
 				var host = this.host;
 				var obj = this.__next_state;
 				host._next(obj);
+				var hostArgs = this.__hostArgs;
 				this.end();
 				obj.start();
 				host.suspendEvents();
-				Objs.iter(this.__hostArgs, function (dummy, key) {
+				obj = host.state();
+				Objs.iter(hostArgs, function (dummy, key) {
 					if (!obj.__hostArgs[key])
 						host.unset(key);
 				}, this);

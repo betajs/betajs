@@ -5,7 +5,7 @@ Scoped.define("module:Collections.MappedCollection", [
 	return Collection.extend({scoped: scoped}, function (inherited) {
 		
 		/**
-		 * The BetaJS.Collections.MappedCollection Class allows you to create a dynamic sub collection based on another Collection instance and a mapping function.
+		 * The MappedCollection Class allows you to create a dynamic sub collection based on another Collection instance and a mapping function.
 		 * 
 		 * @class BetaJS.Collections.MappedCollection
 		 */
