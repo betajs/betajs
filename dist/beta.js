@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.63 - 2016-07-21
+betajs - v1.0.64 - 2016-07-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.63 - 2016-07-21
+betajs - v1.0.64 - 2016-07-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "522.1469105192226"
+    "version": "523.1469234599260"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4913,6 +4913,15 @@ Scoped.define("module:Time", [], function () {
 		},
 		
 		/**
+		 * Returns the performance time in millseconds
+		 * 
+		 * @return {float} performance time
+		 */
+		perfNow: function () {
+			return typeof performance === "undefined" ? (new Date()).getTime() : performance.now();
+		},
+		
+		/**
 		 * Increments a given time with respect to provided component data
 		 * 
 		 * @param {int} t UTC time
@@ -6294,106 +6303,6 @@ Scoped.define("module:Classes.OptimisticConditionalInstance", [
 		}
 		
 	});	
-});
-
-Scoped.define("module:Classes.AbstractGarbageCollector", [
-    "module:Class"    
-], function (Class, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		/**
-		 * Abstract Garbage Collector
-		 * 
-		 * @class BetaJS.Classes.AbstractGarbageCollector
-		 */
-		return {
-			
-			/**
-			 * Instantiate garbage collector.
-			 * 
-			 */
-			constructor: function () {
-				inherited.constructor.call(this);
-				this.__classes = {};
-				this.__queue = [];
-			},
-			
-			/**
-			 * Add an object to the garbage collection queue.
-			 * 
-			 * @param {object} obj object to be destroyed
-			 */
-			queue: function (obj) {
-				if (!obj || obj.destroyed() || this.__classes[obj.cid()])
-					return this;
-				this.__queue.push(obj);
-				this.__classes[obj.cid()] = obj;
-				return this;
-			},
-			
-			/**
-			 * Are there objects in the garbage collection queue?
-			 * 
-			 * @return {boolean} true if the queue is not empty
-			 */
-			hasNext: function () {
-				return this.__queue.length > 0;
-			},
-			
-			/**
-			 * Destroy the next object in the queue.
-			 * 
-			 */
-			destroyNext: function () {
-				var obj = this.__queue.shift();
-				delete this.__classes[obj.cid()];
-				if (!obj.destroyed())
-					obj.destroy();
-				delete obj.__gc;
-				return this;
-			}
-
-		};
-	});
-});
-
-
-Scoped.define("module:Classes.DefaultGarbageCollector", [
-    "module:Classes.AbstractGarbageCollector",
-    "module:Timers.Timer",
-    "module:Time"
-], function (Class, Timer, Time, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		/**
-		 * Default Garbage Collector
-		 * 
-		 * @class BetaJS.Classes.DefaultGarbageCollector
-		 */
-		return {
-			
-			/**
-			 * Instantiate garbage collector.
-			 * 
-			 * @param {integer} delay how long should be the delay between garbage collection
-			 * @param {integer} duration how long should garbage collection be executed
-			 */
-			constructor: function (delay, duration) {
-				inherited.constructor.call(this);
-				this.__duration = duration || 5;
-				this.auto_destroy(new Timer({
-					fire: this.__fire,
-					context: this,
-					delay: delay || 100
-				}));
-			},
-			
-			__fire: function () {
-				var t = Time.now() + this.__duration;
-				while (Time.now() < t && this.hasNext())
-					this.destroyNext();
-			}		
-
-		};
-	});
 });
 
 Scoped.define("module:Classes.LocaleMixin", function () {
@@ -9266,20 +9175,34 @@ Scoped.define("module:RMI.Server", [
 
 
 
-
 Scoped.define("module:RMI.Skeleton", [
-                                      "module:Class",
-                                      "module:Objs",
-                                      "module:Promise"
-                                      ], function (Class, Objs, Promise, scoped) {
+    "module:Class",
+    "module:Objs",
+    "module:Promise"
+], function (Class, Objs, Promise, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Rmi Skeleton Class containing the server-side implementation.
+		 * 
+		 * @class BetaJS.RMI.Skeleton
+		 */
 		return {
 
-			_stub: null,
+			/**
+			 * @member {array} intf List of exported functions
+			 */
 			intf: [],
+			
+			_stub: null,
 			_intf: {},
 			__superIntf: ["_destroy"],
 
+			/**
+			 * Instantiates a skeleton instance.
+			 * 
+			 * @param {object} options Options, currently supported destroyable.
+			 */
 			constructor: function (options) {
 				this._options = Objs.extend({
 					destroyable: false
@@ -9290,11 +9213,24 @@ Scoped.define("module:RMI.Skeleton", [
 					this._intf[this.intf[i]] = true;
 			},
 
+			/**
+			 * (Remotely) destroy the skeleton if supported.
+			 * 
+			 * @protected
+			 */
 			_destroy: function () {
 				if (this._options.destroyable)
 					this.destroy();
 			},
 
+			/**
+			 * Invoke an exported function.
+			 * 
+			 * @param {string} message name of exported function
+			 * @param {array} data custom data array
+			 * 
+			 * @return {object} execution promise
+			 */
 			invoke: function (message, data) {
 				if (!(this._intf[message]))
 					return Promise.error(message);
@@ -9306,14 +9242,37 @@ Scoped.define("module:RMI.Skeleton", [
 				}
 			},
 
+			/**
+			 * Returns a success promise for an exported call.
+			 * 
+			 * @param result Success value
+			 * 
+			 * @return {object} success promise
+			 * 
+			 * @protected
+			 */
 			_success: function (result) {
 				return Promise.value(result);
 			},
 
+			/**
+			 * Returns an error promise for an exported call.
+			 * 
+			 * @param result Error value
+			 * 
+			 * @return {object} error promise
+			 * 
+			 * @protected
+			 */
 			_error: function (result) {
 				return Promise.error(result);
 			},
 
+			/**
+			 * Returns the name of the corresponding Stub.
+			 * 
+			 * @return {string} corresponding Stub name
+			 */
 			stub: function () {
 				if (this._stub)
 					return this._stub;
@@ -9428,6 +9387,222 @@ Scoped.define("module:RMI.StubSyncer", [
 
 		};
 	}]);
+});
+
+
+Scoped.define("module:Scheduling.GarbageCollector", [
+    "module:Class",
+    "module:Scheduling.SchedulableMixin"
+], function (Class, SchedulableMixin, scoped) {
+	return Class.extend({scoped: scoped}, [SchedulableMixin, function (inherited) {
+		/**
+		 * Garbage Collector
+		 * 
+		 * @class BetaJS.Scheduling.GarbageCollector
+		 */
+		return {
+			
+			/**
+			 * Instantiate garbage collector.
+			 * 
+			 */
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__classes = {};
+			},
+			
+			/**
+			 * Add an object to the garbage collection queue.
+			 * 
+			 * @param {object} obj object to be destroyed
+			 */
+			queue: function (obj) {
+				if (!obj || obj.destroyed() || this.__classes[obj.cid()])
+					return this;
+				var cid = obj.cid();
+				this.__classes[cid] = true;
+				this.schedulable(function () {
+					delete this.__classes[cid];
+					if (!obj.destroyed())
+						obj.destroy();
+					delete obj.__gc;
+				});
+				return this;
+			}
+
+		};
+	}]);
+});
+Scoped.define("module:Scheduling.SchedulableMixin", [], function () {
+	return {
+		
+		schedulable: function (callback, initialSteps) {
+			if (this.scheduler)
+				this.scheduler.schedulable(this, callback, initialSteps);
+			else 
+				callback.call(this, Infinity);
+		}
+				
+	};	
+});
+
+
+Scoped.define("module:Scheduling.AbstractScheduler", [
+    "module:Class"
+], function (Class, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			_schedulable: function (context, callback, initialSteps) {},
+			
+			_register: function (context, options) {},
+			
+			_unregister: function (context, options) {},
+			
+			schedulable: function (context, callback, initialSteps) {
+				this._schedulable(context, callback, initialSteps || 1);
+			},
+			
+			register: function (context, options) {
+				context.scheduler = this;
+				this._register(context, options);
+			},
+			
+			unregister: function (context, options) {
+				if (context.scheduler === this)
+					context.scheduler = null;
+				this._unregister(context, options);
+			}
+			
+		};		
+	});		
+});
+
+Scoped.define("module:Scheduling.DefaultScheduler", [
+	"module:Scheduling.AbstractScheduler",
+	"module:Time",
+	"module:Objs",
+	"module:Timers.Timer"
+], function (AbstractScheduler, Time, Objs, Timer, scoped) {
+	return AbstractScheduler.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				this._current = null;
+				this._last = null;
+				this._first = null;
+				this._map = {};
+				this._resources = 0;
+				this._options = Objs.extend({
+					penaltyFactor: 0.5,
+					rewardFactor: 0.5,
+					defaultResources: 10,
+					defaultLimit: 10,
+					autoTimer: null
+				}, options);
+				if (this._options.autoTimer) {
+					this.auto_destroy(new Timer({
+						start: true,
+						delay: this._options.autoTimer,
+						context: this,
+						fire: this.run
+					}));
+				}
+			},
+			
+			_register: function (context, options) {
+				var id = context.cid(); 
+				if (!this._map[id]) {
+					options = options || {};
+					var entry = {
+						context: context,
+						resources: options.resources || this._options.defaultResources,
+						scheduled: [],
+						allocatedTime: 0,
+						usedTime: 0,
+						prev: this._last,
+						next: null
+					};					
+					this._map[id] = entry;
+					this._last = entry;
+					if (!this._first)
+						this._first = entry;
+				}
+			},
+			
+			_unregister: function (ctx) {
+				var id = context.cid(); 
+				if (this._map[id]) {
+					var entry = this._map[id];
+					if (this._current === entry)
+						this._current = entry.next;
+					if (entry.prev)
+						entry.prev.next = entry.next;
+					else
+						this._first = entry.next;
+					if (entry.next)
+						entry.next.prev = entry.prev;
+					else
+						this._last = entry.prev;
+					if (entry.scheduled)
+						this._resources -= entry.resources;
+					delete this._map[id];
+				}
+			},
+
+			_schedulable: function (context, callback, initialSteps) {
+				var id = context.cid();
+				var obj = this._map[id];
+				if (obj) {
+					obj.scheduled.push({
+						callback: callback,
+						initialSteps: initialSteps,
+						totalTime: 0,
+						totalSteps: 0
+					}); 
+					if (obj.scheduled.length === 1)
+						this._resources += obj.resources;
+				}
+			},
+			
+			run: function (limit) {
+				limit = limit || this._options.defaultLimit;
+				var endTime = Time.perfNow() + limit;
+				while (this._resources > 0) {
+					var nowTime = Time.perfNow();
+					var timeLeft = endTime - nowTime;
+					if (timeLeft <= 0)
+						break;
+					var current = this._current || this._first;
+					if (current.scheduled.length >= 0) {
+						var resources = current.resources;
+						if (current.allocatedTime > current.usedTime)
+							resources += current.usedTime / current.allocatedTime * this._options.rewardFactor; 
+						if (current.allocatedTime < current.usedTime)
+							resources -= current.allocatedTime / current.usedTime * this._options.penaltyFactor;
+						var currentEndTime = Math.min(nowTime + limit * resources / this._resources, endTime);
+						do {
+							var deltaTime = currentEndTime - nowTime;
+							var head = current.scheduled.shift();
+							var steps = Math.max(1, head.totalSteps > 0 ? head.totalSteps / (head.totalTime || 1) * deltaTime: head.initialSteps);
+							var result = head.callback.call(current.context, steps);
+							if (result === false)
+								current.scheduled.unshift(head);
+							else if (current.scheduled.length === 0)
+								this._resources -= current.resources;
+							var nextTime = Time.perfNow();
+							current.allocatedTime += deltaTime;
+							current.usedTime += nextTime - nowTime;
+							nowTime = nextTime;
+						} while (nowTime < currentEndTime && current.scheduled.length > 0);
+					}
+					this._current = current.next;
+				}
+			}
+			
+		};		
+	});		
 });
 
 

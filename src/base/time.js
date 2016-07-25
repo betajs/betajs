@@ -188,6 +188,15 @@ Scoped.define("module:Time", [], function () {
 		},
 		
 		/**
+		 * Returns the performance time in millseconds
+		 * 
+		 * @return {float} performance time
+		 */
+		perfNow: function () {
+			return typeof performance === "undefined" ? (new Date()).getTime() : performance.now();
+		},
+		
+		/**
 		 * Increments a given time with respect to provided component data
 		 * 
 		 * @param {int} t UTC time
