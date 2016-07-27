@@ -222,8 +222,8 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 		    input = input || "";
 			var temp = input.split("<");
 			input = temp[0].trim();
-			if (!input && temp.length > 1) {
-				temp = temp[1].split(">");
+			if (!input || temp.length < 2) {
+				temp = temp[temp.length - 1].split("@");
 				input = temp[0].trim();
 			}		
 			input = input.replace(/['"]/g, "").replace(/[\\._@]/g, " ");
