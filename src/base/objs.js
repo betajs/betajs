@@ -29,6 +29,25 @@ Scoped.define("module:Objs", [
 		},
 
 		/**
+		 * Return the i-th value of an object.
+		 * 
+		 * @param {object} obj the object
+		 * @param {int} i index of the i-th value (default: 0)
+		 * 
+		 * @return {string} i-th value
+		 */
+		ithValue: function (obj, i) {
+			i = i || 0;
+			for (var key in obj) {
+				if (i <= 0)
+					return obj[key];
+				else
+					--i;
+			}
+			return null;
+		},
+
+		/**
 		 * Returns the number of elements of an object or array.
 		 * 
 		 * @param obj object or array

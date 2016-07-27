@@ -56,8 +56,8 @@ Scoped.define("module:Collections.Collection", [
 				}, this);
 			},
 			
-			get_by_secondary_index: function (key, value) {
-				return this.__indices[key][value];
+			get_by_secondary_index: function (key, value, returnFirst) {
+				return returnFirst ? Objs.ithValue(this.__indices[key][value]) : this.__indices[key][value];
 			},
 			
 			get_ident: function (obj) {

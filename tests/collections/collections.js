@@ -185,6 +185,7 @@ test("test collection query", function () {
 	list.add(new BetaJS.Properties.Properties({"text": "C Example X"}));
 	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 2);
 	list.add_secondary_index("text");
+	QUnit.equal(list.get_by_secondary_index("text", "C Example X", true).get("text"), "C Example X");
 	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 2);
 	list.add(new BetaJS.Properties.Properties({"text": "C Example X"}));
 	QUnit.equal(list.query({"text": "C Example X"}).asArray().length, 3);

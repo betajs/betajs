@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.65 - 2016-07-26
+betajs - v1.0.66 - 2016-07-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.65 - 2016-07-26
+betajs - v1.0.66 - 2016-07-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "525.1469558505519"
+    "version": "526.1469636663043"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2697,6 +2697,25 @@ Scoped.define("module:Objs", [
 			for (var key in obj) {
 				if (i <= 0)
 					return key;
+				else
+					--i;
+			}
+			return null;
+		},
+
+		/**
+		 * Return the i-th value of an object.
+		 * 
+		 * @param {object} obj the object
+		 * @param {int} i index of the i-th value (default: 0)
+		 * 
+		 * @return {string} i-th value
+		 */
+		ithValue: function (obj, i) {
+			i = i || 0;
+			for (var key in obj) {
+				if (i <= 0)
+					return obj[key];
 				else
 					--i;
 			}
@@ -6767,38 +6786,88 @@ Scoped.define("module:Classes.ContextRegistry", [
 Scoped.define("module:Classes.Taggable", [
     "module:Objs"
 ], function (Objs) {
+
+	/**
+	 * Taggable Mixin for handling instance tags
+	 * 
+	 * @mixin BetaJS.Classes.Taggable
+	 */
 	return {
 		
-		__tags: {},
-		
+		/**
+		 * Determines whether a specific tag is present. 
+		 * 
+		 * @param {string} tag tag in question
+		 * @return {boolean} true if tag present
+		 */
 		hasTag: function (tag) {
-			return tag in this.__tags;
+			return this.__tags && (tag in this.__tags);
 		},
 		
+		/**
+		 * Returns all tags being present.
+		 *  
+		 * @return {array} Array of tags
+		 */
 		getTags: function () {
-			return Object.keys(this.__tags);
+			return Object.keys(this.__tags || {});
 		},
 		
+		/**
+		 * Removes a specific tag. 
+		 * 
+		 * @param {string} tag tag in question
+		 * @return {object} this
+		 */
 		removeTag: function (tag) {
-			delete this.__tags[tag];
-			this._notify("tags-changed");
+			if (this.__tags) {
+				delete this.__tags[tag];
+				this._notify("tags-changed");
+			}
 			return this;
 		},
 		
+		/**
+		 * Remove a list of tags. 
+		 * 
+		 * @param {array} tags tags to be removed
+		 * @return {object} this
+		 */
 		removeTags: function (tags) {
 			Objs.iter(tags, this.removeTag, this);
+			return this;
 		},
 		
+		/**
+		 * Add a tag to the instance. 
+		 * 
+		 * @param {string} tag tag in question
+		 * @return {object} this
+		 */
 		addTag: function (tag) {
+			this.__tags = this.__tags || {};
 			this.__tags[tag] = true;
 			this._notify("tags-changed");
 			return this;
 		},
 		
+		/**
+		 * Add a number of tags to the instance. 
+		 * 
+		 * @param {array} tags tag to be added
+		 * @return {object} this
+		 */
 		addTags: function (tags) {
 			Objs.iter(tags, this.addTag, this);
+			return this;
 		},
 
+		/**
+		 * Returns the subset of the given tags that are present in the instance. 
+		 * 
+		 * @param {array} tags Superset of tags to be checkd
+		 * @return {array} Subset of intersecting tags
+		 */
 		tagIntersect: function (tags) {
 			return Objs.filter(tags, this.hasTag, this);
 		}
@@ -6814,6 +6883,12 @@ Scoped.define("module:Classes.StringTable", [
     "module:Objs"
 ], function (Class, Taggable, Functions, Objs, scoped) {
 	return Class.extend({scoped: scoped}, [Taggable, function (inherited) {
+
+		/**
+		 * Taggable StringTable Class 
+		 * 
+		 * @class BetaJS.Classes.StringTable
+		 */
 		return {
 			
 			_notifications: {
@@ -6822,6 +6897,9 @@ Scoped.define("module:Classes.StringTable", [
 				}
 			},
 			
+			/**
+			 * Instantiates a StringTable. 
+			 */
 			constructor: function () {
 				inherited.constructor.call(this);
 				this.__cache = {};
@@ -6846,6 +6924,16 @@ Scoped.define("module:Classes.StringTable", [
 				return c > 0;
 			},
 			
+			/**
+			 * Registers string resources. 
+			 * 
+			 * @param {object} strings key-value representation of strings
+			 * @param {string} prefix optional prefix for the keys
+			 * @param {array} tags optional tags
+			 * @param {int} priority optional priority
+			 * 
+			 * @return {object} this
+			 */
 			register: function () {
 				var args = Functions.matchArgs(arguments, {
 					strings: true,
@@ -6863,8 +6951,17 @@ Scoped.define("module:Classes.StringTable", [
 					});
 					delete this.__cache[key];
 				}, this);
+				return this;
 			},
 			
+			/**
+			 * Returns a string resource by key 
+			 * 
+			 * @param {string} key key to be retrieved
+			 * @param {string} prefix optional prefix for the key
+			 * 
+			 * @return {string} resource string
+			 */
 			get: function (key, prefix) {
 				key = this.__resolveKey(key, prefix);
 				if (key in this.__cache)
@@ -6880,6 +6977,11 @@ Scoped.define("module:Classes.StringTable", [
 				return current.value;
 			},
 			
+			/**
+			 * Retruns all included string resources 
+			 * 
+			 * @return {object} key-value representation of the included string resources
+			 */
 			all: function () {
 				return Objs.map(this.__strings, function (value, key) {
 					return this.get(key);
@@ -6896,7 +6998,14 @@ Scoped.define("module:Classes.LocaleTable", [
 	"module:Classes.StringTable",
 	"module:Classes.LocaleMixin"
 ], function (StringTable, LocaleMixin, scoped) {
-	return StringTable.extend({scoped: scoped}, [LocaleMixin, {
+	return StringTable.extend({scoped: scoped}, [LocaleMixin,
+
+ 		/**
+ 		 * Locale Table Class
+ 		 * 
+ 		 * @class BetaJS.Classes.LocaleTable
+ 		 */
+        {
 
 		_localeTags: function (locale) {
 			if (!locale)
@@ -6908,10 +7017,16 @@ Scoped.define("module:Classes.LocaleTable", [
 			return result;
 		},
 
+		/**
+		 * @override 
+		 */
 		_clearLocale: function () {
 			this.removeTags(this._localeTags(this.getLocale()));
 		},
 
+		/**
+		 * @override 
+		 */
 		_setLocale: function (locale) {
 			this.addTags(this._localeTags(locale));
 		}
@@ -6976,8 +7091,8 @@ Scoped.define("module:Collections.Collection", [
 				}, this);
 			},
 			
-			get_by_secondary_index: function (key, value) {
-				return this.__indices[key][value];
+			get_by_secondary_index: function (key, value, returnFirst) {
+				return returnFirst ? Objs.ithValue(this.__indices[key][value]) : this.__indices[key][value];
 			},
 			
 			get_ident: function (obj) {
