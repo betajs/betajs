@@ -452,6 +452,14 @@ Scoped.define("module:Objs", [
 				if (!(key in ordinary) || ordinary[key] != concrete[key])
 					result[key] = concrete[key];
 			return result;
+		},
+		
+		inverseKeyValue: function (obj) {
+			var result = {};
+			this.iter(obj, function (value, key) {
+				result[value] = key;
+			});
+			return result;
 		}
 
 	};

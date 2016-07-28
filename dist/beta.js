@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.66 - 2016-07-27
+betajs - v1.0.67 - 2016-07-28
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.66 - 2016-07-27
+betajs - v1.0.67 - 2016-07-28
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "526.1469636663043"
+    "version": "528.1469738927136"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3126,6 +3126,14 @@ Scoped.define("module:Objs", [
 			for (var key in iterateOver)
 				if (!(key in ordinary) || ordinary[key] != concrete[key])
 					result[key] = concrete[key];
+			return result;
+		},
+		
+		inverseKeyValue: function (obj) {
+			var result = {};
+			this.iter(obj, function (value, key) {
+				result[value] = key;
+			});
 			return result;
 		}
 
@@ -8129,18 +8137,27 @@ Scoped.define("module:Timers.Timer", [
     "module:Time"
 ], function (Class, Objs, Time, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Timer Class
+		 * 
+		 * @class BetaJS.Timers.Timer
+		 */
 		return {
 			
-			/*
-			 * int delay (mandatory): number of milliseconds until it fires
-			 * bool once (optional, default false): should it fire infinitely often
-			 * func fire (optional): will be fired
-			 * object context (optional): for fire
-			 * bool start (optional, default true): should it start immediately
-			 * bool real_time (default false)
-			 * bool immediate (optional, default false): zero time until first fire
-			 * int duration (optional, default null)
-			 * int fire_max (optional, default null)
+			/**
+			 * Create a new timer instance.
+			 * 
+			 * @param {object} options, including
+			 *   int delay (mandatory): number of milliseconds until it fires
+			 *   bool once (optional, default false): should it fire infinitely often
+			 *   func fire (optional): will be fired
+			 *   object context (optional): for fire
+			 *   bool start (optional, default true): should it start immediately
+			 *   bool real_time (default false)
+			 *   bool immediate (optional, default false): zero time until first fire
+			 *   int duration (optional, default null)
+			 *   int fire_max (optional, default null)
 			 * 
 			 */
 			constructor: function (options) {
@@ -8172,19 +8189,35 @@ Scoped.define("module:Timers.Timer", [
 					this.start();
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.stop();
 				inherited.destroy.call(this);
 			},
 			
+			/**
+			 * Returns the number of times the timer has fired.
+			 * 
+			 * @return {int} fire count
+			 */
 			fire_count: function () {
 				return this.__fire_count;
 			},
-			
+
+			/**
+			 * Returns the current duration of timer.
+			 * 
+			 * @return {int} duration in milliseconds
+			 */
 			duration: function () {
 				return Time.now() - this.__start_time;
 			},
 			
+			/**
+			 * Fired when the timer fires.
+			 */
 			fire: function () {
 				if (this.__once)
 					this.__started = false;
@@ -8205,6 +8238,11 @@ Scoped.define("module:Timers.Timer", [
 					this.weakDestroy();
 			},
 			
+			/**
+			 * Stops the timer.
+			 * 
+			 * @return {object}
+			 */
 			stop: function () {
 				if (!this.__started)
 					return this;
@@ -8218,6 +8256,11 @@ Scoped.define("module:Timers.Timer", [
 				return this;
 			},
 			
+			/**
+			 * Starts the timer.
+			 * 
+			 * @return {object} this
+			 */
 			start: function () {
 				if (this.__started)
 					return this;
@@ -8238,12 +8281,16 @@ Scoped.define("module:Timers.Timer", [
 				return this;
 			},
 			
+			/**
+			 * Restarts the timer.
+			 * 
+			 * @return {object} this
+			 */
 			restart: function () {
 				this.stop();
 				this.start();
 				return this;
 			}
-			
 			
 		};
 	});
