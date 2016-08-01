@@ -313,6 +313,14 @@ Scoped.define("module:Objs", [
 			return c;
 		},
 		
+		/**
+		 * Returns true if all key-value-pairs of the first object are contained in the second object.
+		 * 
+		 * @param a first object or array
+		 * @param b second object or array
+		 * 
+		 * @return {boolean} true if first contained in second
+		 */
 		subset_of: function (a, b) {
 			a = Types.is_array(a) ? this.objectify(a) : a;
 			b = Types.is_array(b) ? this.objectify(b) : b;
@@ -467,8 +475,21 @@ Scoped.define("module:Objs", [
 
 
 Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
+	/**
+	 * Scoped access of keys within objects.
+	 * 
+	 * @module BetaJS.Objs.Scopes
+	 */
 	return {
 
+		/**
+		 * Determines whether a scoped key exists within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 * 
+		 * @return {boolean} true if key exists within scope
+		 */
 		has: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
@@ -479,6 +500,14 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			return Types.is_defined(scope);
 		},
 
+		/**
+		 * Returns the value of a key within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 * 
+		 * @return Value for key in scope
+		 */
 		get: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
@@ -489,6 +518,13 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			return scope;
 		},
 
+		/**
+		 * Sets the value of a key within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param name value to be set
+		 * @param {object} name scope context
+		 */
 		set: function (key, value, scope) {
 			if (!key)
 				return;
@@ -501,6 +537,12 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			scope[keys[keys.length - 1]] = value;
 		},
 
+		/**
+		 * Unsets a key within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 */
 		unset: function (key, scope) {
 			if (!key)
 				return;
@@ -513,6 +555,14 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			delete scope[keys[keys.length - 1]];
 		},
 
+		/**
+		 * Makes sure that a certain key is accessible within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 * 
+		 * @return Touched value
+		 */
 		touch: function (key, scope) {
 			if (!key)
 				return scope;
