@@ -356,6 +356,103 @@ Scoped.define("module:Objs", [
 			return null;
 		},
 
+		/**
+		 * Iterates over an object or array, calling a callback function for each item.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f callback function
+		 * @param {object} context optional callback context
+		 * 
+		 */
+		iter: function (obj, f, context) {
+			var result = null;
+			if (Types.is_array(obj)) {
+				for (var i = 0; i < obj.length; ++i) {
+					result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
+					if (Types.is_defined(result) && !result)
+						return false;
+				}
+			} else {
+				for (var key in obj) {
+					result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+					if (Types.is_defined(result) && !result)
+						return false;
+				}
+			}
+			return true;
+		},
+
+		/**
+		 * Creates the intersection object of two objects.
+		 * 
+		 * @param {object} a object one
+		 * @param {object} b object two
+		 * 
+		 * @return {object} intersection object
+		 */
+		intersect: function (a, b) {
+			var c = {};
+			for (var key in a) {
+				if (key in b)
+					c[key] = a[key];
+			}
+			return c;
+		},
+		
+		/**
+		 * Creates the difference object of two objects.
+		 * 
+		 * @param {object} a object one
+		 * @param {object} b object two
+		 * 
+		 * @return {object} difference object
+		 */
+		diff: function (a, b) {
+			var c = {};
+			for (var key in a)
+				if (!(key in b) || a[key] !== b[key])
+					c[key] = a[key];
+			return c;
+		},
+		
+		/**
+		 * Determines whether a key exists in an array or object.
+		 * 
+		 * @param obj object or array
+		 * @param key search key
+		 * 
+		 * @return {boolean} true if key is contained in obj
+		 */
+		contains_key: function (obj, key) {
+			if (Types.is_array(obj))
+				return Types.is_defined(obj[key]);
+			else
+				return key in obj;
+		},
+
+		/**
+		 * Determines whether a value exists in an array or object.
+		 * 
+		 * @param obj object or array
+		 * @param value search value
+		 * 
+		 * @return {boolean} true if value is contained in obj
+		 */
+		contains_value: function (obj, value) {
+			if (Types.is_array(obj)) {
+				for (var i = 0; i < obj.length; ++i) {
+					if (obj[i] === value)
+						return true;
+				}
+			} else {
+				for (var key in obj) {
+					if (obj[key] === value)
+						return true;
+				}
+			}
+			return false;
+		},
+
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -448,63 +545,6 @@ Scoped.define("module:Objs", [
 				return true;
 			} else
 				return obj1 == obj2;
-		},
-
-		iter: function (obj, f, context) {
-			var result = null;
-			if (Types.is_array(obj)) {
-				for (var i = 0; i < obj.length; ++i) {
-					result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
-					if (Types.is_defined(result) && !result)
-						return false;
-				}
-			} else {
-				for (var key in obj) {
-					result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-					if (Types.is_defined(result) && !result)
-						return false;
-				}
-			}
-			return true;
-		},
-
-		intersect: function (a, b) {
-			var c = {};
-			for (var key in a) {
-				if (key in b)
-					c[key] = a[key];
-			}
-			return c;
-		},
-		
-		diff: function (a, b) {
-			var c = {};
-			for (var key in a)
-				if (!(key in b) || a[key] !== b[key])
-					c[key] = a[key];
-			return c;
-		},
-		
-		contains_key: function (obj, key) {
-			if (Types.is_array(obj))
-				return Types.is_defined(obj[key]);
-			else
-				return key in obj;
-		},
-
-		contains_value: function (obj, value) {
-			if (Types.is_array(obj)) {
-				for (var i = 0; i < obj.length; ++i) {
-					if (obj[i] === value)
-						return true;
-				}
-			} else {
-				for (var key in obj) {
-					if (obj[key] === value)
-						return true;
-				}
-			}
-			return false;
 		},
 
 		objectify: function (arr, f, context) {
