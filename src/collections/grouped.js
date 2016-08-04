@@ -47,8 +47,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 				var group = this.__objectToGroup(object);
 				if (!group) {
 					group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
-					group.objects = {};
-					group.object_count = 0;
+					group.items = group.auto_destroy(new Collection());
 					Objs.iter(this.__groupby, function (key) {
 						group.set(key, object.get(key));
 					});
@@ -62,7 +61,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 				var group = this.__objectToGroup(object);
 				if (group) {
 					this.__removeObjectFromGroup(object, group);
-					if (group.object_count === 0)
+					if (group.items.count() === 0)
 						this.remove(group);
 				}
 			},
@@ -76,17 +75,13 @@ Scoped.define("module:Collections.GroupedCollection", [
 			},
 			
 			__addObjectToGroup: function (object, group) {
-				group.objects[this.__parent.get_ident(object)] = object;
-				group.object_count++;
+				group.items.add(object);
 				this.__insertObject(object, group);
 			},
 			
 			__removeObjectFromGroup: function (object, group) {
-				if (!(this.__parent.get_ident(object) in group.objects))
-					return;
-				delete group.objects[this.__parent.get_ident(object)];
-				group.object_count--;
-				if (group.object_count > 0)
+				group.items.remove(object);
+				if (group.items.count() > 0)
 					this.__removeObject(object, group);
 			},
 			
