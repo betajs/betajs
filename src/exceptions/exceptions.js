@@ -19,6 +19,11 @@ Scoped.define("module:Exceptions.Exception", [
 			constructor: function (message) {
 				inherited.constructor.call(this);
 				this.__message = message;
+				try {
+					throw new Error();
+				} catch (e) {
+					this.__stack = e.stack;
+				}
 			},
 			
 			/**
@@ -42,6 +47,15 @@ Scoped.define("module:Exceptions.Exception", [
 				return this.__message;
 			},
 			
+			/**
+			 * Returns exception stack.
+			 * 
+			 * @return Exception stack
+			 */
+			stack: function () {
+				return this.__stack;
+			},
+
 			/**
 			 * Format exception as string.
 			 * 
@@ -68,7 +82,8 @@ Scoped.define("module:Exceptions.Exception", [
 			json: function () {
 				return {
 					classname: this.cls.classname,
-					message: this.message()
+					message: this.message(),
+					stack: this.stack()
 				};
 			},
 			
@@ -83,24 +98,17 @@ Scoped.define("module:Exceptions.Exception", [
 			}			
 			
 		};
-	}, {
-		
-		/**
-		 * Ensures that a given exception is an instance of an Exception class
-		 * 
-		 * @param e Exception
-		 * @return {object} Exception instance, possibly wrapping e as a NativeException
-		 */
-		ensure: function (e) {
-			throw "Should be overwritten via Scoped.";
-		}
-		
 	});
 });
 
 
-Scoped.define("module:Exceptions.NativeException", ["module:Exceptions.Exception"], function (Exception, scoped) {
-	return Exception.extend({scoped: scoped}, function (inherited) {
+Scoped.define("module:Exceptions.NativeException", [
+    "module:Types", 
+    "module:Objs",
+    "module:Exceptions.Exception"
+], function (Types, Objs, Exception, scoped) {
+	
+	var NativeException = Exception.extend({scoped: scoped}, function (inherited) {
 		
 		/**
 		 * Native Exception Wrapper Class
@@ -115,7 +123,15 @@ Scoped.define("module:Exceptions.NativeException", ["module:Exceptions.Exception
 			 * @param {object} object Native exception object
 			 */
 			constructor: function (object) {
-				inherited.constructor.call(this, object ? ("toString" in object ? object.toString() : object) : "null");
+				var message = "null";
+				this.__data = {};
+				if (object) {
+					["name", "message", "filename", "lineno"].forEach(function (key) {
+						if (key in object)
+							this.__data[key] = object[key];
+					}, this);
+				}
+				inherited.constructor.call(this, object ? Objs.values(this.__data).join("; ") : "null");
 				this.__object = object;
 			},
 			
@@ -126,21 +142,30 @@ Scoped.define("module:Exceptions.NativeException", ["module:Exceptions.Exception
 			 */
 			object: function () {
 				return this.__object;
-			}
+			},
+			
+			/**
+			 * Returns the extracted data.
+			 * 
+			 * @return {object} Extracted data
+			 */
+			data: function () {
+				return this.__data;
+			},
+			
+			/**
+			 * Returns exception data as JSON.
+			 * 
+			 * @return {object} exception data
+			 */
+			json: function () {
+				var j = inherited.json.call(this);
+				j.data = this.data();
+				return j;
+			}			
 
 		};
-	});
-});
-
-
-Scoped.extend("module:Exceptions", ["module:Types", "module:Exceptions.Exception", "module:Exceptions.NativeException"], function (Types, Exception, NativeException) {
-	
-	/**
-	 * The Exception module
-	 * 
-	 * @module BetaJS.Exceptions
-	 */
-	return {
+	}, {
 		
 		/**
 		 * Ensures that a given exception is an instance of an Exception class
@@ -151,17 +176,8 @@ Scoped.extend("module:Exceptions", ["module:Types", "module:Exceptions.Exception
 		ensure: function (e) {
 			return Exception.is_instance_of(e) ? e : new NativeException(e);
 		}
-
-	};
-});
-
-Scoped.extend("module:Exceptions.Exception", ["module:Exceptions"], ["module:Exceptions.ensure"], function (Exceptions) {
+		
+	});
 	
-	return {
-		
-		ensure: function (e) {
-			return Exceptions.ensure(e).assert(this);
-		}
-		
-	};
+	return NativeException;
 });
