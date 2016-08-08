@@ -98,6 +98,20 @@ Scoped.define("module:Exceptions.Exception", [
 			}			
 			
 		};
+	}, {
+		
+		/**
+		 * Ensures that a given exception is an instance of an Exception class
+		 * 
+		 * @param e Exception
+		 * @return {object} Exception instance
+		 */
+		ensure: function (e) {
+			if (!this.is_instance_of(e))
+				throw "Unasserted Exception " + e;
+			return e;
+		}
+
 	});
 });
 
@@ -174,7 +188,7 @@ Scoped.define("module:Exceptions.NativeException", [
 		 * @return {object} Exception instance, possibly wrapping e as a NativeException
 		 */
 		ensure: function (e) {
-			return Exception.is_instance_of(e) ? e : new NativeException(e);
+			return NativeException.is_instance_of(e) ? e : new NativeException(e);
 		}
 		
 	});

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.69 - 2016-08-04
+betajs - v1.0.70 - 2016-08-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.69 - 2016-08-04
+betajs - v1.0.70 - 2016-08-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "533.1470347731072"
+    "version": "534.1470635096067"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5189,7 +5189,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return Time.timeModulo(t, "second", "floor");
 			},
 			"mmm": function (t) {
-				return (new Date(t)).toDateString().substring(4,7);
+				return (new Date(t)).toUTCString().substring(4,7);
 			},
 			"mm": function (t) {
 				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
@@ -5202,10 +5202,10 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 			},
 			"dddd": function (t) {
 				var map = {2: "s", 3: "nes", 4: "rs", 6: "ur"};
-				return (new Date(t)).toDateString().substring(0,3) + (map[Time.timeComponentGet(t, "weekday")] || "") + "day";
+				return (new Date(t)).toUTCString().substring(0,3) + (map[Time.timeComponentGet(t, "weekday")] || "") + "day";
 			},
 			"ddd": function (t) {
-				return (new Date(t)).toDateString().substring(0,3);
+				return (new Date(t)).toUTCString().substring(0,3);
 			},
 			"dd": function (t) {
 				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
@@ -7577,6 +7577,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 				options = options || {};
 				delete options.objects;
 				this.__groupby = options.groupby;
+				this.__keepEmptyGroups = options.keepEmptyGroups;
 				this.__insertCallback = options.insert;
 				this.__removeCallback = options.remove;
 				this.__callbackContext = options.context || this;
@@ -7597,35 +7598,36 @@ Scoped.define("module:Collections.GroupedCollection", [
 				inherited.destroy.call(this);
 			},
 			
-			__addParentObject: function (object) {
-				var group = this.__objectToGroup(object);
-				if (!group) {
+			touchGroup: function (data, create) {
+				data = Properties.is_instance_of(data) ? data.data() : data;
+				var query = {};
+				Objs.iter(this.__groupby, function (key) {
+					query[key] = data[key];
+				});
+				var group = this.query(query).nextOrNull();
+				if (!group && create) {
 					group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
 					group.items = group.auto_destroy(new Collection());
 					Objs.iter(this.__groupby, function (key) {
-						group.set(key, object.get(key));
+						group.set(key, data[key]);
 					});
-					this.__addObjectToGroup(object, group);
 					this.add(group);
-				} else
-					this.__addObjectToGroup(object, group);
+				}
+				return group;
+			},
+			
+			__addParentObject: function (object) {
+				var group = this.touchGroup(object, true);
+				this.__addObjectToGroup(object, group);
 			},
 			
 			__removeParentObject: function (object) {
-				var group = this.__objectToGroup(object);
+				var group = this.touchGroup(object);
 				if (group) {
 					this.__removeObjectFromGroup(object, group);
-					if (group.items.count() === 0)
+					if (!this.__keepEmptyGroups && group.items.count() === 0)
 						this.remove(group);
 				}
-			},
-			
-			__objectToGroup: function (object) {
-				var query = {};
-				Objs.iter(this.__groupby, function (key) {
-					query[key] = object.get(key);
-				});
-				return this.query(query).nextOrNull();
 			},
 			
 			__addObjectToGroup: function (object, group) {
@@ -7635,8 +7637,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 			
 			__removeObjectFromGroup: function (object, group) {
 				group.items.remove(object);
-				if (group.items.count() > 0)
-					this.__removeObject(object, group);
+				this.__removeObject(object, group);
 			},
 			
 			/**
@@ -7964,6 +7965,20 @@ Scoped.define("module:Exceptions.Exception", [
 			}			
 			
 		};
+	}, {
+		
+		/**
+		 * Ensures that a given exception is an instance of an Exception class
+		 * 
+		 * @param e Exception
+		 * @return {object} Exception instance
+		 */
+		ensure: function (e) {
+			if (!this.is_instance_of(e))
+				throw "Unasserted Exception " + e;
+			return e;
+		}
+
 	});
 });
 
@@ -8040,7 +8055,7 @@ Scoped.define("module:Exceptions.NativeException", [
 		 * @return {object} Exception instance, possibly wrapping e as a NativeException
 		 */
 		ensure: function (e) {
-			return Exception.is_instance_of(e) ? e : new NativeException(e);
+			return NativeException.is_instance_of(e) ? e : new NativeException(e);
 		}
 		
 	});

@@ -23,6 +23,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 				options = options || {};
 				delete options.objects;
 				this.__groupby = options.groupby;
+				this.__keepEmptyGroups = options.keepEmptyGroups;
 				this.__insertCallback = options.insert;
 				this.__removeCallback = options.remove;
 				this.__callbackContext = options.context || this;
@@ -43,35 +44,36 @@ Scoped.define("module:Collections.GroupedCollection", [
 				inherited.destroy.call(this);
 			},
 			
-			__addParentObject: function (object) {
-				var group = this.__objectToGroup(object);
-				if (!group) {
+			touchGroup: function (data, create) {
+				data = Properties.is_instance_of(data) ? data.data() : data;
+				var query = {};
+				Objs.iter(this.__groupby, function (key) {
+					query[key] = data[key];
+				});
+				var group = this.query(query).nextOrNull();
+				if (!group && create) {
 					group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
 					group.items = group.auto_destroy(new Collection());
 					Objs.iter(this.__groupby, function (key) {
-						group.set(key, object.get(key));
+						group.set(key, data[key]);
 					});
-					this.__addObjectToGroup(object, group);
 					this.add(group);
-				} else
-					this.__addObjectToGroup(object, group);
+				}
+				return group;
+			},
+			
+			__addParentObject: function (object) {
+				var group = this.touchGroup(object, true);
+				this.__addObjectToGroup(object, group);
 			},
 			
 			__removeParentObject: function (object) {
-				var group = this.__objectToGroup(object);
+				var group = this.touchGroup(object);
 				if (group) {
 					this.__removeObjectFromGroup(object, group);
-					if (group.items.count() === 0)
+					if (!this.__keepEmptyGroups && group.items.count() === 0)
 						this.remove(group);
 				}
-			},
-			
-			__objectToGroup: function (object) {
-				var query = {};
-				Objs.iter(this.__groupby, function (key) {
-					query[key] = object.get(key);
-				});
-				return this.query(query).nextOrNull();
 			},
 			
 			__addObjectToGroup: function (object, group) {
@@ -81,8 +83,7 @@ Scoped.define("module:Collections.GroupedCollection", [
 			
 			__removeObjectFromGroup: function (object, group) {
 				group.items.remove(object);
-				if (group.items.count() > 0)
-					this.__removeObject(object, group);
+				this.__removeObject(object, group);
 			},
 			
 			/**
