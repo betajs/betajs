@@ -79,7 +79,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return Time.timeModulo(t, "second", "floor");
 			},
 			"mmm": function (t) {
-				return (new Date(t)).toUTCString().substring(4,7);
+				return ((new Date(t)).toUTCString().split(" "))[2];
 			},
 			"mm": function (t) {
 				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
@@ -101,7 +101,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
 			},
 			"d": function (t) {
-				return Time.timeComponentGet(t, "day");
+				return Time.timeComponentGet(t, "day") + 1;
 			},
 			"yyyy": function (t) {
 				return Time.timeComponentGet(t, "year");
