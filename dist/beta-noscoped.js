@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.72 - 2016-08-13
+betajs - v1.0.73 - 2016-08-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "536.1471101220211"
+    "version": "537.1471468363556"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -880,6 +880,8 @@ Scoped.define("module:Events.EventsMixin", [
 					for (var i = 0; i < argss.length; ++i)
 						this.__call_event_object(event_object, argss[i]);
 				}
+				if (options && options.initcall)
+					this.__call_event_object(event_object, []);
 			}
 			return this;
 		},
