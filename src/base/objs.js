@@ -453,43 +453,16 @@ Scoped.define("module:Objs", [
 			return false;
 		},
 
-		merge: function (secondary, primary, options) {
-			secondary = secondary || {};
-			primary = primary || {};
-			var result = {};
-			var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
-			for (var key in keys) {
-				var opt = key in options ? options[key] : "primary";
-				if (opt == "primary" || opt == "secondary") {
-					if (key in primary || key in secondary) {
-						if (opt == "primary")
-							result[key] = key in primary ? primary[key] : secondary[key];
-						else
-							result[key] = key in secondary ? secondary[key] : primary[key];
-					}			
-				}
-				else if (Types.is_function(opt))
-					result[key] = opt(secondary[key], primary[key]);
-				else if (Types.is_object(opt))
-					result[key] = this.merge(secondary[key], primary[key], opt);
-			}
-			return result;
-		},
-
-		tree_merge: function (secondary, primary) {
-			secondary = secondary || {};
-			primary = primary || {};
-			var result = {};
-			var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
-			for (var key in keys) {
-				if (Types.is_object(primary[key]) && secondary[key])
-					result[key] = this.tree_merge(secondary[key], primary[key]);
-				else
-					result[key] = key in primary ? primary[key] : secondary[key];
-			}
-			return result;
-		},
-
+		/**
+		 * Maps an array of object, mapping values using a function.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f function for mapping values
+		 * @param {object} context function context
+		 * 
+		 * @return object or array with mapped values
+		 * 
+		 */
 		map: function (obj, f, context) {
 			var result = null;
 			if (Types.is_array(obj)) {
@@ -505,6 +478,15 @@ Scoped.define("module:Objs", [
 			}
 		},
 
+		/**
+		 * Maps the keys of an object using a function.
+		 * 
+		 * @param {object} obj object
+		 * @param {function} f function for mapping keys
+		 * @param {object} context function context
+		 * 
+		 * @return {object} object with mapped keys
+		 */
 		keyMap: function (obj, f, context) {
 			result = {};
 			for (var key in obj)
@@ -512,6 +494,13 @@ Scoped.define("module:Objs", [
 			return result;
 		},
 
+		/**
+		 * Returns all values of an object as an array.
+		 * 
+		 * @param {object} obj object
+		 * 
+		 * @return {array} values of object as array
+		 */
 		values: function (obj) {
 			var result = [];
 			for (var key in obj)
@@ -571,6 +560,43 @@ Scoped.define("module:Objs", [
 			for (var key in iterateOver)
 				if (!(key in ordinary) || ordinary[key] != concrete[key])
 					result[key] = concrete[key];
+			return result;
+		},
+		
+		merge: function (secondary, primary, options) {
+			secondary = secondary || {};
+			primary = primary || {};
+			var result = {};
+			var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
+			for (var key in keys) {
+				var opt = key in options ? options[key] : "primary";
+				if (opt == "primary" || opt == "secondary") {
+					if (key in primary || key in secondary) {
+						if (opt == "primary")
+							result[key] = key in primary ? primary[key] : secondary[key];
+						else
+							result[key] = key in secondary ? secondary[key] : primary[key];
+					}			
+				}
+				else if (Types.is_function(opt))
+					result[key] = opt(secondary[key], primary[key]);
+				else if (Types.is_object(opt))
+					result[key] = this.merge(secondary[key], primary[key], opt);
+			}
+			return result;
+		},
+
+		tree_merge: function (secondary, primary) {
+			secondary = secondary || {};
+			primary = primary || {};
+			var result = {};
+			var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
+			for (var key in keys) {
+				if (Types.is_object(primary[key]) && secondary[key])
+					result[key] = this.tree_merge(secondary[key], primary[key]);
+				else
+					result[key] = key in primary ? primary[key] : secondary[key];
+			}
 			return result;
 		}
 
