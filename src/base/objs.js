@@ -508,6 +508,15 @@ Scoped.define("module:Objs", [
 			return result;
 		},
 
+		/**
+		 * Filters all values of an object or array.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f filter function
+		 * @param {object} context filter function context
+		 * 
+		 * @return object or array with filtered items
+		 */
 		filter: function (obj, f, context) {
 			f = f || function (x) { return !!x; };
 			if (Types.is_array(obj))
@@ -520,6 +529,15 @@ Scoped.define("module:Objs", [
 			return ret;
 		},
 
+		/**
+		 * Tests two objects for deep equality up to a certain depth.
+		 * 
+		 * @param {object} obj1 first object
+		 * @param {object} obj2 second object
+		 * @param {int} depth depth until deep comparison should be done
+		 * 
+		 * @return {boolean} true if both objects are equal 
+		 */
 		equals: function (obj1, obj2, depth) {
 			var key = null;
 			if (depth && depth > 0) {
@@ -536,6 +554,15 @@ Scoped.define("module:Objs", [
 				return obj1 == obj2;
 		},
 
+		/**
+		 * Converts an array into object using the array values as keys.
+		 * 
+		 * @param {array} arr array to be converted
+		 * @param f a function mapping the value of an array to a value of the object, or a constant value, or undefined (then true is used)
+		 * @param {object} context optional function context
+		 * 
+		 * @return {object} converted object
+		 */
 		objectify: function (arr, f, context) {
 			var result = {};
 			var is_function = Types.is_function(f);
@@ -546,6 +573,11 @@ Scoped.define("module:Objs", [
 				return result;
 		},
 
+		/**
+		 * Creates an object by pairing up the arguments to key value pairs.
+		 * 
+		 * @return {object} created object
+		 */
 		objectBy: function () {
 			var obj = {};
 			var count = arguments.length / 2;
