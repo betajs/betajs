@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.73 - 2016-08-17
+betajs - v1.0.74 - 2016-08-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "537.1471468363556"
+    "version": "540.1472329858852"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2346,6 +2346,148 @@ Scoped.define("module:Objs", [
 			return false;
 		},
 
+		/**
+		 * Maps an array of object, mapping values using a function.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f function for mapping values
+		 * @param {object} context function context
+		 * 
+		 * @return object or array with mapped values
+		 * 
+		 */
+		map: function (obj, f, context) {
+			var result = null;
+			if (Types.is_array(obj)) {
+				result = [];
+				for (var i = 0; i < obj.length; ++i)
+					result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
+				return result;
+			} else {
+				result = {};
+				for (var key in obj)
+					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+				return result;
+			}
+		},
+
+		/**
+		 * Maps the keys of an object using a function.
+		 * 
+		 * @param {object} obj object
+		 * @param {function} f function for mapping keys
+		 * @param {object} context function context
+		 * 
+		 * @return {object} object with mapped keys
+		 */
+		keyMap: function (obj, f, context) {
+			result = {};
+			for (var key in obj)
+				result[f.call(context || this, obj[key], key)] = obj[key];
+			return result;
+		},
+
+		/**
+		 * Returns all values of an object as an array.
+		 * 
+		 * @param {object} obj object
+		 * 
+		 * @return {array} values of object as array
+		 */
+		values: function (obj) {
+			var result = [];
+			for (var key in obj)
+				result.push(obj[key]);
+			return result;
+		},
+
+		/**
+		 * Filters all values of an object or array.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f filter function
+		 * @param {object} context filter function context
+		 * 
+		 * @return object or array with filtered items
+		 */
+		filter: function (obj, f, context) {
+			f = f || function (x) { return !!x; };
+			if (Types.is_array(obj))
+				return obj.filter(f, context);
+			var ret = {};
+			for (var key in obj) {
+				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
+					ret[key] = obj[key];
+			}
+			return ret;
+		},
+
+		/**
+		 * Tests two objects for deep equality up to a certain depth.
+		 * 
+		 * @param {object} obj1 first object
+		 * @param {object} obj2 second object
+		 * @param {int} depth depth until deep comparison should be done
+		 * 
+		 * @return {boolean} true if both objects are equal 
+		 */
+		equals: function (obj1, obj2, depth) {
+			var key = null;
+			if (depth && depth > 0) {
+				for (key in obj1) {
+					if (!(key in obj2) || !this.equals(obj1[key], obj2[key], depth-1))
+						return false;
+				}
+				for (key in obj2) {
+					if (!(key in obj1))
+						return false;
+				}
+				return true;
+			} else
+				return obj1 == obj2;
+		},
+
+		/**
+		 * Converts an array into object using the array values as keys.
+		 * 
+		 * @param {array} arr array to be converted
+		 * @param f a function mapping the value of an array to a value of the object, or a constant value, or undefined (then true is used)
+		 * @param {object} context optional function context
+		 * 
+		 * @return {object} converted object
+		 */
+		objectify: function (arr, f, context) {
+			var result = {};
+			var is_function = Types.is_function(f);
+			if (Types.is_undefined(f))
+				f = true;
+			for (var i = 0; i < arr.length; ++i)
+				result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
+				return result;
+		},
+
+		/**
+		 * Creates an object by pairing up the arguments to key value pairs.
+		 * 
+		 * @return {object} created object
+		 */
+		objectBy: function () {
+			var obj = {};
+			var count = arguments.length / 2;
+			for (var i = 0; i < count; ++i)
+				obj[arguments[2 * i]] = arguments[2 * i + 1];
+			return obj;
+		},
+
+		specialize: function (ordinary, concrete, keys) {
+			var result = {};
+			var iterateOver = keys ? ordinary : concrete;
+			for (var key in iterateOver)
+				if (!(key in ordinary) || ordinary[key] != concrete[key])
+					result[key] = concrete[key];
+			return result;
+		},
+		
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -2380,90 +2522,6 @@ Scoped.define("module:Objs", [
 				else
 					result[key] = key in primary ? primary[key] : secondary[key];
 			}
-			return result;
-		},
-
-		map: function (obj, f, context) {
-			var result = null;
-			if (Types.is_array(obj)) {
-				result = [];
-				for (var i = 0; i < obj.length; ++i)
-					result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
-				return result;
-			} else {
-				result = {};
-				for (var key in obj)
-					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-				return result;
-			}
-		},
-
-		keyMap: function (obj, f, context) {
-			result = {};
-			for (var key in obj)
-				result[f.call(context || this, obj[key], key)] = obj[key];
-			return result;
-		},
-
-		values: function (obj) {
-			var result = [];
-			for (var key in obj)
-				result.push(obj[key]);
-			return result;
-		},
-
-		filter: function (obj, f, context) {
-			f = f || function (x) { return !!x; };
-			if (Types.is_array(obj))
-				return obj.filter(f, context);
-			var ret = {};
-			for (var key in obj) {
-				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
-					ret[key] = obj[key];
-			}
-			return ret;
-		},
-
-		equals: function (obj1, obj2, depth) {
-			var key = null;
-			if (depth && depth > 0) {
-				for (key in obj1) {
-					if (!(key in obj2) || !this.equals(obj1[key], obj2[key], depth-1))
-						return false;
-				}
-				for (key in obj2) {
-					if (!(key in obj1))
-						return false;
-				}
-				return true;
-			} else
-				return obj1 == obj2;
-		},
-
-		objectify: function (arr, f, context) {
-			var result = {};
-			var is_function = Types.is_function(f);
-			if (Types.is_undefined(f))
-				f = true;
-			for (var i = 0; i < arr.length; ++i)
-				result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
-				return result;
-		},
-
-		objectBy: function () {
-			var obj = {};
-			var count = arguments.length / 2;
-			for (var i = 0; i < count; ++i)
-				obj[arguments[2 * i]] = arguments[2 * i + 1];
-			return obj;
-		},
-
-		specialize: function (ordinary, concrete, keys) {
-			var result = {};
-			var iterateOver = keys ? ordinary : concrete;
-			for (var key in iterateOver)
-				if (!(key in ordinary) || ordinary[key] != concrete[key])
-					result[key] = concrete[key];
 			return result;
 		}
 
@@ -5105,6 +5163,21 @@ Scoped.define("module:Types", function () {
 			if (type == "object")
 				return JSON.parse(x);
 			return x;
+		},
+		
+		/**
+		 * Parses an object with given types.
+		 * 
+		 * @param {object} data object with key value pairs
+		 * @param {object} types object mapping keys to types
+		 * 
+		 * @return {object} object with properly parsed types
+		 */
+		parseTypes: function (data, types) {
+			var result = {};
+			for (var key in data)
+				result[key] = key in types ? this.parseType(data[key], types[key]) : data[key];
+			return result;
 		},
 		
 		/**
