@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.74 - 2016-08-27
+betajs - v1.0.75 - 2016-08-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.74 - 2016-08-27
+betajs - v1.0.75 - 2016-08-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "540.1472329858852"
+    "version": "541.1472579428804"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3189,6 +3189,15 @@ Scoped.define("module:Objs", [
 			return obj;
 		},
 
+		/**
+		 * Extracts all key-value pairs from an object instance not matching default key-value pairs in another instance.
+		 * 
+		 * @param {object} ordinary object with default key-value pairs
+		 * @param {object} concrete object with a concrete list of key-value pairs
+		 * @param {boolean} keys if true, iterating over the ordinary keys, otherwise iterating over the conrete keys (default)
+		 * 
+		 * @return {object} specialized key-value pairs
+		 */
 		specialize: function (ordinary, concrete, keys) {
 			var result = {};
 			var iterateOver = keys ? ordinary : concrete;
@@ -3198,6 +3207,15 @@ Scoped.define("module:Objs", [
 			return result;
 		},
 		
+		/**
+		 * Merges to objects.
+		 * 
+		 * @param {object} secondary Secondary object
+		 * @param {object} primary Primary object
+		 * @param {object} options Key-based options for merging
+		 * 
+		 * @return {object} Merged object
+		 */
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -3221,6 +3239,14 @@ Scoped.define("module:Objs", [
 			return result;
 		},
 
+		/**
+		 * Recursively merges one object into another without modifying the source objects.
+		 * 
+		 * @param {object} secondary Object to be merged into.
+		 * @param {object} primary Object to be merged in
+		 * 
+		 * @return {object} Recurisvely merged object
+		 */
 		tree_merge: function (secondary, primary) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -9183,8 +9209,20 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
 	});		
 });
 
-Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", "module:Iterators.ArrayIterator"], function (Types, Iterator, ArrayIterator) {
+Scoped.extend("module:Iterators", [
+    "module:Types",
+    "module:Iterators.Iterator",
+    "module:Iterators.ArrayIterator"
+], function (Types, Iterator, ArrayIterator) {
 	return {
+	
+		/**
+		 * Ensure that something is an iterator and if it is not and iterator is created from the data.
+		 * 
+		 * @param mixed mixed type variable
+		 * 
+		 * @return {object} iterator
+		 */
 		ensure: function (mixed) {
 			if (mixed === null)
 				return new ArrayIterator([]);
@@ -9193,7 +9231,8 @@ Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", 
 			if (Types.is_array(mixed))
 				return new ArrayIterator(mixed);
 			return new ArrayIterator([mixed]);
-		}		
+		}
+	
 	};
 });
 
@@ -9204,57 +9243,93 @@ Scoped.define("module:Iterators.Iterator", [
     "module:Async",
     "module:Promise"
 ], function (Class, Functions, Async, Promise, scoped) {
-	return Class.extend({scoped: scoped}, {
+	return Class.extend({scoped: scoped}, function (inherited) {
 		
-		hasNext: function () {
-			return false;
-		},
-		
-		next: function () {
-			return null;
-		},
-		
-		nextOrNull: function () {
-			return this.hasNext() ? this.next() : null;
-		},
+		/**
+		 * Abstract Iterator Class
+		 * 
+		 * @class BetaJS.Iterators.Iterator
+		 */
+		return {
 
-		asArray: function () {
-			var arr = [];
-			while (this.hasNext())
-				arr.push(this.next());
-			return arr;
-		},
+			/**
+			 * Determines whether there are more elements in the iterator.
+			 * Should be overwritten by subclass.
+			 * 
+			 * @return {boolean} true if more elements present
+			 */
+			hasNext: function () {
+				return false;
+			},
+			
+			/**
+			 * Returns the next element in the iterator.
+			 * Should be overwritten by subclass.
+			 * 
+			 * @return next element in iterator
+			 */
+			next: function () {
+				return null;
+			},
+			
+			/**
+			 * Returns the next element if present or null otherwise.
+			 * 
+			 * @return next element in iterator or null
+			 */
+			nextOrNull: function () {
+				return this.hasNext() ? this.next() : null;
+			},
+	
+			/**
+			 * Materializes the iterator as an array.
+			 * 
+			 * @return {array} array of elements in iterator
+			 */
+			asArray: function () {
+				var arr = [];
+				while (this.hasNext())
+					arr.push(this.next());
+				return arr;
+			},
 
-		asArrayDelegate: function (f) {
-			var arr = [];
-			while (this.hasNext()) {
-				var obj = this.next();			
-				arr.push(obj[f].apply(obj, Functions.getArguments(arguments, 1)));
-			}
-			return arr;
-		},
-
-		iterate: function (cb, ctx) {
-			while (this.hasNext()) {
+			/**
+			 * Iterate over the iterator, calling a callback function for every element.
+			 * 
+			 * @param {function} cb callback function
+			 * @param {object} ctx optional callback context
+			 */
+			iterate: function (cb, ctx) {
+				while (this.hasNext()) {
+					var result = cb.call(ctx || this, this.next());
+					if (result === false)
+						return;
+				}
+			},
+			
+			/**
+			 * Asynchronously iterate over the iterator, calling a callback function for every element.
+			 * 
+			 * @param {function} cb callback function
+			 * @param {object} ctx optional callback context
+			 * @param {int} time optional time between calls
+			 * 
+			 * @return {object} finish promise
+			 */
+			asyncIterate: function (cb, ctx, time) {
+				if (!this.hasNext())
+					return Promise.value(true);
 				var result = cb.call(ctx || this, this.next());
 				if (result === false)
-					return;
+					return Promise.value(true);
+				var promise = Promise.create();
+				Async.eventually(function () {
+					this.asyncIterate(cb, ctx, time).forwardCallback(promise);
+				}, this, time);
+				return promise;
 			}
-		},
-		
-		asyncIterate: function (cb, ctx, time) {
-			if (!this.hasNext())
-				return Promise.value(true);
-			var result = cb.call(ctx || this, this.next());
-			if (result === false)
-				return Promise.value(true);
-			var promise = Promise.create();
-			Async.eventually(function () {
-				this.asyncIterate(cb, ctx, time).forwardCallback(promise);
-			}, this, time);
-			return promise;
-		}
 
+		};
 	});
 });
 
@@ -10227,6 +10302,20 @@ Scoped.define("module:Scheduling.SchedulableMixin", [], function () {
 				this.scheduler.schedulable(this, callback, initialSteps);
 			else 
 				callback.call(this, Infinity);
+		}
+				
+	};	
+});
+
+
+Scoped.define("module:Scheduling.Helper", [], function () {
+	return {
+		
+		schedulable: function (callback, initialSteps, scheduler, context) {
+			if (scheduler)
+				scheduler.schedulable(context || this, callback, initialSteps);
+			else 
+				callback.call(context || this, Infinity);
 		}
 				
 	};	

@@ -12,6 +12,20 @@ Scoped.define("module:Scheduling.SchedulableMixin", [], function () {
 });
 
 
+Scoped.define("module:Scheduling.Helper", [], function () {
+	return {
+		
+		schedulable: function (callback, initialSteps, scheduler, context) {
+			if (scheduler)
+				scheduler.schedulable(context || this, callback, initialSteps);
+			else 
+				callback.call(context || this, Infinity);
+		}
+				
+	};	
+});
+
+
 Scoped.define("module:Scheduling.AbstractScheduler", [
     "module:Class"
 ], function (Class, scoped) {

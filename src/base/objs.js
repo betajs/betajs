@@ -586,6 +586,15 @@ Scoped.define("module:Objs", [
 			return obj;
 		},
 
+		/**
+		 * Extracts all key-value pairs from an object instance not matching default key-value pairs in another instance.
+		 * 
+		 * @param {object} ordinary object with default key-value pairs
+		 * @param {object} concrete object with a concrete list of key-value pairs
+		 * @param {boolean} keys if true, iterating over the ordinary keys, otherwise iterating over the conrete keys (default)
+		 * 
+		 * @return {object} specialized key-value pairs
+		 */
 		specialize: function (ordinary, concrete, keys) {
 			var result = {};
 			var iterateOver = keys ? ordinary : concrete;
@@ -595,6 +604,15 @@ Scoped.define("module:Objs", [
 			return result;
 		},
 		
+		/**
+		 * Merges to objects.
+		 * 
+		 * @param {object} secondary Secondary object
+		 * @param {object} primary Primary object
+		 * @param {object} options Key-based options for merging
+		 * 
+		 * @return {object} Merged object
+		 */
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -618,6 +636,14 @@ Scoped.define("module:Objs", [
 			return result;
 		},
 
+		/**
+		 * Recursively merges one object into another without modifying the source objects.
+		 * 
+		 * @param {object} secondary Object to be merged into.
+		 * @param {object} primary Object to be merged in
+		 * 
+		 * @return {object} Recurisvely merged object
+		 */
 		tree_merge: function (secondary, primary) {
 			secondary = secondary || {};
 			primary = primary || {};
