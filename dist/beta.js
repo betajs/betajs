@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.75 - 2016-08-30
+betajs - v1.0.76 - 2016-08-31
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.75 - 2016-08-30
+betajs - v1.0.76 - 2016-08-31
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,12 +720,279 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "541.1472579428804"
+    "version": "542.1472655572997"
 };
 });
 Scoped.require(['module:'], function (mod) {
 	this.exports(typeof module != 'undefined' ? module : null, mod);
 }, this);
+Scoped.define("module:Ajax.Support", [
+    "module:Ajax.NoCandidateAjaxException",
+    "module:Ajax.ReturnDataParseException",
+    "module:Promise",
+    "module:Objs",
+    "module:Net.Uri"
+], function (NoCandidateAjaxException, ReturnDataParseException, Promise, Objs, Uri) {
+	return {
+		
+		__registry: [],
+		
+		register: function (descriptor, priority) {
+			this.__registry.push({
+				descriptor: descriptor,
+				priority: priority
+			});
+		},
+		
+		parseReturnData: function (data, decodeType) {
+			if (decodeType === "json")
+				return JSON.parse(data);
+			return data;
+		},
+		
+		promiseReturnData: function (promise, data, decodeType) {
+			try {
+				promise.asyncSuccess(this.parseReturnData(data, decodeType));
+			} catch (e) {
+				promise.asyncError(new ReturnDataParseException(data, decodeType));
+			}
+		},
+		
+		preprocess: function (options) {
+			options = Objs.extend({
+				method: "GET",
+				mapMethodsKey: "_method",
+				context: this,
+				jsonpParam: undefined,
+				forceJsonp: false,
+				decodeType: "json"
+			}, options);
+			options.method = options.method.toUpperCase();
+			if (options.baseUri)
+				options.uri = options.uri ? options.baseUri + options.uri : options.baseUri;
+			delete options.baseUri;
+			if (options.mapMethods && options.method in options.mapMethods)
+				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.mapMethodsKey, options.mapMethods[options.method]));
+			delete options.mapMethods;
+			delete options.mapMethodsKey;
+			return options;
+		},
+		
+		execute: function (options) {
+			options = this.preprocess(options);
+			var current = null;		
+			this.__registry.forEach(function (candidate) {
+				if ((!current || current.priority < candidate.priority) && candidate.descriptor.supports.call(candidate.descriptor.context || candidate.descriptor, options))
+					current = candidate;
+			}, this);
+			return current ? current.descriptor.execute.call(current.descriptor.context || current.descriptor, options) : Promise.error(new NoCandidateAjaxException(options));
+		}
+
+	};
+});
+
+
+Scoped.define("module:Ajax.AjaxWrapper", [
+    "module:Class",
+    "module:Objs",
+    "module:Ajax.Support"
+], function (Class, Objs, Support, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+		
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				this._options = options;
+			},
+			
+			execute: function (options) {
+				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options));
+			}
+			
+		};
+	});
+});
+
+
+Scoped.define("module:Net.AjaxException", [
+    "module:Exceptions.Exception",
+    "module:Objs"
+], function (Exception, Objs, scoped) {
+	return Exception.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Ajax Exception Class
+		 * 
+		 * @class BetaJS.Net.AjaxException
+		 */
+		return {
+
+			/**
+			 * Instantiates an Ajax Exception
+			 * 
+			 * @param status_code Status Code
+			 * @param {string} status_text Status Text
+			 * @param data Custom Exception Data
+			 */
+			constructor: function (status_code, status_text, data) {
+				inherited.constructor.call(this, status_code + ": " + status_text);
+				this.__status_code = status_code;
+				this.__status_text = status_text;
+				this.__data = data;
+			},
+
+			/**
+			 * Returns the status code associated with the exception
+			 * 
+			 * @return status code
+			 */
+			status_code: function () {
+				return this.__status_code;
+			},
+
+			/**
+			 * Returns the status text associated with the exception
+			 * 
+			 * @return {string} status text
+			 */
+			status_text: function () {
+				return this.__status_text;
+			},
+
+			/**
+			 * Returns the custom data associated with the exception 
+			 * 
+			 * @return custom data
+			 */
+			data: function () {
+				return this.__data;
+			},
+
+			/**
+			 * Returns a JSON representation of the exception
+			 * 
+			 * @return {object} Exception JSON representation
+			 */
+			json: function () {
+				return Objs.extend({
+					data: this.data(),
+					status_code: this.status_code(),
+					status_text: this.status_text()
+				}, inherited.json.call(this));
+			}
+			
+		};
+	});
+});
+
+
+
+Scoped.define("module:Net.Ajax", [
+    "module:Classes.ConditionalInstance",
+    "module:Objs",
+    "module:Net.Uri"
+], function (ConditionalInstance, Objs, Uri, scoped) {
+	return ConditionalInstance.extend({ scoped : scoped },
+		
+		/**
+		 * Abstract Ajax Class, child classes override this for concrete realizations of Ajax
+		 * 
+		 * @class BetaJS.Net.Ajax
+		 */
+		{
+
+		/**
+		 * Execute asynchronous ajax call
+		 * 
+		 * @param {object} options Ajax Call Options
+		 * @return {object} Success promise
+		 */
+		asyncCall : function(options) {
+			if (this._shouldMap (options))
+				options = this._mapToPost(options);
+			return this._asyncCall(Objs.extend(Objs.clone(this._options, 1), options));
+		},
+
+		/**
+		 * Abstract Call for executing Ajax.
+		 * 
+		 * @param {object} options Ajax Call Options
+		 * @return {object} Success promise
+		 */
+		_asyncCall : function(options) {
+			throw "Abstract";
+		},
+
+		/**
+		 * Check if should even attempt a mapping. Important to not assume
+		 * that the method option is always specified.
+		 * 
+		 * @param {object} options Ajax Call Options
+		 * @return {boolean} true if it should be mapped
+		 */
+		_shouldMap : function (options) {
+			return (this._options.mapPutToPost && options.method && options.method.toLowerCase() === "put") ||
+			       (this._options.mapDestroyToPost && options.method && options.method.toLowerCase() === "destroy");
+		},
+
+		/**
+		 * Some implementations do not supporting sending data with
+		 * the non-standard request. This fix converts the Request to use POST, so
+		 * the data is sent, but the server still thinks it is receiving a
+		 * non-standard request.
+		 * 
+		 * @param {object} options Ajax Call Options
+		 * @return {object} Updated options
+		 */
+		_mapToPost : function (options) {
+			options.uri = Uri.appendUriParams(options.uri, {
+				_method : options.method.toUpperCase()
+			});
+			options.method = "POST";
+			return options;
+		}
+	}, {
+		
+		_initializeOptions: function (options) {
+			return Objs.extend({
+				"method" : "GET",
+				"data" : {}
+			}, options);
+		}
+		
+	});
+});
+
+Scoped.define("module:Ajax.AjaxException", [
+    "module:Exceptions.Exception"
+], function (Exception, scoped) {
+	return Exception.extend({scoped: scoped});
+});
+
+
+Scoped.define("module:Ajax.NoCandidateAjaxException", [
+	"module:Ajax.AjaxException"
+], function (Exception, scoped) {
+	return Exception.extend({scoped: scoped});
+});
+
+
+Scoped.define("module:Ajax.ReturnDataParseException", [
+	"module:Ajax.AjaxException"
+], function (Exception, scoped) {
+   	return Exception.extend({scoped: scoped}, function (inherited) {
+   		return {
+   			
+   			constructor: function (data, decodeType) {
+   				inherited.constructor.call(this, "Could not decode data with type " + decodeType);
+   				this.__decodeType = decodeType;
+   				this.__data = data;
+   			}
+   			
+   		};
+   	});
+});
+
 Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions", "module:Ids"], function (Types, Objs, Functions, Ids) {
 	var Class = function () {};
 
@@ -2148,52 +2415,114 @@ Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
 	};
 
 });
-Scoped.define("module:KeyValue.KeyValueStore", ["module:Class", "module:Events.EventsMixin"], function (Class, EventsMixin, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, {
+Scoped.define("module:KeyValue.KeyValueStore", [
+    "module:Class",
+    "module:Events.EventsMixin"
+], function (Class, EventsMixin, scoped) {
+	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		
+		/**
+		 * Abstract Key Value Store
+		 * 
+		 * @class BetaJS.KeyValue.KeyValueStore
+		 */
+		return {
+			
+			/**
+			 * Determines whether a key exists in the store.
+			 * 
+			 * @param {string} key key to check
+			 * 
+			 * @return {boolean} true if key exists
+			 */
+			mem: function (key) {
+				return this._mem(key);
+			},
+			
+			/**
+			 * Returns the value for a key in the store.
+			 * 
+			 * @param {string} key key to get the value for
+			 * 
+			 * @return value of key
+			 */
+			get: function (key) {
+				return this._get(key);
+			},
+			
+			/**
+			 * Sets the value of a key in the store.
+			 * 
+			 * @param {string} key key to set the value for
+			 * @param value new value for key
+			 */
+			set: function (key, value) {
+				this._set(key, value);
+				this.trigger("change:" + key, value);
+			},
+			
+			/**
+			 * Removes a key from the store
+			 * 
+			 * @param {string} key key to be removed
+			 */
+			remove: function (key) {
+				this._remove(key);
+			}
 
-		mem: function (key) {
-			return this._mem(key);
-		},
-		
-		get: function (key) {
-			return this._get(key);
-		},
-		
-		set: function (key, value) {
-			this._set(key, value);
-			this.trigger("change:" + key, value);
-		},
-		
-		remove: function (key) {
-			this._remove(key);
-		}
-	
+		};
 	}]);
 });
 
 
-Scoped.define("module:KeyValue.PrefixKeyValueStore", ["module:KeyValue.KeyValueStore"], function (KeyValueStore, scoped) {
+Scoped.define("module:KeyValue.PrefixKeyValueStore", [
+    "module:KeyValue.KeyValueStore"
+], function (KeyValueStore, scoped) {
 	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * A delegated Key-Value-Store by automatically prefixing keys.
+		 * 
+		 * @class BetaJS.KeyValue.PrefixKeyValueStore
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} kv Underlying Key-Value store
+			 * @param {string} prefix prefix string to be used for all keys
+			 */
 			constructor: function (kv, prefix) {
 				inherited.constructor.call(this);
 				this.__kv = kv;
 				this.__prefix = prefix;
 			},
 			
+			/**
+			 * @override
+			 */
 			_mem: function (key) {
 				return this.__kv.mem(this.__prefix + key);
 			},
 			
+			/**
+			 * @override
+			 */
 			_get: function (key) {
 				return this.__kv.get(this.__prefix + key);
 			},
 			
+			/**
+			 * @override
+			 */
 			_set: function (key, value) {
 				this.__kv.set(this.__prefix + key, value);
 			},
 			
+			/**
+			 * @override
+			 */
 			_remove: function (key) {
 				this.__kv.remove(this.__prefix + key);
 			}
@@ -2203,27 +2532,54 @@ Scoped.define("module:KeyValue.PrefixKeyValueStore", ["module:KeyValue.KeyValueS
 });
 
 
-Scoped.define("module:KeyValue.MemoryKeyValueStore", ["module:KeyValue.KeyValueStore", "module:Objs"], function (KeyValueStore, Objs, scoped) {
+Scoped.define("module:KeyValue.MemoryKeyValueStore", [
+	"module:KeyValue.KeyValueStore",
+	"module:Objs"
+], function (KeyValueStore, Objs, scoped) {
 	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * A Memory-based Key-Value-Store.
+		 * 
+		 * @class BetaJS.KeyValue.MemoryKeyValueStore
+		 */
 		return {
 	
+			/**
+			 * Creates a new Memory KV-Store
+			 * 
+			 * @param {object} data Initial data object
+			 * @param {boolean} clone Should the initial data object be cloned or used directly (default: false)
+			 */
 			constructor: function (data, clone) {
 				inherited.constructor.call(this);
 				this.__data = Objs.clone(data, clone ? 1 : 0);
 			},
 			
+			/**
+			 * @override
+			 */
 			_mem: function (key) {
 				return key in this.__data;
 			},
 			
+			/**
+			 * @override
+			 */
 			_get: function (key) {
 				return this.__data[key];
 			},
 			
+			/**
+			 * @override
+			 */
 			_set: function (key, value) {
 				this.__data[key] = value;
 			},
 			
+			/**
+			 * @override
+			 */
 			_remove: function (key) {
 				delete this.__data[key];
 			}
@@ -2233,28 +2589,54 @@ Scoped.define("module:KeyValue.MemoryKeyValueStore", ["module:KeyValue.KeyValueS
 });
 
 
-Scoped.define("module:KeyValue.DefaultKeyValueStore", ["module:KeyValue.KeyValueStore"], function (KeyValueStore, scoped) {
+Scoped.define("module:KeyValue.DefaultKeyValueStore", [
+    "module:KeyValue.KeyValueStore"
+], function (KeyValueStore, scoped) {
 	return KeyValueStore.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * A delegated KV-Store falling back to a default KV-Store if a key is not defined.
+		 * 
+		 * @class BetaJS.KeyValue.DefaultKeyValueStore
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} kv The main underlying key value store
+			 * @param {object} def The default key value store that we fallback to if a key is not defined in the main key value store
+			 */
 			constructor: function (kv, def) {
 				inherited.constructor.call(this);
 				this.__kv = kv;
 				this.__def = def;
 			},
 			
+			/**
+			 * @override
+			 */
 			_mem: function (key) {
 				return this.__kv.mem(key) || this.__def.mem(key);
 			},
 			
+			/**
+			 * @override
+			 */
 			_get: function (key) {
 				return this.__kv.mem(key) ? this.__kv.get(key) : this.__def.get(key);
 			},
 			
+			/**
+			 * @override
+			 */
 			_set: function (key, value) {
 				this.__kv.set(key, value);
 			},
 			
+			/**
+			 * @override
+			 */
 			_remove: function (key) {
 				this.__kv.remove(key);
 			}
@@ -9330,155 +9712,6 @@ Scoped.define("module:Iterators.Iterator", [
 			}
 
 		};
-	});
-});
-
-Scoped.define("module:Net.AjaxException", [
-    "module:Exceptions.Exception",
-    "module:Objs"
-], function (Exception, Objs, scoped) {
-	return Exception.extend({scoped: scoped}, function (inherited) {
-		
-		/**
-		 * Ajax Exception Class
-		 * 
-		 * @class BetaJS.Net.AjaxException
-		 */
-		return {
-
-			/**
-			 * Instantiates an Ajax Exception
-			 * 
-			 * @param status_code Status Code
-			 * @param {string} status_text Status Text
-			 * @param data Custom Exception Data
-			 */
-			constructor: function (status_code, status_text, data) {
-				inherited.constructor.call(this, status_code + ": " + status_text);
-				this.__status_code = status_code;
-				this.__status_text = status_text;
-				this.__data = data;
-			},
-
-			/**
-			 * Returns the status code associated with the exception
-			 * 
-			 * @return status code
-			 */
-			status_code: function () {
-				return this.__status_code;
-			},
-
-			/**
-			 * Returns the status text associated with the exception
-			 * 
-			 * @return {string} status text
-			 */
-			status_text: function () {
-				return this.__status_text;
-			},
-
-			/**
-			 * Returns the custom data associated with the exception 
-			 * 
-			 * @return custom data
-			 */
-			data: function () {
-				return this.__data;
-			},
-
-			/**
-			 * Returns a JSON representation of the exception
-			 * 
-			 * @return {object} Exception JSON representation
-			 */
-			json: function () {
-				return Objs.extend({
-					data: this.data(),
-					status_code: this.status_code(),
-					status_text: this.status_text()
-				}, inherited.json.call(this));
-			}
-			
-		};
-	});
-});
-
-
-
-Scoped.define("module:Net.Ajax", [
-    "module:Classes.ConditionalInstance",
-    "module:Objs",
-    "module:Net.Uri"
-], function (ConditionalInstance, Objs, Uri, scoped) {
-	return ConditionalInstance.extend({ scoped : scoped },
-		
-		/**
-		 * Abstract Ajax Class, child classes override this for concrete realizations of Ajax
-		 * 
-		 * @class BetaJS.Net.Ajax
-		 */
-		{
-
-		/**
-		 * Execute asynchronous ajax call
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {object} Success promise
-		 */
-		asyncCall : function(options) {
-			if (this._shouldMap (options))
-				options = this._mapToPost(options);
-			return this._asyncCall(Objs.extend(Objs.clone(this._options, 1), options));
-		},
-
-		/**
-		 * Abstract Call for executing Ajax.
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {object} Success promise
-		 */
-		_asyncCall : function(options) {
-			throw "Abstract";
-		},
-
-		/**
-		 * Check if should even attempt a mapping. Important to not assume
-		 * that the method option is always specified.
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {boolean} true if it should be mapped
-		 */
-		_shouldMap : function (options) {
-			return (this._options.mapPutToPost && options.method && options.method.toLowerCase() === "put") ||
-			       (this._options.mapDestroyToPost && options.method && options.method.toLowerCase() === "destroy");
-		},
-
-		/**
-		 * Some implementations do not supporting sending data with
-		 * the non-standard request. This fix converts the Request to use POST, so
-		 * the data is sent, but the server still thinks it is receiving a
-		 * non-standard request.
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {object} Updated options
-		 */
-		_mapToPost : function (options) {
-			options.uri = Uri.appendUriParams(options.uri, {
-				_method : options.method.toUpperCase()
-			});
-			options.method = "POST";
-			return options;
-		}
-	}, {
-		
-		_initializeOptions: function (options) {
-			return Objs.extend({
-				"method" : "GET",
-				"data" : {}
-			}, options);
-		}
-		
 	});
 });
 
