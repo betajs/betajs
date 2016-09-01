@@ -1,10 +1,12 @@
 Scoped.define("module:Ajax.Support", [
     "module:Ajax.NoCandidateAjaxException",
     "module:Ajax.ReturnDataParseException",
+    "module:Ajax.RequestException",
     "module:Promise",
     "module:Objs",
-    "module:Net.Uri"
-], function (NoCandidateAjaxException, ReturnDataParseException, Promise, Objs, Uri) {
+    "module:Net.Uri",
+    "module:Net.HttpHeader"
+], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Uri, HttpHeader) {
 	return {
 		
 		__registry: [],
@@ -30,21 +32,34 @@ Scoped.define("module:Ajax.Support", [
 			}
 		},
 		
+		promiseRequestException: function (promise, status, status_text, data, decodeType) {
+			status_text = status_text || HttpHeader.format(status);
+			try {
+				promise.asyncError(new RequestException(status, status_text, this.parseReturnData(data, decodeType)));
+			} catch (e) {
+				promise.asyncError(new RequestException(status, status_text, data));
+			}
+		},
+		
 		preprocess: function (options) {
 			options = Objs.extend({
 				method: "GET",
 				mapMethodsKey: "_method",
 				context: this,
 				jsonpParam: undefined,
-				forceJsonp: false,
-				decodeType: "json"
+				cors: false,
+				corscreds: false,
+				forceJsonp: false/*,
+				decodeType: "json"*/
 			}, options);
 			options.method = options.method.toUpperCase();
 			if (options.baseUri)
 				options.uri = options.uri ? options.baseUri + options.uri : options.baseUri;
 			delete options.baseUri;
-			if (options.mapMethods && options.method in options.mapMethods)
-				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.mapMethodsKey, options.mapMethods[options.method]));
+			if (options.mapMethods && options.method in options.mapMethods) {
+				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.mapMethodsKey, options.method));
+				options.method = options.mapMethods[options.method];
+			}
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
 			return options;

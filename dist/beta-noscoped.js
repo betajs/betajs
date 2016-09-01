@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.76 - 2016-08-31
+betajs - v1.0.77 - 2016-09-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "542.1472655572997"
+    "version": "543.1472746573266"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -19,10 +19,12 @@ Scoped.require(['module:'], function (mod) {
 Scoped.define("module:Ajax.Support", [
     "module:Ajax.NoCandidateAjaxException",
     "module:Ajax.ReturnDataParseException",
+    "module:Ajax.RequestException",
     "module:Promise",
     "module:Objs",
-    "module:Net.Uri"
-], function (NoCandidateAjaxException, ReturnDataParseException, Promise, Objs, Uri) {
+    "module:Net.Uri",
+    "module:Net.HttpHeader"
+], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Uri, HttpHeader) {
 	return {
 		
 		__registry: [],
@@ -48,21 +50,34 @@ Scoped.define("module:Ajax.Support", [
 			}
 		},
 		
+		promiseRequestException: function (promise, status, status_text, data, decodeType) {
+			status_text = status_text || HttpHeader.format(status);
+			try {
+				promise.asyncError(new RequestException(status, status_text, this.parseReturnData(data, decodeType)));
+			} catch (e) {
+				promise.asyncError(new RequestException(status, status_text, data));
+			}
+		},
+		
 		preprocess: function (options) {
 			options = Objs.extend({
 				method: "GET",
 				mapMethodsKey: "_method",
 				context: this,
 				jsonpParam: undefined,
-				forceJsonp: false,
-				decodeType: "json"
+				cors: false,
+				corscreds: false,
+				forceJsonp: false/*,
+				decodeType: "json"*/
 			}, options);
 			options.method = options.method.toUpperCase();
 			if (options.baseUri)
 				options.uri = options.uri ? options.baseUri + options.uri : options.baseUri;
 			delete options.baseUri;
-			if (options.mapMethods && options.method in options.mapMethods)
-				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.mapMethodsKey, options.mapMethods[options.method]));
+			if (options.mapMethods && options.method in options.mapMethods) {
+				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.mapMethodsKey, options.method));
+				options.method = options.mapMethods[options.method];
+			}
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
 			return options;
@@ -280,6 +295,77 @@ Scoped.define("module:Ajax.ReturnDataParseException", [
    			}
    			
    		};
+   	});
+});
+
+
+Scoped.define("module:Ajax.RequestException", [
+	"module:Ajax.AjaxException"
+], function (Exception, scoped) {
+   	return Exception.extend({scoped: scoped}, function (inherited) {
+		   		
+		/**
+		 * Request Exception Class
+		 * 
+		 * @class BetaJS.Ajax.RequestException
+		 */
+		return {
+		
+			/**
+			 * Instantiates a Ajax Request Exception
+			 * 
+			 * @param status_code Status Code
+			 * @param {string} status_text Status Text
+			 * @param data Custom Exception Data
+			 */
+			constructor: function (status_code, status_text, data) {
+				inherited.constructor.call(this, status_code + ": " + status_text);
+				this.__status_code = status_code;
+				this.__status_text = status_text;
+				this.__data = data;
+			},
+		
+			/**
+			 * Returns the status code associated with the exception
+			 * 
+			 * @return status code
+			 */
+			status_code: function () {
+				return this.__status_code;
+			},
+		
+			/**
+			 * Returns the status text associated with the exception
+			 * 
+			 * @return {string} status text
+			 */
+			status_text: function () {
+				return this.__status_text;
+			},
+		
+			/**
+			 * Returns the custom data associated with the exception 
+			 * 
+			 * @return custom data
+			 */
+			data: function () {
+				return this.__data;
+			},
+		
+			/**
+			 * Returns a JSON representation of the exception
+			 * 
+			 * @return {object} Exception JSON representation
+			 */
+			json: function () {
+				return Objs.extend({
+					data: this.data(),
+					status_code: this.status_code(),
+					status_text: this.status_text()
+				}, inherited.json.call(this));
+			}
+			
+		};
    	});
 });
 
@@ -7580,17 +7666,29 @@ Scoped.define("module:Exceptions.UncaughtErrorCatcher", [
 Scoped.define("module:Exceptions.ExceptionThrower", [
     "module:Class"
 ], function (Class, scoped) {
-	return Class.extend({scoped: scoped}, {
-		
-		throwException: function (e) {
-			this._throwException(e);
-			return this;
-		},
-		
-		_throwException: function (e) {
-			throw e;
-		}
+	return Class.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Abstract Exception Thrower Class
+		 * 
+		 * @class BetaJS.Exceptions.ExceptionThrower
+		 */
+		return {
 			
+			/**
+			 * Throws an exception.
+			 * 
+			 * @param {exception} e exception to be thrown
+			 */
+			throwException: function (e) {
+				this._throwException(e);
+				return this;
+			},
+			
+			_throwException: function (e) {
+				throw e;
+			}
+
+		};
 	});
 });
 
@@ -7598,10 +7696,20 @@ Scoped.define("module:Exceptions.ExceptionThrower", [
 Scoped.define("module:Exceptions.NullExceptionThrower", [
 	"module:Exceptions.ExceptionThrower"
 ], function (ExceptionThrower, scoped) {
-	return ExceptionThrower.extend({scoped: scoped},{
-			
-		_throwException: function (e) {}
+	return ExceptionThrower.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Silentely forgets about the exception.
+		 * 
+		 * @class BetaJS.Exceptions.NullExceptionThrower
+		 */
+		return {
+
+			/**
+			 * @override
+			 */
+			_throwException: function (e) {}
 		
+		};
 	});
 });
 
@@ -7610,14 +7718,24 @@ Scoped.define("module:Exceptions.AsyncExceptionThrower", [
 	"module:Exceptions.ExceptionThrower",
 	"module:Async"
 ], function (ExceptionThrower, Async, scoped) {
-	return ExceptionThrower.extend({scoped: scoped},{
-			
-		_throwException: function (e) {
-			Async.eventually(function () {
-				throw e;
-			});
-		}
+	return ExceptionThrower.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Throws an exception asynchronously.
+		 * 
+		 * @class BetaJS.Exceptions.AsyncExceptionThrower
+		 */
+		return {
+
+			/**
+			 * @override
+			 */
+			_throwException: function (e) {
+				Async.eventually(function () {
+					throw e;
+				});
+			}
 		
+		};
 	});
 });
 
@@ -7626,12 +7744,22 @@ Scoped.define("module:Exceptions.ConsoleExceptionThrower", [
 	"module:Exceptions.ExceptionThrower",
 	"module:Exceptions.NativeException"
 ], function (ExceptionThrower, NativeException, scoped) {
-	return ExceptionThrower.extend({scoped: scoped}, {
+	return ExceptionThrower.extend({scoped: scoped}, function (inherited) {
+		/**
+		 * Throws execption by console-logging it.
+		 * 
+		 * @class BetaJS.Exceptions.ConsoleExceptionThrower
+		 */
+		return {
+
+			/**
+			 * @override
+			 */
+			_throwException: function (e) {
+				console.log("Exception", NativeException.ensure(e).json());
+			}
 		
-		_throwException: function (e) {
-			console.log("Exception", NativeException.ensure(e).json());
-		}
-			
+		};
 	});
 });
 
@@ -7640,12 +7768,22 @@ Scoped.define("module:Exceptions.EventExceptionThrower", [
 	"module:Exceptions.ExceptionThrower",
 	"module:Events.EventsMixin"
 ], function (ExceptionThrower, EventsMixin, scoped) {
-	return ExceptionThrower.extend({scoped: scoped}, [EventsMixin, {
+	return ExceptionThrower.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		/**
+		 * Throws exception by triggering an exception event.
+		 * 
+		 * @class BetaJS.Exceptions.EventExceptionThrower
+		 */
+		return {
 
-		_throwException: function (e) {
-			this.trigger("exception", e);
-		}
-	
+			/**
+			 * @override
+			 */
+			_throwException: function (e) {
+				this.trigger("exception", e);
+			}
+		
+		};
 	}]);
 });
 
