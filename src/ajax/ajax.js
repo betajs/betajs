@@ -4,9 +4,10 @@ Scoped.define("module:Ajax.Support", [
     "module:Ajax.RequestException",
     "module:Promise",
     "module:Objs",
+    "module:Types",
     "module:Net.Uri",
     "module:Net.HttpHeader"
-], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Uri, HttpHeader) {
+], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader) {
 	return {
 		
 		__registry: [],
@@ -19,7 +20,7 @@ Scoped.define("module:Ajax.Support", [
 		},
 		
 		parseReturnData: function (data, decodeType) {
-			if (decodeType === "json")
+			if (decodeType === "json" && Types.is_string(data))
 				return JSON.parse(data);
 			return data;
 		},

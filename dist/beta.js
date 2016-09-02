@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.77 - 2016-09-01
+betajs - v1.0.78 - 2016-09-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.77 - 2016-09-01
+betajs - v1.0.78 - 2016-09-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "543.1472746573266"
+    "version": "544.1472839605511"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -732,9 +732,10 @@ Scoped.define("module:Ajax.Support", [
     "module:Ajax.RequestException",
     "module:Promise",
     "module:Objs",
+    "module:Types",
     "module:Net.Uri",
     "module:Net.HttpHeader"
-], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Uri, HttpHeader) {
+], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader) {
 	return {
 		
 		__registry: [],
@@ -747,7 +748,7 @@ Scoped.define("module:Ajax.Support", [
 		},
 		
 		parseReturnData: function (data, decodeType) {
-			if (decodeType === "json")
+			if (decodeType === "json" && Types.is_string(data))
 				return JSON.parse(data);
 			return data;
 		},
@@ -8322,13 +8323,29 @@ Scoped.define("module:Exceptions.ErrorCatcher", [
     "module:Class"
 ], function (Class, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * ErrorCatcher Object
+		 * 
+		 * @class BetaJS.Exceptions.ErrorCatcher
+		 */
 		return {
 			
+			/**
+			 * Creates an instance.
+			 * 
+			 * @param {object} thrower TODO
+			 */
 			constructor: function (thrower) {
 				inherited.constructor.call(this);
 				this.__thrower = thrower;
 			},
 			
+			/**
+			 * Throws an exception object.
+			 * 
+			 * @param e Exception object
+			 */
 			throwException: function (e) {
 				this.__thrower.throwException(e);
 			}
@@ -8343,8 +8360,19 @@ Scoped.define("module:Exceptions.UncaughtErrorCatcher", [
 	"module:Functions"
 ], function (ErrorCatcher, Functions, scoped) {
 	return ErrorCatcher.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * UncaughtErrorCatcher Object
+		 * 
+		 * @class BetaJS.Exceptions.UncaughtErrorCatcher
+		 */
 		return {
 			
+			/**
+			 * Creates an instance.
+			 * 
+			 * @param {object} thrower Thrower object
+			 */
 			constructor: function (thrower) {
 				inherited.constructor.call(this, thrower);
 				this.__listenerFunction = Functions.as_method(this._listenerFunction, this);
@@ -8356,6 +8384,9 @@ Scoped.define("module:Exceptions.UncaughtErrorCatcher", [
 				} catch (e) {}
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				try {
 					window.removeEventListener("error", this.__listenerFunction);
