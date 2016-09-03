@@ -47,10 +47,13 @@ Scoped.define("module:Ajax.Support", [
 				method: "GET",
 				mapMethodsKey: "_method",
 				context: this,
-				jsonpParam: undefined,
+				jsonp: undefined,
+				postmessage: undefined,
+				contentType: "default",
 				cors: false,
 				corscreds: false,
-				forceJsonp: false/*,
+				forceJsonp: false,
+				forcePostmessage: false/*,
 				decodeType: "json"*/
 			}, options);
 			options.method = options.method.toUpperCase();
@@ -63,6 +66,13 @@ Scoped.define("module:Ajax.Support", [
 			}
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
+			if (options.contentType === "default" && !Types.is_empty(options.data)) {
+				var has_non_primitive_value = Objs.exists(options.data, function (value) {
+					return Types.is_array(value) || Types.is_object(value);
+				});
+				if (has_non_primitive_value)
+					options.contentType = "json";
+			}
 			return options;
 		},
 		

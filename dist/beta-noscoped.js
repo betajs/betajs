@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.78 - 2016-09-02
+betajs - v1.0.79 - 2016-09-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "544.1472839605511"
+    "version": "545.1472942238628"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -65,10 +65,13 @@ Scoped.define("module:Ajax.Support", [
 				method: "GET",
 				mapMethodsKey: "_method",
 				context: this,
-				jsonpParam: undefined,
+				jsonp: undefined,
+				postmessage: undefined,
+				contentType: "default",
 				cors: false,
 				corscreds: false,
-				forceJsonp: false/*,
+				forceJsonp: false,
+				forcePostmessage: false/*,
 				decodeType: "json"*/
 			}, options);
 			options.method = options.method.toUpperCase();
@@ -81,6 +84,13 @@ Scoped.define("module:Ajax.Support", [
 			}
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
+			if (options.contentType === "default" && !Types.is_empty(options.data)) {
+				var has_non_primitive_value = Objs.exists(options.data, function (value) {
+					return Types.is_array(value) || Types.is_object(value);
+				});
+				if (has_non_primitive_value)
+					options.contentType = "json";
+			}
 			return options;
 		},
 		
@@ -9279,6 +9289,7 @@ Scoped.define("module:Net.HttpHeader", function () {
 		
 		HTTP_STATUS_OK : 200,
 		HTTP_STATUS_CREATED : 201,
+		HTTP_STATUS_BAD_REQUEST : 400,
 		HTTP_STATUS_UNAUTHORIZED: 401,
 		HTTP_STATUS_PAYMENT_REQUIRED : 402,
 		HTTP_STATUS_FORBIDDEN : 403,
@@ -9290,6 +9301,7 @@ Scoped.define("module:Net.HttpHeader", function () {
 			0: "Unknown Error",
 			200: "OK",
 			201: "Created",
+			400: "Bad Request",
 			401: "Unauthorized",
 			402: "Payment Required",
 			403: "Forbidden",

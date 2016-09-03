@@ -8,6 +8,7 @@ Scoped.define("module:Net.HttpHeader", function () {
 		
 		HTTP_STATUS_OK : 200,
 		HTTP_STATUS_CREATED : 201,
+		HTTP_STATUS_BAD_REQUEST : 400,
 		HTTP_STATUS_UNAUTHORIZED: 401,
 		HTTP_STATUS_PAYMENT_REQUIRED : 402,
 		HTTP_STATUS_FORBIDDEN : 403,
@@ -19,6 +20,7 @@ Scoped.define("module:Net.HttpHeader", function () {
 			0: "Unknown Error",
 			200: "OK",
 			201: "Created",
+			400: "Bad Request",
 			401: "Unauthorized",
 			402: "Payment Required",
 			403: "Forbidden",
