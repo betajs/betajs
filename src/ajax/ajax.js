@@ -19,17 +19,53 @@ Scoped.define("module:Ajax.Support", [
 			});
 		},
 		
+		unwrapStatus: function (json, errorDecodeType) {
+			/**
+			 * Should be:
+			 * {
+			 * 	status: XXX,
+			 *  statusText: XXX, (or empty)
+			 *  responseText: XXX (or empty)
+			 * }
+			 */
+			var status = json.status || HttpHeader.HTTP_STATUS_INTERNAL_SERVER_ERROR;
+			if (!HttpHeader.isSuccessStatus(status)) {
+				var status_text = json.statusText || HttpHeader.format(status);
+				var resp = json.responseText;
+				try {
+					resp = this.parseReturnData(json.responseText, errorDecodeType);
+				} catch (e) {}
+				throw new RequestException(status, status_text, resp);
+			} else 
+				return json.responseText; 
+		},
+		
 		parseReturnData: function (data, decodeType) {
 			if (decodeType === "json" && Types.is_string(data))
 				return JSON.parse(data);
 			return data;
 		},
 		
-		promiseReturnData: function (promise, data, decodeType) {
+		promiseReturnData: function (promise, options, data, decodeType) {
+			if (options.wrapStatus) {
+				try {
+					data = this.parseReturnData(data, "json");
+				} catch (e) {
+					promise.asyncError(new ReturnDataParseException(data, decodeType));
+					return;
+				}
+				try {
+					data = this.unwrapStatus(data, decodeType);
+				} catch (e) {
+					promise.asyncError(e);
+					return;
+				}
+			}
 			try {
 				promise.asyncSuccess(this.parseReturnData(data, decodeType));
 			} catch (e) {
 				promise.asyncError(new ReturnDataParseException(data, decodeType));
+				return;
 			}
 		},
 		
@@ -46,6 +82,8 @@ Scoped.define("module:Ajax.Support", [
 			options = Objs.extend({
 				method: "GET",
 				mapMethodsKey: "_method",
+				wrapStatus: false,
+				wrapStatusParam: null,
 				context: this,
 				jsonp: undefined,
 				postmessage: undefined,
@@ -64,6 +102,8 @@ Scoped.define("module:Ajax.Support", [
 				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.mapMethodsKey, options.method));
 				options.method = options.mapMethods[options.method];
 			}
+			if (options.wrapStatus && options.wrapStatusParam)
+				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.wrapStatusParam, "true"));
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
 			if (options.contentType === "default" && !Types.is_empty(options.data)) {

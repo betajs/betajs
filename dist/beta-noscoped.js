@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.79 - 2016-09-03
+betajs - v1.0.80 - 2016-09-09
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "545.1472942238628"
+    "version": "548.1473464390277"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -37,17 +37,53 @@ Scoped.define("module:Ajax.Support", [
 			});
 		},
 		
+		unwrapStatus: function (json, errorDecodeType) {
+			/**
+			 * Should be:
+			 * {
+			 * 	status: XXX,
+			 *  statusText: XXX, (or empty)
+			 *  responseText: XXX (or empty)
+			 * }
+			 */
+			var status = json.status || HttpHeader.HTTP_STATUS_INTERNAL_SERVER_ERROR;
+			if (!HttpHeader.isSuccessStatus(status)) {
+				var status_text = json.statusText || HttpHeader.format(status);
+				var resp = json.responseText;
+				try {
+					resp = this.parseReturnData(json.responseText, errorDecodeType);
+				} catch (e) {}
+				throw new RequestException(status, status_text, resp);
+			} else 
+				return json.responseText; 
+		},
+		
 		parseReturnData: function (data, decodeType) {
 			if (decodeType === "json" && Types.is_string(data))
 				return JSON.parse(data);
 			return data;
 		},
 		
-		promiseReturnData: function (promise, data, decodeType) {
+		promiseReturnData: function (promise, options, data, decodeType) {
+			if (options.wrapStatus) {
+				try {
+					data = this.parseReturnData(data, "json");
+				} catch (e) {
+					promise.asyncError(new ReturnDataParseException(data, decodeType));
+					return;
+				}
+				try {
+					data = this.unwrapStatus(data, decodeType);
+				} catch (e) {
+					promise.asyncError(e);
+					return;
+				}
+			}
 			try {
 				promise.asyncSuccess(this.parseReturnData(data, decodeType));
 			} catch (e) {
 				promise.asyncError(new ReturnDataParseException(data, decodeType));
+				return;
 			}
 		},
 		
@@ -64,6 +100,8 @@ Scoped.define("module:Ajax.Support", [
 			options = Objs.extend({
 				method: "GET",
 				mapMethodsKey: "_method",
+				wrapStatus: false,
+				wrapStatusParam: null,
 				context: this,
 				jsonp: undefined,
 				postmessage: undefined,
@@ -82,6 +120,8 @@ Scoped.define("module:Ajax.Support", [
 				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.mapMethodsKey, options.method));
 				options.method = options.mapMethods[options.method];
 			}
+			if (options.wrapStatus && options.wrapStatusParam)
+				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.wrapStatusParam, "true"));
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
 			if (options.contentType === "default" && !Types.is_empty(options.data)) {
@@ -8652,15 +8692,17 @@ Scoped.define("module:Timers.Timer", [
 Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
 		
-		/** ArrayIterator Class
+		/**
+		 * ArrayIterator Class
 		 * 
 		 * @class BetaJS.Iterators.ArrayIterator
 		 */
 		return {
 
-			/** Creates an Array Iterator
+			/**
+			 * Creates an Array Iterator
 			 * 
-			 * @param arr array
+			 * @param {array} arr array
 			 */
 			constructor: function (arr) {
 				inherited.constructor.call(this);
@@ -8668,17 +8710,15 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 				this.__i = 0;
 			},
 
-			/** Determines whether there are more items.
-			 * 
-			 * @return true if there are more items
+			/**
+			 * @override
 			 */
 			hasNext: function () {
 				return this.__i < this.__array.length;
 			},
 
-			/** Returns the next items if there is one.
-			 * 
-			 * @return next item
+			/**
+			 * @override
 			 */
 			next: function () {
 				var ret = this.__array[this.__i];
@@ -8689,6 +8729,14 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 		};
 	}, {
 
+		/**
+		 * Creates an Array Iterator by an iteration function
+		 * 
+		 * @param {function} iterate_func Iteration function
+		 * @param {object} iterate_func_ctx Optional context
+		 * 
+		 * @return {object} Array Iterator instance
+		 */
 		byIterate: function (iterate_func, iterate_func_ctx) {
 			var result = [];
 			iterate_func.call(iterate_func_ctx || this, function (item) {
@@ -8702,18 +8750,35 @@ Scoped.define("module:Iterators.ArrayIterator", ["module:Iterators.Iterator"], f
 
 Scoped.define("module:Iterators.NativeMapIterator", ["module:Iterators.Iterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * NativeMapIterator Class
+		 * 
+		 * @class BetaJS.Iterators.NativeMapIterator
+		 */
 		return {
 
+			/**
+			 * Creates a Native Map Iterator
+			 * 
+			 * @param {Map} map Iterator based on the values of this native map
+			 */
 			constructor: function (map) {
 				inherited.constructor.call(this);
 				this.__iter = map.values();
 				this.__next = this.__iter.next();
 			},
 
+			/**
+			 * @override
+			 */
 			hasNext: function () {
 				return !this.__next.done;
 			},
 
+			/**
+			 * @override
+			 */
 			next: function () {
 				var value = this.__next.value;
 				this.__next = this.__iter.next();
@@ -8727,8 +8792,19 @@ Scoped.define("module:Iterators.NativeMapIterator", ["module:Iterators.Iterator"
 
 Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIterator"], function (ArrayIterator, scoped) {
 	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * ObjectKeysIterator Class
+		 * 
+		 * @class BetaJS.Iterators.ObjectKeysIterator
+		 */
 		return {
 
+			/**
+			 * Creates an Object Keys Iterator
+			 * 
+			 * @param {object} obj Object to create iterator from
+			 */
 			constructor: function (obj) {
 				inherited.constructor.call(this, Object.keys(obj));
 			}
@@ -8740,8 +8816,19 @@ Scoped.define("module:Iterators.ObjectKeysIterator", ["module:Iterators.ArrayIte
 
 Scoped.define("module:Iterators.ObjectValuesIterator", ["module:Iterators.ArrayIterator", "module:Objs"], function (ArrayIterator, Objs, scoped) {
 	return ArrayIterator.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * ObjectValuesIterator Class
+		 * 
+		 * @class BetaJS.Iterators.ObjectValuesIterator
+		 */
 		return {
 
+			/**
+			 * Creates an Object Values Iterator
+			 * 
+			 * @param {object} obj Object to create iterator from
+			 */
 			constructor: function (obj) {
 				inherited.constructor.call(this, Objs.values(obj));
 			}
@@ -8753,8 +8840,20 @@ Scoped.define("module:Iterators.ObjectValuesIterator", ["module:Iterators.ArrayI
 
 Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.LazyIterator"], function (Iterator, scoped) {
 	return Iterator.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * LazyMultiArrayIterator Class
+		 * 
+		 * @class BetaJS.Iterators.LazyMultiArrayIterator
+		 */
 		return {
 
+			/**
+			 * Creates a Lazy Multi Array Iterator
+			 * 
+			 * @param {function} next_callback Function returning the next array
+			 * @param {object} next_context Context for next function
+			 */
 			constructor: function (next_callback, next_context) {
 				inherited.constructor.call(this);
 				this.__next_callback = next_callback;
@@ -8763,6 +8862,9 @@ Scoped.define("module:Iterators.LazyMultiArrayIterator", ["module:Iterators.Lazy
 				this.__i = 0;
 			},
 
+			/**
+			 * @override
+			 */
 			_next: function () {
 				if (this.__array === null || this.__i >= this.__array.length) {
 					this.__array = this.__next_callback.apply(this.__next_context);
@@ -9322,6 +9424,17 @@ Scoped.define("module:Net.HttpHeader", function () {
 		format: function (code, prepend_code) {
 			var ret = this.STRINGS[code in this.STRINGS ? code : 0];
 			return prepend_code ? (code + " " + ret) : ret;
+		},
+		
+		/**
+		 * Returns true if a status code is in the 200 region.
+		 * 
+		 * @param {int} code status code
+		 * 
+		 * @return {boolean} true if code in the 200 region
+		 */
+		isSuccessStatus: function (code) {
+			return code >= this.HTTP_STATUS_OK && code < 300;
 		}
 		
 	};
@@ -9457,8 +9570,20 @@ Scoped.define("module:RMI.Client", [
                                     "module:RMI.Stub"
                                     ], function (Class, Objs, TransportChannel, Ids, Skeleton, Types, Stub, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * RMI Client Class
+		 * 
+		 * @class BetaJS.RMI.Client
+		 */
 		return {			
 
+			/**
+			 * Creates a new instance of an RMI client.
+			 * 
+			 * @param {object} sender_or_channel_or_null a channel or sender that should be connected to
+			 * @param {object} receiver_or_null a receiver that should be connected to
+			 */
 			constructor: function (sender_or_channel_or_null, receiver_or_null) {
 				inherited.constructor.call(this);
 				this.__channel = null;
@@ -9471,18 +9596,31 @@ Scoped.define("module:RMI.Client", [
 				}
 			},
 
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				if (this.__channel)
 					this.disconnect();
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Connect to a channel.
+			 * 
+			 * @param {object} channel channel to be connected to
+			 */
 			connect: function (channel) {
 				if (this.__channel)
 					return;
 				this.__channel = channel;
+				return this;
 			},
 
+			/**
+			 * Disconnect from channel.
+			 * 
+			 */
 			disconnect: function () {
 				if (!this.__channel)
 					return;
@@ -9490,8 +9628,16 @@ Scoped.define("module:RMI.Client", [
 				Objs.iter(this.__instances, function (inst) {
 					this.release(inst);
 				}, this);
+				return this;
 			},
 
+			/**
+			 * Serialize a value.
+			 * 
+			 * @param value value to be serialized.
+			 * 
+			 * @return Serialized value
+			 */
 			_serializeValue: function (value) {
 				if (Skeleton.is_instance_of(value)) {
 					var registry = this.server;
@@ -9505,6 +9651,13 @@ Scoped.define("module:RMI.Client", [
 					return value;		
 			},
 
+			/**
+			 * Unserialize a value.
+			 * 
+			 * @param value value to be unserialized.
+			 * 
+			 * @return unserialized value
+			 */
 			_unserializeValue: function (value) {
 				if (value && value.__rmi_meta) {
 					var receiver = this;
@@ -9513,6 +9666,14 @@ Scoped.define("module:RMI.Client", [
 					return value;		
 			},
 
+			/**
+			 * Acquires an object instance.
+			 * 
+			 * @param {string} class_type class type of object instance
+			 * @param {string} instance_name registered name of instance
+			 * 
+			 * @return {object} object instance
+			 */
 			acquire: function (class_type, instance_name) {
 				if (this.__instances[instance_name])
 					return this.__instances[instance_name];
@@ -9534,12 +9695,19 @@ Scoped.define("module:RMI.Client", [
 				return instance;		
 			},
 
+			/**
+			 * Releases an acquired instance.
+			 * 
+			 * @param {object} instance instance to be released
+			 * 
+			 */
 			release: function (instance) {
 				var instance_name = Ids.objectId(instance);
-				if (!this.__instances[instance_name])
-					return;
-				instance.weakDestroy();
-				delete this.__instances[instance_name];
+				if (this.__instances[instance_name]) {
+					instance.weakDestroy();
+					delete this.__instances[instance_name];
+				}
+				return this;
 			}
 
 		};
@@ -9644,8 +9812,18 @@ Scoped.define("module:RMI.Server", [
                                     "module:Promise"
                                     ], function (Class, EventsMixin, Objs, TransportChannel, ObjectIdList, Ids, Skeleton, Promise, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		
+		/**
+		 * @class BetaJS.RMI.Server
+		 */
 		return {
 
+			/**
+			 * Creates an RMI Server instance
+			 * 
+			 * @param {object} sender_or_channel_or_null a channel or sender that should be connected to
+			 * @param {object} receiver_or_null a receiver that should be connected to
+			 */
 			constructor: function (sender_or_channel_or_null, receiver_or_null) {
 				inherited.constructor.call(this);
 				this.__channels = new ObjectIdList();
@@ -9658,6 +9836,9 @@ Scoped.define("module:RMI.Server", [
 				}
 			},
 
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__channels.iterate(this.unregisterClient, this);
 				Objs.iter(this.__instances, function (inst) {
@@ -9667,6 +9848,14 @@ Scoped.define("module:RMI.Server", [
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Registers an RMI skeleton instance.
+			 * 
+			 * @param {object} instance skeleton instance
+			 * @param {object} options Options like name of instance
+			 * 
+			 * @return {object} Instance
+			 */
 			registerInstance: function (instance, options) {
 				options = options || {};
 				this.__instances[Ids.objectId(instance, options.name)] = {
@@ -9676,11 +9865,22 @@ Scoped.define("module:RMI.Server", [
 				return instance;
 			},
 
+			/**
+			 * Unregisters a RMI skeleton instance
+			 * 
+			 * @param {object} instance skeleton instance
+			 */
 			unregisterInstance: function (instance) {
 				delete this.__instances[Ids.objectId(instance)];
 				instance.weakDestroy();
+				return this;
 			},
 
+			/**
+			 * Register a client channel
+			 * 
+			 * @param {object} channel Client channel
+			 */
 			registerClient: function (channel) {
 				var self = this;
 				this.__channels.add(channel);
@@ -9691,13 +9891,27 @@ Scoped.define("module:RMI.Server", [
 					else
 						return Promise.error(true);
 				};
+				return this;
 			},
 
+			/**
+			 * Unregister a client channel
+			 * 
+			 * @param {object} channel Client channel
+			 */
 			unregisterClient: function (channel) {
 				this.__channels.remove(channel);
 				channel._reply = null;
+				return this;
 			},
 
+			/**
+			 * Serialize a value.
+			 * 
+			 * @param value value to be serialized.
+			 * 
+			 * @return Serialized value
+			 */
 			_serializeValue: function (value) {
 				if (Skeleton.is_instance_of(value)) {
 					var registry = this;
@@ -9711,6 +9925,13 @@ Scoped.define("module:RMI.Server", [
 					return value;		
 			},
 
+			/**
+			 * Unserialize a value.
+			 * 
+			 * @param value value to be unserialized.
+			 * 
+			 * @return unserialized value
+			 */
 			_unserializeValue: function (value) {
 				if (value && value.__rmi_meta) {
 					var receiver = this.client;
@@ -9719,6 +9940,16 @@ Scoped.define("module:RMI.Server", [
 					return value;		
 			},
 
+			/**
+			 * Invokes an instance method on a channel.
+			 * 
+			 * @param {object} channel Channel to be used for invokation
+			 * @param {string} instance_id Id of instance to be used as context
+			 * @param {string} method Method to be called
+			 * @param data Data to be passed to method
+			 * 
+			 * @return Return value of method as promise. 
+			 */
 			_invoke: function (channel, instance_id, method, data) {
 				var instance = this.__instances[instance_id];
 				if (!instance) {

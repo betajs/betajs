@@ -41,6 +41,17 @@ Scoped.define("module:Net.HttpHeader", function () {
 		format: function (code, prepend_code) {
 			var ret = this.STRINGS[code in this.STRINGS ? code : 0];
 			return prepend_code ? (code + " " + ret) : ret;
+		},
+		
+		/**
+		 * Returns true if a status code is in the 200 region.
+		 * 
+		 * @param {int} code status code
+		 * 
+		 * @return {boolean} true if code in the 200 region
+		 */
+		isSuccessStatus: function (code) {
+			return code >= this.HTTP_STATUS_OK && code < 300;
 		}
 		
 	};
