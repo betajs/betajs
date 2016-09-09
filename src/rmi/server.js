@@ -11,8 +11,18 @@ Scoped.define("module:RMI.Server", [
                                     "module:Promise"
                                     ], function (Class, EventsMixin, Objs, TransportChannel, ObjectIdList, Ids, Skeleton, Promise, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		
+		/**
+		 * @class BetaJS.RMI.Server
+		 */
 		return {
 
+			/**
+			 * Creates an RMI Server instance
+			 * 
+			 * @param {object} sender_or_channel_or_null a channel or sender that should be connected to
+			 * @param {object} receiver_or_null a receiver that should be connected to
+			 */
 			constructor: function (sender_or_channel_or_null, receiver_or_null) {
 				inherited.constructor.call(this);
 				this.__channels = new ObjectIdList();
@@ -25,6 +35,9 @@ Scoped.define("module:RMI.Server", [
 				}
 			},
 
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__channels.iterate(this.unregisterClient, this);
 				Objs.iter(this.__instances, function (inst) {
@@ -34,6 +47,14 @@ Scoped.define("module:RMI.Server", [
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Registers an RMI skeleton instance.
+			 * 
+			 * @param {object} instance skeleton instance
+			 * @param {object} options Options like name of instance
+			 * 
+			 * @return {object} Instance
+			 */
 			registerInstance: function (instance, options) {
 				options = options || {};
 				this.__instances[Ids.objectId(instance, options.name)] = {
@@ -43,11 +64,22 @@ Scoped.define("module:RMI.Server", [
 				return instance;
 			},
 
+			/**
+			 * Unregisters a RMI skeleton instance
+			 * 
+			 * @param {object} instance skeleton instance
+			 */
 			unregisterInstance: function (instance) {
 				delete this.__instances[Ids.objectId(instance)];
 				instance.weakDestroy();
+				return this;
 			},
 
+			/**
+			 * Register a client channel
+			 * 
+			 * @param {object} channel Client channel
+			 */
 			registerClient: function (channel) {
 				var self = this;
 				this.__channels.add(channel);
@@ -58,13 +90,27 @@ Scoped.define("module:RMI.Server", [
 					else
 						return Promise.error(true);
 				};
+				return this;
 			},
 
+			/**
+			 * Unregister a client channel
+			 * 
+			 * @param {object} channel Client channel
+			 */
 			unregisterClient: function (channel) {
 				this.__channels.remove(channel);
 				channel._reply = null;
+				return this;
 			},
 
+			/**
+			 * Serialize a value.
+			 * 
+			 * @param value value to be serialized.
+			 * 
+			 * @return Serialized value
+			 */
 			_serializeValue: function (value) {
 				if (Skeleton.is_instance_of(value)) {
 					var registry = this;
@@ -78,6 +124,13 @@ Scoped.define("module:RMI.Server", [
 					return value;		
 			},
 
+			/**
+			 * Unserialize a value.
+			 * 
+			 * @param value value to be unserialized.
+			 * 
+			 * @return unserialized value
+			 */
 			_unserializeValue: function (value) {
 				if (value && value.__rmi_meta) {
 					var receiver = this.client;
@@ -86,6 +139,16 @@ Scoped.define("module:RMI.Server", [
 					return value;		
 			},
 
+			/**
+			 * Invokes an instance method on a channel.
+			 * 
+			 * @param {object} channel Channel to be used for invokation
+			 * @param {string} instance_id Id of instance to be used as context
+			 * @param {string} method Method to be called
+			 * @param data Data to be passed to method
+			 * 
+			 * @return Return value of method as promise. 
+			 */
 			_invoke: function (channel, instance_id, method, data) {
 				var instance = this.__instances[instance_id];
 				if (!instance) {
