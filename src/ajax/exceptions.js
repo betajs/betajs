@@ -1,14 +1,34 @@
 Scoped.define("module:Ajax.AjaxException", [
     "module:Exceptions.Exception"
 ], function (Exception, scoped) {
-	return Exception.extend({scoped: scoped});
+	return Exception.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Abstract Ajax Exception Class
+		 * 
+		 * @class BetaJS.Ajax.AjaxException
+		 */
+		return {
+			
+		};
+	});
 });
 
 
 Scoped.define("module:Ajax.NoCandidateAjaxException", [
 	"module:Ajax.AjaxException"
 ], function (Exception, scoped) {
-	return Exception.extend({scoped: scoped});
+	return Exception.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * No Candidate Ajax Exception Class
+		 * 
+		 * @class BetaJS.Ajax.NoCandidateAjaxException
+		 */
+		return {
+			
+		};
+	});
 });
 
 
@@ -16,8 +36,20 @@ Scoped.define("module:Ajax.ReturnDataParseException", [
 	"module:Ajax.AjaxException"
 ], function (Exception, scoped) {
    	return Exception.extend({scoped: scoped}, function (inherited) {
+   		
+   		/**
+   		 * Return Data Parse Exception Class
+   		 * 
+   		 * @class BetaJS.Ajax.ReturnDataParseException 
+   		 */
    		return {
    			
+   			/**
+   			 * Creates a new instance.
+   			 * 
+   			 * @param data return data
+   			 * @param {string} decodeType decode type for return data 
+   			 */
    			constructor: function (data, decodeType) {
    				inherited.constructor.call(this, "Could not decode data with type " + decodeType);
    				this.__decodeType = decodeType;

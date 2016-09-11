@@ -8,10 +8,22 @@ Scoped.define("module:Ajax.Support", [
     "module:Net.Uri",
     "module:Net.HttpHeader"
 ], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader) {
+	
+	/**
+	 * Ajax Support Module
+	 * 
+	 * @module BetaJS.Ajax.Support
+	 */
 	return {
 		
 		__registry: [],
 		
+		/**
+		 * Registers an ajax execution system 
+		 * 
+		 * @param {object} descriptor Descriptor object containing a supports and an execute function
+		 * @param {int} priority Priority of this execution system to be used if applicable
+		 */
 		register: function (descriptor, priority) {
 			this.__registry.push({
 				descriptor: descriptor,
@@ -19,8 +31,16 @@ Scoped.define("module:Ajax.Support", [
 			});
 		},
 		
+		/**
+		 * Unwrap the status from return data
+		 * 
+		 * @param {object} json Status-encoded return object
+		 * @param {string} errorDecodeType Decode type for data in case it is an error
+		 * 
+		 * @return Unwrapped data in case of a success status
+		 */
 		unwrapStatus: function (json, errorDecodeType) {
-			/**
+			/*
 			 * Should be:
 			 * {
 			 * 	status: XXX,
@@ -40,12 +60,29 @@ Scoped.define("module:Ajax.Support", [
 				return json.responseText; 
 		},
 		
+		/**
+		 * Parse return data given a decode type.
+		 * 
+		 * @param data Return data to be parsed
+		 * @param {string} decodeType Decode type, e.g. "json"
+		 * 
+		 * @return Parsed return data
+		 */
 		parseReturnData: function (data, decodeType) {
 			if (decodeType === "json" && Types.is_string(data))
 				return JSON.parse(data);
 			return data;
 		},
 		
+		/**
+		 * Process the return data and forward the result to a promise object.
+		 * 
+		 * @param {object} promise Promise object
+		 * @param {object} options Options for processing the return data
+		 * @param data Return data
+		 * @param {string} decodeType Decode type, e.g. "json"
+		 * 
+		 */
 		promiseReturnData: function (promise, options, data, decodeType) {
 			if (options.wrapStatus) {
 				try {
@@ -65,10 +102,19 @@ Scoped.define("module:Ajax.Support", [
 				promise.asyncSuccess(this.parseReturnData(data, decodeType));
 			} catch (e) {
 				promise.asyncError(new ReturnDataParseException(data, decodeType));
-				return;
 			}
 		},
 		
+		/**
+		 * Process the return data and forward the result as an error to a promise object.
+		 * 
+		 * @param {object} promise Promise object
+		 * @param {int} status Error status
+		 * @param {string} status_text Optional status text
+		 * @param data Return data
+		 * @param {string} decodeType Decode type, e.g. "json"
+		 * 
+		 */
 		promiseRequestException: function (promise, status, status_text, data, decodeType) {
 			status_text = status_text || HttpHeader.format(status);
 			try {
@@ -78,6 +124,13 @@ Scoped.define("module:Ajax.Support", [
 			}
 		},
 		
+		/**
+		 * Preprocess Ajax Options object.
+		 * 
+		 * @param {object} options Options object
+		 * 
+		 * @return {object} Preprocessed options object
+		 */
 		preprocess: function (options) {
 			options = Objs.extend({
 				method: "GET",
@@ -116,6 +169,13 @@ Scoped.define("module:Ajax.Support", [
 			return options;
 		},
 		
+		/**
+		 * Execute an Ajax command.
+		 * 
+		 * @param {object} options Options for the Ajax command
+		 * 
+		 * @return {object} Execution promise
+		 */
 		execute: function (options) {
 			options = this.preprocess(options);
 			var current = null;		
@@ -136,13 +196,31 @@ Scoped.define("module:Ajax.AjaxWrapper", [
     "module:Ajax.Support"
 ], function (Class, Objs, Support, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Ajax Wrapper Class
+		 * 
+		 * @class BetaJS.Ajax.AjaxWrapper
+		 */
 		return {
 		
+			/**
+			 * Creates an instance.
+			 * 
+			 * @param {object} options common options for ajax calls
+			 */
 			constructor: function (options) {
 				inherited.constructor.call(this);
 				this._options = options;
 			},
 			
+			/**
+			 * Execute an ajax call.
+			 * 
+			 * @param {object} options options for ajax call
+			 * 
+			 * @return {object} promise for the ajax call
+			 */
 			execute: function (options) {
 				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options));
 			}
