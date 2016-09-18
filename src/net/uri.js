@@ -114,6 +114,29 @@ Scoped.define("module:Net.Uri", [
 				if ($1) uri.queryKey[$1] = $2;
 			});
 			return uri;
+		},
+		
+		/**
+		 * Determines whether a target URI is considered cross-domain with respect to a source URI.
+		 * 
+		 * @param {string} source source URI
+		 * @param {string} target target URI
+		 * 
+		 * @return {boolean} true if target is cross-domain w.r.t. source
+		 */
+		isCrossDomainUri: function (source, target) {
+			// If target has no protocol delimiter, there is no domain given, hence source domain is used
+			if (target.indexOf("//") < 0)
+				return false;
+			// If source has no protocol delimiter but target has, it is cross-domain.
+			if (source.indexOf("//") < 0)
+				return true;
+			source = this.parse(source.toLowerCase());
+			target = this.parse(target.toLowerCase());
+			// Terminate if one of protocols is the file protocol.
+			if (source.protocol === "file" || target.protocol === "file")
+				return source.protocol === target.protocol;
+			return source.host !== target.host || source.port !== target.port;
 		}
 			
 	};

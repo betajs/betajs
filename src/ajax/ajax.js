@@ -166,6 +166,7 @@ Scoped.define("module:Ajax.Support", [
 				if (has_non_primitive_value)
 					options.contentType = "json";
 			}
+			options.isCorsRequest = Uri.isCrossDomainUri(document.location.href, options.uri);
 			return options;
 		},
 		

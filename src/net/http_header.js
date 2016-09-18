@@ -15,6 +15,7 @@ Scoped.define("module:Net.HttpHeader", function () {
 		HTTP_STATUS_NOT_FOUND : 404,
 		HTTP_STATUS_PRECONDITION_FAILED : 412,
 		HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+		HTTP_STATUS_GATEWAY_TIMEOUT: 504,
 		
 		STRINGS: {
 			0: "Unknown Error",
@@ -26,7 +27,8 @@ Scoped.define("module:Net.HttpHeader", function () {
 			403: "Forbidden",
 			404: "Not found",
 			412: "Precondition Failed",
-			500: "Internal Server Error"
+			500: "Internal Server Error",
+			504: "Gateway timeout"
 		},
 		
 		
