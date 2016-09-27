@@ -46,18 +46,25 @@ Scoped.define("module:Net.Uri", [
 		 * 
 		 * @param {object} arr a key-value set of query parameters
 		 * @param {string} prefix an optional prefix to be used for generating the keys
+		 * @param {boolean} flatten flatten the components first
 		 * 
 		 * @return {string} encoded query parameters
 		 */
-		encodeUriParams: function (arr, prefix) {
+		encodeUriParams: function (arr, prefix, flatten) {
 			prefix = prefix || "";
 			var res = [];
-			Objs.iter(arr, function (value, key) {
-				if (Types.is_object(value))
-					res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
-				else
-					res.push(prefix + key + "=" + encodeURIComponent(value));
-			}, this);
+			if (flatten) {
+				Objs.iter(Objs.serializeFlatJSON(arr), function (kv) {
+					res.push(prefix + kv.key + "=" + encodeURIComponent(kv.value));
+				}, this);
+			} else {
+                Objs.iter(arr, function (value, key) {
+                	if (Types.is_object(value))
+                		res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
+                    else
+                        res.push(prefix + key + "=" + encodeURIComponent(value));
+                }, this);
+			}
 			return res.join("&");
 		},
 		

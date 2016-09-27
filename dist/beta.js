@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.81 - 2016-09-18
+betajs - v1.0.82 - 2016-09-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.81 - 2016-09-18
+betajs - v1.0.82 - 2016-09-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +720,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "551.1474229761017"
+    "version": "552.1475007751569"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -866,15 +866,28 @@ Scoped.define("module:Ajax.Support", [
 				wrapStatus: false,
 				wrapStatusParam: null,
 				context: this,
+				query: {},
 				jsonp: undefined,
 				postmessage: undefined,
-				contentType: "default",
+				contentType: "urlencoded", // json
+				resilience: 1,
+				resilience_delay: 1000,
 				cors: false,
+				sendContentType: true,
 				corscreds: false,
 				forceJsonp: false,
 				forcePostmessage: false/*,
 				decodeType: "json"*/
 			}, options);
+			if (options.params) {
+				options.query = Objs.extend(options.query, options.params);
+				delete options.params;
+			}
+			if (!Types.is_empty(options.query)) {
+				options.query = Objs.filter(options.query, function (value) {
+					return value !== null && value !== undefined;
+				});
+			}
 			options.method = options.method.toUpperCase();
 			if (options.baseUri)
 				options.uri = options.uri ? options.baseUri + options.uri : options.baseUri;
@@ -887,12 +900,10 @@ Scoped.define("module:Ajax.Support", [
 				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.wrapStatusParam, "true"));
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
-			if (options.contentType === "default" && !Types.is_empty(options.data)) {
-				var has_non_primitive_value = Objs.exists(options.data, function (value) {
-					return Types.is_array(value) || Types.is_object(value);
+			if (options.contentType === "urlencoded" && !Types.is_empty(options.data)) {
+				options.data = Objs.filter(options.data, function (value) {
+					return value !== null && value !== undefined;
 				});
-				if (has_non_primitive_value)
-					options.contentType = "json";
 			}
 			options.isCorsRequest = Uri.isCrossDomainUri(document.location.href, options.uri);
 			return options;
@@ -912,7 +923,21 @@ Scoped.define("module:Ajax.Support", [
 				if ((!current || current.priority < candidate.priority) && candidate.descriptor.supports.call(candidate.descriptor.context || candidate.descriptor, options))
 					current = candidate;
 			}, this);
-			return current ? current.descriptor.execute.call(current.descriptor.context || current.descriptor, options) : Promise.error(new NoCandidateAjaxException(options));
+			if (!current)
+				return Promise.error(new NoCandidateAjaxException(options));
+			var helper = function (resilience) {
+				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options);
+				if (!resilience || resilience <= 1)
+					return promise;
+				var returnPromise = Promise.create();
+				promise.forwardSuccess(returnPromise).error(function () {
+					Async.eventually(function () {
+						helper(resilience - 1).forwardCallback(returnPromise);
+					}, options.resilience_delay);
+				});
+				return returnPromise;
+			};
+			return helper(options.resilience);
 		}
 
 	};
@@ -958,155 +983,6 @@ Scoped.define("module:Ajax.AjaxWrapper", [
 	});
 });
 
-
-Scoped.define("module:Net.AjaxException", [
-    "module:Exceptions.Exception",
-    "module:Objs"
-], function (Exception, Objs, scoped) {
-	return Exception.extend({scoped: scoped}, function (inherited) {
-		
-		/**
-		 * Ajax Exception Class
-		 * 
-		 * @class BetaJS.Net.AjaxException
-		 */
-		return {
-
-			/**
-			 * Instantiates an Ajax Exception
-			 * 
-			 * @param status_code Status Code
-			 * @param {string} status_text Status Text
-			 * @param data Custom Exception Data
-			 */
-			constructor: function (status_code, status_text, data) {
-				inherited.constructor.call(this, status_code + ": " + status_text);
-				this.__status_code = status_code;
-				this.__status_text = status_text;
-				this.__data = data;
-			},
-
-			/**
-			 * Returns the status code associated with the exception
-			 * 
-			 * @return status code
-			 */
-			status_code: function () {
-				return this.__status_code;
-			},
-
-			/**
-			 * Returns the status text associated with the exception
-			 * 
-			 * @return {string} status text
-			 */
-			status_text: function () {
-				return this.__status_text;
-			},
-
-			/**
-			 * Returns the custom data associated with the exception 
-			 * 
-			 * @return custom data
-			 */
-			data: function () {
-				return this.__data;
-			},
-
-			/**
-			 * Returns a JSON representation of the exception
-			 * 
-			 * @return {object} Exception JSON representation
-			 */
-			json: function () {
-				return Objs.extend({
-					data: this.data(),
-					status_code: this.status_code(),
-					status_text: this.status_text()
-				}, inherited.json.call(this));
-			}
-			
-		};
-	});
-});
-
-
-
-Scoped.define("module:Net.Ajax", [
-    "module:Classes.ConditionalInstance",
-    "module:Objs",
-    "module:Net.Uri"
-], function (ConditionalInstance, Objs, Uri, scoped) {
-	return ConditionalInstance.extend({ scoped : scoped },
-		
-		/**
-		 * Abstract Ajax Class, child classes override this for concrete realizations of Ajax
-		 * 
-		 * @class BetaJS.Net.Ajax
-		 */
-		{
-
-		/**
-		 * Execute asynchronous ajax call
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {object} Success promise
-		 */
-		asyncCall : function(options) {
-			if (this._shouldMap (options))
-				options = this._mapToPost(options);
-			return this._asyncCall(Objs.extend(Objs.clone(this._options, 1), options));
-		},
-
-		/**
-		 * Abstract Call for executing Ajax.
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {object} Success promise
-		 */
-		_asyncCall : function(options) {
-			throw "Abstract";
-		},
-
-		/**
-		 * Check if should even attempt a mapping. Important to not assume
-		 * that the method option is always specified.
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {boolean} true if it should be mapped
-		 */
-		_shouldMap : function (options) {
-			return (this._options.mapPutToPost && options.method && options.method.toLowerCase() === "put") ||
-			       (this._options.mapDestroyToPost && options.method && options.method.toLowerCase() === "destroy");
-		},
-
-		/**
-		 * Some implementations do not supporting sending data with
-		 * the non-standard request. This fix converts the Request to use POST, so
-		 * the data is sent, but the server still thinks it is receiving a
-		 * non-standard request.
-		 * 
-		 * @param {object} options Ajax Call Options
-		 * @return {object} Updated options
-		 */
-		_mapToPost : function (options) {
-			options.uri = Uri.appendUriParams(options.uri, {
-				_method : options.method.toUpperCase()
-			});
-			options.method = "POST";
-			return options;
-		}
-	}, {
-		
-		_initializeOptions: function (options) {
-			return Objs.extend({
-				"method" : "GET",
-				"data" : {}
-			}, options);
-		}
-		
-	});
-});
 
 Scoped.define("module:Ajax.AjaxException", [
     "module:Exceptions.Exception"
@@ -1172,8 +1048,9 @@ Scoped.define("module:Ajax.ReturnDataParseException", [
 
 
 Scoped.define("module:Ajax.RequestException", [
-	"module:Ajax.AjaxException"
-], function (Exception, scoped) {
+	"module:Ajax.AjaxException",
+	"module:Objs"
+], function (Exception, Objs, scoped) {
    	return Exception.extend({scoped: scoped}, function (inherited) {
 		   		
 		/**
@@ -3887,6 +3764,33 @@ Scoped.define("module:Objs", [
 					result[key] = this.tree_merge(secondary[key], primary[key]);
 				else
 					result[key] = key in primary ? primary[key] : secondary[key];
+			}
+			return result;
+		},
+		
+		/**
+		 * Serializes an object in such a way that all subscopes appear in a flat notation.
+		 * 
+		 * @param {object} obj source object
+		 * @param {string} head prefix header, usually empty
+		 * 
+		 * @return {array} serialized object
+		 */
+		serializeFlatJSON: function (obj, head) {
+			var result = [];
+			if (Types.is_array(obj) && obj) {
+				obj.forEach(function (value) {
+					result = result.concat(this.serializeFlatJSON(value, head + "[]"));
+				}, this);
+			} else if (Types.is_object(obj) && obj) {
+				this.iter(obj, function (value, key) {
+					result = result.concat(this.serializeFlatJSON(value, head ? head + "[" + key + "]" : key));
+				}, this);
+			} else {
+				result = [{
+					key: head,
+					value: obj
+				}];
 			}
 			return result;
 		}
@@ -10749,18 +10653,25 @@ Scoped.define("module:Net.Uri", [
 		 * 
 		 * @param {object} arr a key-value set of query parameters
 		 * @param {string} prefix an optional prefix to be used for generating the keys
+		 * @param {boolean} flatten flatten the components first
 		 * 
 		 * @return {string} encoded query parameters
 		 */
-		encodeUriParams: function (arr, prefix) {
+		encodeUriParams: function (arr, prefix, flatten) {
 			prefix = prefix || "";
 			var res = [];
-			Objs.iter(arr, function (value, key) {
-				if (Types.is_object(value))
-					res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
-				else
-					res.push(prefix + key + "=" + encodeURIComponent(value));
-			}, this);
+			if (flatten) {
+				Objs.iter(Objs.serializeFlatJSON(arr), function (kv) {
+					res.push(prefix + kv.key + "=" + encodeURIComponent(kv.value));
+				}, this);
+			} else {
+                Objs.iter(arr, function (value, key) {
+                	if (Types.is_object(value))
+                		res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
+                    else
+                        res.push(prefix + key + "=" + encodeURIComponent(value));
+                }, this);
+			}
 			return res.join("&");
 		},
 		

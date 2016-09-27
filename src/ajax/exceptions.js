@@ -62,8 +62,9 @@ Scoped.define("module:Ajax.ReturnDataParseException", [
 
 
 Scoped.define("module:Ajax.RequestException", [
-	"module:Ajax.AjaxException"
-], function (Exception, scoped) {
+	"module:Ajax.AjaxException",
+	"module:Objs"
+], function (Exception, Objs, scoped) {
    	return Exception.extend({scoped: scoped}, function (inherited) {
 		   		
 		/**

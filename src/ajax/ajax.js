@@ -138,15 +138,28 @@ Scoped.define("module:Ajax.Support", [
 				wrapStatus: false,
 				wrapStatusParam: null,
 				context: this,
+				query: {},
 				jsonp: undefined,
 				postmessage: undefined,
-				contentType: "default",
+				contentType: "urlencoded", // json
+				resilience: 1,
+				resilience_delay: 1000,
 				cors: false,
+				sendContentType: true,
 				corscreds: false,
 				forceJsonp: false,
 				forcePostmessage: false/*,
 				decodeType: "json"*/
 			}, options);
+			if (options.params) {
+				options.query = Objs.extend(options.query, options.params);
+				delete options.params;
+			}
+			if (!Types.is_empty(options.query)) {
+				options.query = Objs.filter(options.query, function (value) {
+					return value !== null && value !== undefined;
+				});
+			}
 			options.method = options.method.toUpperCase();
 			if (options.baseUri)
 				options.uri = options.uri ? options.baseUri + options.uri : options.baseUri;
@@ -159,12 +172,10 @@ Scoped.define("module:Ajax.Support", [
 				options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.wrapStatusParam, "true"));
 			delete options.mapMethods;
 			delete options.mapMethodsKey;
-			if (options.contentType === "default" && !Types.is_empty(options.data)) {
-				var has_non_primitive_value = Objs.exists(options.data, function (value) {
-					return Types.is_array(value) || Types.is_object(value);
+			if (options.contentType === "urlencoded" && !Types.is_empty(options.data)) {
+				options.data = Objs.filter(options.data, function (value) {
+					return value !== null && value !== undefined;
 				});
-				if (has_non_primitive_value)
-					options.contentType = "json";
 			}
 			options.isCorsRequest = Uri.isCrossDomainUri(document.location.href, options.uri);
 			return options;
@@ -184,7 +195,21 @@ Scoped.define("module:Ajax.Support", [
 				if ((!current || current.priority < candidate.priority) && candidate.descriptor.supports.call(candidate.descriptor.context || candidate.descriptor, options))
 					current = candidate;
 			}, this);
-			return current ? current.descriptor.execute.call(current.descriptor.context || current.descriptor, options) : Promise.error(new NoCandidateAjaxException(options));
+			if (!current)
+				return Promise.error(new NoCandidateAjaxException(options));
+			var helper = function (resilience) {
+				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options);
+				if (!resilience || resilience <= 1)
+					return promise;
+				var returnPromise = Promise.create();
+				promise.forwardSuccess(returnPromise).error(function () {
+					Async.eventually(function () {
+						helper(resilience - 1).forwardCallback(returnPromise);
+					}, options.resilience_delay);
+				});
+				return returnPromise;
+			};
+			return helper(options.resilience);
 		}
 
 	};

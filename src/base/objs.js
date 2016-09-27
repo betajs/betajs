@@ -656,6 +656,33 @@ Scoped.define("module:Objs", [
 					result[key] = key in primary ? primary[key] : secondary[key];
 			}
 			return result;
+		},
+		
+		/**
+		 * Serializes an object in such a way that all subscopes appear in a flat notation.
+		 * 
+		 * @param {object} obj source object
+		 * @param {string} head prefix header, usually empty
+		 * 
+		 * @return {array} serialized object
+		 */
+		serializeFlatJSON: function (obj, head) {
+			var result = [];
+			if (Types.is_array(obj) && obj) {
+				obj.forEach(function (value) {
+					result = result.concat(this.serializeFlatJSON(value, head + "[]"));
+				}, this);
+			} else if (Types.is_object(obj) && obj) {
+				this.iter(obj, function (value, key) {
+					result = result.concat(this.serializeFlatJSON(value, head ? head + "[" + key + "]" : key));
+				}, this);
+			} else {
+				result = [{
+					key: head,
+					value: obj
+				}];
+			}
+			return result;
 		}
 
 	};
