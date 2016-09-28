@@ -17,6 +17,12 @@ Scoped.define("module:RMI.Stub", [
 			 * @member {array} intf abstract interface list, needs to be overwritten in subclasses
 			 */
 			intf: [],
+			
+			/**
+			 * 
+			 * @member {object} serializes list of serialization information
+			 */
+			serializes: {},
 
 			/**
 			 * Instantiates the stub.
@@ -39,7 +45,7 @@ Scoped.define("module:RMI.Stub", [
 			 * @override
 			 */
 			invoke: function (message) {
-				return this.__send(message, Functions.getArguments(arguments, 1));
+				return this.__send(message, Functions.getArguments(arguments, 1), this.serializes[message]);
 			}
 
 		};

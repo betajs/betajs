@@ -1,6 +1,7 @@
 Scoped.define("module:Workers.WorkerSenderChannel", [
-    "module:Channels.Sender"
-], function (Sender, scoped) {
+    "module:Channels.Sender",
+    "module:Objs"
+], function (Sender, Objs, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -9,11 +10,18 @@ Scoped.define("module:Workers.WorkerSenderChannel", [
 				this.__worker = worker || self;
 			},
 			
-			_send: function (message, data) {
+			_send: function (message, data, serializerInfo) {
+				var transfer = [];
+				if (serializerInfo) {
+					Objs.iter(serializerInfo, function (value, key) {
+						if (value && value.transfer && data[key])
+							transfer.push(data[key]);
+					}, this);
+				}
 				this.__worker.postMessage({
 					message: message,
 					data: data
-				});
+				}, transfer);
 			}
 			
 		};

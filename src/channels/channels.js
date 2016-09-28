@@ -16,10 +16,11 @@ Scoped.define("module:Channels.Sender", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @param serializerInfo Custom serializer information
 		 */
-		send: function (message, data) {
+		send: function (message, data, serializerInfo) {
 			this.trigger("send", message, data);
-			this._send(message, data);
+			this._send(message, data, serializerInfo);
 		},
 		
 		/**
@@ -27,8 +28,9 @@ Scoped.define("module:Channels.Sender", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @param serializerInfo Custom serializer information
 		 */
-		_send: function (message, data) {}
+		_send: function (message, data, serializerInfo) {}
 	
 	}]);
 });
@@ -52,10 +54,11 @@ Scoped.define("module:Channels.Receiver", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @param serializerInfo Custom serializer information
 		 */
-		_receive: function (message, data) {
-			this.trigger("receive", message, data);
-			this.trigger("receive:" + message, data);
+		_receive: function (message, data, serializerInfo) {
+			this.trigger("receive", message, data, serializerInfo);
+			this.trigger("receive:" + message, data, serializerInfo);
 		}
 	
 	}]);
@@ -76,11 +79,11 @@ Scoped.define("module:Channels.ReceiverSender", [
 		return {
 
 			/**
-			 * TODO
+			 * Creates a new instance.
 			 * 
-			 * @param {object} receiver TODO
-			 * @param {boolean} async TODO
-			 * @param {int} delay TODO
+			 * @param {object} receiver Receiver object
+			 * @param {boolean} async Handle every invocation asynchronously
+			 * @param {int} delay Delay time for asynchronous invocation
 			 */
 			constructor: function (receiver, async, delay) {
 				inherited.constructor.call(this);
@@ -89,13 +92,16 @@ Scoped.define("module:Channels.ReceiverSender", [
 				this.__delay = delay;
 			},
 			
-			_send: function (message, data) {
+			/**
+			 * @override
+			 */
+			_send: function (message, data, serializerInfo) {
 				if (this.__async) {
 					Async.eventually(function () {
-						this.__receiver._receive(message, data);
+						this.__receiver._receive(message, data, serializerInfo);
 					}, this, this.__delay);
 				} else
-					this.__receiver._receive(message, data);
+					this.__receiver._receive(message, data, serializerInfo);
 			}
 			
 		};
@@ -126,11 +132,14 @@ Scoped.define("module:Channels.ReadySender", [
 				this.__sender = sender;
 			},
 			
-			_send: function (message, data) {
+			/**
+			 * @override
+			 */
+			_send: function (message, data, serializerInfo) {
 				if (this.__ready)
-					this.__sender.send(message, data);
+					this.__sender.send(message, data, serializerInfo);
 				else
-					this.__cache.push({message: message, data: data});
+					this.__cache.push({message: message, data: data, serializerInfo: serializerInfo});
 			},
 			
 			/**
@@ -139,8 +148,9 @@ Scoped.define("module:Channels.ReadySender", [
 			 */
 			ready: function () {
 				this.__ready = true;
-				for (var i = 0; i < this.__cache.length; ++i)
-					this.__sender.send(this.__cache[i].message, this.__cache[i].data);
+				this.__cache.forEach(function (entry) {
+					this.__sender.send(entry.message, entry.data, entry.serializerInfo);
+				}, this);
 				this.__cache = [];
 			},
 			

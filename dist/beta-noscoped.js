@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.82 - 2016-09-27
+betajs - v1.0.83 - 2016-09-28
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "552.1475007751569"
+    "version": "554.1475107054248"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5784,10 +5784,11 @@ Scoped.define("module:Channels.Sender", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @param serializerInfo Custom serializer information
 		 */
-		send: function (message, data) {
+		send: function (message, data, serializerInfo) {
 			this.trigger("send", message, data);
-			this._send(message, data);
+			this._send(message, data, serializerInfo);
 		},
 		
 		/**
@@ -5795,8 +5796,9 @@ Scoped.define("module:Channels.Sender", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @param serializerInfo Custom serializer information
 		 */
-		_send: function (message, data) {}
+		_send: function (message, data, serializerInfo) {}
 	
 	}]);
 });
@@ -5820,10 +5822,11 @@ Scoped.define("module:Channels.Receiver", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @param serializerInfo Custom serializer information
 		 */
-		_receive: function (message, data) {
-			this.trigger("receive", message, data);
-			this.trigger("receive:" + message, data);
+		_receive: function (message, data, serializerInfo) {
+			this.trigger("receive", message, data, serializerInfo);
+			this.trigger("receive:" + message, data, serializerInfo);
 		}
 	
 	}]);
@@ -5844,11 +5847,11 @@ Scoped.define("module:Channels.ReceiverSender", [
 		return {
 
 			/**
-			 * TODO
+			 * Creates a new instance.
 			 * 
-			 * @param {object} receiver TODO
-			 * @param {boolean} async TODO
-			 * @param {int} delay TODO
+			 * @param {object} receiver Receiver object
+			 * @param {boolean} async Handle every invocation asynchronously
+			 * @param {int} delay Delay time for asynchronous invocation
 			 */
 			constructor: function (receiver, async, delay) {
 				inherited.constructor.call(this);
@@ -5857,13 +5860,16 @@ Scoped.define("module:Channels.ReceiverSender", [
 				this.__delay = delay;
 			},
 			
-			_send: function (message, data) {
+			/**
+			 * @override
+			 */
+			_send: function (message, data, serializerInfo) {
 				if (this.__async) {
 					Async.eventually(function () {
-						this.__receiver._receive(message, data);
+						this.__receiver._receive(message, data, serializerInfo);
 					}, this, this.__delay);
 				} else
-					this.__receiver._receive(message, data);
+					this.__receiver._receive(message, data, serializerInfo);
 			}
 			
 		};
@@ -5894,11 +5900,14 @@ Scoped.define("module:Channels.ReadySender", [
 				this.__sender = sender;
 			},
 			
-			_send: function (message, data) {
+			/**
+			 * @override
+			 */
+			_send: function (message, data, serializerInfo) {
 				if (this.__ready)
-					this.__sender.send(message, data);
+					this.__sender.send(message, data, serializerInfo);
 				else
-					this.__cache.push({message: message, data: data});
+					this.__cache.push({message: message, data: data, serializerInfo: serializerInfo});
 			},
 			
 			/**
@@ -5907,8 +5916,9 @@ Scoped.define("module:Channels.ReadySender", [
 			 */
 			ready: function () {
 				this.__ready = true;
-				for (var i = 0; i < this.__cache.length; ++i)
-					this.__sender.send(this.__cache[i].message, this.__cache[i].data);
+				this.__cache.forEach(function (entry) {
+					this.__sender.send(entry.message, entry.data, entry.serializerInfo);
+				}, this);
 				this.__cache = [];
 			},
 			
@@ -6052,7 +6062,7 @@ Scoped.define("module:Channels.TransportChannel", [
 			 * 
 			 * @param {object} sender Sender Channel
 			 * @param {object} receiver Receiver Channel
-			 * @param {object} options options (timeout, tries, timer) for configuring the Transport Channel
+			 * @param {object} options options (timeout, tries, timer, auto_destroy) for configuring the Transport Channel
 			 */
 			constructor: function (sender, receiver, options) {
 				inherited.constructor.call(this);
@@ -6063,6 +6073,10 @@ Scoped.define("module:Channels.TransportChannel", [
 					tries: 1,
 					timer: 500
 				});
+				if (this.__options.auto_destroy) {
+					this.auto_destroy(sender);
+					this.auto_destroy(receiver);
+				}
 				this.__receiver.on("receive:send", function (data) {
 					this.__reply(data);
 				}, this);
@@ -10102,6 +10116,17 @@ Scoped.define("module:RMI.Client", [
 				this.__channel = channel;
 				return this;
 			},
+			
+			/**
+			 * Connect to a channel using sender and receiver.
+			 * 
+			 * @param {object} sender sender channel to be connected to
+			 * @param {object} receiver receiver channel to be connected to
+			 * @param {object} options options for transport channel
+			 */
+			connectTransport: function (sender, receiver, options) {
+				return this.connect(this.auto_destroy(new TransportChannel(sender, receiver, options)));
+			},
 
 			/**
 			 * Disconnect from channel.
@@ -10170,11 +10195,11 @@ Scoped.define("module:RMI.Client", [
 				var instance = new class_type();
 				this.__instances[Ids.objectId(instance, instance_name)] = instance;
 				var self = this;
-				instance.__send = function (message, data) {
+				instance.__send = function (message, data, serializes) {
 					if (!self.__channel)
 						return;
 					data = Objs.map(data, self._serializeValue, self);
-					return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
+					return self.__channel.send(instance_name + ":" + message, data, serializes).mapSuccess(function (result) {
 						return this._unserializeValue(result);
 					}, self);
 				};
@@ -10348,6 +10373,8 @@ Scoped.define("module:RMI.Server", [
 						instance: instance,
 						options: options
 				};
+				if (options.auto_destroy)
+					this.auto_destroy(instance);
 				return instance;
 			},
 
@@ -10366,8 +10393,10 @@ Scoped.define("module:RMI.Server", [
 			 * Register a client channel
 			 * 
 			 * @param {object} channel Client channel
+			 * @param {object} options Options
 			 */
-			registerClient: function (channel) {
+			registerClient: function (channel, options) {
+				options = options || {};
 				var self = this;
 				this.__channels.add(channel);
 				channel._reply = function (message, data) {
@@ -10377,7 +10406,20 @@ Scoped.define("module:RMI.Server", [
 					else
 						return Promise.error(true);
 				};
+				if (options.auto_destroy)
+					this.auto_destroy(channel);
 				return this;
+			},
+			
+			/**
+			 * Register a client by sender and receiver channel
+			 * 
+			 * @param {object} sender Sender channel
+			 * @param {object} receiver Receiver channel
+			 * @param {object} options Options
+			 */
+			registerTransportClient: function (sender, receiver, options) {
+				return this.registerClient(this.auto_destroy(new TransportChannel(sender, receiver, options)));
 			},
 
 			/**
@@ -10585,6 +10627,12 @@ Scoped.define("module:RMI.Stub", [
 			 * @member {array} intf abstract interface list, needs to be overwritten in subclasses
 			 */
 			intf: [],
+			
+			/**
+			 * 
+			 * @member {object} serializes list of serialization information
+			 */
+			serializes: {},
 
 			/**
 			 * Instantiates the stub.
@@ -10607,7 +10655,7 @@ Scoped.define("module:RMI.Stub", [
 			 * @override
 			 */
 			invoke: function (message) {
-				return this.__send(message, Functions.getArguments(arguments, 1));
+				return this.__send(message, Functions.getArguments(arguments, 1), this.serializes[message]);
 			}
 
 		};
@@ -10903,40 +10951,77 @@ Scoped.define("module:Scheduling.DefaultScheduler", [
 
 
 Scoped.define("module:States.CompetingComposite", [
-                                                   "module:Class",
-                                                   "module:Objs"
-                                                   ], function (Class, Objs, scoped) {
-	return Class.extend({scoped: scoped}, {
-
-		_register_host: function (competing_host) {
-			this._hosts = this._hosts || [];
-			this._hosts.push(this._auto_destroy(competing_host));
-		},
-
-		other_hosts: function (competing_host) {
-			return Objs.filter(this._hosts || [], function (other) {
-				return other != competing_host;
-			}, this);
-		},
-
-		_next: function (competing_host, state) {
-			var others = this.other_hosts(competing_host);
-			for (var i = 0; i < others.length; ++i) {
-				var other = others[i];
-				var other_state = other.state();
-				if (!other_state.can_coexist_with(state))
-					other_state.retreat_against(state);
+    "module:Class",
+    "module:Objs"
+], function (Class, Objs, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Competing Composite Class
+		 * 
+		 * @class BetaJS.States.CompetingComposite
+		 */
+		return {
+			
+			/**
+			 * Register a competing host
+			 * 
+			 * @param {object} competing_host Competing host
+			 */
+			_register_host: function (competing_host) {
+				this._hosts = this._hosts || [];
+				this._hosts.push(this._auto_destroy(competing_host));
+			},
+	
+			/**
+			 * Returns all other hosts of a competing host
+			 * 
+			 * @param {object} competing_host competing hosts in question
+			 * @return {array} other hosts
+			 */
+			other_hosts: function (competing_host) {
+				return Objs.filter(this._hosts || [], function (other) {
+					return other != competing_host;
+				}, this);
+			},
+	
+			/**
+			 * Transcend to another state of a competing host
+			 * 
+			 * @param {object} competing_host Competing host
+			 * @param {object} state State
+			 */
+			_next: function (competing_host, state) {
+				var others = this.other_hosts(competing_host);
+				for (var i = 0; i < others.length; ++i) {
+					var other = others[i];
+					var other_state = other.state();
+					if (!other_state.can_coexist_with(state))
+						other_state.retreat_against(state);
+				}
 			}
-		}
 
+		};
 	});
 });
 
 
 Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (Host, scoped) {
 	return Host.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * CompetingHost Class
+		 * 
+		 * @class BetaJS.States.CompetingHost
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} composite Associated composite object
+			 * @param {object} options Host options
+			 */
 			constructor: function (composite, options) {
 				inherited.constructor.call(this, options);
 				this._composite = composite;
@@ -10944,10 +11029,18 @@ Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (H
 					composite._register_host(this);
 			},
 
+			/**
+			 * Returns the associated composite.
+			 * 
+			 * @return {object} Composite
+			 */
 			composite: function () {
 				return this._composite;
 			},
 
+			/**
+			 * @override
+			 */
 			_can_transition_to: function (state) {
 				if (!inherited._can_transition_to.call(this, state))
 					return false;
@@ -10963,6 +11056,9 @@ Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (H
 				return true;
 			},
 
+			/**
+			 * @override
+			 */
 			_next: function (state) {
 				if (this._composite)
 					this._composite._next(this, state);
@@ -10975,19 +11071,44 @@ Scoped.define("module:States.CompetingHost", ["module:States.Host"], function (H
 
 
 Scoped.define("module:States.CompetingState", ["module:States.State"], function (State, scoped) {
-	return State.extend({scoped: scoped}, {
+	return State.extend({scoped: scoped}, function (inherited) {
 
-		can_coexist_with: function (foreign_state) {
-			return true;
-		},
+		/**
+		 * ComponentState Class
+		 * 
+		 * @class BetaJS.States.CompetingState
+		 */
+		return {
+			
+			/**
+			 * Determines whether this state can coexist with a foreign state
+			 * 
+			 * @param {object} foreign_state Foreign state
+			 * @return {boolean} true if it can coexist
+			 */
+			can_coexist_with: function (foreign_state) {
+				return true;
+			},
+	
+			/**
+			 * Determines whether this state can prevail against a foreign state
+			 * 
+			 * @param {object} foreign_state Foreign state
+			 * @return {boolean} true if it can prevail
+			 */
+			can_prevail_against: function (foreign_state) {
+				return false;
+			},
+	
+			/**
+			 * Retreat against foreign state
+			 * 
+			 * @param {object} foreign_state Foreign state
+			 */
+			retreat_against: function (foreign_state) {
+			}
 
-		can_prevail_against: function (foreign_state) {
-			return false;
-		},
-
-		retreat_against: function (foreign_state) {
-		}
-
+		};
 	});
 });
 
@@ -11776,8 +11897,9 @@ Scoped.define("module:Workers.PseudoWorker", [
 	});
 });
 Scoped.define("module:Workers.WorkerSenderChannel", [
-    "module:Channels.Sender"
-], function (Sender, scoped) {
+    "module:Channels.Sender",
+    "module:Objs"
+], function (Sender, Objs, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -11786,11 +11908,18 @@ Scoped.define("module:Workers.WorkerSenderChannel", [
 				this.__worker = worker || self;
 			},
 			
-			_send: function (message, data) {
+			_send: function (message, data, serializerInfo) {
+				var transfer = [];
+				if (serializerInfo) {
+					Objs.iter(serializerInfo, function (value, key) {
+						if (value && value.transfer && data[key])
+							transfer.push(data[key]);
+					}, this);
+				}
 				this.__worker.postMessage({
 					message: message,
 					data: data
-				});
+				}, transfer);
 			}
 			
 		};

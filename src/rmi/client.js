@@ -55,6 +55,17 @@ Scoped.define("module:RMI.Client", [
 				this.__channel = channel;
 				return this;
 			},
+			
+			/**
+			 * Connect to a channel using sender and receiver.
+			 * 
+			 * @param {object} sender sender channel to be connected to
+			 * @param {object} receiver receiver channel to be connected to
+			 * @param {object} options options for transport channel
+			 */
+			connectTransport: function (sender, receiver, options) {
+				return this.connect(this.auto_destroy(new TransportChannel(sender, receiver, options)));
+			},
 
 			/**
 			 * Disconnect from channel.
@@ -123,11 +134,11 @@ Scoped.define("module:RMI.Client", [
 				var instance = new class_type();
 				this.__instances[Ids.objectId(instance, instance_name)] = instance;
 				var self = this;
-				instance.__send = function (message, data) {
+				instance.__send = function (message, data, serializes) {
 					if (!self.__channel)
 						return;
 					data = Objs.map(data, self._serializeValue, self);
-					return self.__channel.send(instance_name + ":" + message, data).mapSuccess(function (result) {
+					return self.__channel.send(instance_name + ":" + message, data, serializes).mapSuccess(function (result) {
 						return this._unserializeValue(result);
 					}, self);
 				};

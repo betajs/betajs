@@ -61,6 +61,8 @@ Scoped.define("module:RMI.Server", [
 						instance: instance,
 						options: options
 				};
+				if (options.auto_destroy)
+					this.auto_destroy(instance);
 				return instance;
 			},
 
@@ -79,8 +81,10 @@ Scoped.define("module:RMI.Server", [
 			 * Register a client channel
 			 * 
 			 * @param {object} channel Client channel
+			 * @param {object} options Options
 			 */
-			registerClient: function (channel) {
+			registerClient: function (channel, options) {
+				options = options || {};
 				var self = this;
 				this.__channels.add(channel);
 				channel._reply = function (message, data) {
@@ -90,7 +94,20 @@ Scoped.define("module:RMI.Server", [
 					else
 						return Promise.error(true);
 				};
+				if (options.auto_destroy)
+					this.auto_destroy(channel);
 				return this;
+			},
+			
+			/**
+			 * Register a client by sender and receiver channel
+			 * 
+			 * @param {object} sender Sender channel
+			 * @param {object} receiver Receiver channel
+			 * @param {object} options Options
+			 */
+			registerTransportClient: function (sender, receiver, options) {
+				return this.registerClient(this.auto_destroy(new TransportChannel(sender, receiver, options)));
 			},
 
 			/**
