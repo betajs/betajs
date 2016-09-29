@@ -18,6 +18,7 @@ module.exports = function(grunt) {
     /* Testing */
     .qunitTask(null, './dist/' + dist + '.js', grunt.file.expand('./tests/*/*.js'))
     .closureTask(null, ["./vendors/scoped.js", "./dist/" + dist + "-noscoped.js"])
+    .browserqunitTask(null, "tests/tests.html")
     .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: false})
     .browserstackTask(null, 'tests/tests.html', {desktop: false, mobile: true})
     .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js', "./benchmarks/**/*.js"])
