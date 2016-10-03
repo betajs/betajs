@@ -3,13 +3,27 @@ Scoped.define("module:Workers.WorkerSenderChannel", [
     "module:Objs"
 ], function (Sender, Objs, scoped) {
 	return Sender.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Worker Sender Channel Class
+		 * 
+		 * @class BetaJS.Workers.WorkerSenderChannel
+		 */
 		return {
 			
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} worker worker object
+			 */
 			constructor: function (worker) {
 				inherited.constructor.call(this);
 				this.__worker = worker || self;
 			},
 			
+			/**
+			 * @override
+			 */
 			_send: function (message, data, serializerInfo) {
 				var transfer = [];
 				if (serializerInfo) {
@@ -33,8 +47,19 @@ Scoped.define("module:Workers.WorkerReceiverChannel", [
     "module:Channels.Receiver"
 ], function (Receiver, scoped) {
 	return Receiver.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Worker Receiver Channel Class
+		 * 
+		 * @class BetaJS.Workers.WorkerReceiverChannel
+		 */
 		return {
-						
+					
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} worker worker object
+			 */
 			constructor: function (worker) {
 				inherited.constructor.call(this);
 				this.__worker = worker || self;
