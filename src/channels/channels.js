@@ -54,11 +54,10 @@ Scoped.define("module:Channels.Receiver", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
-		 * @param serializerInfo Custom serializer information
 		 */
-		_receive: function (message, data, serializerInfo) {
-			this.trigger("receive", message, data, serializerInfo);
-			this.trigger("receive:" + message, data, serializerInfo);
+		_receive: function (message, data) {
+			this.trigger("receive", message, data);
+			this.trigger("receive:" + message, data);
 		}
 	
 	}]);
@@ -98,10 +97,10 @@ Scoped.define("module:Channels.ReceiverSender", [
 			_send: function (message, data, serializerInfo) {
 				if (this.__async) {
 					Async.eventually(function () {
-						this.__receiver._receive(message, data, serializerInfo);
+						this.__receiver._receive(message, data);
 					}, this, this.__delay);
 				} else
-					this.__receiver._receive(message, data, serializerInfo);
+					this.__receiver._receive(message, data);
 			}
 			
 		};

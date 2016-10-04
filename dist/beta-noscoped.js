@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.83 - 2016-09-28
+betajs - v1.0.84 - 2016-10-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "554.1475107054248"
+    "version": "557.1475608779737"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5297,24 +5297,94 @@ Scoped.define("module:Tokens", function() {
 	};
 });
 Scoped.define("module:Trees.TreeNavigator", function () {
+	
+	/**
+	 * Abstract Tree Navigator Mixin
+	 * 
+	 * @mixin BetaJS.Trees.TreeNavigator
+	 */
 	return {		
 
+		/**
+		 * Returns the root node of a tree.
+		 * 
+		 * @return {object} Root node
+		 */
 		nodeRoot: function () {},
+
+		/**
+		 * Retrusns the id of a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {string} Id of node
+		 */
 		nodeId: function (node) {},
+
+		/**
+		 * Returns the parent of a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {object} Parent node
+		 */
 		nodeParent: function (node) {},
+
+		/**
+		 * Returns the children of a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {array} Children of the node
+		 */
 		nodeChildren: function (node) {},
+
+		/**
+		 * Watches a node for changes.
+		 * 
+		 * @param {object} node Node
+		 * @param {function} func Change callback function
+		 * @param {object} context Optional change callback context
+		 */
 		nodeWatch: function (node, func, context) {},
+
+		/**
+		 * Unwatches a node for changes.
+		 * 
+		 * @param {object} node Node
+		 * @param {function} func Change callback function
+		 * @param {object} context Optional change callback context
+		 */
 		nodeUnwatch: function (node, func, context) {},
+
+		/**
+		 * Returns the data associated with a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {object} Node data
+		 */
 		nodeData: function (node) {}
 
 	};
 });
 
 
-Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Lexer", "module:Trees.TreeQueryObject"], function (Class, Lexer, TreeQueryObject, scoped) {
+Scoped.define("module:Trees.TreeQueryEngine", [
+    "module:Class",
+    "module:Parser.Lexer",
+    "module:Trees.TreeQueryObject"
+], function (Class, Lexer, TreeQueryObject, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Tree Query Engine Class
+		 * 
+		 * @class BetaJS.Trees.TreeQueryEngine
+		 */
 		return {
 
+			/**
+			 * Create a new instance.
+			 * 
+			 * @param {object} navigator Navigator instance
+			 */
 			constructor: function (navigator) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -5329,6 +5399,14 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 				}));
 			},
 
+			/**
+			 * Query the tree.
+			 * 
+			 * @param {object} node Node to start the query from
+			 * @param {string} query Query string
+			 * 
+			 * @return {object} Tree query object for the query
+			 */
 			query: function (node, query) {
 				return new TreeQueryObject(this.__navigator, node, this.__lexer.lex(query));
 			}
@@ -5338,10 +5416,28 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 });
 
 
-Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.EventsMixin", "module:Objs", "module:Types"], function (Class, EventsMixin, Objs, Types, scoped) {
+Scoped.define("module:Trees.TreeQueryObject", [
+    "module:Class",
+    "module:Events.EventsMixin",
+    "module:Objs",
+    "module:Types"
+], function (Class, EventsMixin, Objs, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		
+		/**
+		 * Object representing a tree query on a node
+		 *
+		 * @class BetaJS.Trees.TreeQueryObject
+		 */
 		return {
 
+			/**
+			 * Create new instance.
+			 * 
+			 * @param {object} navigator Navigator object
+			 * @param {object} node Node of the query
+			 * @param {object} query Lexed query
+			 */
 			constructor: function (navigator, node, query) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -5353,6 +5449,9 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__register(node, 0, {});
 			},
 
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				Objs.iter(this.__partials, function (partials) {
 					Objs.iter(partials.partials, function (partial) {
@@ -5362,6 +5461,11 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Returns the currently matching nodes.
+			 * 
+			 * @return {array} Matching nodes.
+			 */
 			result: function () {
 				var result = [];
 				Objs.iter(this.__result, function (value) {
@@ -5822,11 +5926,10 @@ Scoped.define("module:Channels.Receiver", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
-		 * @param serializerInfo Custom serializer information
 		 */
-		_receive: function (message, data, serializerInfo) {
-			this.trigger("receive", message, data, serializerInfo);
-			this.trigger("receive:" + message, data, serializerInfo);
+		_receive: function (message, data) {
+			this.trigger("receive", message, data);
+			this.trigger("receive:" + message, data);
 		}
 	
 	}]);
@@ -5866,10 +5969,10 @@ Scoped.define("module:Channels.ReceiverSender", [
 			_send: function (message, data, serializerInfo) {
 				if (this.__async) {
 					Async.eventually(function () {
-						this.__receiver._receive(message, data, serializerInfo);
+						this.__receiver._receive(message, data);
 					}, this, this.__delay);
 				} else
-					this.__receiver._receive(message, data, serializerInfo);
+					this.__receiver._receive(message, data);
 			}
 			
 		};
@@ -5959,8 +6062,8 @@ Scoped.define("module:Channels.SenderMultiplexer", ["module:Channels.Sender"], f
 				this.__prefix = prefix;
 			},
 						
-			_send: function (message, data) {
-				this.__sender.send(this.__prefix + ":" + message, data);
+			_send: function (message, data, serializerInfo) {
+				this.__sender.send(this.__prefix + ":" + message, data, serializerInfo);
 			}
 			
 		};
@@ -11844,105 +11947,6 @@ Scoped.define("module:States.StateRouter", ["module:Class", "module:Objs"], func
 			}
 
 		};		
-	});
-});
-
-Scoped.define("module:Workers.PseudoWorker", [
-    "module:Class",
-    "module:Events.EventsMixin"
-], function (Class, EventsMixin, scoped) {
-	return Class.extend({scoped: scoped}, [EventsMixin, {
-		
-		bind: function (peerWorker) {
-			this.__peer = peerWorker;
-		},
-		
-		postMessage: function (data) {
-			this.__peer.triggerAsync("message", data);
-		},
-		
-		addEventListener: function (event, callback) {
-			if (event === "message") {
-				this.on(event, function (data) {
-					callback.call(this, {data : data});
-				}, this);
-			} else {
-				this.on(event, callback);
-			}
-		}
-
-	}], {		
-		
-		createWorker: function (url) {
-			try {
-				return new Worker(url);
-			} catch (e) {
-				return null;
-			}
-		},
-		
-		createPseudoWorker: function (workerFactory, workerFactoryCtx) {
-			var clientWorker = new this();
-			var serverWorker = clientWorker.auto_destroy(new this());
-			clientWorker.bind(serverWorker);
-			serverWorker.bind(clientWorker);
-			workerFactory.call(workerFactoryCtx || this, serverWorker);
-			return clientWorker;
-		},
-		
-		createAsFallback: function (url, workerFactory, workerFactoryCtx) {
-			return this.createWorker(url) || this.createPseudoWorker(workerFactory, workerFactoryCtx);
-		}
-		
-	});
-});
-Scoped.define("module:Workers.WorkerSenderChannel", [
-    "module:Channels.Sender",
-    "module:Objs"
-], function (Sender, Objs, scoped) {
-	return Sender.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			constructor: function (worker) {
-				inherited.constructor.call(this);
-				this.__worker = worker || self;
-			},
-			
-			_send: function (message, data, serializerInfo) {
-				var transfer = [];
-				if (serializerInfo) {
-					Objs.iter(serializerInfo, function (value, key) {
-						if (value && value.transfer && data[key])
-							transfer.push(data[key]);
-					}, this);
-				}
-				this.__worker.postMessage({
-					message: message,
-					data: data
-				}, transfer);
-			}
-			
-		};
-	});
-});
-
-
-Scoped.define("module:Workers.WorkerReceiverChannel", [
-    "module:Channels.Receiver"
-], function (Receiver, scoped) {
-	return Receiver.extend({scoped: scoped}, function (inherited) {
-		return {
-						
-			constructor: function (worker) {
-				inherited.constructor.call(this);
-				this.__worker = worker || self;
-				var _this = this;
-				this.__worker.addEventListener("message", function (data) {
-					_this._receive(data.data.message, data.data.data);
-				});
-		    }
-	
-		};
 	});
 });
 
