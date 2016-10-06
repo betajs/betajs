@@ -1,17 +1,56 @@
 Scoped.define("module:Lists.AbstractList", [
-                                            "module:Class",
-                                            "module:Objs",
-                                            "module:Types",
-                                            "module:Iterators.ArrayIterator"
-                                            ], function (Class, Objs, Types, ArrayIterator, scoped) {
+	"module:Class",
+	"module:Objs",
+	"module:Types",
+	"module:Iterators.ArrayIterator"
+], function (Class, Objs, Types, ArrayIterator, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Abstract List Class
+		 * 
+		 * @class BetaJS.Lists.AbstractList
+		 */
 		return {
 
+			/**
+			 * Add an object to the list.
+			 * 
+			 * @param {object} object Object to be added
+			 * @return {string} ident of object
+			 */
 			_add: function (object) {},
+			
+			/**
+			 * Remove an object from the list.
+			 * 
+			 * @param {string} ident Ident of object to be removed.
+			 * @return {object} removed object
+			 */
 			_remove: function (ident) {},
+			
+			/**
+			 * Get an object by ident.
+			 * 
+			 * @param {string} ident Ident of object
+			 * @return {object} object matching the ident
+			 */
 			_get: function (ident) {},
+			
+			/**
+			 * Iterate over all objects in the list.
+			 * 
+			 * @param {function} callback callback function for iteration
+			 * @param {object} context optional context for callback function
+			 */
 			_iterate: function (callback, context) {},
 
+			/**
+			 * Given an object, return the ident of the object.
+			 * 
+			 * @param {object} object object in question
+			 * @return {string} ident of object
+			 */
 			get_ident: function (object) {
 				var ident = null;
 				this._iterate(function (obj, id) {
@@ -24,12 +63,29 @@ Scoped.define("module:Lists.AbstractList", [
 				return ident;
 			},
 
+			/**
+			 * Determines whether an object exists in the list.
+			 * 
+			 * @param {object} object object in question
+			 * @return {boolean} true if object is contained in list
+			 */
 			exists: function (object) {
 				return object && this.get_ident(object) !== null;
 			},
 
+			/**
+			 * Notification when an object obtains a new ident.
+			 * 
+			 * @param {object} object object in question
+			 * @param {string} new_ident new identifier of object
+			 */
 			_ident_changed: function (object, new_ident) {},
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {array} objects optional array of initial objects to be added to the list
+			 */
 			constructor: function (objects) {
 				inherited.constructor.call(this);
 				this.__count = 0;
@@ -40,6 +96,12 @@ Scoped.define("module:Lists.AbstractList", [
 				}
 			},
 
+			/**
+			 * Add an object to the list.
+			 * 
+			 * @param {object} object Object to be added
+			 * @return {string} ident of object
+			 */
 			add: function (object) {
 				var ident = this._add(object);
 				if (Types.is_defined(ident))
@@ -47,10 +109,19 @@ Scoped.define("module:Lists.AbstractList", [
 				return ident;
 			},
 
+			/**
+			 * Returns the number of objects contained in the list.
+			 * 
+			 * @return {int} number of objects
+			 */
 			count: function () {
 				return this.__count;
 			},
 
+			/**
+			 * Removes all objects from the list.
+			 * 
+			 */
 			clear: function () {
 				this._iterate(function (object, ident) {
 					this.remove_by_ident(ident);
@@ -58,6 +129,12 @@ Scoped.define("module:Lists.AbstractList", [
 				}, this);
 			},
 
+			/**
+			 * Remove an object from the list by identifier.
+			 * 
+			 * @param {string} ident Ident of object to be removed.
+			 * @return {object} removed object
+			 */
 			remove_by_ident: function (ident) {
 				var ret = this._remove(ident);
 				if (Types.is_defined(ret))
@@ -65,10 +142,21 @@ Scoped.define("module:Lists.AbstractList", [
 				return ret;
 			},
 
+			/**
+			 * Remove an object from the list.
+			 * 
+			 * @param {object} object object in question
+			 * @return {object} removed object
+			 */
 			remove: function (object) {
 				return this.remove_by_ident(this.get_ident(object));
 			},
 
+			/**
+			 * Remove objects from the list that match a filter function.
+			 * 
+			 * @param {function} filter filter function for object
+			 */
 			remove_by_filter: function (filter) {
 				this._iterate(function (object, ident) {
 					if (filter(object))
@@ -77,17 +165,34 @@ Scoped.define("module:Lists.AbstractList", [
 				}, this);
 			},
 
+			/**
+			 * Get an object by ident.
+			 * 
+			 * @param {string} ident Ident of object
+			 * @return {object} object matching the ident
+			 */
 			get: function (ident) {
 				return this._get(ident);
 			},
 
+			/**
+			 * Iterate over all objects in the list.
+			 * 
+			 * @param {function} callback callback function for iteration
+			 * @param {object} context optional context for callback function
+			 */
 			iterate: function (cb, context) {
 				this._iterate(function (object, ident) {
-					var ret = cb.apply(this, [object, ident]);
+					var ret = cb.call(this, object, ident);
 					return Types.is_defined(ret) ? ret : true;
 				}, context);
 			},
 
+			/**
+			 * Creates an iterator for the list.
+			 * 
+			 * @return {object} iterator for list
+			 */
 			iterator: function () {
 				return ArrayIterator.byIterate(this.iterate, this);
 			}
