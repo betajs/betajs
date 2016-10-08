@@ -77,7 +77,7 @@ Scoped.define("module:Channels.TransportChannel", [
 						message: message,
 						data: data,
 						stateless: true
-					});
+					}, options.serializerInfo);
 					promise.asyncSuccess(true);
 				} else {
 					this.__sent_id++;
@@ -93,7 +93,7 @@ Scoped.define("module:Channels.TransportChannel", [
 						message: message,
 						data: data,
 						id: this.__sent_id
-					});
+					}, options.serializerInfo);
 				}
 				return promise;
 			},
