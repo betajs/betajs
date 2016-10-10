@@ -4,8 +4,21 @@ Scoped.define("module:Promise", [
     "module:Async",
     "module:Objs"
 ], function (Types, Functions, Async, Objs) {
+	
+	/**
+	 * Promise Class
+	 * 
+	 * @class BetaJS.Promise
+	 */
 	var Promise = {		
-			
+
+		/**
+		 * Creates a new promise instance.
+		 * 
+		 * @param value optional promise value
+		 * @param error optional promise error
+		 * @param {boolean} finished does this promise have its final value / error
+		 */
 		Promise: function (value, error, finished) {
 			this.__value = error ? null : (value || null);
 			this.__error = error ? error : null;
@@ -15,14 +28,34 @@ Scoped.define("module:Promise", [
 			this.__callbacks = [];
 		},
 		
+		/**
+		 * Create a new promise instance. (Simplified)
+		 * 
+		 * @param value optional promise value
+		 * @param error optional promise error
+		 * 
+		 * @return {object} promise instance
+		 */
 		create: function (value, error) {
 			return new this.Promise(value, error, arguments.length > 0);
 		},
 		
+		/**
+		 * Returns a promise instance for a value. The value might be a promise itself already.
+		 * 
+		 * @param value promise value or promise
+		 * @return {object} promise instance
+		 */
 		value: function (value) {
 			return this.is(value) ? value : new this.Promise(value, null, true);
 		},
 		
+		/**
+		 * Returns a promise instance for a value, setting the value asynchronously.
+		 * 
+		 * @param value promise value
+		 * @return {object} promise instance
+		 */
 		eventualValue: function (value) {
 			var promise = new this.Promise();
 			Async.eventually(function () {
@@ -31,6 +64,12 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 	
+		/**
+		 * Returns a promise instance for an error. The error might be a promise itself already.
+		 * 
+		 * @param error promise error or promise
+		 * @return {object} promise instance
+		 */
 		error: function (error) {
 			return this.is(error) ? error : new this.Promise(null, error, true);
 		},
