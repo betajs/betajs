@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.85 - 2016-10-08
+betajs - v1.0.85 - 2016-10-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "559.1475944408767"
+    "version": "567.1476570972098"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -203,10 +203,12 @@ Scoped.define("module:Ajax.Support", [
 		 * Execute an Ajax command.
 		 * 
 		 * @param {object} options Options for the Ajax command
+		 * @param {function} progress Optional progress function
+		 * @param {object} progressCtx Optional progress context
 		 * 
 		 * @return {object} Execution promise
 		 */
-		execute: function (options) {
+		execute: function (options, progress, progressCtx) {
 			options = this.preprocess(options);
 			var current = null;		
 			this.__registry.forEach(function (candidate) {
@@ -216,7 +218,7 @@ Scoped.define("module:Ajax.Support", [
 			if (!current)
 				return Promise.error(new NoCandidateAjaxException(options));
 			var helper = function (resilience) {
-				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options);
+				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options, progress, progressCtx);
 				if (!resilience || resilience <= 1)
 					return promise;
 				var returnPromise = Promise.create();
@@ -262,11 +264,12 @@ Scoped.define("module:Ajax.AjaxWrapper", [
 			 * Execute an ajax call.
 			 * 
 			 * @param {object} options options for ajax call
-			 * 
+			 * @param {function} progress Optional progress function
+			 * @param {object} progressCtx Optional progress context
 			 * @return {object} promise for the ajax call
 			 */
-			execute: function (options) {
-				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options));
+			execute: function (options, progress, progressCtx) {
+				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options), progress, progressCtx);
 			}
 			
 		};
@@ -8705,8 +8708,21 @@ Scoped.define("module:Promise", [
     "module:Async",
     "module:Objs"
 ], function (Types, Functions, Async, Objs) {
+	
+	/**
+	 * Promise Class
+	 * 
+	 * @class BetaJS.Promise
+	 */
 	var Promise = {		
-			
+
+		/**
+		 * Creates a new promise instance.
+		 * 
+		 * @param value optional promise value
+		 * @param error optional promise error
+		 * @param {boolean} finished does this promise have its final value / error
+		 */
 		Promise: function (value, error, finished) {
 			this.__value = error ? null : (value || null);
 			this.__error = error ? error : null;
@@ -8716,14 +8732,34 @@ Scoped.define("module:Promise", [
 			this.__callbacks = [];
 		},
 		
+		/**
+		 * Create a new promise instance. (Simplified)
+		 * 
+		 * @param value optional promise value
+		 * @param error optional promise error
+		 * 
+		 * @return {object} promise instance
+		 */
 		create: function (value, error) {
 			return new this.Promise(value, error, arguments.length > 0);
 		},
 		
+		/**
+		 * Returns a promise instance for a value. The value might be a promise itself already.
+		 * 
+		 * @param value promise value or promise
+		 * @return {object} promise instance
+		 */
 		value: function (value) {
 			return this.is(value) ? value : new this.Promise(value, null, true);
 		},
 		
+		/**
+		 * Returns a promise instance for a value, setting the value asynchronously.
+		 * 
+		 * @param value promise value
+		 * @return {object} promise instance
+		 */
 		eventualValue: function (value) {
 			var promise = new this.Promise();
 			Async.eventually(function () {
@@ -8732,10 +8768,25 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 	
+		/**
+		 * Returns a promise instance for an error. The error might be a promise itself already.
+		 * 
+		 * @param error promise error or promise
+		 * @return {object} promise instance
+		 */
 		error: function (error) {
 			return this.is(error) ? error : new this.Promise(null, error, true);
 		},
 		
+		/**
+		 * Turns a function call into a promise, mapping exceptions to errors.
+		 * 
+		 * @param {function} f function
+		 * @param {object} ctx optional function context
+		 * @param {array} params optional function parameters
+		 * 
+		 * @return {object} promise
+		 */
 		box: function (f, ctx, params) {
 			try {
 				var result = f.apply(ctx || this, params || []);
@@ -8745,6 +8796,14 @@ Scoped.define("module:Promise", [
 			}
 		},
 		
+		/**
+		 * Try-Catch a function, wrapping it into a promise.
+		 * 
+		 * @param {function} f function
+		 * @param {object} ctx optional function context
+		 * 
+		 * @return {object} promise
+		 */
 		tryCatch: function (f, ctx) {
 			try {
 				return this.value(f.apply(ctx || this));
@@ -8753,8 +8812,16 @@ Scoped.define("module:Promise", [
 			}
 		},
 		
+		/**
+		 * Turns a function accepting a callback function as last parameter into a promise.
+		 * 
+		 * @param {object} optional function context
+		 * @param {function} func function
+		 * 
+		 * @return {object} promise
+		 */
 		funcCallback: function (ctx, func) {
-			var args  = Functions.getArguments(arguments, 1);
+			var args = [];
 			if (Types.is_function(ctx)) {
 				args = Functions.getArguments(arguments, 1);
 				func = ctx;
@@ -8767,6 +8834,13 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 		
+		/**
+		 * Takes a number of promises and creates a single new promise being successful if and only if all input promises are successful.
+		 * 
+		 * @param {array} promises promises array
+		 * 
+		 * @return {object} promise
+		 */
 		and: function (promises) {
 			var promise = this.create();
 			promise.__promises = [];
@@ -8827,6 +8901,13 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 		
+		/**
+		 * Takes a function and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {function} func function
+		 * 
+		 * @return {object} promise
+		 */
 		func: function (func) {
 			var args = Functions.getArguments(arguments, 1);
 			var promises = [];
@@ -8848,6 +8929,15 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 		
+		/**
+		 * Takes a method and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {object} ctx function context
+		 * @param {function} func function
+		 * @param {array} params parameters
+		 * 
+		 * @return {object} promise
+		 */
 		methodArgs: function (ctx, func, params) {
 			params.unshift(function () {
 				return func.apply(ctx, arguments);
@@ -8855,20 +8945,52 @@ Scoped.define("module:Promise", [
 			return this.func.apply(this, params);
 		},
 		
+		/**
+		 * Takes a method and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {object} ctx function context
+		 * @param {function} func function
+		 * 
+		 * @return {object} promise
+		 */
 		method: function (ctx, func) {
 			return this.methodArgs(ctx, func, Functions.getArguments(arguments, 2));
 		},
 	
+		/**
+		 * Takes a constructor and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {object} cls constructor class
+		 * 
+		 * @return {object} promise
+		 */
 		newClass: function (cls) {
 			var params = Functions.getArguments(arguments, 1);
 			params.unshift(Functions.newClassFunc(cls));
 			return this.func.apply(this, params);
 		},
 		
+		/**
+		 * Determines whether some value is a promise object.
+		 * 
+		 * @param obj value
+		 * 
+		 * @return {boolean} true if obj is a promise object
+		 */
 		is: function (obj) {
 			return obj && Types.is_object(obj) && obj.classGuid == this.Promise.prototype.classGuid;
 		},
 		
+		/**
+		 * Applies a method multiple times until it succeeds.
+		 * 
+		 * @param {function} method method
+		 * @param {object} context method context
+		 * @param {int} resilience number of times to call
+		 * @param {array} args arguments for method
+		 * 
+		 * @return {object} promise
+		 */
 		resilience: function (method, context, resilience, args) {
 			return method.apply(context, args).mapError(function (error) {
 				return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
@@ -8880,14 +9002,36 @@ Scoped.define("module:Promise", [
 	Objs.extend(Promise.Promise.prototype, {
 		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
 		
+		/**
+		 * Be notified when the promise is successful.
+		 * 
+		 * @param {function} f callback function
+		 * @param {object} context optional callback context
+		 * @param {object} options optional options
+		 */
 		success: function (f, context, options) {
 			return this.callback(f, context, options, "success");
 		},
 		
+		/**
+		 * Be notified when the promise is unsuccessful.
+		 * 
+		 * @param {function} f callback function
+		 * @param {object} context optional callback context
+		 * @param {object} options optional options
+		 */
 		error: function (f, context, options) {
 			return this.callback(f, context, options, "error");
 		},
 		
+		/**
+		 * Be notified when the promise is finished..
+		 * 
+		 * @param {function} f callback function
+		 * @param {object} context callback context
+		 * @param {object} options options
+		 * @param {string} type type of callback like "success"
+		 */
 		callback: function (f, context, options, type) {
 			if ("end" in this)
 				this.end();
@@ -8904,6 +9048,12 @@ Scoped.define("module:Promise", [
 			return this;
 		},
 		
+		/**
+		 * Trigger the result.
+		 * 
+		 * @param {object} record optional specific callback record
+		 * 
+		 */
 		triggerResult: function (record) {
 			if (!this.__isFinished)
 				return this;
@@ -8923,22 +9073,47 @@ Scoped.define("module:Promise", [
 			return this;
 		},
 		
+		/**
+		 * Returns the value of the promise.
+		 * 
+		 * @return value of promise
+		 */
 		value: function () {
 			return this.__value;
 		},
 
+		/**
+		 * Returns the error of the promise.
+		 * 
+		 * @return error of promise
+		 */
 		err: function () {
 			return this.__error;
 		},
 
+		/**
+		 * Determines whether the promise has a value or an error already.
+		 * 
+		 * @return {boolean} true if value or error present
+		 */
 		isFinished: function () {
 			return this.__isFinished;
 		},
 
+		/**
+		 * Determines whether the promise has a value.
+		 * 
+		 * @return {boolean} true if value present
+		 */
 		hasValue: function () {
 			return this.__isFinished && !this.__hasError;
 		},
 
+		/**
+		 * Determines whether the promise has an error.
+		 * 
+		 * @return {boolean} true if error present
+		 */
 		hasError: function () {
 			return this.__isFinished && this.__hasError;
 		},

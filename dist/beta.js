@@ -1,32 +1,93 @@
 /*!
-betajs - v1.0.85 - 2016-10-08
+betajs - v1.0.85 - 2016-10-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
 /** @flow **//*!
-betajs-scoped - v0.0.10 - 2016-04-07
+betajs-scoped - v0.0.12 - 2016-10-02
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
 var Scoped = (function () {
-var Globals = {
-
+var Globals = (function () {  
+/** 
+ * This helper module provides functions for reading and writing globally accessible namespaces, both in the browser and in NodeJS.
+ * 
+ * @module Globals
+ * @access private
+ */
+return { 
+		
+	/**
+	 * Returns the value of a global variable.
+	 * 
+	 * @param {string} key identifier of a global variable
+	 * @return value of global variable or undefined if not existing
+	 */
 	get : function(key/* : string */) {
 		if (typeof window !== "undefined")
 			return window[key];
 		if (typeof global !== "undefined")
 			return global[key];
-		return null;
+		if (typeof self !== "undefined")
+			return self[key];
+		return undefined;
 	},
 
+	
+	/**
+	 * Sets a global variable.
+	 * 
+	 * @param {string} key identifier of a global variable
+	 * @param value value to be set
+	 * @return value that has been set
+	 */
 	set : function(key/* : string */, value) {
 		if (typeof window !== "undefined")
 			window[key] = value;
 		if (typeof global !== "undefined")
 			global[key] = value;
+		if (typeof self !== "undefined")
+			self[key] = value;
 		return value;
 	},
 	
+	
+	/**
+	 * Returns the value of a global variable under a namespaced path.
+	 * 
+	 * @param {string} path namespaced path identifier of variable
+	 * @return value of global variable or undefined if not existing
+	 * 
+	 * @example
+	 * // returns window.foo.bar / global.foo.bar 
+	 * Globals.getPath("foo.bar")
+	 */
+	getPath: function (path/* : string */) {
+		var args = path.split(".");
+		if (args.length == 1)
+			return this.get(path);		
+		var current = this.get(args[0]);
+		for (var i = 1; i < args.length; ++i) {
+			if (!current)
+				return current;
+			current = current[args[i]];
+		}
+		return current;
+	},
+
+
+	/**
+	 * Sets a global variable under a namespaced path.
+	 * 
+	 * @param {string} path namespaced path identifier of variable
+	 * @param value value to be set
+	 * @return value that has been set
+	 * 
+	 * @example
+	 * // sets window.foo.bar / global.foo.bar 
+	 * Globals.setPath("foo.bar", 42);
+	 */
 	setPath: function (path/* : string */, value) {
 		var args = path.split(".");
 		if (args.length == 1)
@@ -39,36 +100,47 @@ var Globals = {
 		}
 		current[args[args.length - 1]] = value;
 		return value;
-	},
-	
-	getPath: function (path/* : string */) {
-		var args = path.split(".");
-		if (args.length == 1)
-			return this.get(path);		
-		var current = this.get(args[0]);
-		for (var i = 1; i < args.length; ++i) {
-			if (!current)
-				return current;
-			current = current[args[i]];
-		}
-		return current;
 	}
-
-};
+	
+};}).call(this);
 /*::
 declare module Helper {
 	declare function extend<A, B>(a: A, b: B): A & B;
 }
 */
 
-var Helper = {
+var Helper = (function () {  
+/** 
+ * This helper module provides auxiliary functions for the Scoped system.
+ * 
+ * @module Helper
+ * @access private
+ */
+return { 
 		
+	/**
+	 * Attached a context to a function.
+	 * 
+	 * @param {object} obj context for the function
+	 * @param {function} func function
+	 * 
+	 * @return function with attached context
+	 */
 	method: function (obj, func) {
 		return function () {
 			return func.apply(obj, arguments);
 		};
 	},
 
+	
+	/**
+	 * Extend a base object with all attributes of a second object.
+	 * 
+	 * @param {object} base base object
+	 * @param {object} overwrite second object
+	 * 
+	 * @return {object} extended base object
+	 */
 	extend: function (base, overwrite) {
 		base = base || {};
 		overwrite = overwrite || {};
@@ -77,10 +149,26 @@ var Helper = {
 		return base;
 	},
 	
+	
+	/**
+	 * Returns the type of an object, particulary returning 'array' for arrays.
+	 * 
+	 * @param obj object in question
+	 * 
+	 * @return {string} type of object
+	 */
 	typeOf: function (obj) {
 		return Object.prototype.toString.call(obj) === '[object Array]' ? "array" : typeof obj;
 	},
 	
+	
+	/**
+	 * Returns whether an object is null, undefined, an empty array or an empty object.
+	 * 
+	 * @param obj object in question
+	 * 
+	 * @return true if object is empty
+	 */
 	isEmpty: function (obj) {
 		if (obj === null || typeof obj === "undefined")
 			return true;
@@ -93,6 +181,15 @@ var Helper = {
 		return true;
 	},
 	
+	
+    /**
+     * Matches function arguments against some pattern.
+     * 
+     * @param {array} args function arguments
+     * @param {object} pattern typed pattern
+     * 
+     * @return {object} matched arguments as associative array 
+     */	
 	matchArgs: function (args, pattern) {
 		var i = 0;
 		var result = {};
@@ -106,18 +203,41 @@ var Helper = {
 		return result;
 	},
 	
+	
+	/**
+	 * Stringifies a value as JSON and functions to string representations.
+	 * 
+	 * @param value value to be stringified
+	 * 
+	 * @return stringified value
+	 */
 	stringify: function (value) {
 		if (this.typeOf(value) == "function")
 			return "" + value;
 		return JSON.stringify(value);
 	}	
 
-};
-var Attach = {
+	
+};}).call(this);
+var Attach = (function () {  
+/** 
+ * This module provides functionality to attach the Scoped system to the environment.
+ * 
+ * @module Attach
+ * @access private
+ */
+return { 
 		
 	__namespace: "Scoped",
 	__revert: null,
 	
+	
+	/**
+	 * Upgrades a pre-existing Scoped system to the newest version present. 
+	 * 
+	 * @param {string} namespace Optional namespace (default is 'Scoped')
+	 * @return {object} the attached Scoped system
+	 */
 	upgrade: function (namespace/* : ?string */) {
 		var current = Globals.get(namespace || Attach.__namespace);
 		if (current && Helper.typeOf(current) == "object" && current.guid == this.guid && Helper.typeOf(current.version) == "string") {
@@ -134,6 +254,13 @@ var Attach = {
 			return this.attach(namespace);		
 	},
 
+
+	/**
+	 * Attaches the Scoped system to the environment. 
+	 * 
+	 * @param {string} namespace Optional namespace (default is 'Scoped')
+	 * @return {object} the attached Scoped system
+	 */
 	attach : function(namespace/* : ?string */) {
 		if (namespace)
 			Attach.__namespace = namespace;
@@ -154,6 +281,13 @@ var Attach = {
 		return this;
 	},
 	
+
+	/**
+	 * Detaches the Scoped system from the environment. 
+	 * 
+	 * @param {boolean} forceDetach Overwrite any attached scoped system by null.
+	 * @return {object} the detached Scoped system
+	 */
 	detach: function (forceDetach/* : ?boolean */) {
 		if (forceDetach)
 			Globals.set(Attach.__namespace, null);
@@ -165,6 +299,15 @@ var Attach = {
 		return this;
 	},
 	
+
+	/**
+	 * Exports an object as a module if possible. 
+	 * 
+	 * @param {object} mod a module object (optional, default is 'module')
+	 * @param {object} object the object to be exported
+	 * @param {boolean} forceExport overwrite potentially pre-existing exports
+	 * @return {object} the Scoped system
+	 */
 	exports: function (mod, object, forceExport) {
 		mod = mod || (typeof module != "undefined" ? module : null);
 		if (typeof mod == "object" && mod && "exports" in mod && (forceExport || mod.exports == this || !mod.exports || Helper.isEmpty(mod.exports)))
@@ -172,7 +315,7 @@ var Attach = {
 		return this;
 	}	
 
-};
+};}).call(this);
 
 function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Object} */) {
 
@@ -221,6 +364,10 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 			try {
 				if (global)
 					nsRoot.data = global;
+			} catch (e) { }
+			try {
+				if (self)
+					nsRoot.data = self;
 			} catch (e) { }
 		} else
 			nsRoot.data = options.root;
@@ -337,12 +484,30 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 		return result;
 	}
 
+	/** 
+	 * The namespace module manages a namespace in the Scoped system.
+	 * 
+	 * @module Namespace
+	 * @access public
+	 */
 	return {
 		
+		/**
+		 * Extend a node in the namespace by an object.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @param {object} value object that should be used for extend the namespace node
+		 */
 		extend: function (path, value) {
 			nodeSetData(nodeNavigate(path), value);
 		},
 		
+		/**
+		 * Set the object value of a node in the namespace.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @param {object} value object that should be used as value for the namespace node
+		 */
 		set: function (path, value) {
 			var node = nodeNavigate(path);
 			if (node.data)
@@ -350,11 +515,25 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 			nodeSetData(node, value);
 		},
 		
+		/**
+		 * Read the object value of a node in the namespace.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @return {object} object value of the node or null if undefined
+		 */
 		get: function (path) {
 			var node = nodeNavigate(path);
 			return node.ready ? node.data : null;
 		},
 		
+		/**
+		 * Lazily navigate to a node in the namespace.
+		 * Will asynchronously call the callback as soon as the node is being touched.
+		 *
+		 * @param {string} path path to the node in the namespace
+		 * @param {function} callback callback function accepting the node's object value
+		 * @param {context} context optional callback context
+		 */
 		lazy: function (path, callback, context) {
 			var node = nodeNavigate(path);
 			if (node.ready)
@@ -367,14 +546,33 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 			}
 		},
 		
+		/**
+		 * Digest a node path, checking whether it has been defined by an external system.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 */
 		digest: function (path) {
 			nodeDigest(nodeNavigate(path));
 		},
 		
+		/**
+		 * Asynchronously access a node in the namespace.
+		 * Will asynchronously call the callback as soon as the node is being defined.
+		 *
+		 * @param {string} path path to the node in the namespace
+		 * @param {function} callback callback function accepting the node's object value
+		 * @param {context} context optional callback context
+		 */
 		obtain: function (path, callback, context) {
 			nodeAddWatcher(nodeNavigate(path), callback, context);
 		},
 		
+		/**
+		 * Returns all unresolved watchers under a certain path.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @return {array} list of all unresolved watchers 
+		 */
 		unresolvedWatchers: function (path) {
 			return nodeUnresolvedWatchers(nodeNavigate(path), path);
 		},
@@ -473,6 +671,12 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 		return this;
 	};
 	
+	/** 
+	 * This module provides all functionality in a scope.
+	 * 
+	 * @module Scoped
+	 * @access public
+	 */
 	return {
 		
 		getGlobal: Helper.method(Globals, Globals.getPath),
@@ -489,12 +693,23 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 		
 		dependencies: {},
 		
+		
+		/**
+		 * Returns a reference to the next scope that will be obtained by a subScope call.
+		 * 
+		 * @return {object} next scope
+		 */
 		nextScope: function () {
 			if (!nextScope)
 				nextScope = newScope(this, localNamespace, rootNamespace, globalNamespace);
 			return nextScope;
 		},
 		
+		/**
+		 * Creates a sub scope of the current scope and returns it.
+		 * 
+		 * @return {object} sub scope
+		 */
 		subScope: function () {
 			var sub = this.nextScope();
 			childScopes.push(sub);
@@ -502,6 +717,14 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			return sub;
 		},
 		
+		/**
+		 * Creates a binding within in the scope. 
+		 * 
+		 * @param {string} alias identifier of the new binding
+		 * @param {string} namespaceLocator identifier of an existing namespace path
+		 * @param {object} options options for the binding
+		 * 
+		 */
 		binding: function (alias, namespaceLocator, options) {
 			if (!bindings[alias] || !bindings[alias].readonly) {
 				var ns;
@@ -520,6 +743,14 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			return this;
 		},
 		
+		
+		/**
+		 * Resolves a name space locator to a name space.
+		 * 
+		 * @param {string} namespaceLocator name space locator
+		 * @return {object} resolved name space
+		 * 
+		 */
 		resolve: function (namespaceLocator) {
 			var parts = namespaceLocator.split(":");
 			if (parts.length == 1) {
@@ -537,7 +768,18 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 				};
 			}
 		},
+
 		
+		/**
+		 * Defines a new name space once a list of name space locators is available.
+		 * 
+		 * @param {string} namespaceLocator the name space that is to be defined
+		 * @param {array} dependencies a list of name space locator dependencies (optional)
+		 * @param {array} hiddenDependencies a list of hidden name space locators (optional)
+		 * @param {function} callback a callback function accepting all dependencies as arguments and returning the new definition
+		 * @param {object} context a callback context (optional)
+		 * 
+		 */
 		define: function () {
 			return custom.call(this, arguments, "define", function (ns, result) {
 				if (ns.namespace.get(ns.path))
@@ -546,22 +788,14 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			});
 		},
 		
-		assume: function () {
-			var args = Helper.matchArgs(arguments, {
-				assumption: true,
-				dependencies: "array",
-				callback: true,
-				context: "object",
-				error: "string"
-			});
-			var dependencies = args.dependencies || [];
-			dependencies.unshift(args.assumption);
-			this.require(dependencies, function (assumptionValue) {
-				if (!args.callback.apply(args.context || this, arguments))
-					throw ("Scoped Assumption '" + args.assumption + "' failed, value is " + assumptionValue + (args.error ? ", but assuming " + args.error : "")); 
-			});
-		},
 		
+		/**
+		 * Assume a specific version of a module and fail if it is not met.
+		 * 
+		 * @param {string} assumption name space locator
+		 * @param {string} version assumed version
+		 * 
+		 */
 		assumeVersion: function () {
 			var args = Helper.matchArgs(arguments, {
 				assumption: true,
@@ -590,19 +824,33 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			});
 		},
 		
+		
+		/**
+		 * Extends a potentiall existing name space once a list of name space locators is available.
+		 * 
+		 * @param {string} namespaceLocator the name space that is to be defined
+		 * @param {array} dependencies a list of name space locator dependencies (optional)
+		 * @param {array} hiddenDependencies a list of hidden name space locators (optional)
+		 * @param {function} callback a callback function accepting all dependencies as arguments and returning the new additional definitions.
+		 * @param {object} context a callback context (optional)
+		 * 
+		 */
 		extend: function () {
 			return custom.call(this, arguments, "extend", function (ns, result) {
 				ns.namespace.extend(ns.path, result);
 			});
 		},
+				
 		
-		condition: function () {
-			return custom.call(this, arguments, "condition", function (ns, result) {
-				if (result)
-					ns.namespace.set(ns.path, result);
-			});
-		},
-		
+		/**
+		 * Requires a list of name space locators and calls a function once they are present.
+		 * 
+		 * @param {array} dependencies a list of name space locator dependencies (optional)
+		 * @param {array} hiddenDependencies a list of hidden name space locators (optional)
+		 * @param {function} callback a callback function accepting all dependencies as arguments
+		 * @param {object} context a callback context (optional)
+		 * 
+		 */
 		require: function () {
 			var args = Helper.matchArgs(arguments, {
 				dependencies: "array",
@@ -641,18 +889,36 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			}
 			return this;
 		},
+
 		
+		/**
+		 * Digest a name space locator, checking whether it has been defined by an external system.
+		 * 
+		 * @param {string} namespaceLocator name space locator
+		 */
 		digest: function (namespaceLocator) {
 			var ns = this.resolve(namespaceLocator);
 			ns.namespace.digest(ns.path);
 			return this;
 		},
 		
+		
+		/**
+		 * Returns all unresolved definitions under a namespace locator
+		 * 
+		 * @param {string} namespaceLocator name space locator, e.g. "global:"
+		 * @return {array} list of all unresolved definitions 
+		 */
 		unresolved: function (namespaceLocator) {
 			var ns = this.resolve(namespaceLocator);
 			return ns.namespace.unresolvedWatchers(ns.path);
 		},
 		
+		/**
+		 * Exports the scope.
+		 * 
+		 * @return {object} exported scope
+		 */
 		__export: function () {
 			return {
 				parentNamespace: parentNamespace.__export(),
@@ -663,6 +929,12 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			};
 		},
 		
+		/**
+		 * Imports a scope from an exported scope.
+		 * 
+		 * @param {object} data exported scope to be imported
+		 * 
+		 */
 		__import: function (data) {
 			parentNamespace.__import(data.parentNamespace);
 			rootNamespace.__import(data.rootNamespace);
@@ -678,16 +950,31 @@ var globalNamespace = newNamespace({tree: true, global: true});
 var rootNamespace = newNamespace({tree: true});
 var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 
-var Public = Helper.extend(rootScope, {
+var Public = Helper.extend(rootScope, (function () {  
+/** 
+ * This module includes all public functions of the Scoped system.
+ * 
+ * It includes all methods of the root scope and the Attach module.
+ * 
+ * @module Public
+ * @access public
+ */
+return {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '43.1460041676769',
+	version: '49.1475462345450',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
 	detach: Attach.detach,
 	exports: Attach.exports,
 	
+	/**
+	 * Exports all data contained in the Scoped system.
+	 * 
+	 * @return data of the Scoped system.
+	 * @access private
+	 */
 	__exportScoped: function () {
 		return {
 			globalNamespace: globalNamespace.__export(),
@@ -696,20 +983,28 @@ var Public = Helper.extend(rootScope, {
 		};
 	},
 	
+	/**
+	 * Import data into the Scoped system.
+	 * 
+	 * @param data of the Scoped system.
+	 * @access private
+	 */
 	__importScoped: function (data) {
 		globalNamespace.__import(data.globalNamespace);
 		rootNamespace.__import(data.rootNamespace);
 		rootScope.__import(data.rootScope);
 	}
 	
-});
+};
+
+}).call(this));
 
 Public = Public.upgrade();
 Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.85 - 2016-10-08
+betajs - v1.0.85 - 2016-10-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "559.1475944408767"
+    "version": "567.1476570972098"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -913,10 +1208,12 @@ Scoped.define("module:Ajax.Support", [
 		 * Execute an Ajax command.
 		 * 
 		 * @param {object} options Options for the Ajax command
+		 * @param {function} progress Optional progress function
+		 * @param {object} progressCtx Optional progress context
 		 * 
 		 * @return {object} Execution promise
 		 */
-		execute: function (options) {
+		execute: function (options, progress, progressCtx) {
 			options = this.preprocess(options);
 			var current = null;		
 			this.__registry.forEach(function (candidate) {
@@ -926,7 +1223,7 @@ Scoped.define("module:Ajax.Support", [
 			if (!current)
 				return Promise.error(new NoCandidateAjaxException(options));
 			var helper = function (resilience) {
-				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options);
+				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options, progress, progressCtx);
 				if (!resilience || resilience <= 1)
 					return promise;
 				var returnPromise = Promise.create();
@@ -972,11 +1269,12 @@ Scoped.define("module:Ajax.AjaxWrapper", [
 			 * Execute an ajax call.
 			 * 
 			 * @param {object} options options for ajax call
-			 * 
+			 * @param {function} progress Optional progress function
+			 * @param {object} progressCtx Optional progress context
 			 * @return {object} promise for the ajax call
 			 */
-			execute: function (options) {
-				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options));
+			execute: function (options, progress, progressCtx) {
+				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options), progress, progressCtx);
 			}
 			
 		};
@@ -9415,8 +9713,21 @@ Scoped.define("module:Promise", [
     "module:Async",
     "module:Objs"
 ], function (Types, Functions, Async, Objs) {
+	
+	/**
+	 * Promise Class
+	 * 
+	 * @class BetaJS.Promise
+	 */
 	var Promise = {		
-			
+
+		/**
+		 * Creates a new promise instance.
+		 * 
+		 * @param value optional promise value
+		 * @param error optional promise error
+		 * @param {boolean} finished does this promise have its final value / error
+		 */
 		Promise: function (value, error, finished) {
 			this.__value = error ? null : (value || null);
 			this.__error = error ? error : null;
@@ -9426,14 +9737,34 @@ Scoped.define("module:Promise", [
 			this.__callbacks = [];
 		},
 		
+		/**
+		 * Create a new promise instance. (Simplified)
+		 * 
+		 * @param value optional promise value
+		 * @param error optional promise error
+		 * 
+		 * @return {object} promise instance
+		 */
 		create: function (value, error) {
 			return new this.Promise(value, error, arguments.length > 0);
 		},
 		
+		/**
+		 * Returns a promise instance for a value. The value might be a promise itself already.
+		 * 
+		 * @param value promise value or promise
+		 * @return {object} promise instance
+		 */
 		value: function (value) {
 			return this.is(value) ? value : new this.Promise(value, null, true);
 		},
 		
+		/**
+		 * Returns a promise instance for a value, setting the value asynchronously.
+		 * 
+		 * @param value promise value
+		 * @return {object} promise instance
+		 */
 		eventualValue: function (value) {
 			var promise = new this.Promise();
 			Async.eventually(function () {
@@ -9442,10 +9773,25 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 	
+		/**
+		 * Returns a promise instance for an error. The error might be a promise itself already.
+		 * 
+		 * @param error promise error or promise
+		 * @return {object} promise instance
+		 */
 		error: function (error) {
 			return this.is(error) ? error : new this.Promise(null, error, true);
 		},
 		
+		/**
+		 * Turns a function call into a promise, mapping exceptions to errors.
+		 * 
+		 * @param {function} f function
+		 * @param {object} ctx optional function context
+		 * @param {array} params optional function parameters
+		 * 
+		 * @return {object} promise
+		 */
 		box: function (f, ctx, params) {
 			try {
 				var result = f.apply(ctx || this, params || []);
@@ -9455,6 +9801,14 @@ Scoped.define("module:Promise", [
 			}
 		},
 		
+		/**
+		 * Try-Catch a function, wrapping it into a promise.
+		 * 
+		 * @param {function} f function
+		 * @param {object} ctx optional function context
+		 * 
+		 * @return {object} promise
+		 */
 		tryCatch: function (f, ctx) {
 			try {
 				return this.value(f.apply(ctx || this));
@@ -9463,8 +9817,16 @@ Scoped.define("module:Promise", [
 			}
 		},
 		
+		/**
+		 * Turns a function accepting a callback function as last parameter into a promise.
+		 * 
+		 * @param {object} optional function context
+		 * @param {function} func function
+		 * 
+		 * @return {object} promise
+		 */
 		funcCallback: function (ctx, func) {
-			var args  = Functions.getArguments(arguments, 1);
+			var args = [];
 			if (Types.is_function(ctx)) {
 				args = Functions.getArguments(arguments, 1);
 				func = ctx;
@@ -9477,6 +9839,13 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 		
+		/**
+		 * Takes a number of promises and creates a single new promise being successful if and only if all input promises are successful.
+		 * 
+		 * @param {array} promises promises array
+		 * 
+		 * @return {object} promise
+		 */
 		and: function (promises) {
 			var promise = this.create();
 			promise.__promises = [];
@@ -9537,6 +9906,13 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 		
+		/**
+		 * Takes a function and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {function} func function
+		 * 
+		 * @return {object} promise
+		 */
 		func: function (func) {
 			var args = Functions.getArguments(arguments, 1);
 			var promises = [];
@@ -9558,6 +9934,15 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 		
+		/**
+		 * Takes a method and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {object} ctx function context
+		 * @param {function} func function
+		 * @param {array} params parameters
+		 * 
+		 * @return {object} promise
+		 */
 		methodArgs: function (ctx, func, params) {
 			params.unshift(function () {
 				return func.apply(ctx, arguments);
@@ -9565,20 +9950,52 @@ Scoped.define("module:Promise", [
 			return this.func.apply(this, params);
 		},
 		
+		/**
+		 * Takes a method and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {object} ctx function context
+		 * @param {function} func function
+		 * 
+		 * @return {object} promise
+		 */
 		method: function (ctx, func) {
 			return this.methodArgs(ctx, func, Functions.getArguments(arguments, 2));
 		},
 	
+		/**
+		 * Takes a constructor and calls with a number of arguments, some of which might be promises and turns it into actual values.
+		 * 
+		 * @param {object} cls constructor class
+		 * 
+		 * @return {object} promise
+		 */
 		newClass: function (cls) {
 			var params = Functions.getArguments(arguments, 1);
 			params.unshift(Functions.newClassFunc(cls));
 			return this.func.apply(this, params);
 		},
 		
+		/**
+		 * Determines whether some value is a promise object.
+		 * 
+		 * @param obj value
+		 * 
+		 * @return {boolean} true if obj is a promise object
+		 */
 		is: function (obj) {
 			return obj && Types.is_object(obj) && obj.classGuid == this.Promise.prototype.classGuid;
 		},
 		
+		/**
+		 * Applies a method multiple times until it succeeds.
+		 * 
+		 * @param {function} method method
+		 * @param {object} context method context
+		 * @param {int} resilience number of times to call
+		 * @param {array} args arguments for method
+		 * 
+		 * @return {object} promise
+		 */
 		resilience: function (method, context, resilience, args) {
 			return method.apply(context, args).mapError(function (error) {
 				return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
@@ -9590,14 +10007,36 @@ Scoped.define("module:Promise", [
 	Objs.extend(Promise.Promise.prototype, {
 		classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
 		
+		/**
+		 * Be notified when the promise is successful.
+		 * 
+		 * @param {function} f callback function
+		 * @param {object} context optional callback context
+		 * @param {object} options optional options
+		 */
 		success: function (f, context, options) {
 			return this.callback(f, context, options, "success");
 		},
 		
+		/**
+		 * Be notified when the promise is unsuccessful.
+		 * 
+		 * @param {function} f callback function
+		 * @param {object} context optional callback context
+		 * @param {object} options optional options
+		 */
 		error: function (f, context, options) {
 			return this.callback(f, context, options, "error");
 		},
 		
+		/**
+		 * Be notified when the promise is finished..
+		 * 
+		 * @param {function} f callback function
+		 * @param {object} context callback context
+		 * @param {object} options options
+		 * @param {string} type type of callback like "success"
+		 */
 		callback: function (f, context, options, type) {
 			if ("end" in this)
 				this.end();
@@ -9614,6 +10053,12 @@ Scoped.define("module:Promise", [
 			return this;
 		},
 		
+		/**
+		 * Trigger the result.
+		 * 
+		 * @param {object} record optional specific callback record
+		 * 
+		 */
 		triggerResult: function (record) {
 			if (!this.__isFinished)
 				return this;
@@ -9633,22 +10078,47 @@ Scoped.define("module:Promise", [
 			return this;
 		},
 		
+		/**
+		 * Returns the value of the promise.
+		 * 
+		 * @return value of promise
+		 */
 		value: function () {
 			return this.__value;
 		},
 
+		/**
+		 * Returns the error of the promise.
+		 * 
+		 * @return error of promise
+		 */
 		err: function () {
 			return this.__error;
 		},
 
+		/**
+		 * Determines whether the promise has a value or an error already.
+		 * 
+		 * @return {boolean} true if value or error present
+		 */
 		isFinished: function () {
 			return this.__isFinished;
 		},
 
+		/**
+		 * Determines whether the promise has a value.
+		 * 
+		 * @return {boolean} true if value present
+		 */
 		hasValue: function () {
 			return this.__isFinished && !this.__hasError;
 		},
 
+		/**
+		 * Determines whether the promise has an error.
+		 * 
+		 * @return {boolean} true if error present
+		 */
 		hasError: function () {
 			return this.__isFinished && this.__hasError;
 		},

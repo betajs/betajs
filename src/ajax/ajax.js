@@ -185,10 +185,12 @@ Scoped.define("module:Ajax.Support", [
 		 * Execute an Ajax command.
 		 * 
 		 * @param {object} options Options for the Ajax command
+		 * @param {function} progress Optional progress function
+		 * @param {object} progressCtx Optional progress context
 		 * 
 		 * @return {object} Execution promise
 		 */
-		execute: function (options) {
+		execute: function (options, progress, progressCtx) {
 			options = this.preprocess(options);
 			var current = null;		
 			this.__registry.forEach(function (candidate) {
@@ -198,7 +200,7 @@ Scoped.define("module:Ajax.Support", [
 			if (!current)
 				return Promise.error(new NoCandidateAjaxException(options));
 			var helper = function (resilience) {
-				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options);
+				var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options, progress, progressCtx);
 				if (!resilience || resilience <= 1)
 					return promise;
 				var returnPromise = Promise.create();
@@ -244,11 +246,12 @@ Scoped.define("module:Ajax.AjaxWrapper", [
 			 * Execute an ajax call.
 			 * 
 			 * @param {object} options options for ajax call
-			 * 
+			 * @param {function} progress Optional progress function
+			 * @param {object} progressCtx Optional progress context
 			 * @return {object} promise for the ajax call
 			 */
-			execute: function (options) {
-				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options));
+			execute: function (options, progress, progressCtx) {
+				return Support.execute(Objs.extend(Objs.clone(this._options, 1), options), progress, progressCtx);
 			}
 			
 		};
