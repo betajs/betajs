@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.85 - 2016-10-15
+betajs - v1.0.87 - 2016-10-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "567.1476570972098"
+    "version": "568.1476760482593"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -289,6 +289,15 @@ Scoped.define("module:Ajax.AjaxException", [
 		 */
 		return {
 			
+			/**
+			 * Returns the status code associated with the exception
+			 * 
+			 * @return {int} status code
+			 */
+			status_code: function () {
+				return 500;
+			}
+			
 		};
 	});
 });
@@ -370,7 +379,7 @@ Scoped.define("module:Ajax.RequestException", [
 			/**
 			 * Returns the status code associated with the exception
 			 * 
-			 * @return status code
+			 * @return {int} status code
 			 */
 			status_code: function () {
 				return this.__status_code;
@@ -9118,6 +9127,12 @@ Scoped.define("module:Promise", [
 			return this.__isFinished && this.__hasError;
 		},
 
+		/**
+		 * Informs the promise of a successful value.
+		 * 
+		 * @param value success value
+		 * @param {object} promise optional success promise
+		 */
 		asyncSuccess: function (value, promise) {
 			if (this.__isFinished) 
 				return this;
@@ -9129,11 +9144,12 @@ Scoped.define("module:Promise", [
 			return this.triggerResult();
 		},
 
-		forwardSuccess: function (promise) {
-			this.success(promise.asyncSuccess, promise);
-			return this;
-		},
-
+		/**
+		 * Informs the promise of an error value.
+		 * 
+		 * @param error error value
+		 * @param {object} promise optional error promise
+		 */
 		asyncError: function (error, promise) {
 			if (this.__isFinished) 
 				return this;
@@ -9145,11 +9161,13 @@ Scoped.define("module:Promise", [
 			return this.triggerResult();
 		},
 
-		forwardError: function (promise) {
-			this.error(promise.asyncError, promise);
-			return this;
-		},
-
+		/**
+		 * Informs the promise of an error or success value.
+		 * 
+		 * @param error optional error value
+		 * @param value optional success value
+		 * @param {object} promise optional callback promise
+		 */
 		asyncCallback: function (error, value, promise) {
 			if (error)
 				return this.asyncError(error, promise);
@@ -9157,15 +9175,53 @@ Scoped.define("module:Promise", [
 				return this.asyncSuccess(value, promise);
 		},
 
-		asyncCallbackFunc: function () {
-			return Functions.as_method(this.asyncCallback, this);
+		/**
+		 * Forwards the success of this promise to another promise.
+		 * 
+		 * @param {object} promise promise to which the success should be forwarded to
+		 */
+		forwardSuccess: function (promise) {
+			this.success(promise.asyncSuccess, promise);
+			return this;
 		},
 
+		/**
+		 * Forwards the error of this promise to another promise.
+		 * 
+		 * @param {object} promise promise to which the error should be forwarded to
+		 */
+		forwardError: function (promise) {
+			this.error(promise.asyncError, promise);
+			return this;
+		},
+
+		/**
+		 * Forwards the callback of this promise to another promise.
+		 * 
+		 * @param {object} promise promise to which the callback should be forwarded to
+		 */
 		forwardCallback: function (promise) {
 			this.callback(promise.asyncCallback, promise);
 			return this;
 		},
 
+		/**
+		 * Generates a context-less function for the asynchronous callback.
+		 * 
+		 * @return {function} context-less function
+		 */
+		asyncCallbackFunc: function () {
+			return Functions.as_method(this.asyncCallback, this);
+		},
+
+		/**
+		 * Maps the success value of the promise to a function that might return another promise.
+		 * 
+		 * @param {function} func success callback
+		 * @param {object} ctx optional context
+		 * 
+		 * @return {object} promise
+		 */
 		mapSuccess: function (func, ctx) {
 			var promise = Promise.create();
 			this.forwardError(promise).success(function (value, pr) {
@@ -9178,6 +9234,14 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 		
+		/**
+		 * Maps the error value of the promise to a function that might return another promise.
+		 * 
+		 * @param {function} func error callback
+		 * @param {object} ctx optional context
+		 * 
+		 * @return {object} promise
+		 */
 		mapError: function (func, ctx) {
 			var promise = Promise.create();
 			this.forwardSuccess(promise).error(function (err, pr) {
@@ -9190,6 +9254,14 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 
+		/**
+		 * Maps the error or success value of the promise to a function that might return another promise.
+		 * 
+		 * @param {function} func callback function
+		 * @param {object} ctx optional context
+		 * 
+		 * @return {object} promise
+		 */
 		mapCallback: function (func, ctx) {
 			var promise = Promise.create();
 			this.callback(function (err, value, pr) {
@@ -9202,6 +9274,13 @@ Scoped.define("module:Promise", [
 			return promise;
 		},
 
+		/**
+		 * Concatenates more promises to this promise
+		 * 
+		 * @param {array} promises other promises
+		 * 
+		 * @return {object} promise
+		 */
 		and: function (promises) {
 			var result = Promise.and(this);
 			return result.and(promises);

@@ -10,6 +10,15 @@ Scoped.define("module:Ajax.AjaxException", [
 		 */
 		return {
 			
+			/**
+			 * Returns the status code associated with the exception
+			 * 
+			 * @return {int} status code
+			 */
+			status_code: function () {
+				return 500;
+			}
+			
 		};
 	});
 });
@@ -91,7 +100,7 @@ Scoped.define("module:Ajax.RequestException", [
 			/**
 			 * Returns the status code associated with the exception
 			 * 
-			 * @return status code
+			 * @return {int} status code
 			 */
 			status_code: function () {
 				return this.__status_code;
