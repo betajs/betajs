@@ -202,51 +202,73 @@ Scoped.define("module:Lists.AbstractList", [
 });
 
 
-Scoped.define("module:Lists.LinkedList", ["module:Lists.AbstractList"], function (AbstractList, scoped) {
-	return AbstractList.extend({scoped: scoped},  {
-
-		__first: null,
-		__last: null,
-
-		_add: function (obj) {
-			this.__last = {
-					obj: obj,
-					prev: this.__last,
-					next: null
-			};
-			if (this.__first)
-				this.__last.prev.next = this.__last;
-			else
-				this.__first = this.__last;
-			return this.__last;
-		},
-
-		_remove: function (container) {
-			if (container.next)
-				container.next.prev = container.prev;
-			else
-				this.__last = container.prev;
-			if (container.prev)
-				container.prev.next = container.next;
-			else
-				this.__first = container.next;
-			return container.obj;
-		},
-
-		_get: function (container) {
-			return container.obj;
-		},
-
-		_iterate: function (cb, context) {
-			var current = this.__first;
-			while (current) {
-				var prev = current;
-				current = current.next;
-				if (!cb.apply(context || this, [prev.obj, prev]))
-					return;
+Scoped.define("module:Lists.LinkedList", [
+    "module:Lists.AbstractList"
+], function (AbstractList, scoped) {
+	return AbstractList.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Linked List Implementation of List
+		 * 
+		 * @class BetaJS.Lists.LinkedList
+		 */
+		return {
+			
+			__first: null,
+			__last: null,
+	
+			/**
+			 * @override
+			 */
+			_add: function (obj) {
+				this.__last = {
+						obj: obj,
+						prev: this.__last,
+						next: null
+				};
+				if (this.__first)
+					this.__last.prev.next = this.__last;
+				else
+					this.__first = this.__last;
+				return this.__last;
+			},
+	
+			/**
+			 * @override
+			 */
+			_remove: function (container) {
+				if (container.next)
+					container.next.prev = container.prev;
+				else
+					this.__last = container.prev;
+				if (container.prev)
+					container.prev.next = container.next;
+				else
+					this.__first = container.next;
+				return container.obj;
+			},
+	
+			/**
+			 * @override
+			 */
+			_get: function (container) {
+				return container.obj;
+			},
+	
+			/**
+			 * @override
+			 */
+			_iterate: function (cb, context) {
+				var current = this.__first;
+				while (current) {
+					var prev = current;
+					current = current.next;
+					if (!cb.apply(context || this, [prev.obj, prev]))
+						return;
+				}
 			}
-		}
-
+			
+		};
 	});
 });
 
