@@ -273,16 +273,34 @@ Scoped.define("module:Lists.LinkedList", [
 });
 
 
-Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module:Ids"], function (AbstractList, Ids, scoped) {
+Scoped.define("module:Lists.ObjectIdList", [
+    "module:Lists.AbstractList",
+    "module:Ids"
+], function (AbstractList, Ids, scoped) {
 	return AbstractList.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Object Id List Class
+		 * 
+		 * @class BetaJS.Lists.ObjectIdList
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {array} objects optional initial set of objects
+			 * @param {function} id_generator optional id generating function
+			 */
 			constructor: function (objects, id_generator) {
 				this.__map = {};
 				this.__id_generator = id_generator;
 				inherited.constructor.call(this, objects);
 			},
 
+			/**
+			 * @override
+			 */
 			_add: function (object) {
 				var id = object.__cid;
 				if (!id) {
@@ -296,21 +314,33 @@ Scoped.define("module:Lists.ObjectIdList", ["module:Lists.AbstractList", "module
 				return id;
 			},
 
+			/**
+			 * @override
+			 */
 			_remove: function (ident) {
 				var obj = this.__map[ident];
 				delete this.__map[ident];
 				return obj;
 			},
 
+			/**
+			 * @override
+			 */
 			_get: function (ident) {
 				return this.__map[ident];
 			},
 
+			/**
+			 * @override
+			 */
 			_iterate: function (callback, context) {
 				for (var key in this.__map)
 					callback.apply(context || this, [this.__map[key], key]);
 			},
 
+			/**
+			 * @override
+			 */
 			get_ident: function (object) {
 				var ident = Ids.objectId(object);
 				return this.__map[ident] ? ident : null;
