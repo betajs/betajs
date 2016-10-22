@@ -354,8 +354,20 @@ Scoped.define("module:Lists.ObjectIdList", [
 
 Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Ids", "module:Objs"], function (AbstractList, Ids, Objs, scoped) {
 	return AbstractList.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Array List Class
+		 * 
+		 * @class BetaJS.Lists.ArrayList
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {array} objects optional initial set of objects
+			 * @param {options} options optional options parameter
+			 */
 			constructor: function (objects, options) {
 				this.__idToIndex = {};
 				this.__items = [];
@@ -367,16 +379,31 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				inherited.constructor.call(this, objects);
 			},
 
+			/**
+			 * Set current compare function.
+			 * 
+			 * @param {function} compare compare function
+			 */
 			set_compare: function (compare) {
 				this._compare = compare;
 				if (compare)
 					this.sort();
 			},
 
+			/**
+			 * Get current compare function.
+			 * 
+			 * @return {function} current compare function
+			 */
 			get_compare: function () {
 				return this._compare;
 			},
 
+			/**
+			 * Sort list using a compare function.
+			 * 
+			 * @param {function} compare compare function
+			 */
 			sort: function (compare) {
 				compare = compare || this._compare;
 				if (!compare)
@@ -389,6 +416,13 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 
 			_sorted: function () {},
 
+			/**
+			 * Reindex the index of an item.
+			 * 
+			 * @param {int} index index of the item
+			 * 
+			 * @return {int} new index of the item
+			 */
 			re_index: function (index) {
 				if (!this._compare)
 					return index;
@@ -422,6 +456,9 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				return this._get_ident ? this._get_ident(object) : Ids.objectId(object);
 			},
 
+			/**
+			 * @override
+			 */
 			_add: function (object) {
 				var last = this.__items.length;
 				this.__items.push(object);
@@ -430,6 +467,9 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				return i;
 			},
 
+			/**
+			 * @override
+			 */
 			_remove: function (ident) {
 				var obj = this.__items[ident];
 				for (var i = ident + 1; i < this.__items.length; ++i) {
@@ -441,10 +481,16 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				return obj;
 			},
 
+			/**
+			 * @override
+			 */
 			_get: function (ident) {
 				return this.__items[ident];
 			},
 
+			/**
+			 * @override
+			 */
 			_iterate: function (callback, context) {
 				var items = Objs.clone(this.__items, 1);
 				for (var i = 0; i < items.length; ++i)
@@ -456,11 +502,21 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 				this._ident_changed(object, index);
 			},
 
+			/**
+			 * @override
+			 */
 			get_ident: function (object) {
 				var id = this.__objectId(object);
 				return id in this.__idToIndex ? this.__idToIndex[id] : null;
 			},
 
+			/**
+			 * Returns the identifier given an id.
+			 * 
+			 * @param {string} id id
+			 * 
+			 * @return {string} identifier
+			 */
 			ident_by_id: function (id) {
 				return this.__idToIndex[id];
 			}
