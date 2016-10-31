@@ -1,10 +1,20 @@
-Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
-                                             "module:Objs" ], function(Class, Strings, Objs, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, function(inherited) {
+Scoped.define("module:Router.RouteParser", [
+    "module:Class", "module:Strings", "module:Objs"
+], function (Class, Strings, Objs, scoped) {
+	return Class.extend({ scoped : scoped }, function(inherited) {
+		
+		/**
+		 * Route Parser Class
+		 * 
+		 * @class BetaJS.Router.RouteParser
+		 */
 		return {
 
+			/**
+			 * Create a new instance.
+			 * 
+			 * @param {object} routes routes mapping
+			 */
 			constructor : function(routes) {
 				inherited.constructor.call(this);
 				this.routes = {};
@@ -13,6 +23,12 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 				}, this);
 			},
 
+			/**
+			 * Return parses a route and returns the parsed result.
+			 * 
+			 * @param {string} route route to be parsed
+			 * @return {object} parsed route
+			 */
 			parse : function(route) {
 				for ( var key in this.routes) {
 					var entry = this.routes[key];
@@ -27,6 +43,15 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 				return null;
 			},
 
+			/**
+			 * Recreates a full route from an abstract route descriptor and route arguments.
+			 * 
+			 * @param {string} name route descriptor
+			 * @param {array} args arguments for route
+			 * 
+			 * @return {string} full route
+			 * 
+			 */
 			format : function(name, args) {
 				args = args || {};
 				var entry = this.routes[name];
@@ -34,6 +59,12 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 						entry.captureRegex.mapBack(args));
 			},
 
+			/**
+			 * Bind a new route.
+			 * 
+			 * @param {string} key route descriptor
+			 * @param {string} route route regex string
+			 */
 			bind : function(key, route) {
 				this.routes[key] = {
 						name : key,
