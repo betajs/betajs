@@ -78,13 +78,23 @@ Scoped.define("module:Router.RouteParser", [
 	});
 });
 
-Scoped.define("module:Router.RouteMap", [ "module:Class", "module:Strings",
-                                          "module:Objs" ], function(Class, Strings, Objs, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, function(inherited) {
+Scoped.define("module:Router.RouteMap", [
+	"module:Class", "module:Strings", "module:Objs"
+], function(Class, Strings, Objs, scoped) {
+	return Class.extend({ scoped : scoped }, function(inherited) {
+		
+		/**
+		 * RouteMap Class, mapping routes to routes.
+		 * 
+		 * @class BetaJS.Router.RouteMap
+		 */
 		return {
 
+			/**
+			 * Creates new instance.
+			 * 
+			 * @param {object} options initialization options
+			 */
 			constructor : function(options) {
 				inherited.constructor.call(this);
 				options = options || {};
@@ -93,6 +103,14 @@ Scoped.define("module:Router.RouteMap", [ "module:Class", "module:Strings",
 				this._bindings = options.bindings || {};
 			},
 
+			/**
+			 * Maps a route.
+			 * 
+			 * @param {string} name route name
+			 * @param {array} args route arguments
+			 * 
+			 * @return {object} mapped route
+			 */
 			map : function(name, args) {
 				var binding = this._bindings[name];
 				if (binding)
@@ -105,6 +123,12 @@ Scoped.define("module:Router.RouteMap", [ "module:Class", "module:Strings",
 				};
 			},
 
+			/**
+			 * Binds a route.
+			 * 
+			 * @param {string} name name of route
+			 * @param {function} func function to bind the route to
+			 */
 			bind : function(name, func) {
 				this._bindings[name] = func;
 				return this;
