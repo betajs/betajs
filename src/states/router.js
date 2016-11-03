@@ -138,93 +138,168 @@ Scoped.define("module:Router.RouteMap", [
 	});
 });
 
-Scoped.define("module:Router.Router", [ "module:Class",
-                                        "module:Events.EventsMixin", "module:Objs",
-                                        "module:Router.RouteParser", "module:Comparators" ], function(Class,
-                                        		EventsMixin, Objs, RouteParser, Comparators, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, [
-	    EventsMixin,
-	    function(inherited) {
-	    	return {
+Scoped.define("module:Router.Router", [
+    "module:Class",
+    "module:Events.EventsMixin",
+    "module:Objs",
+    "module:Router.RouteParser",
+    "module:Comparators"
+], function(Class, EventsMixin, Objs, RouteParser, Comparators, scoped) {
+	return Class.extend({ scoped : scoped }, [EventsMixin, function(inherited) {
+		
+		/**
+		 * Router Class
+		 * 
+		 * @class BetaJS.Router.Router
+		 */
+    	return {
 
-	    		constructor : function(routes) {
-	    			inherited.constructor.call(this);
-	    			this._routeParser = new RouteParser(routes);
-	    			this._current = null;
-	    		},
+    		/**
+    		 * Creates new instance.
+    		 * 
+    		 * @param {object} routes routes mapping for route parser
+    		 */
+    		constructor : function(routes) {
+    			inherited.constructor.call(this);
+    			this._routeParser = new RouteParser(routes);
+    			this._current = null;
+    		},
 
-	    		destroy : function() {
-	    			this._routeParser.destroy();
-	    			inherited.destroy.call(this);
-	    		},
+    		/**
+    		 * @override
+    		 */
+    		destroy : function() {
+    			this._routeParser.destroy();
+    			inherited.destroy.call(this);
+    		},
 
-	    		bind : function(key, route, func, ctx) {
-	    			this._routeParser.bind(key, route);
-	    			if (func)
-	    				this.on("dispatch:" + key, func, ctx);
-	    			return this;
-	    		},
+    		/**
+    		 * Bind a new route.
+    		 * 
+			 * @param {string} key route descriptor
+			 * @param {string} route route regex string
+			 * @param {function} func optional function to be called when route is dispatched
+			 * @param {object} ctx optional function context
+    		 */
+    		bind : function(key, route, func, ctx) {
+    			this._routeParser.bind(key, route);
+    			if (func)
+    				this.on("dispatch:" + key, func, ctx);
+    			return this;
+    		},
 
-	    		current : function() {
-	    			return this._current;
-	    		},
+    		/**
+    		 * Returns the current route.
+    		 * 
+    		 * @return {string} current route
+    		 */
+    		current : function() {
+    			return this._current;
+    		},
 
-	    		navigate : function(route) {
-	    			this.trigger("navigate", route);
-	    			this.trigger("navigate:" + route);
-	    			var parsed = this._routeParser.parse(route);
-	    			if (parsed)
-	    				this.dispatch(parsed.name, parsed.args, route);
-	    			else
-	    				this.trigger("notfound", route);
-	    		},
+    		/**
+    		 * Navigates to a new route.
+    		 * 
+    		 * @param {string} route route to navigate to
+    		 */
+    		navigate : function(route) {
+    			this.trigger("navigate", route);
+    			this.trigger("navigate:" + route);
+    			var parsed = this._routeParser.parse(route);
+    			if (parsed)
+    				this.dispatch(parsed.name, parsed.args, route);
+    			else
+    				this.trigger("notfound", route);
+    			return this;
+    		},
 
-	    		dispatch : function(name, args, route) {
-	    			if (this._current) {
-	    				if (this._current.name === name && Comparators.deepEqual(args, this._current.args, 2))
-	    					return;
-	    				this.trigger("leave", this._current.name,
-	    						this._current.args, this._current);
-	    				this.trigger("leave:" + this._current.name,
-	    						this._current.args, this._current);
-	    			}
-	    			var current = {
-    					route : route || this.format(name, args),
-    					name : name,
-    					args : args
-	    			};
-	    			this.trigger("dispatch", name, args, current);
-	    			this.trigger("dispatch:" + name, args, current);
-	    			this._current = current;
-	    			this.trigger("dispatched", name, args, current);
-	    			this.trigger("dispatched:" + name, args, current);
-	    		},
+    		/**
+    		 * Dispatches a new route.
+    		 * 
+    		 * @param {string} name name of route
+    		 * @param {array} args arguments of new route
+    		 * @param {string} route optional route string
+    		 * 
+    		 */
+    		dispatch : function(name, args, route) {
+    			if (this._current) {
+    				if (this._current.name === name && Comparators.deepEqual(args, this._current.args, 2))
+    					return;
+    				this.trigger("leave", this._current.name,
+    						this._current.args, this._current);
+    				this.trigger("leave:" + this._current.name,
+    						this._current.args, this._current);
+    			}
+    			var current = {
+					route : route || this.format(name, args),
+					name : name,
+					args : args
+    			};
+    			this.trigger("dispatch", name, args, current);
+    			this.trigger("dispatch:" + name, args, current);
+    			this._current = current;
+    			this.trigger("dispatched", name, args, current);
+    			this.trigger("dispatched:" + name, args, current);
+    			return this;
+    		},
 
-	    		format : function(name, args) {
-	    			return this._routeParser.format(name, args);
-	    		}
+			/**
+			 * Recreates a full route from an abstract route descriptor and route arguments.
+			 * 
+			 * @param {string} name route descriptor
+			 * @param {array} args arguments for route
+			 * 
+			 * @return {string} full route
+			 * 
+			 */
+    		format : function(name, args) {
+    			return this._routeParser.format(name, args);
+    		}
 
-	    	};
-	    } ]);
+    	};
+    } ]);
 });
 
 
 
-Scoped.define("module:Router.RouteBinder", [ "module:Class", "module:Types" ], function(Class, Types, scoped) {
-	return Class.extend({ scoped : scoped
-	}, function(inherited) {
+Scoped.define("module:Router.RouteBinder", [
+	"module:Class", "module:Types"
+], function( Class, Types, scoped) {
+	return Class.extend({ scoped : scoped }, function(inherited) {
+		
+		/**
+		 * Abstract Route Binder Class for bidirectionally binding the route to a separate router.
+		 * 
+		 * @class BetaJS.Router.RouteBinder
+		 */
 		return {
 			
+			/**
+			 * Overwrite the local route of this binder.
+			 * 
+			 * @param {string} currentRoute current route
+			 */
 			_setLocalRoute: function (currentRoute) {},
 			
+			/**
+			 * Read the local route of this binder.
+			 * 
+			 * @return {string} local route
+			 */
 			_getLocalRoute: function () {},
 			
+			/**
+			 * Notify the router that the local route has changed.
+			 */
 			_localRouteChanged: function () {
 				this.setGlobalRoute(this._getLocalRoute());
 			},
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} router router instance
+			 */
 			constructor : function(router) {
 				inherited.constructor.call(this);
 				this._router = router;
@@ -237,20 +312,35 @@ Scoped.define("module:Router.RouteBinder", [ "module:Class", "module:Types" ], f
 					this.setGlobalRoute(this._getLocalRoute());
 			},
 
+			/**
+			 * @override
+			 */
 			destroy : function() {
 				this._router.off(null, null, this);
 				inherited.destroy.call(this);
 			},
 			
+			/**
+			 * Sets the local route.
+			 * 
+			 * @param {string} currentRoute current route
+			 */
 			setLocalRoute: function (currentRoute) {
 				this._setLocalRoute(currentRoute);
+				return this;
 			},
 			
+			/**
+			 * Sets the global route.
+			 * 
+			 * @param {string} route new global route
+			 */
 			setGlobalRoute: function (route) {
 				if (Types.is_string(route))
 					this._router.navigate(route);
 				else
 					this._router.dispatch(route.name, route.args);
+				return this;
 			}
 
 		};

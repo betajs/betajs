@@ -170,11 +170,10 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | betajs-scoped | [Open](https://github.com/betajs/betajs-scoped) |
 
 
-## Contributors
+## Main Contributors
 
 - Oliver Friedmann
 - Victor Lingenthal
-
 
 ## License
 
@@ -186,3 +185,13 @@ Apache-2.0
 This software may include modified and unmodified portions of:
 - Underscore, MIT Software License, (c) 2009-2013 Jeremy Ashkenas, DocumentCloud
 - parseUri, MIT Software License, (c) Steven Levithan
+
+
+
+
+## Sponsors
+
+- Ziggeo
+- Browserstack
+
+
