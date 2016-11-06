@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.87 - 2016-11-03
+betajs - v1.0.87 - 2016-11-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.87 - 2016-11-03
+betajs - v1.0.87 - 2016-11-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "575.1478193128876"
+    "version": "576.1478469989650"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11457,8 +11457,17 @@ Scoped.define("module:Loggers.ConsoleLogListener", [
 	"module:Loggers.LogListener"
 ], function (LogListener, scoped) {
 	return LogListener.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Console Log Listener Class
+		 * 
+		 * @class BetaJS.Loggers.ConsoleLogListener
+		 */
 		return {
 			
+			/**
+			 * @override
+			 */
 			message: function (source, msg) {
 				console[msg.type].apply(console, msg.args);
 			}
@@ -11470,8 +11479,20 @@ Scoped.define("module:Loggers.LogListener", [
 	"module:Class"
 ], function (Class, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Abstract Log Listener Class, reacting to logging calls
+		 * 
+		 * @class BetaJS.Loggers.LogListener
+		 */
 		return {
 			
+			/**
+			 * Called when a log message is created.
+			 * 
+			 * @param {object} source logger source
+			 * @param {object} msg message object
+			 */
 			message: function (source, msg) {}
 			
 		};
@@ -11483,14 +11504,29 @@ Scoped.define("module:Loggers.LogListenerFilter", [
 	"module:Types"
 ], function (LogListener, Objs, Types, scoped) {
 	return LogListener.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Log Listener Filter Class
+		 * 
+		 * @class BetaJS.Loggers.LogListenerFilter
+		 */
 		return {
 			
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} target target log listener that should be filtered for
+			 * @param {array} tags tags that should be filtered by
+			 */
 			constructor: function (target, tags) {
 				inherited.constructor.call(this);
 				this.__target = target;
 				this.__tags = tags;
 			},
 
+			/**
+			 * @override
+			 */
 			message: function (source, msg) {
 				var tags = Objs.objectify(msg.tags); 
 				var result = false;
@@ -11518,8 +11554,19 @@ Scoped.define("module:Loggers.Logger", [
 	"module:Functions"
 ], function (Class, Objs, Functions, scoped) {
 	var Cls = Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Logger Class
+		 * 
+		 * @class BetaJS.Loggers.Logger
+		 */
 		return {
 			
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} options options for the logger
+			 */
 			constructor: function (options) {
 				inherited.constructor.call(this);
 				options = options || {};
@@ -11528,16 +11575,29 @@ Scoped.define("module:Loggers.Logger", [
 				Objs.iter(options.listeners, this.addListener, this);
 			},
 			
+			/**
+			 * Adds a new listener to the logger.
+			 * 
+			 * @param {object} listener listener to be added
+			 */
 			addListener: function (listener) {
 				this.__listeners[listener.cid()] = listener;
 				return this;
 			},
 			
+			/**
+			 * Remove an existing listener from the logger.
+			 * 
+			 * @param {object} listener listener to be removed
+			 */
 			removeListener: function (listener) {
 				delete this.__listeners[listener.cid()];
 				return this;
 			},
 			
+			/**
+			 * Create a new log message.
+			 */
 			log: function () {
 				return this.message(this, {
 					type: "log",
@@ -11545,6 +11605,16 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Creates a log function calling the logger.
+			 */
+			logf: function () {
+				return Functions.as_method(this.log, this);
+			},
+			
+			/**
+			 * Create a new warn message.
+			 */
 			warn: function () {
 				return this.message(this, {
 					type: "warn",
@@ -11552,6 +11622,9 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Create a new error message.
+			 */
 			error: function () {
 				return this.message(this, {
 					type: "error",
@@ -11559,6 +11632,11 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Create a new tagged log message.
+			 * 
+			 * @param {array} tags tags for the message
+			 */
 			taggedlog: function (tags) {
 				return this.message(this, {
 					type: "log",
@@ -11567,6 +11645,11 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Create a new tagged warn message.
+			 * 
+			 * @param {array} tags tags for the message
+			 */
 			taggedwarn: function (tags) {
 				return this.message(this, {
 					type: "warn",
@@ -11575,6 +11658,11 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 
+			/**
+			 * Create a new tagged error message.
+			 * 
+			 * @param {array} tags tags for the message
+			 */
 			taggederror: function (tags) {
 				return this.message(this, {
 					type: "error",
@@ -11583,6 +11671,12 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 
+			/**
+			 * Create a new log message.
+			 * 
+			 * @param {object} source logger source for message
+			 * @param {object} msg log message
+			 */
 			message: function (source, msg) {
 				Objs.iter(this.__listeners, function (listener) {
 					msg.tags = this.__tags.concat(msg.tags || []);
@@ -11591,6 +11685,11 @@ Scoped.define("module:Loggers.Logger", [
 				return this;
 			},
 			
+			/**
+			 * Create a new sub logger by tags.
+			 *
+			 * @return {object} sub logger
+			 */
 			tag: function () {
 				return new Cls({
 					tags: Functions.getArguments(arguments),
@@ -11601,6 +11700,11 @@ Scoped.define("module:Loggers.Logger", [
 		};
 	}, {
 		
+		/**
+		 * Return global singleton logger instance.
+		 * 
+		 * @return {object} singleton logger
+		 */
 		global: function () {
 			if (!this.__global)
 				this.__global = new Cls();
@@ -13319,12 +13423,25 @@ Scoped.define("module:Router.RouteBinder", [
 });
 
 
-Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "module:Objs", "module:Strings",
-                                                  "module:Router.RouteMap" ], function(RouteBinder, Objs, Strings, RouteMap, scoped) {
-	return RouteBinder.extend({ scoped : scoped
-	}, function(inherited) {
+Scoped.define("module:Router.StateRouteBinder", [
+	"module:Router.RouteBinder", "module:Objs", "module:Strings", "module:Router.RouteMap"
+], function(RouteBinder, Objs, Strings, RouteMap, scoped) {
+	return RouteBinder.extend({ scoped : scoped }, function(inherited) {
+		
+		/**
+		 * State Router Binder Class, binding a router to a state machine
+		 * 
+		 * @class BetaJS.Router.StateRouteBinder
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} router router instance
+			 * @param {object} stateHost state host instance
+			 * @param {object} options optional options
+			 */
 			constructor : function(router, stateHost, options) {
 				this._stateHost = stateHost;
 				options = Objs.extend({
@@ -13353,6 +13470,9 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 				stateHost.on("start", this._localRouteChanged, this);
 			},
 
+			/**
+			 * @override
+			 */
 			destroy : function() {
 				this._routeToState.destroy();
 				this._stateToRoute.destroy();
@@ -13360,22 +13480,44 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Bind a route to a state.
+			 * 
+			 * @param {string} name route name
+			 * @param {function} func state function
+			 */
 			bindRouteToState : function(name, func) {
 				this._routeToState.bind(name, func);
 				return this;
 			},
 
+			/**
+			 * Bind a state to a route.
+			 * 
+			 * @param {string} name state name
+			 * @param {function} func route function
+			 */
 			bindStateToRoute : function(name, func) {
 				this._stateToRoute.bind(name, func);
 				return this;
 			},
 
+			/**
+			 * Register a new route and corresponding state.
+			 * 
+			 * @param {string} name name of route / state
+			 * @param {string} route new route
+			 * @param {object} extension state extension object
+			 */
 			register: function (name, route, extension) {
 				this._router.bind(name, route);
 				this._stateHost.register(this._options.capitalizeStates ? Strings.capitalize(name) : name, extension);
 				return this;
 			},			
 
+			/**
+			 * @override
+			 */
 			_setLocalRoute: function (currentRoute) {
 				var mapped = this._routeToState.map(currentRoute.name, currentRoute.args);
 				if (mapped) {
@@ -13388,6 +13530,9 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 				}
 			},
 			
+			/**
+			 * @override
+			 */
 			_getLocalRoute: function () {
 				if (!this._stateHost.state())
 					return null;
@@ -13399,13 +13544,24 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 	});
 });
 
-Scoped.define("module:Router.RouterHistory", [ "module:Class",
-                                               "module:Events.EventsMixin" ], function(Class, EventsMixin, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, [ EventsMixin, function(inherited) {
+
+Scoped.define("module:Router.RouterHistory", [
+	"module:Class", "module:Events.EventsMixin"
+], function(Class, EventsMixin, scoped) {
+	return Class.extend({ scoped : scoped }, [ EventsMixin, function(inherited) {
+		
+		/**
+		 * Router History Class
+		 * 
+		 * @class BetaJS.Router.RouterHistory
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} router router instance
+			 */
 			constructor : function(router) {
 				inherited.constructor.call(this);
 				this._router = router;
@@ -13417,25 +13573,50 @@ Scoped.define("module:Router.RouterHistory", [ "module:Class",
 				}, this);
 			},
 
+			/**
+			 * @override
+			 */
 			destroy : function() {
 				this._router.off(null, null, this);
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Returns the last history item.
+			 * 
+			 * @param {int} index optional index, counting from the end.
+			 * @return {string} history route
+			 */
 			last : function(index) {
 				index = index || 0;
 				return this.get(this.count() - 1 - index);
 			},
 
+			/**
+			 * Return the number of history items.
+			 * 
+			 * @return {int} number of history items 
+			 */
 			count : function() {
 				return this._history.length;
 			},
 
+			/**
+			 * Returns a history item.
+			 * 
+			 * @param {int} index optional index, counting from the start.
+			 * @return {string} history route
+			 */
 			get : function(index) {
 				index = index || 0;
 				return this._history[index];
 			},
 
+			/**
+			 * Goes back in history.
+			 * 
+			 * @param {int} index optional index, stating how many items to go back.
+			 */
 			back : function(index) {
 				if (this.count() < 2)
 					return null;

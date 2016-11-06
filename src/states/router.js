@@ -348,12 +348,25 @@ Scoped.define("module:Router.RouteBinder", [
 });
 
 
-Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "module:Objs", "module:Strings",
-                                                  "module:Router.RouteMap" ], function(RouteBinder, Objs, Strings, RouteMap, scoped) {
-	return RouteBinder.extend({ scoped : scoped
-	}, function(inherited) {
+Scoped.define("module:Router.StateRouteBinder", [
+	"module:Router.RouteBinder", "module:Objs", "module:Strings", "module:Router.RouteMap"
+], function(RouteBinder, Objs, Strings, RouteMap, scoped) {
+	return RouteBinder.extend({ scoped : scoped }, function(inherited) {
+		
+		/**
+		 * State Router Binder Class, binding a router to a state machine
+		 * 
+		 * @class BetaJS.Router.StateRouteBinder
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} router router instance
+			 * @param {object} stateHost state host instance
+			 * @param {object} options optional options
+			 */
 			constructor : function(router, stateHost, options) {
 				this._stateHost = stateHost;
 				options = Objs.extend({
@@ -382,6 +395,9 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 				stateHost.on("start", this._localRouteChanged, this);
 			},
 
+			/**
+			 * @override
+			 */
 			destroy : function() {
 				this._routeToState.destroy();
 				this._stateToRoute.destroy();
@@ -389,22 +405,44 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Bind a route to a state.
+			 * 
+			 * @param {string} name route name
+			 * @param {function} func state function
+			 */
 			bindRouteToState : function(name, func) {
 				this._routeToState.bind(name, func);
 				return this;
 			},
 
+			/**
+			 * Bind a state to a route.
+			 * 
+			 * @param {string} name state name
+			 * @param {function} func route function
+			 */
 			bindStateToRoute : function(name, func) {
 				this._stateToRoute.bind(name, func);
 				return this;
 			},
 
+			/**
+			 * Register a new route and corresponding state.
+			 * 
+			 * @param {string} name name of route / state
+			 * @param {string} route new route
+			 * @param {object} extension state extension object
+			 */
 			register: function (name, route, extension) {
 				this._router.bind(name, route);
 				this._stateHost.register(this._options.capitalizeStates ? Strings.capitalize(name) : name, extension);
 				return this;
 			},			
 
+			/**
+			 * @override
+			 */
 			_setLocalRoute: function (currentRoute) {
 				var mapped = this._routeToState.map(currentRoute.name, currentRoute.args);
 				if (mapped) {
@@ -417,6 +455,9 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 				}
 			},
 			
+			/**
+			 * @override
+			 */
 			_getLocalRoute: function () {
 				if (!this._stateHost.state())
 					return null;
@@ -428,13 +469,24 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 	});
 });
 
-Scoped.define("module:Router.RouterHistory", [ "module:Class",
-                                               "module:Events.EventsMixin" ], function(Class, EventsMixin, scoped) {
-	return Class.extend({
-		scoped : scoped
-	}, [ EventsMixin, function(inherited) {
+
+Scoped.define("module:Router.RouterHistory", [
+	"module:Class", "module:Events.EventsMixin"
+], function(Class, EventsMixin, scoped) {
+	return Class.extend({ scoped : scoped }, [ EventsMixin, function(inherited) {
+		
+		/**
+		 * Router History Class
+		 * 
+		 * @class BetaJS.Router.RouterHistory
+		 */
 		return {
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} router router instance
+			 */
 			constructor : function(router) {
 				inherited.constructor.call(this);
 				this._router = router;
@@ -446,25 +498,50 @@ Scoped.define("module:Router.RouterHistory", [ "module:Class",
 				}, this);
 			},
 
+			/**
+			 * @override
+			 */
 			destroy : function() {
 				this._router.off(null, null, this);
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Returns the last history item.
+			 * 
+			 * @param {int} index optional index, counting from the end.
+			 * @return {string} history route
+			 */
 			last : function(index) {
 				index = index || 0;
 				return this.get(this.count() - 1 - index);
 			},
 
+			/**
+			 * Return the number of history items.
+			 * 
+			 * @return {int} number of history items 
+			 */
 			count : function() {
 				return this._history.length;
 			},
 
+			/**
+			 * Returns a history item.
+			 * 
+			 * @param {int} index optional index, counting from the start.
+			 * @return {string} history route
+			 */
 			get : function(index) {
 				index = index || 0;
 				return this._history[index];
 			},
 
+			/**
+			 * Goes back in history.
+			 * 
+			 * @param {int} index optional index, stating how many items to go back.
+			 */
 			back : function(index) {
 				if (this.count() < 2)
 					return null;

@@ -4,8 +4,19 @@ Scoped.define("module:Loggers.Logger", [
 	"module:Functions"
 ], function (Class, Objs, Functions, scoped) {
 	var Cls = Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Logger Class
+		 * 
+		 * @class BetaJS.Loggers.Logger
+		 */
 		return {
 			
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} options options for the logger
+			 */
 			constructor: function (options) {
 				inherited.constructor.call(this);
 				options = options || {};
@@ -14,16 +25,29 @@ Scoped.define("module:Loggers.Logger", [
 				Objs.iter(options.listeners, this.addListener, this);
 			},
 			
+			/**
+			 * Adds a new listener to the logger.
+			 * 
+			 * @param {object} listener listener to be added
+			 */
 			addListener: function (listener) {
 				this.__listeners[listener.cid()] = listener;
 				return this;
 			},
 			
+			/**
+			 * Remove an existing listener from the logger.
+			 * 
+			 * @param {object} listener listener to be removed
+			 */
 			removeListener: function (listener) {
 				delete this.__listeners[listener.cid()];
 				return this;
 			},
 			
+			/**
+			 * Create a new log message.
+			 */
 			log: function () {
 				return this.message(this, {
 					type: "log",
@@ -31,6 +55,16 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Creates a log function calling the logger.
+			 */
+			logf: function () {
+				return Functions.as_method(this.log, this);
+			},
+			
+			/**
+			 * Create a new warn message.
+			 */
 			warn: function () {
 				return this.message(this, {
 					type: "warn",
@@ -38,6 +72,9 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Create a new error message.
+			 */
 			error: function () {
 				return this.message(this, {
 					type: "error",
@@ -45,6 +82,11 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Create a new tagged log message.
+			 * 
+			 * @param {array} tags tags for the message
+			 */
 			taggedlog: function (tags) {
 				return this.message(this, {
 					type: "log",
@@ -53,6 +95,11 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 			
+			/**
+			 * Create a new tagged warn message.
+			 * 
+			 * @param {array} tags tags for the message
+			 */
 			taggedwarn: function (tags) {
 				return this.message(this, {
 					type: "warn",
@@ -61,6 +108,11 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 
+			/**
+			 * Create a new tagged error message.
+			 * 
+			 * @param {array} tags tags for the message
+			 */
 			taggederror: function (tags) {
 				return this.message(this, {
 					type: "error",
@@ -69,6 +121,12 @@ Scoped.define("module:Loggers.Logger", [
 				});
 			},
 
+			/**
+			 * Create a new log message.
+			 * 
+			 * @param {object} source logger source for message
+			 * @param {object} msg log message
+			 */
 			message: function (source, msg) {
 				Objs.iter(this.__listeners, function (listener) {
 					msg.tags = this.__tags.concat(msg.tags || []);
@@ -77,6 +135,11 @@ Scoped.define("module:Loggers.Logger", [
 				return this;
 			},
 			
+			/**
+			 * Create a new sub logger by tags.
+			 *
+			 * @return {object} sub logger
+			 */
 			tag: function () {
 				return new Cls({
 					tags: Functions.getArguments(arguments),
@@ -87,6 +150,11 @@ Scoped.define("module:Loggers.Logger", [
 		};
 	}, {
 		
+		/**
+		 * Return global singleton logger instance.
+		 * 
+		 * @return {object} singleton logger
+		 */
 		global: function () {
 			if (!this.__global)
 				this.__global = new Cls();
