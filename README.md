@@ -1,4 +1,4 @@
-# betajs 1.0.87
+# betajs 1.0.88
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
 
@@ -137,11 +137,11 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 ## Compatability
 | Target | Versions |
 | :----- | -------: |
-| Firefox | 4 - Latest |
+| Firefox | 6 - Latest |
 | Chrome | 15 - Latest |
 | Safari | 4 - Latest |
 | Opera | 12 - Latest |
-| Internet Explorer | 6 - Latest |
+| Internet Explorer | 8 - Latest |
 | Edge | 12 - Latest |
 | iOS | 7.0 - Latest |
 | Android | 4.0 - Latest |

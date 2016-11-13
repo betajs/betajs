@@ -283,6 +283,13 @@ Scoped.define("module:States.State", [
 			__next_state: null,
 			__suspended: 0,
 
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} host state host
+			 * @param {object} args arguments for creating the state
+			 * @param {object} transitionals transitionals variables
+			 */
 			constructor: function (host, args, transitionals) {
 				inherited.constructor.call(this);
 				this.host = host;
@@ -310,6 +317,11 @@ Scoped.define("module:States.State", [
 				host.resumeEvents();
 			},
 			
+			/**
+			 * Returns all attributes of the state.
+			 * 
+			 * @return {object} all attributes
+			 */
 			allAttr: function () {
 				var result = Objs.clone(this.host.data(), 1);
 				Objs.iter(this._locals, function (key) {
@@ -321,17 +333,30 @@ Scoped.define("module:States.State", [
 				return result;
 			},
 
+			/**
+			 * Returns the name of state.
+			 * 
+			 * @return {string} name of state
+			 */
 			state_name: function () {
 				return Strings.last_after(this.cls.classname, ".");
 			},
 
+			/**
+			 * Returns the description of state.
+			 * 
+			 * @return {string} description of state
+			 */
 			description: function () {
 				return this.state_name();
 			},
 
+			/**
+			 * Starts the state.
+			 */
 			start: function () {
 				if (this._starting)
-					return;
+					return this;
 				this._starting = true;
 				this.host._start(this);
 				this._start();
@@ -339,27 +364,51 @@ Scoped.define("module:States.State", [
 					this.host._afterStart(this);
 					this._started = true;
 				}
+				return this;
 			},
 
+			/**
+			 * Ends the state.
+			 */
 			end: function () {
 				if (this._stopped)
-					return;
+					return this;
 				this._stopped = true;
 				this._end();
 				this.host._end(this);
 				this.host._afterEnd(this);
 				this.destroy();
+				return this;
 			},
 
+			/**
+			 * Eventually transitions to the next state.
+			 * 
+			 * @param {string} state_name name of next state
+			 * @param {object} args arguments for creating the state
+			 * @param {object} transitionals transitionals variables
+			 * 
+			 * @return {object} next state
+			 */
 			eventualNext: function (state_name, args, transitionals) {
 				this.suspend();
-				this.next(state_name, args, transitionals);
+				var state = this.next(state_name, args, transitionals);
 				this.eventualResume();
+				return state;
 			},
 
+			/**
+			 * Eventually transitions to the next state.
+			 * 
+			 * @param {string} state_name name of next state
+			 * @param {object} args arguments for creating the state
+			 * @param {object} transitionals transitionals variables
+			 * 
+			 * @return {object} next state
+			 */
 			next: function (state_name, args, transitionals) {
 				if (!this._starting || this._stopped || this.__next_state)
-					return;
+					return null;
 				args = args || {};
 				for (var i = 0; i < this._persistents.length; ++i) {
 					if (!(this._persistents[i] in args))
@@ -368,7 +417,7 @@ Scoped.define("module:States.State", [
 				var obj = this.host._createState(state_name, args, transitionals);
 				if (!this.can_transition_to(obj)) {
 					obj.destroy();
-					return;
+					return null;
 				}
 				if (!this._started) {
 					this.host._afterStart(this);
@@ -379,8 +428,18 @@ Scoped.define("module:States.State", [
 				this._transition();
 				if (this.__suspended <= 0)
 					this.__next();
+				return obj;
 			},
 			
+			/**
+			 * Checks weakly whether a prospective new state is equal to this state.
+			 * 
+			 * @param {string} state_name name of next state
+			 * @param {object} args arguments for creating the state
+			 * @param {object} transitionals transitionals variables
+			 * 
+			 * @return {boolean} true if equal
+			 */
 			weakSame: function (state_name, args, transitionals) {
 				var same = true;
 				if (state_name !== this.state_name())
@@ -393,6 +452,15 @@ Scoped.define("module:States.State", [
 				return same;
 			},
 			
+			/**
+			 * Weakly transitions to the next state.
+			 * 
+			 * @param {string} state_name name of next state
+			 * @param {object} args arguments for creating the state
+			 * @param {object} transitionals transitionals variables
+			 * 
+			 * @return {object} next state
+			 */
 			weakNext: function (state_name, args, transitionals) {
 				return this.weakSame.apply(this, arguments) ? this : this.next.apply(this, arguments);
 			},
@@ -417,20 +485,39 @@ Scoped.define("module:States.State", [
 			_transition: function () {
 			},
 
+			/**
+			 * Suspends the state.
+			 */
 			suspend: function () {
 				this.__suspended++;
+				return this;
 			},
 
+			/**
+			 * Eventually resumes the state.
+			 */
 			eventualResume: function () {
 				Async.eventually(this.resume, this);
+				return this;
 			},
 
+			/**
+			 * Resumes the state.
+			 */
 			resume: function () {
 				this.__suspended--;
 				if (this.__suspended === 0 && !this._stopped && this.__next_state)
 					this.__next();
+				return this;
 			},
 
+			/**
+			 * Determines whether the state can transition to another state.
+			 * 
+			 * @param {object} state another state
+			 * 
+			 * @return {boolean} true if it can transition
+			 */
 			can_transition_to: function (state) {
 				return this.host && this.host._can_transition_to(state) && this._can_transition_to(state);
 			},

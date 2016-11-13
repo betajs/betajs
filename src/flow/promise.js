@@ -151,7 +151,7 @@ Scoped.define("module:Promise", [
 					promises = [promises];
 				var f = function (error, value) {
 					if (error)
-						this.__errorPromise = promises[this.idx];
+						this.promise.__errorPromise = this.promise.__promises[this.idx];
 					else {
 						this.promise.__successCount++;
 						this.promise.__values[this.idx] = value;
