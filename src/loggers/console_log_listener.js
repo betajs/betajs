@@ -14,7 +14,7 @@ Scoped.define("module:Loggers.ConsoleLogListener", [
 			 * @override
 			 */
 			message: function (source, msg) {
-				console[msg.type].apply(console, msg.args);
+				console[msg.type].apply(console, msg.args.concat(msg.augments));
 			}
 
 		};

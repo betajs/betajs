@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.88 - 2016-11-17
+betajs - v1.0.89 - 2016-11-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "580.1479399507316"
+    "version": "581.1479851741228"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1706,7 +1706,8 @@ Scoped.define("module:Events.EventsMixin", [
 		 * 
 		 * @return {object} parent event object
 		 * 
-		 * @protected @abstract
+		 * @protected
+		 * @abstract
 		 */
 		_eventChain: function () {},
 		
@@ -1855,7 +1856,20 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 	 * @module BetaJS.Functions
 	 */
 	return {
-	
+		
+		/**
+		 * Returns the current stack trace.
+		 * 
+		 * @param {int} index optional stack trace start index
+		 * 
+		 * @return {array} stack trace array
+		 */
+		getStackTrace: function (index) {
+			var stack = (new Error()).stack.split("\n");
+			while (stack.length > 0 && stack[0].trim().toLowerCase() === "error")
+				stack.shift();
+			return index ? stack.slice(index) : stack;
+		},
 		
 	    /**
 	     * Takes a function and an instance and returns the method call as a function
@@ -11102,6 +11116,30 @@ Scoped.define("module:Iterators.Iterator", [
 	});
 });
 
+Scoped.define("module:Loggers.CallOriginLogAugment", [
+	"module:Loggers.AbstractLogAugment",
+	"module:Functions"
+], function (AbstractLogAugment, Functions, scoped) {
+	return AbstractLogAugment.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Call Origin Log Augment Class
+		 * 
+		 * @class BetaJS.Loggers.CallOriginLogAugment
+		 */
+		return {
+			
+			/**
+			 * @override
+			 */
+			augmentMessage: function (source, msg, depth) {
+				var stack = Functions.getStackTrace(depth * 3 + 6);
+				return stack[0];
+			}
+			
+		};
+	});
+});
 Scoped.define("module:Loggers.ConsoleLogListener", [
 	"module:Loggers.LogListener"
 ], function (LogListener, scoped) {
@@ -11118,9 +11156,34 @@ Scoped.define("module:Loggers.ConsoleLogListener", [
 			 * @override
 			 */
 			message: function (source, msg) {
-				console[msg.type].apply(console, msg.args);
+				console[msg.type].apply(console, msg.args.concat(msg.augments));
 			}
 
+		};
+	});
+});
+Scoped.define("module:Loggers.AbstractLogAugment", [
+	"module:Class"
+], function (Class, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Abstract Log Augment Class, augmenting logs
+		 * 
+		 * @class BetaJS.Loggers.AbstractLogAugment
+		 */
+		return {
+			
+			/**
+			 * Called when a log message is created.
+			 * 
+			 * @param {object} source logger source
+			 * @param {object} msg message object
+			 * @param {int} depth call depth (internal use)
+			 * @return augmentation
+			 */
+			augmentMessage: function (source, msg, depth) {}
+			
 		};
 	});
 });
@@ -11220,8 +11283,29 @@ Scoped.define("module:Loggers.Logger", [
 				inherited.constructor.call(this);
 				options = options || {};
 				this.__listeners = {};
+				this.__augments = {};
 				this.__tags = options.tags || [];
 				Objs.iter(options.listeners, this.addListener, this);
+			},
+			
+			/**
+			 * Adds a new augment to the logger.
+			 * 
+			 * @param {object} augment augment to be added
+			 */
+			addAugment: function (augment) {
+				this.__augments[augment.cid()] = augment;
+				return this;
+			},
+			
+			/**
+			 * Remove an existing augment from the logger.
+			 * 
+			 * @param {object} augment augment to be removed
+			 */
+			removeAugment: function (augment) {
+				delete this.__augments[augment.cid()];
+				return this;
 			},
 			
 			/**
@@ -11325,11 +11409,17 @@ Scoped.define("module:Loggers.Logger", [
 			 * 
 			 * @param {object} source logger source for message
 			 * @param {object} msg log message
+			 * @param {int} depth call depth (internal use)
 			 */
-			message: function (source, msg) {
+			message: function (source, msg, depth) {
+				depth = depth || 0;
+				msg.tags = this.__tags.concat(msg.tags || []);
+				msg.augments = msg.augments || [];
+				Objs.iter(this.__augments, function (augment) {
+					msg.augments.push(augment.augmentMessage(source, msg, depth));
+				}, this);
 				Objs.iter(this.__listeners, function (listener) {
-					msg.tags = this.__tags.concat(msg.tags || []);
-					listener.message(this, msg);
+					listener.message(this, msg, depth + 1);
 				}, this);
 				return this;
 			},
@@ -11419,7 +11509,7 @@ Scoped.define("module:Net.SocketReceiverChannel", ["module:Channels.Receiver"], 
 		/**
 		 * Socket Receiver Channel Class
 		 * 
-		 * @class SocketReceiverChannel
+		 * @class BetaJS.Net.SocketReceiverChannel
 		 */
 		return {
 						

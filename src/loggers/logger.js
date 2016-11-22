@@ -21,8 +21,29 @@ Scoped.define("module:Loggers.Logger", [
 				inherited.constructor.call(this);
 				options = options || {};
 				this.__listeners = {};
+				this.__augments = {};
 				this.__tags = options.tags || [];
 				Objs.iter(options.listeners, this.addListener, this);
+			},
+			
+			/**
+			 * Adds a new augment to the logger.
+			 * 
+			 * @param {object} augment augment to be added
+			 */
+			addAugment: function (augment) {
+				this.__augments[augment.cid()] = augment;
+				return this;
+			},
+			
+			/**
+			 * Remove an existing augment from the logger.
+			 * 
+			 * @param {object} augment augment to be removed
+			 */
+			removeAugment: function (augment) {
+				delete this.__augments[augment.cid()];
+				return this;
 			},
 			
 			/**
@@ -126,11 +147,17 @@ Scoped.define("module:Loggers.Logger", [
 			 * 
 			 * @param {object} source logger source for message
 			 * @param {object} msg log message
+			 * @param {int} depth call depth (internal use)
 			 */
-			message: function (source, msg) {
+			message: function (source, msg, depth) {
+				depth = depth || 0;
+				msg.tags = this.__tags.concat(msg.tags || []);
+				msg.augments = msg.augments || [];
+				Objs.iter(this.__augments, function (augment) {
+					msg.augments.push(augment.augmentMessage(source, msg, depth));
+				}, this);
 				Objs.iter(this.__listeners, function (listener) {
-					msg.tags = this.__tags.concat(msg.tags || []);
-					listener.message(this, msg);
+					listener.message(this, msg, depth + 1);
 				}, this);
 				return this;
 			},

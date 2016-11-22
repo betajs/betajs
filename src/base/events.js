@@ -274,7 +274,8 @@ Scoped.define("module:Events.EventsMixin", [
 		 * 
 		 * @return {object} parent event object
 		 * 
-		 * @protected @abstract
+		 * @protected
+		 * @abstract
 		 */
 		_eventChain: function () {},
 		
