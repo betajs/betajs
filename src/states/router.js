@@ -201,15 +201,24 @@ Scoped.define("module:Router.Router", [
     		 * Navigates to a new route.
     		 * 
     		 * @param {string} route route to navigate to
+			 * @fires BetaJS.Router.Router#navigate
+			 * @fires BetaJS.Router.Router#notfound
     		 */
     		navigate : function(route) {
+				/**
+				 * @event BetaJS.Router.Router#navigate
+				 */
     			this.trigger("navigate", route);
     			this.trigger("navigate:" + route);
     			var parsed = this._routeParser.parse(route);
     			if (parsed)
     				this.dispatch(parsed.name, parsed.args, route);
-    			else
+    			else {
+    				/**
+    				 * @event BetaJS.Router.Router#notfound
+    				 */
     				this.trigger("notfound", route);
+    			}
     			return this;
     		},
 
@@ -219,25 +228,34 @@ Scoped.define("module:Router.Router", [
     		 * @param {string} name name of route
     		 * @param {array} args arguments of new route
     		 * @param {string} route optional route string
-    		 * 
+			 * @fires BetaJS.Router.Router#leave
+			 * @fires BetaJS.Router.Router#dispatch
+			 * @fires BetaJS.Router.Router#dispatched
     		 */
     		dispatch : function(name, args, route) {
     			if (this._current) {
     				if (this._current.name === name && Comparators.deepEqual(args, this._current.args, 2))
     					return;
-    				this.trigger("leave", this._current.name,
-    						this._current.args, this._current);
-    				this.trigger("leave:" + this._current.name,
-    						this._current.args, this._current);
+    				/**
+    				 * @event BetaJS.Router.Router#leave
+    				 */
+    				this.trigger("leave", this._current.name, this._current.args, this._current);
+    				this.trigger("leave:" + this._current.name, this._current.args, this._current);
     			}
     			var current = {
 					route : route || this.format(name, args),
 					name : name,
 					args : args
     			};
+				/**
+				 * @event BetaJS.Router.Router#dispatch
+				 */
     			this.trigger("dispatch", name, args, current);
     			this.trigger("dispatch:" + name, args, current);
     			this._current = current;
+				/**
+				 * @event BetaJS.Router.Router#dispatched
+				 */
     			this.trigger("dispatched", name, args, current);
     			this.trigger("dispatched:" + name, args, current);
     			return this;
@@ -486,6 +504,8 @@ Scoped.define("module:Router.RouterHistory", [
 			 * Creates a new instance.
 			 * 
 			 * @param {object} router router instance
+			 * @fires BetaJS.Router.RouterHistory#change
+			 * @fires BetaJS.Router.RouterHistory#insert
 			 */
 			constructor : function(router) {
 				inherited.constructor.call(this);
@@ -493,7 +513,13 @@ Scoped.define("module:Router.RouterHistory", [
 				this._history = [];
 				router.on("dispatched", function(name, args, current) {
 					this._history.push(current);
+					/**
+					 * @event BetaJS.Router.RouterHistory#change
+					 */
 					this.trigger("change", current);
+					/**
+					 * @event BetaJS.Router.RouterHistory#insert
+					 */
 					this.trigger("insert", current);
 				}, this);
 			},
@@ -541,6 +567,8 @@ Scoped.define("module:Router.RouterHistory", [
 			 * Goes back in history.
 			 * 
 			 * @param {int} index optional index, stating how many items to go back.
+			 * @fires BetaJS.Router.RouterHistory#remove
+			 * @fires BetaJS.Router.RouterHistory#change
 			 */
 			back : function(index) {
 				if (this.count() < 2)
@@ -548,10 +576,16 @@ Scoped.define("module:Router.RouterHistory", [
 				index = index || 0;
 				while (index >= 0 && this.count() > 1) {
 					var removed = this._history.pop();
+					/**
+					 * @event BetaJS.Router.RouterHistory#remove
+					 */
 					this.trigger("remove", removed);
 					--index;
 				}
 				var item = this._history.pop();
+				/**
+				 * @event BetaJS.Router.RouterHistory#change
+				 */
 				this.trigger("change", item);
 				return this._router.dispatch(item.name, item.args);
 			}

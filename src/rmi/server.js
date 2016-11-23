@@ -165,10 +165,15 @@ Scoped.define("module:RMI.Server", [
 			 * @param data Data to be passed to method
 			 * 
 			 * @return Return value of method as promise. 
+			 * 
+			 * @fires BetaJS.RMI.Server#loadInstance
 			 */
 			_invoke: function (channel, instance_id, method, data) {
 				var instance = this.__instances[instance_id];
 				if (!instance) {
+					/**
+					 * @event BetaJS.RMI.Server#loadInstance
+					 */
 					this.trigger("loadInstance", channel, instance_id);
 					instance = this.__instances[instance_id];
 				}

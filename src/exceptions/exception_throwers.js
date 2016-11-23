@@ -113,8 +113,12 @@ Scoped.define("module:Exceptions.EventExceptionThrower", [
 
 			/**
 			 * @override
+			 * @fires BetaJS.Exceptions.EventExceptionThrower#exception
 			 */
 			_throwException: function (e) {
+				/**
+				 * @event BetaJS.Exceptions.EventExceptionThrower#exception
+				 */
 				this.trigger("exception", e);
 			}
 		

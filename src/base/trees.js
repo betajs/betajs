@@ -240,7 +240,13 @@ Scoped.define("module:Trees.TreeQueryObject", [
 					this.__result[node_id].count--;
 					if (this.__result[node_id].count <= 0) {
 						delete this.__result[node_id];
+						/**
+						 * @event BetaJS.Trees.TreeQueryObject#remove
+						 */
 						this.trigger("remove", node);
+						/**
+						 * @event BetaJS.Trees.TreeQueryObject#change
+						 */
 						this.trigger("change");
 					}
 				}
@@ -288,7 +294,13 @@ Scoped.define("module:Trees.TreeQueryObject", [
 									node: node,
 									count: 1
 							};
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#add
+							 */
 							this.trigger("add", node);
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#change
+							 */
 							this.trigger("change");
 						} else
 							this.__result[node_id].count++;
@@ -306,7 +318,13 @@ Scoped.define("module:Trees.TreeQueryObject", [
 						this.__result[node_id].count--;
 						if (this.__result[node_id].count <= 0) {
 							delete this.__result[node_id];
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#remove
+							 */
 							this.trigger("remove", node);
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#change
+							 */
 							this.trigger("change");
 						}
 					}

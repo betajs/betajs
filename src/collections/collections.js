@@ -101,8 +101,12 @@ Scoped.define("module:Collections.Collection", [
 			 * Set the comparison function.
 			 * 
 			 * @param {function} compare Comparison function
+			 * @fires BetaJS.Collections.Collection#set_compare
 			 */
 			set_compare: function (compare) {
+				/**
+				 * @event BetaJS.Collections.Collection#set_compare
+				 */
 				this.trigger("set_compare", compare);
 				this.__data.set_compare(compare);
 				return this;
@@ -126,10 +130,14 @@ Scoped.define("module:Collections.Collection", [
 		
 			/**
 			 * @override
+			 * @fires BetaJS.Collections.Collection#destroy
 			 */
 			destroy: function () {
 				this.__data.iterate(this.__unload_item, this);
 				this.__data.destroy();
+				/**
+				 * @event BetaJS.Collections.Collection#destroy
+				 */
 				this.trigger("destroy");
 				inherited.destroy.call(this);
 			},
@@ -148,8 +156,12 @@ Scoped.define("module:Collections.Collection", [
 			 * 
 			 * @param {object} object Object whose index has changed
 			 * @param {int} index New index
+			 * @fires BetaJS.Collections.Collection#index
 			 */
 			_index_changed: function (object, index) {
+				/**
+				 * @event BetaJS.Collections.Collection#index
+				 */
 				this.trigger("index", object, index);
 			},
 			
@@ -157,16 +169,24 @@ Scoped.define("module:Collections.Collection", [
 			 * Called when the index of an object has been successfully updated.
 			 * 
 			 * @param {object} object Object whose index has been updated
+			 * @fires BetaJS.Collections.Collection#reindexed
 			 */
 			_re_indexed: function (object) {
+				/**
+				 * @event BetaJS.Collections.Collection#reindexed
+				 */
 				this.trigger("reindexed", object);
 			},
 			
 			/**
 			 * Called when the collection has been sorted.
 			 * 
+			 * @fires BetaJS.Collections.Collection#sorted
 			 */
 			_sorted: function () {
+				/**
+				 * @event BetaJS.Collections.Collection#sorted
+				 */
 				this.trigger("sorted");
 			},
 			
@@ -176,9 +196,17 @@ Scoped.define("module:Collections.Collection", [
 			 * @param {object} object Object whose attribute has changed
 			 * @param {string} key Key of changed attribute
 			 * @param value New value of the object
+			 * @fires BetaJS.Collections.Collection#update
+			 * @fires BetaJS.Collections.Collection#change
 			 */
 			_object_changed: function (object, key, value) {
+				/**
+				 * @event BetaJS.Collections.Collection#update
+				 */
 				this.trigger("update");
+				/**
+				 * @event BetaJS.Collections.Collection#change
+				 */
 				this.trigger("change", object, key, value);
 				this.trigger("change:" + key, object, value);
 				this.__data.re_index(this.getIndex(object));
@@ -189,6 +217,8 @@ Scoped.define("module:Collections.Collection", [
 			 * 
 			 * @param {object} object Object to be added
 			 * @return {string} Identifier of added object
+			 * @fires BetaJS.Collections.Collection#add
+			 * @fires BetaJS.Collections.Collection#update
 			 */
 			add: function (object) {
 				if (!Class.is_class_instance(object))
@@ -202,7 +232,13 @@ Scoped.define("module:Collections.Collection", [
 						entries[value] = entries[value] || {};
 						entries[value][this.get_ident(object)] = object;
 					}, this);
+					/**
+					 * @event BetaJS.Collections.Collection#add
+					 */
 					this.trigger("add", object);
+					/**
+					 * @event BetaJS.Collections.Collection#update
+					 */
 					this.trigger("update");
 					if ("on" in object)
 						object.on("change", function (key, value, oldvalue) {
@@ -285,6 +321,8 @@ Scoped.define("module:Collections.Collection", [
 			 * 
 			 * @param {object} object Object to be removed
 			 * @return {object} Removed object
+			 * @fires BetaJS.Collections.Collection#remove
+			 * @fires BetaJS.Collections.Collection#update
 			 */
 			remove: function (object) {
 				if (!this.exists(object))
@@ -298,8 +336,14 @@ Scoped.define("module:Collections.Collection", [
 					}
 				}, this);
 				var result = this.__data.remove(object);
+				/**
+				 * @event BetaJS.Collections.Collection#remove
+				 */
 				this.trigger("remove", object);
 				this.__unload_item(object);
+				/**
+				 * @event BetaJS.Collections.Collection#update
+				 */
 				this.trigger("update");
 				return result;
 			},

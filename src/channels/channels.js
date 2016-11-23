@@ -17,8 +17,12 @@ Scoped.define("module:Channels.Sender", [
 		 * @param {string} message Message string
 		 * @param data Custom message data
 		 * @param serializerInfo Custom serializer information
+		 * @fires BetaJS.Channels.Sender#send
 		 */
 		send: function (message, data, serializerInfo) {
+			/**
+			 * @event BetaJS.Channels.Sender#send
+			 */
 			this.trigger("send", message, data);
 			this._send(message, data, serializerInfo);
 		},
@@ -54,8 +58,12 @@ Scoped.define("module:Channels.Receiver", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @fires BetaJS.Channels.Receiver#receive
 		 */
 		_receive: function (message, data) {
+			/**
+			 * @event BetaJS.Channels.Receiver#receive
+			 */
 			this.trigger("receive", message, data);
 			this.trigger("receive:" + message, data);
 		}

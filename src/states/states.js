@@ -221,8 +221,12 @@ Scoped.define("module:States.Host", [
 			 * 
 			 * @param {object} state state in question
 			 * @param {string} s name of event
+			 * @fires BetaJS.States.Host#event
 			 */
 			_stateEvent: function (state, s) {
+				/**
+				 * @event BetaJS.States.Host#event
+				 */
 				this.trigger("event", s, state.state_name(), state.description());
 				this.trigger(s, state.state_name(), state.description());
 				this.trigger(s + ":" + state.state_name(), state.description());

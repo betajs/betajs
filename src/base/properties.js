@@ -40,6 +40,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Objs.iter(this.__properties.bindings, function (value, key) {
 					this.unbind(key);
 				}, this);
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#destroy
+				 */
 				this.trigger("destroy");
 			},
 			"register_event": function (event) {
@@ -91,14 +94,21 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		},
 		
 		__unsetChanged: function (key, oldValue) {
+			/**
+			 * @event BetaJS.Properties.PropertiesMixin#unset
+			 */
 			this.trigger("unset", key, oldValue);
 			var keys = key ? key.split(".") : [];
 			var current = this.__properties.watchers;
 			var head = "";
 			var tail = key;
 			for (var i = 0; i < keys.length; ++i) {
-				if (current.eventCount > 0)
+				if (current.eventCount > 0) {
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#deepunset
+					 */
 					this.trigger("deepunset:" + head, oldValue, tail);
+				}
 				if (!(keys[i] in current.children))
 					return this;
 				current = current.children[keys[i]];
@@ -108,8 +118,12 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			function process_unset(current, key, oldValue) {
 				if (Types.is_undefined(oldValue))
 					return;
-				if (current.eventCount > 0)
+				if (current.eventCount > 0) {
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#unset
+					 */
 					this.trigger("unset:" + key, oldValue);
+				}
 				Objs.iter(current.children, function (child, subkey) {
 					process_unset.call(this, child, key ? (key + "." + subkey) : subkey, oldValue[subkey]);
 				}, this);
@@ -119,6 +133,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		},
 		
 		__setChanged: function (key, value, oldValue, notStrong) {
+			/**
+			 * @event BetaJS.Properties.PropertiesMixin#change
+			 */
 			this.trigger("change", key, value, oldValue);
 			this._afterSet(key, value);
 			if (this.destroyed())
@@ -129,8 +146,15 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			var tail = key;
 			for (var i = 0; i < keys.length; ++i) {
 				if (current.eventCount > 0) {
-					if (!notStrong)
+					if (!notStrong) {
+						/**
+						 * @event BetaJS.Properties.PropertiesMixin#strongdeepchange
+						 */
 						this.trigger("strongdeepchange:" + head, value, oldValue, tail);
+					}
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#deepchange
+					 */
 					this.trigger("deepchange:" + head, value, oldValue, tail);
 				}
 				if (!(keys[i] in current.children))
@@ -143,8 +167,15 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				if (value == oldValue)
 					return;
 				if (current.eventCount > 0) {
-					if (!notStrong)
+					if (!notStrong) {
+						/**
+						 * @event BetaJS.Properties.PropertiesMixin#strongchange
+						 */
 						this.trigger("strongchange:" + key, value, oldValue);
+					}
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#change
+					 */
 					this.trigger("change:" + key, value, oldValue);
 				}
 				Objs.iter(current.children, function (child, subkey) {
@@ -578,7 +609,13 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
 			} else if (force) {
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#change
+				 */
 				this.trigger("change", key, value, oldValue, true);
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#change
+				 */
 				this.trigger("change:" + key, value, oldValue, true);
 			}
 			return this;

@@ -38,9 +38,13 @@ Scoped.define("module:KeyValue.KeyValueStore", [
 			 * 
 			 * @param {string} key key to set the value for
 			 * @param value new value for key
+			 * @fires BetaJS.KeyValue.KeyValueStore#change
 			 */
 			set: function (key, value) {
 				this._set(key, value);
+				/**
+				 * @event BetaJS.KeyValue.KeyValueStore#change
+				 */
 				this.trigger("change:" + key, value);
 			},
 			

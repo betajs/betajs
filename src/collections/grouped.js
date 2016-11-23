@@ -96,15 +96,23 @@ Scoped.define("module:Collections.GroupedCollection", [
 			__insertObject: function (object, group) {
 				if (this.__insertCallback)
 					this.__insertCallback.call(this.__callbackContext, object, group);
-				else
+				else {
+					/**
+					 * @event BetaJS.Collections.GroupedCollection#insert
+					 */
 					group.trigger("insert", object);
+				}
 			},
 			
 			__removeObject: function (object, group) {
 				if (this.__removeCallback)
 					this.__removeCallback.call(this.__callbackContext, object, group);
-				else
+				else {
+					/**
+					 * @event BetaJS.Collections.GroupedCollection#remove
+					 */
 					group.trigger("remove", object);
+				}
 			}
 			
 		};	
