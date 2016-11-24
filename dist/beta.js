@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.89 - 2016-11-22
+betajs - v1.0.90 - 2016-11-24
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.89 - 2016-11-22
+betajs - v1.0.90 - 2016-11-24
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "581.1479851741228"
+    "version": "583.1480015477528"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1828,20 +1828,38 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	
 	/**
 	 * Increases the reference counter of this instance.
+	 * 
+	 * @param {object} reference optional reference object
 	 */
-	Class.prototype.increaseRef = function () {
+	Class.prototype.increaseRef = function (reference) {
 		this.__referenceCount = this.__referenceCount || 0;
 		this.__referenceCount++;
+		this.__referenceObjects = this.__referenceObjects || {};
+		if (reference) {
+			if (!this.__referenceObjects[reference.cid()])
+				this.__referenceObjects[reference.cid()] = reference;
+			else
+				this.__referenceCount--;
+		}
 		return this;
 	};
 	
 	/**
 	 * Decreases the reference counter of this instance.
+	 * 
+	 * @param {object} reference optional reference object
 	 */
-	Class.prototype.decreaseRef = function () {
+	Class.prototype.decreaseRef = function (reference) {
 		this.__referenceCount = this.__referenceCount || 0;
 		this.__referenceCount--;
-		if (this.__referenceCount <= 0)
+		this.__referenceObjects = this.__referenceObjects || {};
+		if (reference) {
+			if (this.__referenceObjects[reference.cid()])
+				delete this.__referenceObjects[reference.cid()];
+			else
+				this.__referenceCount++;
+		}
+		if (this.__referenceCount <= 0 && Types.is_empty(this.__referenceObjects))
 			this.weakDestroy();
 		return this;
 	};	
@@ -3266,9 +3284,13 @@ Scoped.define("module:KeyValue.KeyValueStore", [
 			 * 
 			 * @param {string} key key to set the value for
 			 * @param value new value for key
+			 * @fires BetaJS.KeyValue.KeyValueStore#change
 			 */
 			set: function (key, value) {
 				this._set(key, value);
+				/**
+				 * @event BetaJS.KeyValue.KeyValueStore#change
+				 */
 				this.trigger("change:" + key, value);
 			},
 			
@@ -4943,6 +4965,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Objs.iter(this.__properties.bindings, function (value, key) {
 					this.unbind(key);
 				}, this);
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#destroy
+				 */
 				this.trigger("destroy");
 			},
 			"register_event": function (event) {
@@ -4994,14 +5019,21 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		},
 		
 		__unsetChanged: function (key, oldValue) {
+			/**
+			 * @event BetaJS.Properties.PropertiesMixin#unset
+			 */
 			this.trigger("unset", key, oldValue);
 			var keys = key ? key.split(".") : [];
 			var current = this.__properties.watchers;
 			var head = "";
 			var tail = key;
 			for (var i = 0; i < keys.length; ++i) {
-				if (current.eventCount > 0)
+				if (current.eventCount > 0) {
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#deepunset
+					 */
 					this.trigger("deepunset:" + head, oldValue, tail);
+				}
 				if (!(keys[i] in current.children))
 					return this;
 				current = current.children[keys[i]];
@@ -5011,8 +5043,12 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			function process_unset(current, key, oldValue) {
 				if (Types.is_undefined(oldValue))
 					return;
-				if (current.eventCount > 0)
+				if (current.eventCount > 0) {
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#unset
+					 */
 					this.trigger("unset:" + key, oldValue);
+				}
 				Objs.iter(current.children, function (child, subkey) {
 					process_unset.call(this, child, key ? (key + "." + subkey) : subkey, oldValue[subkey]);
 				}, this);
@@ -5022,6 +5058,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 		},
 		
 		__setChanged: function (key, value, oldValue, notStrong) {
+			/**
+			 * @event BetaJS.Properties.PropertiesMixin#change
+			 */
 			this.trigger("change", key, value, oldValue);
 			this._afterSet(key, value);
 			if (this.destroyed())
@@ -5032,8 +5071,15 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			var tail = key;
 			for (var i = 0; i < keys.length; ++i) {
 				if (current.eventCount > 0) {
-					if (!notStrong)
+					if (!notStrong) {
+						/**
+						 * @event BetaJS.Properties.PropertiesMixin#strongdeepchange
+						 */
 						this.trigger("strongdeepchange:" + head, value, oldValue, tail);
+					}
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#deepchange
+					 */
 					this.trigger("deepchange:" + head, value, oldValue, tail);
 				}
 				if (!(keys[i] in current.children))
@@ -5046,8 +5092,15 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				if (value == oldValue)
 					return;
 				if (current.eventCount > 0) {
-					if (!notStrong)
+					if (!notStrong) {
+						/**
+						 * @event BetaJS.Properties.PropertiesMixin#strongchange
+						 */
 						this.trigger("strongchange:" + key, value, oldValue);
+					}
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#change
+					 */
 					this.trigger("change:" + key, value, oldValue);
 				}
 				Objs.iter(current.children, function (child, subkey) {
@@ -5481,7 +5534,13 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
 			} else if (force) {
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#change
+				 */
 				this.trigger("change", key, value, oldValue, true);
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#change
+				 */
 				this.trigger("change:" + key, value, oldValue, true);
 			}
 			return this;
@@ -7560,7 +7619,13 @@ Scoped.define("module:Trees.TreeQueryObject", [
 					this.__result[node_id].count--;
 					if (this.__result[node_id].count <= 0) {
 						delete this.__result[node_id];
+						/**
+						 * @event BetaJS.Trees.TreeQueryObject#remove
+						 */
 						this.trigger("remove", node);
+						/**
+						 * @event BetaJS.Trees.TreeQueryObject#change
+						 */
 						this.trigger("change");
 					}
 				}
@@ -7608,7 +7673,13 @@ Scoped.define("module:Trees.TreeQueryObject", [
 									node: node,
 									count: 1
 							};
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#add
+							 */
 							this.trigger("add", node);
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#change
+							 */
 							this.trigger("change");
 						} else
 							this.__result[node_id].count++;
@@ -7626,7 +7697,13 @@ Scoped.define("module:Trees.TreeQueryObject", [
 						this.__result[node_id].count--;
 						if (this.__result[node_id].count <= 0) {
 							delete this.__result[node_id];
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#remove
+							 */
 							this.trigger("remove", node);
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#change
+							 */
 							this.trigger("change");
 						}
 					}
@@ -7911,8 +7988,12 @@ Scoped.define("module:Channels.Sender", [
 		 * @param {string} message Message string
 		 * @param data Custom message data
 		 * @param serializerInfo Custom serializer information
+		 * @fires BetaJS.Channels.Sender#send
 		 */
 		send: function (message, data, serializerInfo) {
+			/**
+			 * @event BetaJS.Channels.Sender#send
+			 */
 			this.trigger("send", message, data);
 			this._send(message, data, serializerInfo);
 		},
@@ -7948,8 +8029,12 @@ Scoped.define("module:Channels.Receiver", [
 		 * 
 		 * @param {string} message Message string
 		 * @param data Custom message data
+		 * @fires BetaJS.Channels.Receiver#receive
 		 */
 		_receive: function (message, data) {
+			/**
+			 * @event BetaJS.Channels.Receiver#receive
+			 */
 			this.trigger("receive", message, data);
 			this.trigger("receive:" + message, data);
 		}
@@ -9405,8 +9490,12 @@ Scoped.define("module:Collections.Collection", [
 			 * Set the comparison function.
 			 * 
 			 * @param {function} compare Comparison function
+			 * @fires BetaJS.Collections.Collection#set_compare
 			 */
 			set_compare: function (compare) {
+				/**
+				 * @event BetaJS.Collections.Collection#set_compare
+				 */
 				this.trigger("set_compare", compare);
 				this.__data.set_compare(compare);
 				return this;
@@ -9421,19 +9510,33 @@ Scoped.define("module:Collections.Collection", [
 				return this.__data.get_compare();
 			},
 			
+			__load_item: function (object) {
+				if ("on" in object) {
+					object.on("change", function (key, value, oldvalue) {
+						this._object_changed(object, key, value, oldvalue);
+					}, this);
+				}
+				if (this.__release_references)
+					object.increaseRef(this);
+			},
+			
 			__unload_item: function (object) {
 				if ("off" in object)
 					object.off(null, null, this);
 				if (this.__release_references)
-					object.decreaseRef();
+					object.decreaseRef(this);
 			},
 		
 			/**
 			 * @override
+			 * @fires BetaJS.Collections.Collection#destroy
 			 */
 			destroy: function () {
 				this.__data.iterate(this.__unload_item, this);
 				this.__data.destroy();
+				/**
+				 * @event BetaJS.Collections.Collection#destroy
+				 */
 				this.trigger("destroy");
 				inherited.destroy.call(this);
 			},
@@ -9452,8 +9555,12 @@ Scoped.define("module:Collections.Collection", [
 			 * 
 			 * @param {object} object Object whose index has changed
 			 * @param {int} index New index
+			 * @fires BetaJS.Collections.Collection#index
 			 */
 			_index_changed: function (object, index) {
+				/**
+				 * @event BetaJS.Collections.Collection#index
+				 */
 				this.trigger("index", object, index);
 			},
 			
@@ -9461,16 +9568,24 @@ Scoped.define("module:Collections.Collection", [
 			 * Called when the index of an object has been successfully updated.
 			 * 
 			 * @param {object} object Object whose index has been updated
+			 * @fires BetaJS.Collections.Collection#reindexed
 			 */
 			_re_indexed: function (object) {
+				/**
+				 * @event BetaJS.Collections.Collection#reindexed
+				 */
 				this.trigger("reindexed", object);
 			},
 			
 			/**
 			 * Called when the collection has been sorted.
 			 * 
+			 * @fires BetaJS.Collections.Collection#sorted
 			 */
 			_sorted: function () {
+				/**
+				 * @event BetaJS.Collections.Collection#sorted
+				 */
 				this.trigger("sorted");
 			},
 			
@@ -9480,9 +9595,17 @@ Scoped.define("module:Collections.Collection", [
 			 * @param {object} object Object whose attribute has changed
 			 * @param {string} key Key of changed attribute
 			 * @param value New value of the object
+			 * @fires BetaJS.Collections.Collection#update
+			 * @fires BetaJS.Collections.Collection#change
 			 */
 			_object_changed: function (object, key, value) {
+				/**
+				 * @event BetaJS.Collections.Collection#update
+				 */
 				this.trigger("update");
+				/**
+				 * @event BetaJS.Collections.Collection#change
+				 */
 				this.trigger("change", object, key, value);
 				this.trigger("change:" + key, object, value);
 				this.__data.re_index(this.getIndex(object));
@@ -9493,6 +9616,8 @@ Scoped.define("module:Collections.Collection", [
 			 * 
 			 * @param {object} object Object to be added
 			 * @return {string} Identifier of added object
+			 * @fires BetaJS.Collections.Collection#add
+			 * @fires BetaJS.Collections.Collection#update
 			 */
 			add: function (object) {
 				if (!Class.is_class_instance(object))
@@ -9506,12 +9631,15 @@ Scoped.define("module:Collections.Collection", [
 						entries[value] = entries[value] || {};
 						entries[value][this.get_ident(object)] = object;
 					}, this);
+					/**
+					 * @event BetaJS.Collections.Collection#add
+					 */
 					this.trigger("add", object);
+					/**
+					 * @event BetaJS.Collections.Collection#update
+					 */
 					this.trigger("update");
-					if ("on" in object)
-						object.on("change", function (key, value, oldvalue) {
-							this._object_changed(object, key, value, oldvalue);
-						}, this);
+					this.__load_item(object);
 				}
 				return ident;
 			},
@@ -9589,6 +9717,8 @@ Scoped.define("module:Collections.Collection", [
 			 * 
 			 * @param {object} object Object to be removed
 			 * @return {object} Removed object
+			 * @fires BetaJS.Collections.Collection#remove
+			 * @fires BetaJS.Collections.Collection#update
 			 */
 			remove: function (object) {
 				if (!this.exists(object))
@@ -9602,8 +9732,14 @@ Scoped.define("module:Collections.Collection", [
 					}
 				}, this);
 				var result = this.__data.remove(object);
+				/**
+				 * @event BetaJS.Collections.Collection#remove
+				 */
 				this.trigger("remove", object);
 				this.__unload_item(object);
+				/**
+				 * @event BetaJS.Collections.Collection#update
+				 */
 				this.trigger("update");
 				return result;
 			},
@@ -10002,15 +10138,23 @@ Scoped.define("module:Collections.GroupedCollection", [
 			__insertObject: function (object, group) {
 				if (this.__insertCallback)
 					this.__insertCallback.call(this.__callbackContext, object, group);
-				else
+				else {
+					/**
+					 * @event BetaJS.Collections.GroupedCollection#insert
+					 */
 					group.trigger("insert", object);
+				}
 			},
 			
 			__removeObject: function (object, group) {
 				if (this.__removeCallback)
 					this.__removeCallback.call(this.__callbackContext, object, group);
-				else
+				else {
+					/**
+					 * @event BetaJS.Collections.GroupedCollection#remove
+					 */
 					group.trigger("remove", object);
+				}
 			}
 			
 		};	
@@ -10290,8 +10434,12 @@ Scoped.define("module:Exceptions.EventExceptionThrower", [
 
 			/**
 			 * @override
+			 * @fires BetaJS.Exceptions.EventExceptionThrower#exception
 			 */
 			_throwException: function (e) {
+				/**
+				 * @event BetaJS.Exceptions.EventExceptionThrower#exception
+				 */
 				this.trigger("exception", e);
 			}
 		
@@ -13182,10 +13330,15 @@ Scoped.define("module:RMI.Server", [
 			 * @param data Data to be passed to method
 			 * 
 			 * @return Return value of method as promise. 
+			 * 
+			 * @fires BetaJS.RMI.Server#loadInstance
 			 */
 			_invoke: function (channel, instance_id, method, data) {
 				var instance = this.__instances[instance_id];
 				if (!instance) {
+					/**
+					 * @event BetaJS.RMI.Server#loadInstance
+					 */
 					this.trigger("loadInstance", channel, instance_id);
 					instance = this.__instances[instance_id];
 				}
@@ -14020,15 +14173,24 @@ Scoped.define("module:Router.Router", [
     		 * Navigates to a new route.
     		 * 
     		 * @param {string} route route to navigate to
+			 * @fires BetaJS.Router.Router#navigate
+			 * @fires BetaJS.Router.Router#notfound
     		 */
     		navigate : function(route) {
+				/**
+				 * @event BetaJS.Router.Router#navigate
+				 */
     			this.trigger("navigate", route);
     			this.trigger("navigate:" + route);
     			var parsed = this._routeParser.parse(route);
     			if (parsed)
     				this.dispatch(parsed.name, parsed.args, route);
-    			else
+    			else {
+    				/**
+    				 * @event BetaJS.Router.Router#notfound
+    				 */
     				this.trigger("notfound", route);
+    			}
     			return this;
     		},
 
@@ -14038,25 +14200,34 @@ Scoped.define("module:Router.Router", [
     		 * @param {string} name name of route
     		 * @param {array} args arguments of new route
     		 * @param {string} route optional route string
-    		 * 
+			 * @fires BetaJS.Router.Router#leave
+			 * @fires BetaJS.Router.Router#dispatch
+			 * @fires BetaJS.Router.Router#dispatched
     		 */
     		dispatch : function(name, args, route) {
     			if (this._current) {
     				if (this._current.name === name && Comparators.deepEqual(args, this._current.args, 2))
     					return;
-    				this.trigger("leave", this._current.name,
-    						this._current.args, this._current);
-    				this.trigger("leave:" + this._current.name,
-    						this._current.args, this._current);
+    				/**
+    				 * @event BetaJS.Router.Router#leave
+    				 */
+    				this.trigger("leave", this._current.name, this._current.args, this._current);
+    				this.trigger("leave:" + this._current.name, this._current.args, this._current);
     			}
     			var current = {
 					route : route || this.format(name, args),
 					name : name,
 					args : args
     			};
+				/**
+				 * @event BetaJS.Router.Router#dispatch
+				 */
     			this.trigger("dispatch", name, args, current);
     			this.trigger("dispatch:" + name, args, current);
     			this._current = current;
+				/**
+				 * @event BetaJS.Router.Router#dispatched
+				 */
     			this.trigger("dispatched", name, args, current);
     			this.trigger("dispatched:" + name, args, current);
     			return this;
@@ -14305,6 +14476,8 @@ Scoped.define("module:Router.RouterHistory", [
 			 * Creates a new instance.
 			 * 
 			 * @param {object} router router instance
+			 * @fires BetaJS.Router.RouterHistory#change
+			 * @fires BetaJS.Router.RouterHistory#insert
 			 */
 			constructor : function(router) {
 				inherited.constructor.call(this);
@@ -14312,7 +14485,13 @@ Scoped.define("module:Router.RouterHistory", [
 				this._history = [];
 				router.on("dispatched", function(name, args, current) {
 					this._history.push(current);
+					/**
+					 * @event BetaJS.Router.RouterHistory#change
+					 */
 					this.trigger("change", current);
+					/**
+					 * @event BetaJS.Router.RouterHistory#insert
+					 */
 					this.trigger("insert", current);
 				}, this);
 			},
@@ -14360,6 +14539,8 @@ Scoped.define("module:Router.RouterHistory", [
 			 * Goes back in history.
 			 * 
 			 * @param {int} index optional index, stating how many items to go back.
+			 * @fires BetaJS.Router.RouterHistory#remove
+			 * @fires BetaJS.Router.RouterHistory#change
 			 */
 			back : function(index) {
 				if (this.count() < 2)
@@ -14367,10 +14548,16 @@ Scoped.define("module:Router.RouterHistory", [
 				index = index || 0;
 				while (index >= 0 && this.count() > 1) {
 					var removed = this._history.pop();
+					/**
+					 * @event BetaJS.Router.RouterHistory#remove
+					 */
 					this.trigger("remove", removed);
 					--index;
 				}
 				var item = this._history.pop();
+				/**
+				 * @event BetaJS.Router.RouterHistory#change
+				 */
 				this.trigger("change", item);
 				return this._router.dispatch(item.name, item.args);
 			}
@@ -14602,8 +14789,12 @@ Scoped.define("module:States.Host", [
 			 * 
 			 * @param {object} state state in question
 			 * @param {string} s name of event
+			 * @fires BetaJS.States.Host#event
 			 */
 			_stateEvent: function (state, s) {
+				/**
+				 * @event BetaJS.States.Host#event
+				 */
 				this.trigger("event", s, state.state_name(), state.description());
 				this.trigger(s, state.state_name(), state.description());
 				this.trigger(s + ":" + state.state_name(), state.description());

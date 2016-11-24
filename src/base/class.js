@@ -401,20 +401,38 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	
 	/**
 	 * Increases the reference counter of this instance.
+	 * 
+	 * @param {object} reference optional reference object
 	 */
-	Class.prototype.increaseRef = function () {
+	Class.prototype.increaseRef = function (reference) {
 		this.__referenceCount = this.__referenceCount || 0;
 		this.__referenceCount++;
+		this.__referenceObjects = this.__referenceObjects || {};
+		if (reference) {
+			if (!this.__referenceObjects[reference.cid()])
+				this.__referenceObjects[reference.cid()] = reference;
+			else
+				this.__referenceCount--;
+		}
 		return this;
 	};
 	
 	/**
 	 * Decreases the reference counter of this instance.
+	 * 
+	 * @param {object} reference optional reference object
 	 */
-	Class.prototype.decreaseRef = function () {
+	Class.prototype.decreaseRef = function (reference) {
 		this.__referenceCount = this.__referenceCount || 0;
 		this.__referenceCount--;
-		if (this.__referenceCount <= 0)
+		this.__referenceObjects = this.__referenceObjects || {};
+		if (reference) {
+			if (this.__referenceObjects[reference.cid()])
+				delete this.__referenceObjects[reference.cid()];
+			else
+				this.__referenceCount++;
+		}
+		if (this.__referenceCount <= 0 && Types.is_empty(this.__referenceObjects))
 			this.weakDestroy();
 		return this;
 	};	

@@ -121,11 +121,21 @@ Scoped.define("module:Collections.Collection", [
 				return this.__data.get_compare();
 			},
 			
+			__load_item: function (object) {
+				if ("on" in object) {
+					object.on("change", function (key, value, oldvalue) {
+						this._object_changed(object, key, value, oldvalue);
+					}, this);
+				}
+				if (this.__release_references)
+					object.increaseRef(this);
+			},
+			
 			__unload_item: function (object) {
 				if ("off" in object)
 					object.off(null, null, this);
 				if (this.__release_references)
-					object.decreaseRef();
+					object.decreaseRef(this);
 			},
 		
 			/**
@@ -240,10 +250,7 @@ Scoped.define("module:Collections.Collection", [
 					 * @event BetaJS.Collections.Collection#update
 					 */
 					this.trigger("update");
-					if ("on" in object)
-						object.on("change", function (key, value, oldvalue) {
-							this._object_changed(object, key, value, oldvalue);
-						}, this);
+					this.__load_item(object);
 				}
 				return ident;
 			},
