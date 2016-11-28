@@ -1,6 +1,6 @@
 {
 	"name": "betajs",
-	"version": "1.0.90",
+	"version": "1.0.91",
 	"description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
 	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
 	"devDependencies": {
@@ -39,7 +39,8 @@
 		"badges": {
 			"codeclimate": true,
 			"travis": true,
-			"npm": false
+			"npm": false,
+			"gitter": true
 		},
 		"credits": [
 			"Underscore, MIT Software License, (c) 2009-2013 Jeremy Ashkenas, DocumentCloud",

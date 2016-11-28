@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.90 - 2016-11-24
+betajs - v1.0.91 - 2016-11-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.90 - 2016-11-24
+betajs - v1.0.91 - 2016-11-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "583.1480015477528"
+    "version": "584.1480179749800"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5777,6 +5777,19 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 	 * @module BetaJS.Strings
 	 */
 	return {
+		
+		/**
+		 * Escapes a string to be used as an exact match in a regular expression.
+		 * 
+		 * @param {string} s string in question
+		 * 
+		 * @return {string} escaped string
+		 * 
+		 * @link http://stackoverflow.com/a/3561711
+		 */
+		regexEscape: function (s) {
+			return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+		},
 		
 		/**
 		 * Pads a string from the left with characters if necessary.

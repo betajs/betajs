@@ -7,6 +7,19 @@ Scoped.define("module:Strings", ["module:Objs"], function (Objs) {
 	return {
 		
 		/**
+		 * Escapes a string to be used as an exact match in a regular expression.
+		 * 
+		 * @param {string} s string in question
+		 * 
+		 * @return {string} escaped string
+		 * 
+		 * @link http://stackoverflow.com/a/3561711
+		 */
+		regexEscape: function (s) {
+			return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+		},
+		
+		/**
 		 * Pads a string from the left with characters if necessary.
 		 * 
 		 * @param {string} s string that should be padded

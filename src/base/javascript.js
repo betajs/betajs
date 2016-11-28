@@ -2,7 +2,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
 	/**
 	 * JavaScript Simple Parse Functions
 	 * 
-	 * @module JavaScript
+	 * @module BetaJS.JavaScript
 	 */
 	return {
 		
