@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.91 - 2016-11-26
+betajs - v1.0.92 - 2016-11-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.91 - 2016-11-26
+betajs - v1.0.92 - 2016-11-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "584.1480179749800"
+    "version": "585.1480567636161"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3173,7 +3173,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
 	/**
 	 * JavaScript Simple Parse Functions
 	 * 
-	 * @module JavaScript
+	 * @module BetaJS.JavaScript
 	 */
 	return {
 		
@@ -13784,13 +13784,13 @@ Scoped.define("module:Scheduling.DefaultScheduler", [
 			run: function (limit) {
 				limit = limit || this._options.defaultLimit;
 				var endTime = Time.perfNow() + limit;
-				while (this._resources > 0) {
+				while (this._resources > 0 && this._first) {
 					var nowTime = Time.perfNow();
 					var timeLeft = endTime - nowTime;
 					if (timeLeft <= 0)
 						break;
 					var current = this._current || this._first;
-					if (current.scheduled.length >= 0) {
+					if (current.scheduled.length > 0) {
 						var resources = current.resources;
 						if (current.allocatedTime > current.usedTime)
 							resources += current.usedTime / current.allocatedTime * this._options.rewardFactor; 

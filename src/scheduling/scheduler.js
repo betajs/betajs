@@ -89,13 +89,13 @@ Scoped.define("module:Scheduling.DefaultScheduler", [
 			run: function (limit) {
 				limit = limit || this._options.defaultLimit;
 				var endTime = Time.perfNow() + limit;
-				while (this._resources > 0) {
+				while (this._resources > 0 && this._first) {
 					var nowTime = Time.perfNow();
 					var timeLeft = endTime - nowTime;
 					if (timeLeft <= 0)
 						break;
 					var current = this._current || this._first;
-					if (current.scheduled.length >= 0) {
+					if (current.scheduled.length > 0) {
 						var resources = current.resources;
 						if (current.allocatedTime > current.usedTime)
 							resources += current.usedTime / current.allocatedTime * this._options.rewardFactor; 
