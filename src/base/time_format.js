@@ -82,7 +82,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return ((new Date(t)).toUTCString().split(" "))[2];
 			},
 			"mm": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
+				return Strings.padZeros(Time.timeComponentGet(t, "month") + 1, 2);
 			},
 			"m": function (t) {
 				return Time.timeComponentGet(t, "month");
@@ -98,7 +98,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return (new Date(t)).toUTCString().substring(0,3);
 			},
 			"dd": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
+				return Strings.padZeros(Time.timeComponentGet(t, "day") + 1, 2);
 			},
 			"d": function (t) {
 				return Time.timeComponentGet(t, "day") + 1;
@@ -156,6 +156,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 		 * 
 		 */
 		format: function (timeFormat, time, timezone) {
+			time = time || Time.now();
 			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
 			var bias = Time.timezoneBias(timezone);
 			var result = timeFormat;

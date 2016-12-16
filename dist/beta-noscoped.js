@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.92 - 2016-11-30
+betajs - v1.0.93 - 2016-12-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "585.1480567636161"
+    "version": "586.1481837244119"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6202,7 +6202,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return ((new Date(t)).toUTCString().split(" "))[2];
 			},
 			"mm": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
+				return Strings.padZeros(Time.timeComponentGet(t, "month") + 1, 2);
 			},
 			"m": function (t) {
 				return Time.timeComponentGet(t, "month");
@@ -6218,7 +6218,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return (new Date(t)).toUTCString().substring(0,3);
 			},
 			"dd": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
+				return Strings.padZeros(Time.timeComponentGet(t, "day") + 1, 2);
 			},
 			"d": function (t) {
 				return Time.timeComponentGet(t, "day") + 1;
@@ -6276,6 +6276,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 		 * 
 		 */
 		format: function (timeFormat, time, timezone) {
+			time = time || Time.now();
 			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
 			var bias = Time.timezoneBias(timezone);
 			var result = timeFormat;
