@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.93 - 2016-12-15
+betajs - v1.0.93 - 2016-12-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.93 - 2016-12-15
+betajs - v1.0.93 - 2016-12-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "586.1481837244119"
+    "version": "587.1481994327278"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1200,7 +1200,7 @@ Scoped.define("module:Ajax.Support", [
 					return value !== null && value !== undefined;
 				});
 			}
-			options.isCorsRequest = Uri.isCrossDomainUri(document.location.href, options.uri);
+			options.isCorsRequest = typeof document !== "undefined" && Uri.isCrossDomainUri(document.location.href, options.uri);
 			return options;
 		},
 		

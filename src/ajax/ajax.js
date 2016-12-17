@@ -177,7 +177,7 @@ Scoped.define("module:Ajax.Support", [
 					return value !== null && value !== undefined;
 				});
 			}
-			options.isCorsRequest = Uri.isCrossDomainUri(document.location.href, options.uri);
+			options.isCorsRequest = typeof document !== "undefined" && Uri.isCrossDomainUri(document.location.href, options.uri);
 			return options;
 		},
 		
