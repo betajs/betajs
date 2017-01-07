@@ -39,7 +39,7 @@
 		"badges": {
 			"codeclimate": true,
 			"travis": true,
-			"npm": false,
+			"npm": true,
 			"gitter": true
 		},
 		"credits": [
