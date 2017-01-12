@@ -1,6 +1,7 @@
-# betajs 1.0.94
+# betajs 1.0.95
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
+[![NPM](https://img.shields.io/npm/v/betajs.svg?style=flat)](https://www.npmjs.com/package/betajs)
 [![Gitter Chat](https://badges.gitter.im/betajs/betajs.svg)](https://gitter.im/betajs/betajs)
 
 BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.

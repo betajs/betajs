@@ -6,8 +6,9 @@ Scoped.define("module:Ajax.Support", [
     "module:Objs",
     "module:Types",
     "module:Net.Uri",
-    "module:Net.HttpHeader"
-], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader) {
+    "module:Net.HttpHeader",
+    "module:Async"
+], function (NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader, Async) {
 	
 	/**
 	 * Ajax Support Module
