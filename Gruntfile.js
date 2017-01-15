@@ -1,23 +1,22 @@
 module.exports = function(grunt) {
 
 	var pkg = grunt.file.readJSON('package.json');
-	var gruntHelper = require('betajs-compile/grunt.js');
+	var gruntHelper = require('betajs-compile');
 	var dist = 'beta';
 
 	gruntHelper.init(pkg, grunt)
-	
 	
     /* Compilation */    
 	.scopedclosurerevisionTask(null, "src/**/*.js", "dist/" + dist + "-noscoped.js", {
 		"module": "global:BetaJS"
     }, null, true)	
-    .concatTask('concat-scoped', ['vendors/scoped.js', 'dist/' + dist + '-noscoped.js'], 'dist/' + dist + '.js')
+    .concatTask('concat-scoped', [require.resolve('betajs-scoped'), 'dist/' + dist + '-noscoped.js'], 'dist/' + dist + '.js')
     .uglifyTask('uglify-noscoped', 'dist/' + dist + '-noscoped.js', 'dist/' + dist + '-noscoped.min.js')
     .uglifyTask('uglify-scoped', 'dist/' + dist + '.js', 'dist/' + dist + '.min.js')
 
     /* Testing */
     .qunitTask(null, './dist/' + dist + '.js', grunt.file.expand('./tests/*/*.js'))
-    .closureTask(null, ["./vendors/scoped.js", "./dist/" + dist + "-noscoped.js"])
+    .closureTask(null, [require.resolve('betajs-scoped'), "./dist/" + dist + "-noscoped.js"])
     .browserqunitTask(null, "tests/tests.html")
     .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: true})
     .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js', "./benchmarks/**/*.js"])
@@ -26,11 +25,8 @@ module.exports = function(grunt) {
     
     /* External Configurations */
     .codeclimateTask()
-    .travisTask()
+    .travisTask(null, "0.11")
     
-    /* Dependencies */
-    .dependenciesTask(null, { github: ['betajs/betajs-scoped/dist/scoped.js'] })
-
     /* Markdown Files */
 	.readmeTask()
     .licenseTask()

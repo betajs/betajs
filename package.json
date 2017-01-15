@@ -15,7 +15,7 @@
         "url": "https://github.com/betajs/betajs/issues"
     },
     "name": "betajs",
-    "version": "1.0.95",
+    "version": "1.0.96",
     "description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
     "contributors": [
         "Oliver Friedmann",
@@ -29,19 +29,18 @@
         "grunt-contrib-uglify": "",
         "grunt-contrib-clean": "",
         "grunt-preprocess": "",
-        "grunt-git-revision-count": "",
         "grunt-closure-tools": "",
         "grunt-node-qunit": "",
         "qunit": "",
-        "grunt-wget": "",
         "grunt-jsdoc": "",
         "grunt-shell": "",
         "grunt-template": "",
         "grunt-benchmark": "",
-        "grunt-betajs-docs-compile": "",
-        "betajs-scoped": "",
-        "betajs-compile": "betajs/betajs-compile"
+        "grunt-betajs-docs-compile": "~0.0.19",
+        "betajs-scoped": "~0.0.13",
+        "betajs-compile": "~0.0.28"
     },
+    "main": "dist/beta.js",
     "repository": {
         "type": "git",
         "url": "git://github.com/betajs/betajs.git"
@@ -78,7 +77,7 @@
             "Edge": "12 - Latest",
             "iOS": "3.0 - Latest",
             "Android": "2.2 - Latest",
-            "NodeJS": "0.10 - Latest"
+            "NodeJS": "0.11 - Latest"
         },
         "weakDependencies": {
             "betajs-scoped": "https://github.com/betajs/betajs-scoped"

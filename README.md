@@ -1,4 +1,4 @@
-# betajs 1.0.95
+# betajs 1.0.96
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
 [![NPM](https://img.shields.io/npm/v/betajs.svg?style=flat)](https://www.npmjs.com/package/betajs)
@@ -147,7 +147,7 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | Edge | 12 - Latest |
 | iOS | 3.0 - Latest |
 | Android | 2.2 - Latest |
-| NodeJS | 0.10 - Latest |
+| NodeJS | 0.11 - Latest |
 
 
 ## CDN

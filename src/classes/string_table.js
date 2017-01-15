@@ -154,7 +154,7 @@ Scoped.define("module:Classes.StringTable", [
 					strings: true,
 					prefix: "string",
 					tags: "array",
-					priority: "int"
+					priority: "number"
 				});
 				Objs.iter(args.strings, function (value, key) {
 					key = this.__resolveKey(key, args.prefix);
