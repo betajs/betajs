@@ -314,7 +314,7 @@ Scoped.define("module:Collections.Collection", [
 				if (return_collection)
 					return this;
 				else
-				 	return count
+				 	return count;
 			},
 			
 			/**
