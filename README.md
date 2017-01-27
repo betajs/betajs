@@ -128,9 +128,10 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | :--------- | --: |
 | Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs.git](git://github.com/betajs/betajs.git) |
-| Repository | [http://github.com/betajs/betajs](http://github.com/betajs/betajs) |
+| Repository | [https://github.com/betajs/betajs](https://github.com/betajs/betajs) |
 | Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
 | Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
+ 
 
 
 
@@ -170,11 +171,10 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | betajs-scoped | [Open](https://github.com/betajs/betajs-scoped) |
 
 
-## Contributors
+## Main Contributors
 
 - Oliver Friedmann
 - Victor Lingenthal
-
 
 ## License
 
@@ -186,3 +186,8 @@ Apache-2.0
 This software may include modified and unmodified portions of:
 - Underscore, MIT Software License, (c) 2009-2013 Jeremy Ashkenas, DocumentCloud
 - parseUri, MIT Software License, (c) Steven Levithan
+
+
+
+
+

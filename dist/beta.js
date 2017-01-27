@@ -1,32 +1,93 @@
 /*!
-betajs - v1.0.59 - 2016-07-12
+betajs - v1.0.59 - 2017-01-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
 /** @flow **//*!
-betajs-scoped - v0.0.10 - 2016-04-07
+betajs-scoped - v0.0.13 - 2017-01-15
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
 var Scoped = (function () {
-var Globals = {
-
+var Globals = (function () {  
+/** 
+ * This helper module provides functions for reading and writing globally accessible namespaces, both in the browser and in NodeJS.
+ * 
+ * @module Globals
+ * @access private
+ */
+return { 
+		
+	/**
+	 * Returns the value of a global variable.
+	 * 
+	 * @param {string} key identifier of a global variable
+	 * @return value of global variable or undefined if not existing
+	 */
 	get : function(key/* : string */) {
 		if (typeof window !== "undefined")
 			return window[key];
 		if (typeof global !== "undefined")
 			return global[key];
-		return null;
+		if (typeof self !== "undefined")
+			return self[key];
+		return undefined;
 	},
 
+	
+	/**
+	 * Sets a global variable.
+	 * 
+	 * @param {string} key identifier of a global variable
+	 * @param value value to be set
+	 * @return value that has been set
+	 */
 	set : function(key/* : string */, value) {
 		if (typeof window !== "undefined")
 			window[key] = value;
 		if (typeof global !== "undefined")
 			global[key] = value;
+		if (typeof self !== "undefined")
+			self[key] = value;
 		return value;
 	},
 	
+	
+	/**
+	 * Returns the value of a global variable under a namespaced path.
+	 * 
+	 * @param {string} path namespaced path identifier of variable
+	 * @return value of global variable or undefined if not existing
+	 * 
+	 * @example
+	 * // returns window.foo.bar / global.foo.bar 
+	 * Globals.getPath("foo.bar")
+	 */
+	getPath: function (path/* : string */) {
+		var args = path.split(".");
+		if (args.length == 1)
+			return this.get(path);		
+		var current = this.get(args[0]);
+		for (var i = 1; i < args.length; ++i) {
+			if (!current)
+				return current;
+			current = current[args[i]];
+		}
+		return current;
+	},
+
+
+	/**
+	 * Sets a global variable under a namespaced path.
+	 * 
+	 * @param {string} path namespaced path identifier of variable
+	 * @param value value to be set
+	 * @return value that has been set
+	 * 
+	 * @example
+	 * // sets window.foo.bar / global.foo.bar 
+	 * Globals.setPath("foo.bar", 42);
+	 */
 	setPath: function (path/* : string */, value) {
 		var args = path.split(".");
 		if (args.length == 1)
@@ -39,36 +100,47 @@ var Globals = {
 		}
 		current[args[args.length - 1]] = value;
 		return value;
-	},
-	
-	getPath: function (path/* : string */) {
-		var args = path.split(".");
-		if (args.length == 1)
-			return this.get(path);		
-		var current = this.get(args[0]);
-		for (var i = 1; i < args.length; ++i) {
-			if (!current)
-				return current;
-			current = current[args[i]];
-		}
-		return current;
 	}
-
-};
+	
+};}).call(this);
 /*::
 declare module Helper {
 	declare function extend<A, B>(a: A, b: B): A & B;
 }
 */
 
-var Helper = {
+var Helper = (function () {  
+/** 
+ * This helper module provides auxiliary functions for the Scoped system.
+ * 
+ * @module Helper
+ * @access private
+ */
+return { 
 		
+	/**
+	 * Attached a context to a function.
+	 * 
+	 * @param {object} obj context for the function
+	 * @param {function} func function
+	 * 
+	 * @return function with attached context
+	 */
 	method: function (obj, func) {
 		return function () {
 			return func.apply(obj, arguments);
 		};
 	},
 
+	
+	/**
+	 * Extend a base object with all attributes of a second object.
+	 * 
+	 * @param {object} base base object
+	 * @param {object} overwrite second object
+	 * 
+	 * @return {object} extended base object
+	 */
 	extend: function (base, overwrite) {
 		base = base || {};
 		overwrite = overwrite || {};
@@ -77,10 +149,26 @@ var Helper = {
 		return base;
 	},
 	
+	
+	/**
+	 * Returns the type of an object, particulary returning 'array' for arrays.
+	 * 
+	 * @param obj object in question
+	 * 
+	 * @return {string} type of object
+	 */
 	typeOf: function (obj) {
 		return Object.prototype.toString.call(obj) === '[object Array]' ? "array" : typeof obj;
 	},
 	
+	
+	/**
+	 * Returns whether an object is null, undefined, an empty array or an empty object.
+	 * 
+	 * @param obj object in question
+	 * 
+	 * @return true if object is empty
+	 */
 	isEmpty: function (obj) {
 		if (obj === null || typeof obj === "undefined")
 			return true;
@@ -93,6 +181,15 @@ var Helper = {
 		return true;
 	},
 	
+	
+    /**
+     * Matches function arguments against some pattern.
+     * 
+     * @param {array} args function arguments
+     * @param {object} pattern typed pattern
+     * 
+     * @return {object} matched arguments as associative array 
+     */	
 	matchArgs: function (args, pattern) {
 		var i = 0;
 		var result = {};
@@ -106,18 +203,41 @@ var Helper = {
 		return result;
 	},
 	
+	
+	/**
+	 * Stringifies a value as JSON and functions to string representations.
+	 * 
+	 * @param value value to be stringified
+	 * 
+	 * @return stringified value
+	 */
 	stringify: function (value) {
 		if (this.typeOf(value) == "function")
 			return "" + value;
 		return JSON.stringify(value);
 	}	
 
-};
-var Attach = {
+	
+};}).call(this);
+var Attach = (function () {  
+/** 
+ * This module provides functionality to attach the Scoped system to the environment.
+ * 
+ * @module Attach
+ * @access private
+ */
+return { 
 		
 	__namespace: "Scoped",
 	__revert: null,
 	
+	
+	/**
+	 * Upgrades a pre-existing Scoped system to the newest version present. 
+	 * 
+	 * @param {string} namespace Optional namespace (default is 'Scoped')
+	 * @return {object} the attached Scoped system
+	 */
 	upgrade: function (namespace/* : ?string */) {
 		var current = Globals.get(namespace || Attach.__namespace);
 		if (current && Helper.typeOf(current) == "object" && current.guid == this.guid && Helper.typeOf(current.version) == "string") {
@@ -134,6 +254,13 @@ var Attach = {
 			return this.attach(namespace);		
 	},
 
+
+	/**
+	 * Attaches the Scoped system to the environment. 
+	 * 
+	 * @param {string} namespace Optional namespace (default is 'Scoped')
+	 * @return {object} the attached Scoped system
+	 */
 	attach : function(namespace/* : ?string */) {
 		if (namespace)
 			Attach.__namespace = namespace;
@@ -154,6 +281,13 @@ var Attach = {
 		return this;
 	},
 	
+
+	/**
+	 * Detaches the Scoped system from the environment. 
+	 * 
+	 * @param {boolean} forceDetach Overwrite any attached scoped system by null.
+	 * @return {object} the detached Scoped system
+	 */
 	detach: function (forceDetach/* : ?boolean */) {
 		if (forceDetach)
 			Globals.set(Attach.__namespace, null);
@@ -165,6 +299,15 @@ var Attach = {
 		return this;
 	},
 	
+
+	/**
+	 * Exports an object as a module if possible. 
+	 * 
+	 * @param {object} mod a module object (optional, default is 'module')
+	 * @param {object} object the object to be exported
+	 * @param {boolean} forceExport overwrite potentially pre-existing exports
+	 * @return {object} the Scoped system
+	 */
 	exports: function (mod, object, forceExport) {
 		mod = mod || (typeof module != "undefined" ? module : null);
 		if (typeof mod == "object" && mod && "exports" in mod && (forceExport || mod.exports == this || !mod.exports || Helper.isEmpty(mod.exports)))
@@ -172,7 +315,7 @@ var Attach = {
 		return this;
 	}	
 
-};
+};}).call(this);
 
 function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Object} */) {
 
@@ -221,6 +364,10 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 			try {
 				if (global)
 					nsRoot.data = global;
+			} catch (e) { }
+			try {
+				if (self)
+					nsRoot.data = self;
 			} catch (e) { }
 		} else
 			nsRoot.data = options.root;
@@ -337,12 +484,30 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 		return result;
 	}
 
+	/** 
+	 * The namespace module manages a namespace in the Scoped system.
+	 * 
+	 * @module Namespace
+	 * @access public
+	 */
 	return {
 		
+		/**
+		 * Extend a node in the namespace by an object.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @param {object} value object that should be used for extend the namespace node
+		 */
 		extend: function (path, value) {
 			nodeSetData(nodeNavigate(path), value);
 		},
 		
+		/**
+		 * Set the object value of a node in the namespace.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @param {object} value object that should be used as value for the namespace node
+		 */
 		set: function (path, value) {
 			var node = nodeNavigate(path);
 			if (node.data)
@@ -350,11 +515,25 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 			nodeSetData(node, value);
 		},
 		
+		/**
+		 * Read the object value of a node in the namespace.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @return {object} object value of the node or null if undefined
+		 */
 		get: function (path) {
 			var node = nodeNavigate(path);
 			return node.ready ? node.data : null;
 		},
 		
+		/**
+		 * Lazily navigate to a node in the namespace.
+		 * Will asynchronously call the callback as soon as the node is being touched.
+		 *
+		 * @param {string} path path to the node in the namespace
+		 * @param {function} callback callback function accepting the node's object value
+		 * @param {context} context optional callback context
+		 */
 		lazy: function (path, callback, context) {
 			var node = nodeNavigate(path);
 			if (node.ready)
@@ -367,14 +546,33 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 			}
 		},
 		
+		/**
+		 * Digest a node path, checking whether it has been defined by an external system.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 */
 		digest: function (path) {
 			nodeDigest(nodeNavigate(path));
 		},
 		
+		/**
+		 * Asynchronously access a node in the namespace.
+		 * Will asynchronously call the callback as soon as the node is being defined.
+		 *
+		 * @param {string} path path to the node in the namespace
+		 * @param {function} callback callback function accepting the node's object value
+		 * @param {context} context optional callback context
+		 */
 		obtain: function (path, callback, context) {
 			nodeAddWatcher(nodeNavigate(path), callback, context);
 		},
 		
+		/**
+		 * Returns all unresolved watchers under a certain path.
+		 * 
+		 * @param {string} path path to the node in the namespace
+		 * @return {array} list of all unresolved watchers 
+		 */
 		unresolvedWatchers: function (path) {
 			return nodeUnresolvedWatchers(nodeNavigate(path), path);
 		},
@@ -473,6 +671,12 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 		return this;
 	};
 	
+	/** 
+	 * This module provides all functionality in a scope.
+	 * 
+	 * @module Scoped
+	 * @access public
+	 */
 	return {
 		
 		getGlobal: Helper.method(Globals, Globals.getPath),
@@ -489,12 +693,23 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 		
 		dependencies: {},
 		
+		
+		/**
+		 * Returns a reference to the next scope that will be obtained by a subScope call.
+		 * 
+		 * @return {object} next scope
+		 */
 		nextScope: function () {
 			if (!nextScope)
 				nextScope = newScope(this, localNamespace, rootNamespace, globalNamespace);
 			return nextScope;
 		},
 		
+		/**
+		 * Creates a sub scope of the current scope and returns it.
+		 * 
+		 * @return {object} sub scope
+		 */
 		subScope: function () {
 			var sub = this.nextScope();
 			childScopes.push(sub);
@@ -502,6 +717,14 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			return sub;
 		},
 		
+		/**
+		 * Creates a binding within in the scope. 
+		 * 
+		 * @param {string} alias identifier of the new binding
+		 * @param {string} namespaceLocator identifier of an existing namespace path
+		 * @param {object} options options for the binding
+		 * 
+		 */
 		binding: function (alias, namespaceLocator, options) {
 			if (!bindings[alias] || !bindings[alias].readonly) {
 				var ns;
@@ -520,6 +743,14 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			return this;
 		},
 		
+		
+		/**
+		 * Resolves a name space locator to a name space.
+		 * 
+		 * @param {string} namespaceLocator name space locator
+		 * @return {object} resolved name space
+		 * 
+		 */
 		resolve: function (namespaceLocator) {
 			var parts = namespaceLocator.split(":");
 			if (parts.length == 1) {
@@ -537,7 +768,18 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 				};
 			}
 		},
+
 		
+		/**
+		 * Defines a new name space once a list of name space locators is available.
+		 * 
+		 * @param {string} namespaceLocator the name space that is to be defined
+		 * @param {array} dependencies a list of name space locator dependencies (optional)
+		 * @param {array} hiddenDependencies a list of hidden name space locators (optional)
+		 * @param {function} callback a callback function accepting all dependencies as arguments and returning the new definition
+		 * @param {object} context a callback context (optional)
+		 * 
+		 */
 		define: function () {
 			return custom.call(this, arguments, "define", function (ns, result) {
 				if (ns.namespace.get(ns.path))
@@ -546,22 +788,14 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			});
 		},
 		
-		assume: function () {
-			var args = Helper.matchArgs(arguments, {
-				assumption: true,
-				dependencies: "array",
-				callback: true,
-				context: "object",
-				error: "string"
-			});
-			var dependencies = args.dependencies || [];
-			dependencies.unshift(args.assumption);
-			this.require(dependencies, function (assumptionValue) {
-				if (!args.callback.apply(args.context || this, arguments))
-					throw ("Scoped Assumption '" + args.assumption + "' failed, value is " + assumptionValue + (args.error ? ", but assuming " + args.error : "")); 
-			});
-		},
 		
+		/**
+		 * Assume a specific version of a module and fail if it is not met.
+		 * 
+		 * @param {string} assumption name space locator
+		 * @param {string} version assumed version
+		 * 
+		 */
 		assumeVersion: function () {
 			var args = Helper.matchArgs(arguments, {
 				assumption: true,
@@ -574,7 +808,7 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			dependencies.unshift(args.assumption);
 			this.require(dependencies, function () {
 				var argv = arguments;
-				var assumptionValue = argv[0];
+				var assumptionValue = argv[0].replace(/[^\d\.]/g, "");
 				argv[0] = assumptionValue.split(".");
 				for (var i = 0; i < argv[0].length; ++i)
 					argv[0][i] = parseInt(argv[0][i], 10);
@@ -582,7 +816,7 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 					if (!args.callback.apply(args.context || this, args))
 						throw ("Scoped Assumption '" + args.assumption + "' failed, value is " + assumptionValue + (args.error ? ", but assuming " + args.error : ""));
 				} else {
-					var version = (args.callback + "").split(".");
+					var version = (args.callback + "").replace(/[^\d\.]/g, "").split(".");
 					for (var j = 0; j < Math.min(argv[0].length, version.length); ++j)
 						if (parseInt(version[j], 10) > argv[0][j])
 							throw ("Scoped Version Assumption '" + args.assumption + "' failed, value is " + assumptionValue + ", but assuming at least " + args.callback);
@@ -590,19 +824,33 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			});
 		},
 		
+		
+		/**
+		 * Extends a potentiall existing name space once a list of name space locators is available.
+		 * 
+		 * @param {string} namespaceLocator the name space that is to be defined
+		 * @param {array} dependencies a list of name space locator dependencies (optional)
+		 * @param {array} hiddenDependencies a list of hidden name space locators (optional)
+		 * @param {function} callback a callback function accepting all dependencies as arguments and returning the new additional definitions.
+		 * @param {object} context a callback context (optional)
+		 * 
+		 */
 		extend: function () {
 			return custom.call(this, arguments, "extend", function (ns, result) {
 				ns.namespace.extend(ns.path, result);
 			});
 		},
+				
 		
-		condition: function () {
-			return custom.call(this, arguments, "condition", function (ns, result) {
-				if (result)
-					ns.namespace.set(ns.path, result);
-			});
-		},
-		
+		/**
+		 * Requires a list of name space locators and calls a function once they are present.
+		 * 
+		 * @param {array} dependencies a list of name space locator dependencies (optional)
+		 * @param {array} hiddenDependencies a list of hidden name space locators (optional)
+		 * @param {function} callback a callback function accepting all dependencies as arguments
+		 * @param {object} context a callback context (optional)
+		 * 
+		 */
 		require: function () {
 			var args = Helper.matchArgs(arguments, {
 				dependencies: "array",
@@ -641,18 +889,36 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			}
 			return this;
 		},
+
 		
+		/**
+		 * Digest a name space locator, checking whether it has been defined by an external system.
+		 * 
+		 * @param {string} namespaceLocator name space locator
+		 */
 		digest: function (namespaceLocator) {
 			var ns = this.resolve(namespaceLocator);
 			ns.namespace.digest(ns.path);
 			return this;
 		},
 		
+		
+		/**
+		 * Returns all unresolved definitions under a namespace locator
+		 * 
+		 * @param {string} namespaceLocator name space locator, e.g. "global:"
+		 * @return {array} list of all unresolved definitions 
+		 */
 		unresolved: function (namespaceLocator) {
 			var ns = this.resolve(namespaceLocator);
 			return ns.namespace.unresolvedWatchers(ns.path);
 		},
 		
+		/**
+		 * Exports the scope.
+		 * 
+		 * @return {object} exported scope
+		 */
 		__export: function () {
 			return {
 				parentNamespace: parentNamespace.__export(),
@@ -663,6 +929,12 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 			};
 		},
 		
+		/**
+		 * Imports a scope from an exported scope.
+		 * 
+		 * @param {object} data exported scope to be imported
+		 * 
+		 */
 		__import: function (data) {
 			parentNamespace.__import(data.parentNamespace);
 			rootNamespace.__import(data.rootNamespace);
@@ -678,16 +950,31 @@ var globalNamespace = newNamespace({tree: true, global: true});
 var rootNamespace = newNamespace({tree: true});
 var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 
-var Public = Helper.extend(rootScope, {
+var Public = Helper.extend(rootScope, (function () {  
+/** 
+ * This module includes all public functions of the Scoped system.
+ * 
+ * It includes all methods of the root scope and the Attach module.
+ * 
+ * @module Public
+ * @access public
+ */
+return {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '43.1460041676769',
+	version: '0.0.13',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
 	detach: Attach.detach,
 	exports: Attach.exports,
 	
+	/**
+	 * Exports all data contained in the Scoped system.
+	 * 
+	 * @return data of the Scoped system.
+	 * @access private
+	 */
 	__exportScoped: function () {
 		return {
 			globalNamespace: globalNamespace.__export(),
@@ -696,20 +983,28 @@ var Public = Helper.extend(rootScope, {
 		};
 	},
 	
+	/**
+	 * Import data into the Scoped system.
+	 * 
+	 * @param data of the Scoped system.
+	 * @access private
+	 */
 	__importScoped: function (data) {
 		globalNamespace.__import(data.globalNamespace);
 		rootNamespace.__import(data.rootNamespace);
 		rootScope.__import(data.rootScope);
 	}
 	
-});
+};
+
+}).call(this));
 
 Public = Public.upgrade();
 Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.59 - 2016-07-12
+betajs - v1.0.59 - 2017-01-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -720,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "514.1468377758690"
+    "version": "1.0.59"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4723,6 +5018,226 @@ Scoped.define("module:Templates.Template", ["module:Class", "module:Templates"],
 });
 
 
+
+Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Objs"], function (Time, Strings, Objs) {
+	/**
+	 * Module for formatting Time / Date
+	 * 
+	 * @module BetaJS.TimeFormat
+	 */
+	return {
+		
+		/*
+			HH	Hours; leading zero for single-digit hours (24-hour clock).
+			H	Hours; no leading zero for single-digit hours (24-hour clock).
+			h+  Hours; hours as absolute number
+			hh	Hours; leading zero for single-digit hours (12-hour clock).
+			h	Hours; no leading zero for single-digit hours (12-hour clock).
+			M+  Minutes; minutes as absolute number
+			MM	Minutes; leading zero for single-digit minutes.
+			M	Minutes; no leading zero for single-digit minutes.
+			s+	Seconds; seconds as absolute number
+			ss	Seconds; leading zero for single-digit seconds.
+			s	Seconds; no leading zero for single-digit seconds.
+			mmm	Month as a three-letter abbreviation.
+			mm	Month as digits; leading zero for single-digit months.
+			m	Month as digits; no leading zero for single-digit months.
+			d+	Days; days as absolute number
+			ddd	Day of the week as a three-letter abbreviation.
+			dd	Day of the month as digits; leading zero for single-digit days.
+			d	Day of the month as digits; no leading zero for single-digit days.
+			yy	Year as last two digits; leading zero for years less than 10.
+			yyyyYear represented by four digits.
+			l+  Milliseconds; absolute
+			l   Milliseconds 3 digits
+			L   Milliseconds 2 digits
+			t	Lowercase, single-character time marker string: a or p.
+			tt	Lowercase, two-character time marker string: am or pm.
+			T	Uppercase, single-character time marker string: A or P.
+			TT	Uppercase, two-character time marker string: AM or PM.
+			o	GMT/UTC timezone offset, e.g. -0500 or +0230.
+			
+		*/
+		
+		formatMappings: {
+			"HH": function (t) {
+				return Strings.padZeros(Time.timeModulo(t, "hour", "floor"), 2);
+			},
+			"H": function (t) {
+				return Time.timeModulo(t, "hour", "floor");
+			},
+			"h+": function (t) {
+				return Time.timeComponent(t, "hour", "floor");
+			},
+			"hh": function (t) {
+				var h = Time.timeModulo(t, "hour", "floor");
+				h = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+				return Strings.padZeros(h, " ", 2);
+			},
+			"h": function (t) {
+				var h = Time.timeModulo(t, "hour", "floor");
+				h = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+				return h;
+			},
+			"M+": function (t) {
+				return Time.timeComponent(t, "minute", "floor");
+			},
+			"MM": function (t) {
+				return Strings.padZeros(Time.timeModulo(t, "minute", "floor"), 2);
+			},
+			"M": function (t) {
+				return Time.timeModulo(t, "minute", "floor");
+			},
+			"s+": function (t) {
+				return Time.timeComponent(t, "second", "floor");
+			},
+			"ss": function (t) {
+				return Strings.padZeros(Time.timeModulo(t, "second", "floor"), 2);
+			},
+			"s": function (t) {
+				return Time.timeModulo(t, "second", "floor");
+			},
+			"mmm": function (t) {
+				return (new Date(t)).toDateString().substring(4,7);
+			},
+			"mm": function (t) {
+				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
+			},
+			"m": function (t) {
+				return Time.timeComponentGet(t, "month");
+			},
+			"d+": function (t) {
+				return Time.timeComponent(t, "day", "floor");
+			},
+			"ddd": function (t) {
+				return (new Date(t)).toDateString().substring(0,3);
+			},
+			"dd": function (t) {
+				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
+			},
+			"d": function (t) {
+				return Time.timeComponentGet(t, "day");
+			},
+			"yyyy": function (t) {
+				return Time.timeComponentGet(t, "year");
+			},
+			"yy": function (t) {
+				return Time.timeComponentGet(t, "year") % 100;
+			},
+			"l+": function (t) {
+				return t;
+			},
+			"l": function (t) {
+				return Time.timeComponent(t, "millisecond", "floor");
+			},
+			"L": function (t) {
+				return Time.timeComponent(t, "millisecond", "floor") % 10;
+			},
+			"tt": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'am' : 'pm';
+			},
+			"t": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'a' : 'p';
+			},
+			"TT": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'AM' : 'PM';
+			},
+			"T": function (t) {
+				return Time.timeModulo(t, "hour", "floor") < 12 ? 'A' : 'P';
+			},
+			"o": function (t, bias) {
+				bias = Math.floor(bias / 1000 / 60);
+				return (bias > 0 ? "-" : "+") + Strings.padZeros(Math.floor(Math.abs(bias) / 60) * 100 + Math.abs(bias) % 60, 4);
+			}
+			
+		},
+		
+		ELAPSED_HOURS_MINUTES_SECONDS: "h+:MM:ss",
+		ELAPSED_MINUTES_SECONDS: "M+:ss",
+		FULL_YEAR: "yyyy",
+		LETTER_MONTH: "mmm",
+		LETTER_MONTH_AND_DAY: "mmm d",
+		WEEKDAY: "ddd",
+		HOURS_MINUTES_TT: "hh:MM tt",
+		
+		
+		/**
+		 * Format a given time w.r.t. a given time format
+		 * 
+		 * @param {string} timeFormat a time format string
+		 * @param {int} time time as integer to be formatted
+		 * @param {int} timezone timezone bias (optional)
+		 * @return {string} formatted time
+		 * 
+		 */
+		format: function (timeFormat, time, timezone) {
+			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
+			var bias = Time.timezoneBias(timezone);
+			var result = timeFormat;
+			var replacers = [];			
+			Objs.iter(this.formatMappings, function (formatter, key) {
+				if (result.indexOf(key) >= 0) {
+					var i = replacers.length;
+					replacers.push(formatter(timezoneTime, bias));
+					result = result.replace(key, "$" + i + "$");
+				}
+			}, this);
+			for (var i = 0; i < replacers.length; ++i)
+				result = result.replace("$" + i + "$", replacers[i]);
+			return result;
+		},
+		
+		/**
+		 * Format the month as a three letter string
+		 * 
+		 * @param {int} month month as an int
+		 * @return {string} three letter month string
+		 */
+		monthString: function (month) {
+			return this.format("mmm", Time.encodePeriod({month: month}));			
+		},
+		
+		/**
+		 * Format the weekday as a three letter string
+		 * 
+		 * @param {int} weekday weekday as an int
+		 * @return {string} three letter weekday string
+		 */
+		weekdayString: function (weekday) {
+			return this.format("ddd", Time.encodePeriod({weekday: weekday}));
+		},
+		
+		/**
+		 * Format most significant part of date / time relative to current time
+		 * 
+		 * @param {int} time date/time to be formatted
+		 * @param {int} currentTime relative to current time (optional)
+		 * @param {int} timezone time zone bias (optional)
+		 * @return {string} formatted time
+		 */
+		formatRelativeMostSignificant: function (time, currentTime, timezone) {
+			currentTime = currentTime || Time.now();
+			var t = Time.decodeTime(time, timezone);
+			var c = Time.decodeTime(currentTime, timezone);
+			// Same day. Return time.
+			if (t.year === c.year && t.month === c.month && t.day === c.day)
+				return this.format(this.HOURS_MINUTES_TT, time, timezone);
+			// Less than 7 days. Return week day.
+			if (currentTime - time < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
+				return this.format(this.WEEKDAY, time, timezone);
+			// Last 2 months?
+			if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
+				return this.format(this.LETTER_MONTH_AND_DAY, time, timezone);
+			// Last 11 month?
+			if (t.year === c.year || (t.year + 1 === c.year && t.month > c.month))
+				return this.format(this.LETTER_MONTH, time, timezone);
+			// Return year
+			return this.format(this.FULL_YEAR, time, timezone);
+		}
+		
+	};
+});
+
 Scoped.define("module:Time", [], function () {
 	/**
 	 * Time Helper Functions
@@ -5003,225 +5518,6 @@ Scoped.define("module:Time", [], function () {
 
 });
 
-
-Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Objs"], function (Time, Strings, Objs) {
-	/**
-	 * Module for formatting Time / Date
-	 * 
-	 * @module BetaJS.TimeFormat
-	 */
-	return {
-		
-		/*
-			HH	Hours; leading zero for single-digit hours (24-hour clock).
-			H	Hours; no leading zero for single-digit hours (24-hour clock).
-			h+  Hours; hours as absolute number
-			hh	Hours; leading zero for single-digit hours (12-hour clock).
-			h	Hours; no leading zero for single-digit hours (12-hour clock).
-			M+  Minutes; minutes as absolute number
-			MM	Minutes; leading zero for single-digit minutes.
-			M	Minutes; no leading zero for single-digit minutes.
-			s+	Seconds; seconds as absolute number
-			ss	Seconds; leading zero for single-digit seconds.
-			s	Seconds; no leading zero for single-digit seconds.
-			mmm	Month as a three-letter abbreviation.
-			mm	Month as digits; leading zero for single-digit months.
-			m	Month as digits; no leading zero for single-digit months.
-			d+	Days; days as absolute number
-			ddd	Day of the week as a three-letter abbreviation.
-			dd	Day of the month as digits; leading zero for single-digit days.
-			d	Day of the month as digits; no leading zero for single-digit days.
-			yy	Year as last two digits; leading zero for years less than 10.
-			yyyyYear represented by four digits.
-			l+  Milliseconds; absolute
-			l   Milliseconds 3 digits
-			L   Milliseconds 2 digits
-			t	Lowercase, single-character time marker string: a or p.
-			tt	Lowercase, two-character time marker string: am or pm.
-			T	Uppercase, single-character time marker string: A or P.
-			TT	Uppercase, two-character time marker string: AM or PM.
-			o	GMT/UTC timezone offset, e.g. -0500 or +0230.
-			
-		*/
-		
-		formatMappings: {
-			"HH": function (t) {
-				return Strings.padZeros(Time.timeModulo(t, "hour", "floor"), 2);
-			},
-			"H": function (t) {
-				return Time.timeModulo(t, "hour", "floor");
-			},
-			"h+": function (t) {
-				return Time.timeComponent(t, "hour", "floor");
-			},
-			"hh": function (t) {
-				var h = Time.timeModulo(t, "hour", "floor");
-				h = h === 0 ? 12 : (h > 12 ? h - 12 : h);
-				return Strings.padZeros(h, " ", 2);
-			},
-			"h": function (t) {
-				var h = Time.timeModulo(t, "hour", "floor");
-				h = h === 0 ? 12 : (h > 12 ? h - 12 : h);
-				return h;
-			},
-			"M+": function (t) {
-				return Time.timeComponent(t, "minute", "floor");
-			},
-			"MM": function (t) {
-				return Strings.padZeros(Time.timeModulo(t, "minute", "floor"), 2);
-			},
-			"M": function (t) {
-				return Time.timeModulo(t, "minute", "floor");
-			},
-			"s+": function (t) {
-				return Time.timeComponent(t, "second", "floor");
-			},
-			"ss": function (t) {
-				return Strings.padZeros(Time.timeModulo(t, "second", "floor"), 2);
-			},
-			"s": function (t) {
-				return Time.timeModulo(t, "second", "floor");
-			},
-			"mmm": function (t) {
-				return (new Date(t)).toDateString().substring(4,7);
-			},
-			"mm": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
-			},
-			"m": function (t) {
-				return Time.timeComponentGet(t, "month");
-			},
-			"d+": function (t) {
-				return Time.timeComponent(t, "day", "floor");
-			},
-			"ddd": function (t) {
-				return (new Date(t)).toDateString().substring(0,3);
-			},
-			"dd": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
-			},
-			"d": function (t) {
-				return Time.timeComponentGet(t, "day");
-			},
-			"yyyy": function (t) {
-				return Time.timeComponentGet(t, "year");
-			},
-			"yy": function (t) {
-				return Time.timeComponentGet(t, "year") % 100;
-			},
-			"l+": function (t) {
-				return t;
-			},
-			"l": function (t) {
-				return Time.timeComponent(t, "millisecond", "floor");
-			},
-			"L": function (t) {
-				return Time.timeComponent(t, "millisecond", "floor") % 10;
-			},
-			"tt": function (t) {
-				return Time.timeModulo(t, "hour", "floor") < 12 ? 'am' : 'pm';
-			},
-			"t": function (t) {
-				return Time.timeModulo(t, "hour", "floor") < 12 ? 'a' : 'p';
-			},
-			"TT": function (t) {
-				return Time.timeModulo(t, "hour", "floor") < 12 ? 'AM' : 'PM';
-			},
-			"T": function (t) {
-				return Time.timeModulo(t, "hour", "floor") < 12 ? 'A' : 'P';
-			},
-			"o": function (t, bias) {
-				bias = Math.floor(bias / 1000 / 60);
-				return (bias > 0 ? "-" : "+") + Strings.padZeros(Math.floor(Math.abs(bias) / 60) * 100 + Math.abs(bias) % 60, 4);
-			}
-			
-		},
-		
-		ELAPSED_HOURS_MINUTES_SECONDS: "h+:MM:ss",
-		ELAPSED_MINUTES_SECONDS: "M+:ss",
-		FULL_YEAR: "yyyy",
-		LETTER_MONTH: "mmm",
-		LETTER_MONTH_AND_DAY: "mmm d",
-		WEEKDAY: "ddd",
-		HOURS_MINUTES_TT: "hh:MM tt",
-		
-		
-		/**
-		 * Format a given time w.r.t. a given time format
-		 * 
-		 * @param {string} timeFormat a time format string
-		 * @param {int} time time as integer to be formatted
-		 * @param {int} timezone timezone bias (optional)
-		 * @return {string} formatted time
-		 * 
-		 */
-		format: function (timeFormat, time, timezone) {
-			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
-			var bias = Time.timezoneBias(timezone);
-			var result = timeFormat;
-			var replacers = [];			
-			Objs.iter(this.formatMappings, function (formatter, key) {
-				if (result.indexOf(key) >= 0) {
-					var i = replacers.length;
-					replacers.push(formatter(timezoneTime, bias));
-					result = result.replace(key, "$" + i + "$");
-				}
-			}, this);
-			for (var i = 0; i < replacers.length; ++i)
-				result = result.replace("$" + i + "$", replacers[i]);
-			return result;
-		},
-		
-		/**
-		 * Format the month as a three letter string
-		 * 
-		 * @param {int} month month as an int
-		 * @return {string} three letter month string
-		 */
-		monthString: function (month) {
-			return this.format("mmm", Time.encodePeriod({month: month}));			
-		},
-		
-		/**
-		 * Format the weekday as a three letter string
-		 * 
-		 * @param {int} weekday weekday as an int
-		 * @return {string} three letter weekday string
-		 */
-		weekdayString: function (weekday) {
-			return this.format("ddd", Time.encodePeriod({weekday: weekday}));
-		},
-		
-		/**
-		 * Format most significant part of date / time relative to current time
-		 * 
-		 * @param {int} time date/time to be formatted
-		 * @param {int} currentTime relative to current time (optional)
-		 * @param {int} timezone time zone bias (optional)
-		 * @return {string} formatted time
-		 */
-		formatRelativeMostSignificant: function (time, currentTime, timezone) {
-			currentTime = currentTime || Time.now();
-			var t = Time.decodeTime(time, timezone);
-			var c = Time.decodeTime(currentTime, timezone);
-			// Same day. Return time.
-			if (t.year === c.year && t.month === c.month && t.day === c.day)
-				return this.format(this.HOURS_MINUTES_TT, time, timezone);
-			// Less than 7 days. Return week day.
-			if (currentTime - time < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
-				return this.format(this.WEEKDAY, time, timezone);
-			// Last 2 months?
-			if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
-				return this.format(this.LETTER_MONTH_AND_DAY, time, timezone);
-			// Last 11 month?
-			if (t.year === c.year || (t.year + 1 === c.year && t.month > c.month))
-				return this.format(this.LETTER_MONTH, time, timezone);
-			// Return year
-			return this.format(this.FULL_YEAR, time, timezone);
-		}
-		
-	};
-});
 Scoped.define("module:Tokens", function() {
 	/**
 	 * Unique Token Generation
@@ -7016,13 +7312,16 @@ Scoped.define("module:Collections.Collection", [
 					this.add(addQueue.shift());
 			},
 			
-			add_objects: function (objects) {
+			add_objects: function (objects, return_collection) {
 				var count = 0;
 				Objs.iter(objects, function (object) {
 					if (this.add(object))
 						count++;
-				}, this);		
-				return count;
+				}, this);
+				if (return_collection)
+					return this;
+				else
+				 	return count
 			},
 			
 			exists: function (object) {

@@ -167,13 +167,16 @@ Scoped.define("module:Collections.Collection", [
 					this.add(addQueue.shift());
 			},
 			
-			add_objects: function (objects) {
+			add_objects: function (objects, return_collection) {
 				var count = 0;
 				Objs.iter(objects, function (object) {
 					if (this.add(object))
 						count++;
-				}, this);		
-				return count;
+				}, this);
+				if (return_collection)
+					return this;
+				else
+				 	return count
 			},
 			
 			exists: function (object) {

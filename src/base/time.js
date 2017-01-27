@@ -1,3 +1,4 @@
+
 Scoped.define("module:Time", [], function () {
 	/**
 	 * Time Helper Functions
