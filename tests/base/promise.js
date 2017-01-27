@@ -79,3 +79,18 @@ test("promise test 6", function () {
 	});
 	promise1.asyncSuccess(10);
 });
+
+test("promise test 7", function() {
+	stop();
+	var promise1 = BetaJS.Promise.create();
+	var promise2 = BetaJS.Promise.create();
+	promise1.and(promise2).success(function (values) {
+		QUnit.ok(false);
+		start();
+	}).error(function () {
+		QUnit.ok(true);
+		start();
+	}).end();
+	promise1.asyncSuccess(4);
+	promise2.asyncError(10);
+});

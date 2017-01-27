@@ -144,26 +144,67 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		
 		__notifications: {},
 		
+		/**
+		 * Determines whether this cls is an ancestor of another class.
+		 * 
+		 * @param {object} cls in question
+		 * 
+		 * @return {boolean} true if ancestor
+		 */
 		ancestor_of: function (cls) {
 			return (this == cls) || (this != Class && this.parent.ancestor_of(cls));
 		},
 		
+		/**
+		 * Determines whether something is of type class.
+		 * 
+		 * @param cls class in question
+		 * 
+		 * @return {boolean} true if class
+		 */
 		is_class: function (cls) {
 			return cls && Types.is_object(cls) && ("__class_guid" in cls) && cls.__class_guid == this.__class_guid;
 		},
 		
+		/**
+		 * Determines whether something is of type class instance.
+		 * 
+		 * @param obj instance in question
+		 * 
+		 * @return {boolean} true if class instance
+		 */
 		is_class_instance: function (obj) {
 			return obj && Types.is_object(obj) && ("__class_instance_guid" in obj) && obj.__class_instance_guid == this.prototype.__class_instance_guid;
 		},
 		
+		/**
+		 * Determines whether something is pure json and not a class instance.
+		 * 
+		 * @param obj json in question
+		 * 
+		 * @return {boolean} true if pure json
+		 */
 		is_pure_json: function (obj) {
 			return obj && Types.is_object(obj) && !this.is_class_instance(obj) && Types.is_pure_object(obj);
 		},
 		
+		/**
+		 * Determines whether an object is an instance of this class.
+		 * 
+		 * @param {object} obj object in question
+		 * 
+		 * @return {boolean} true if instance of class
+		 */
 		is_instance_of: function (obj) {
 			return obj && this.is_class_instance(obj) && obj.instance_of(this);
 		},
 		
+		/**
+		 * Adhoc defines a new class.
+		 * 
+		 * @param parent scoped string of parent class or parent class
+		 * @param current scoped string of new class
+		 */
 		define: function (parent, current) {
 			var args = Functions.getArguments(arguments, 2);
 			if (Types.is_object(parent)) {
@@ -178,9 +219,10 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 				});
 			}
 		},
-		
-		// Legacy Methods
-	
+
+		/**
+		 * @deprecated
+		 */
 		_inherited: function (cls, func) {
 			return cls.parent[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 		}	
@@ -202,10 +244,16 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	
 	//Class.prototype.supportsGc = false;
 	
+	/**
+	 * Creates a new instance.
+	 */
 	Class.prototype.constructor = function () {
 		this._notify("construct");
 	};
 	
+	/**
+	 * Destroys this instance.
+	 */
 	Class.prototype.destroy = function () {
 		this._notify("destroy");
 		if (this.__auto_destroy_list) {
@@ -221,10 +269,18 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		this.destroy = this.__destroyedDestroy;
 	};
 	
+	/**
+	 * Determines whether this instance has already been destroyed.
+	 * 
+	 * @return {boolean} true if this instance has been destroyed
+	 */
 	Class.prototype.destroyed = function () {
 		return this.destroy === this.__destroyedDestroy;
 	};
 	
+	/**
+	 * Weakly destroy this instance, only destroying it if it hasn't been destroyed already.
+	 */
 	Class.prototype.weakDestroy = function () {
 		if (!this.destroyed()) {
 			if (this.__gc) {
@@ -239,29 +295,56 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
 	};
 	
+	/**
+	 * Enable garbage collection for this instance.
+	 */
 	Class.prototype.enableGc = function (gc) {
 		if (this.supportsGc)
 			this.__gc = gc; 
+		return this;
 	};
 	
+	/**
+	 * Destroy another instance depending on this one.
+	 * 
+	 * @param {object} other other object that should be destroyed
+	 */
 	Class.prototype.dependDestroy = function (other) {
-		if (other.destroyed)
+		if (other.destroyed())
 			return;
 		if (this.__gc)
 			other.enableGc();
 		other.weakDestroy();
+		return this;
 	};
 	
+	/**
+	 * Returns the unique id of the object.
+	 * 
+	 * @return {string} unique id
+	 */
 	Class.prototype.cid = function () {
 		return Ids.objectId(this);
 	};
 
 	Class.prototype.cls = Class;
 	
+	/**
+	 * Generates a context-free function of a method.
+	 * 
+	 * @param {string} s name of method
+	 * 
+	 * @return {function} context-free function
+	 */
 	Class.prototype.as_method = function (s) {
 		return Functions.as_method(this[s], this);
 	};
 	
+	/**
+	 * Automatically destroys an object when this object is being destroyed.
+	 * 
+	 * @param {object} obj
+	 */
 	Class.prototype.auto_destroy = function (obj) {
 		if (obj) {
 			if (!this.__auto_destroy_list)
@@ -275,6 +358,13 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		return obj;
 	};
 	
+	/**
+	 * Notify all notifications listeners of an internal notification event.
+	 * 
+	 * @param {string} name notification name
+	 * 
+	 * @protected
+	 */
 	Class.prototype._notify = function (name) {
 		if (!this.cls.__notifications)
 			return;
@@ -287,26 +377,71 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		}, this);
 	};
 	
+	/**
+	 * Checks whether this instance implements a certain mixin.
+	 *
+	 * @param identifier mixin identifier
+	 * 
+	 * @return {boolean} true if it implements the mixin
+	 */
 	Class.prototype.impl = function (identifier) {
 		return !!(this.cls.__implements && this.cls.__implements[Types.is_string(identifier) ? identifier : identifier._implements]);
 	};
 	
+	/**
+	 * Determines whether this instance is an instance of a certain class.
+	 * 
+	 * @param {object} cls class in question
+	 * 
+	 * @return {boolean} true if instance is instance of class
+	 */
 	Class.prototype.instance_of = function (cls) {
 		return this.cls.ancestor_of(cls);
 	};
 	
-	Class.prototype.increaseRef = function () {
+	/**
+	 * Increases the reference counter of this instance.
+	 * 
+	 * @param {object} reference optional reference object
+	 */
+	Class.prototype.increaseRef = function (reference) {
 		this.__referenceCount = this.__referenceCount || 0;
 		this.__referenceCount++;
+		this.__referenceObjects = this.__referenceObjects || {};
+		if (reference) {
+			if (!this.__referenceObjects[reference.cid()])
+				this.__referenceObjects[reference.cid()] = reference;
+			else
+				this.__referenceCount--;
+		}
+		return this;
 	};
 	
-	Class.prototype.decreaseRef = function () {
+	/**
+	 * Decreases the reference counter of this instance.
+	 * 
+	 * @param {object} reference optional reference object
+	 */
+	Class.prototype.decreaseRef = function (reference) {
 		this.__referenceCount = this.__referenceCount || 0;
 		this.__referenceCount--;
-		if (this.__referenceCount <= 0)
+		this.__referenceObjects = this.__referenceObjects || {};
+		if (reference) {
+			if (this.__referenceObjects[reference.cid()])
+				delete this.__referenceObjects[reference.cid()];
+			else
+				this.__referenceCount++;
+		}
+		if (this.__referenceCount <= 0 && Types.is_empty(this.__referenceObjects))
 			this.weakDestroy();
+		return this;
 	};	
 	
+	/**
+	 * Inspects the instance for debugging purposes.
+	 * 
+	 * @return {object} json object describing the instance
+	 */
 	Class.prototype.inspect = function () {
 		return {
 			header: {
@@ -340,12 +475,17 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 	};
 
 	
-	// Legacy Methods
 	
+	/**
+	 * @deprecated
+	 */
 	Class.prototype._auto_destroy = function(obj) {
 		return this.auto_destroy(obj);
 	};
 	
+	/**
+	 * @deprecated
+	 */
 	Class.prototype._inherited = function (cls, func) {
 		return cls.parent.prototype[func].apply(this, Array.prototype.slice.apply(arguments, [2]));
 	};

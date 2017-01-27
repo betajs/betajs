@@ -1,5 +1,17 @@
-Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", "module:Iterators.ArrayIterator"], function (Types, Iterator, ArrayIterator) {
+Scoped.extend("module:Iterators", [
+    "module:Types",
+    "module:Iterators.Iterator",
+    "module:Iterators.ArrayIterator"
+], function (Types, Iterator, ArrayIterator) {
 	return {
+	
+		/**
+		 * Ensure that something is an iterator and if it is not and iterator is created from the data.
+		 * 
+		 * @param mixed mixed type variable
+		 * 
+		 * @return {object} iterator
+		 */
 		ensure: function (mixed) {
 			if (mixed === null)
 				return new ArrayIterator([]);
@@ -8,7 +20,8 @@ Scoped.extend("module:Iterators", ["module:Types", "module:Iterators.Iterator", 
 			if (Types.is_array(mixed))
 				return new ArrayIterator(mixed);
 			return new ArrayIterator([mixed]);
-		}		
+		}
+	
 	};
 });
 
@@ -19,56 +32,92 @@ Scoped.define("module:Iterators.Iterator", [
     "module:Async",
     "module:Promise"
 ], function (Class, Functions, Async, Promise, scoped) {
-	return Class.extend({scoped: scoped}, {
+	return Class.extend({scoped: scoped}, function (inherited) {
 		
-		hasNext: function () {
-			return false;
-		},
-		
-		next: function () {
-			return null;
-		},
-		
-		nextOrNull: function () {
-			return this.hasNext() ? this.next() : null;
-		},
+		/**
+		 * Abstract Iterator Class
+		 * 
+		 * @class BetaJS.Iterators.Iterator
+		 */
+		return {
 
-		asArray: function () {
-			var arr = [];
-			while (this.hasNext())
-				arr.push(this.next());
-			return arr;
-		},
+			/**
+			 * Determines whether there are more elements in the iterator.
+			 * Should be overwritten by subclass.
+			 * 
+			 * @return {boolean} true if more elements present
+			 */
+			hasNext: function () {
+				return false;
+			},
+			
+			/**
+			 * Returns the next element in the iterator.
+			 * Should be overwritten by subclass.
+			 * 
+			 * @return next element in iterator
+			 */
+			next: function () {
+				return null;
+			},
+			
+			/**
+			 * Returns the next element if present or null otherwise.
+			 * 
+			 * @return next element in iterator or null
+			 */
+			nextOrNull: function () {
+				return this.hasNext() ? this.next() : null;
+			},
+	
+			/**
+			 * Materializes the iterator as an array.
+			 * 
+			 * @return {array} array of elements in iterator
+			 */
+			asArray: function () {
+				var arr = [];
+				while (this.hasNext())
+					arr.push(this.next());
+				return arr;
+			},
 
-		asArrayDelegate: function (f) {
-			var arr = [];
-			while (this.hasNext()) {
-				var obj = this.next();			
-				arr.push(obj[f].apply(obj, Functions.getArguments(arguments, 1)));
-			}
-			return arr;
-		},
-
-		iterate: function (cb, ctx) {
-			while (this.hasNext()) {
+			/**
+			 * Iterate over the iterator, calling a callback function for every element.
+			 * 
+			 * @param {function} cb callback function
+			 * @param {object} ctx optional callback context
+			 */
+			iterate: function (cb, ctx) {
+				while (this.hasNext()) {
+					var result = cb.call(ctx || this, this.next());
+					if (result === false)
+						return;
+				}
+			},
+			
+			/**
+			 * Asynchronously iterate over the iterator, calling a callback function for every element.
+			 * 
+			 * @param {function} cb callback function
+			 * @param {object} ctx optional callback context
+			 * @param {int} time optional time between calls
+			 * 
+			 * @return {object} finish promise
+			 */
+			asyncIterate: function (cb, ctx, time) {
+				if (!this.hasNext())
+					return Promise.value(true);
 				var result = cb.call(ctx || this, this.next());
 				if (result === false)
-					return;
+					return Promise.value(true);
+				var promise = Promise.create();
+				Async.eventually(function () {
+					this.asyncIterate(cb, ctx, time).forwardCallback(promise);
+				}, this, time);
+				return promise;
 			}
-		},
-		
-		asyncIterate: function (cb, ctx, time) {
-			if (!this.hasNext())
-				return Promise.value(true);
-			var result = cb.call(ctx || this, this.next());
-			if (result === false)
-				return Promise.value(true);
-			var promise = Promise.create();
-			Async.eventually(function () {
-				this.asyncIterate(cb, ctx, time).forwardCallback(promise);
-			}, this, time);
-			return promise;
-		}
 
+		};
 	});
 });

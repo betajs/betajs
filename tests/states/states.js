@@ -39,3 +39,19 @@ test("test states w router", function () {
 	QUnit.equal(host.get("x"), 42);
 	host.destroy();
 });
+
+test("test states host attributes", function() {
+	var host = new BetaJS.States.Host();
+	var S = BetaJS.States.State.extend("BetaJS.Test.S");
+	var A = S.extend("BetaJS.Test.A");
+	var B = S.extend("BetaJS.Test.B");
+	host.initialize("BetaJS.Test.A", {
+		foobar: 42
+	});
+	QUnit.equal(host.get("foobar"), 42);
+	host.state().next("B", {
+		test: 123
+	});
+	QUnit.equal(host.get("foobar"), undefined);
+	QUnit.equal(host.get("test"), 123);
+});

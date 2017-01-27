@@ -1,4 +1,4 @@
-require(__dirname + "/../../vendors/scoped.js");
+require("betajs-scoped");
 var BetaJS = require(__dirname + "/../../dist/beta-noscoped.js");
 Scoped.nextScope().binding("module", "global:BetaJSOld", {
 	readonly : true

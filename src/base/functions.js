@@ -6,7 +6,20 @@ Scoped.define("module:Functions", ["module:Types"], function (Types) {
 	 * @module BetaJS.Functions
 	 */
 	return {
-	
+		
+		/**
+		 * Returns the current stack trace.
+		 * 
+		 * @param {int} index optional stack trace start index
+		 * 
+		 * @return {array} stack trace array
+		 */
+		getStackTrace: function (index) {
+			var stack = (new Error()).stack.split("\n");
+			while (stack.length > 0 && stack[0].trim().toLowerCase() === "error")
+				stack.shift();
+			return index ? stack.slice(index) : stack;
+		},
 		
 	    /**
 	     * Takes a function and an instance and returns the method call as a function

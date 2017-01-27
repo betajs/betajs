@@ -23,6 +23,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 			mm	Month as digits; leading zero for single-digit months.
 			m	Month as digits; no leading zero for single-digit months.
 			d+	Days; days as absolute number
+			ddddDay of the week as string.
 			ddd	Day of the week as a three-letter abbreviation.
 			dd	Day of the month as digits; leading zero for single-digit days.
 			d	Day of the month as digits; no leading zero for single-digit days.
@@ -78,10 +79,10 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return Time.timeModulo(t, "second", "floor");
 			},
 			"mmm": function (t) {
-				return (new Date(t)).toDateString().substring(4,7);
+				return ((new Date(t)).toUTCString().split(" "))[2];
 			},
 			"mm": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "month"), 2);
+				return Strings.padZeros(Time.timeComponentGet(t, "month") + 1, 2);
 			},
 			"m": function (t) {
 				return Time.timeComponentGet(t, "month");
@@ -89,14 +90,18 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 			"d+": function (t) {
 				return Time.timeComponent(t, "day", "floor");
 			},
+			"dddd": function (t) {
+				var map = {2: "s", 3: "nes", 4: "rs", 6: "ur"};
+				return (new Date(t)).toUTCString().substring(0,3) + (map[Time.timeComponentGet(t, "weekday")] || "") + "day";
+			},
 			"ddd": function (t) {
-				return (new Date(t)).toDateString().substring(0,3);
+				return (new Date(t)).toUTCString().substring(0,3);
 			},
 			"dd": function (t) {
-				return Strings.padZeros(Time.timeComponentGet(t, "day"), 2);
+				return Strings.padZeros(Time.timeComponentGet(t, "day") + 1, 2);
 			},
 			"d": function (t) {
-				return Time.timeComponentGet(t, "day");
+				return Time.timeComponentGet(t, "day") + 1;
 			},
 			"yyyy": function (t) {
 				return Time.timeComponentGet(t, "year");
@@ -151,6 +156,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 		 * 
 		 */
 		format: function (timeFormat, time, timezone) {
+			time = time || Time.now();
 			var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
 			var bias = Time.timezoneBias(timezone);
 			var result = timeFormat;

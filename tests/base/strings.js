@@ -6,12 +6,14 @@ test("test htmlentities", function() {
 	ok(BetaJS.Strings.htmlentities("<test>") == "&lt;test&gt;");
 });
 
-test("test email_get_email", function() {
+test("test email", function() {
 	QUnit.equal(BetaJS.Strings.email_get_email("tester <test@test.com>"), "test@test.com");
-});
-
-test("test email_get_name", function() {
+	QUnit.equal(BetaJS.Strings.email_get_email("tester foobar <test@test.com>"), "test@test.com");
+	QUnit.equal(BetaJS.Strings.email_get_email("test@test.com"), "test@test.com");
 	QUnit.equal(BetaJS.Strings.email_get_name("tester <test@test.com>"), "Tester");
+	QUnit.equal(BetaJS.Strings.email_get_name("tester foobar <test@test.com>"), "Tester Foobar");
+	QUnit.equal(BetaJS.Strings.email_get_name("test@test.com"), "Test");
+	QUnit.equal(BetaJS.Strings.email_get_name("test.abc@test.com"), "Test Abc");
 });
 
 

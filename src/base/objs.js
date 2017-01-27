@@ -29,6 +29,49 @@ Scoped.define("module:Objs", [
 		},
 
 		/**
+		 * Return the i-th value of an object.
+		 * 
+		 * @param {object} obj the object
+		 * @param {int} i index of the i-th value (default: 0)
+		 * 
+		 * @return {string} i-th value
+		 */
+		ithValue: function (obj, i) {
+			i = i || 0;
+			for (var key in obj) {
+				if (i <= 0)
+					return obj[key];
+				else
+					--i;
+			}
+			return null;
+		},
+		
+		/**
+		 * Return the i-th value of an object or array.
+		 * 
+		 * @param obj the object or array
+		 * @param {int} idx index of the i-th value (default: 0)
+		 * 
+		 * @return {string} i-th value
+		 */
+		valueByIndex: function (obj, idx) {
+			return Types.is_array(obj) ? obj[idx || 0] : this.ithValue(obj, idx);
+		},
+
+		/**
+		 * Return the i-th key of an object or array.
+		 * 
+		 * @param obj the object or array
+		 * @param {int} idx index of the i-th key (default: 0)
+		 * 
+		 * @return i-th key
+		 */
+		keyByIndex: function (obj, idx) {
+			return Types.is_array(obj) ? idx || 0 : this.ithKey(obj, idx);
+		},
+
+		/**
 		 * Returns the number of elements of an object or array.
 		 * 
 		 * @param obj object or array
@@ -173,6 +216,403 @@ Scoped.define("module:Objs", [
 			}
 		},
 
+		/**
+		 * Returns true if all key-value-pairs of the first object are contained in the second object.
+		 * 
+		 * @param a first object or array
+		 * @param b second object or array
+		 * 
+		 * @return {boolean} true if first contained in second
+		 */
+		subset_of: function (a, b) {
+			a = Types.is_array(a) ? this.objectify(a) : a;
+			b = Types.is_array(b) ? this.objectify(b) : b;
+			for (var key in a)
+				if (a[key] != b[key])
+					return false;
+			return true;
+		},
+		
+		/**
+		 * Returns true if all key-value-pairs of the second object are contained in the first object.
+		 * 
+		 * @param a first object or array
+		 * @param b second object or array
+		 * 
+		 * @return {boolean} true if second contained in first
+		 */
+		superset_of: function (a, b) {
+			return this.subset_of(b, a);
+		},
+		
+		/**
+		 * Converts an array into an object by pairing together odd and even items.
+		 * 
+		 * @param {array} arr array with pairs
+		 * 
+		 * @return {object} created object
+		 */
+		pairArrayToObject: function (arr) {
+			var result = {};
+			for (var i = 0; i < arr.length / 2; i += 2)
+				result[arr[i]] = arr[i+1];
+			return result;
+		},
+		
+		/**
+		 * Converts a list of arguments into an object by pairing together odd and even arguments.
+		 * 
+		 * @return {object} created object
+		 */
+		pairsToObject: function () {
+			var result = {};
+			for (var i = 0; i < arguments.length; ++i)
+				result[arguments[i][0]] = arguments[i][1];
+			return result;
+		},
+
+		/**
+		 * Inverses the key-value pairs in an object.
+		 * 
+		 * @param {object} obj object to be reversed
+		 * @return {object} object with reversed key-value-pairs
+		 */
+		inverseKeyValue: function (obj) {
+			var result = {};
+			this.iter(obj, function (value, key) {
+				result[value] = key;
+			});
+			return result;
+		},		
+
+		/**
+		 * Returns true if an entry in an object or array exists.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f function to check for an entry to exist
+		 * @param {object} context optional context for the function
+		 * 
+		 * @return {boolean} returns true if an entry exists
+		 * 
+		 */
+		exists: function (obj, f, context) {
+			var success = false;
+			this.iter(obj, function () {
+				success = success || f.apply(this, arguments);
+				return !success;
+			}, context);
+			return success;
+		},
+
+		/**
+		 * Returns true if all entries in an object or array satisfy a condition
+		 * 
+		 * @param obj object or array
+		 * @param {function} f function to check for the condition
+		 * @param {object} context optional context for the function
+		 * 
+		 * @return {boolean} returns true if all entries satisfy the condition
+		 * 
+		 */
+		all: function (obj, f, context) {
+			var success = true;
+			this.iter(obj, function () {
+				success = success && f.apply(this, arguments);
+				return success;
+			}, context);
+			return success;
+		},
+
+		/**
+		 * Returns the first entry of an object or array.
+		 * 
+		 * @param obj object or array
+		 * 
+		 * @return first entry
+		 */
+		peek: function (obj) {
+			if (Types.is_array(obj))
+				return obj.length > 0 ? obj[0] : null;
+			for (var key in obj)
+				return obj[key];
+			return null;
+		},
+
+		/**
+		 * Returns and removes the first entry of an object or array.
+		 * 
+		 * @param obj object or array
+		 * 
+		 * @return first entry
+		 */
+		poll: function (obj) {
+			if (Types.is_array(obj))
+				return obj.shift();
+			for (var key in obj) {
+				var item = obj[key];
+				delete obj[key];
+				return item;
+			}
+			return null;
+		},
+
+		/**
+		 * Iterates over an object or array, calling a callback function for each item.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f callback function
+		 * @param {object} context optional callback context
+		 * 
+		 */
+		iter: function (obj, f, context) {
+			var result = null;
+			if (Types.is_array(obj)) {
+				for (var i = 0; i < obj.length; ++i) {
+					result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
+					if (Types.is_defined(result) && !result)
+						return false;
+				}
+			} else {
+				for (var key in obj) {
+					result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+					if (Types.is_defined(result) && !result)
+						return false;
+				}
+			}
+			return true;
+		},
+
+		/**
+		 * Creates the intersection object of two objects.
+		 * 
+		 * @param {object} a object one
+		 * @param {object} b object two
+		 * 
+		 * @return {object} intersection object
+		 */
+		intersect: function (a, b) {
+			var c = {};
+			for (var key in a) {
+				if (key in b)
+					c[key] = a[key];
+			}
+			return c;
+		},
+		
+		/**
+		 * Creates the difference object of two objects.
+		 * 
+		 * @param {object} a object one
+		 * @param {object} b object two
+		 * 
+		 * @return {object} difference object
+		 */
+		diff: function (a, b) {
+			var c = {};
+			for (var key in a)
+				if (!(key in b) || a[key] !== b[key])
+					c[key] = a[key];
+			return c;
+		},
+		
+		/**
+		 * Determines whether a key exists in an array or object.
+		 * 
+		 * @param obj object or array
+		 * @param key search key
+		 * 
+		 * @return {boolean} true if key is contained in obj
+		 */
+		contains_key: function (obj, key) {
+			if (Types.is_array(obj))
+				return Types.is_defined(obj[key]);
+			else
+				return key in obj;
+		},
+
+		/**
+		 * Determines whether a value exists in an array or object.
+		 * 
+		 * @param obj object or array
+		 * @param value search value
+		 * 
+		 * @return {boolean} true if value is contained in obj
+		 */
+		contains_value: function (obj, value) {
+			if (Types.is_array(obj)) {
+				for (var i = 0; i < obj.length; ++i) {
+					if (obj[i] === value)
+						return true;
+				}
+			} else {
+				for (var key in obj) {
+					if (obj[key] === value)
+						return true;
+				}
+			}
+			return false;
+		},
+
+		/**
+		 * Maps an array of object, mapping values using a function.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f function for mapping values
+		 * @param {object} context function context
+		 * 
+		 * @return object or array with mapped values
+		 * 
+		 */
+		map: function (obj, f, context) {
+			var result = null;
+			if (Types.is_array(obj)) {
+				result = [];
+				for (var i = 0; i < obj.length; ++i)
+					result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
+				return result;
+			} else {
+				result = {};
+				for (var key in obj)
+					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+				return result;
+			}
+		},
+
+		/**
+		 * Maps the keys of an object using a function.
+		 * 
+		 * @param {object} obj object
+		 * @param {function} f function for mapping keys
+		 * @param {object} context function context
+		 * 
+		 * @return {object} object with mapped keys
+		 */
+		keyMap: function (obj, f, context) {
+			result = {};
+			for (var key in obj)
+				result[f.call(context || this, obj[key], key)] = obj[key];
+			return result;
+		},
+
+		/**
+		 * Returns all values of an object as an array.
+		 * 
+		 * @param {object} obj object
+		 * 
+		 * @return {array} values of object as array
+		 */
+		values: function (obj) {
+			var result = [];
+			for (var key in obj)
+				result.push(obj[key]);
+			return result;
+		},
+
+		/**
+		 * Filters all values of an object or array.
+		 * 
+		 * @param obj object or array
+		 * @param {function} f filter function
+		 * @param {object} context filter function context
+		 * 
+		 * @return object or array with filtered items
+		 */
+		filter: function (obj, f, context) {
+			f = f || function (x) { return !!x; };
+			if (Types.is_array(obj))
+				return obj.filter(f, context);
+			var ret = {};
+			for (var key in obj) {
+				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
+					ret[key] = obj[key];
+			}
+			return ret;
+		},
+
+		/**
+		 * Tests two objects for deep equality up to a certain depth.
+		 * 
+		 * @param {object} obj1 first object
+		 * @param {object} obj2 second object
+		 * @param {int} depth depth until deep comparison should be done
+		 * 
+		 * @return {boolean} true if both objects are equal 
+		 */
+		equals: function (obj1, obj2, depth) {
+			var key = null;
+			if (depth && depth > 0) {
+				for (key in obj1) {
+					if (!(key in obj2) || !this.equals(obj1[key], obj2[key], depth-1))
+						return false;
+				}
+				for (key in obj2) {
+					if (!(key in obj1))
+						return false;
+				}
+				return true;
+			} else
+				return obj1 == obj2;
+		},
+
+		/**
+		 * Converts an array into object using the array values as keys.
+		 * 
+		 * @param {array} arr array to be converted
+		 * @param f a function mapping the value of an array to a value of the object, or a constant value, or undefined (then true is used)
+		 * @param {object} context optional function context
+		 * 
+		 * @return {object} converted object
+		 */
+		objectify: function (arr, f, context) {
+			var result = {};
+			var is_function = Types.is_function(f);
+			if (Types.is_undefined(f))
+				f = true;
+			for (var i = 0; i < arr.length; ++i)
+				result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
+				return result;
+		},
+
+		/**
+		 * Creates an object by pairing up the arguments to key value pairs.
+		 * 
+		 * @return {object} created object
+		 */
+		objectBy: function () {
+			var obj = {};
+			var count = arguments.length / 2;
+			for (var i = 0; i < count; ++i)
+				obj[arguments[2 * i]] = arguments[2 * i + 1];
+			return obj;
+		},
+
+		/**
+		 * Extracts all key-value pairs from an object instance not matching default key-value pairs in another instance.
+		 * 
+		 * @param {object} ordinary object with default key-value pairs
+		 * @param {object} concrete object with a concrete list of key-value pairs
+		 * @param {boolean} keys if true, iterating over the ordinary keys, otherwise iterating over the conrete keys (default)
+		 * 
+		 * @return {object} specialized key-value pairs
+		 */
+		specialize: function (ordinary, concrete, keys) {
+			var result = {};
+			var iterateOver = keys ? ordinary : concrete;
+			for (var key in iterateOver)
+				if (!(key in ordinary) || ordinary[key] != concrete[key])
+					result[key] = concrete[key];
+			return result;
+		},
+		
+		/**
+		 * Merges to objects.
+		 * 
+		 * @param {object} secondary Secondary object
+		 * @param {object} primary Primary object
+		 * @param {object} options Key-based options for merging
+		 * 
+		 * @return {object} Merged object
+		 */
 		merge: function (secondary, primary, options) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -196,6 +636,14 @@ Scoped.define("module:Objs", [
 			return result;
 		},
 
+		/**
+		 * Recursively merges one object into another without modifying the source objects.
+		 * 
+		 * @param {object} secondary Object to be merged into.
+		 * @param {object} primary Object to be merged in
+		 * 
+		 * @return {object} Recurisvely merged object
+		 */
 		tree_merge: function (secondary, primary) {
 			secondary = secondary || {};
 			primary = primary || {};
@@ -209,229 +657,31 @@ Scoped.define("module:Objs", [
 			}
 			return result;
 		},
-
-		map: function (obj, f, context) {
-			var result = null;
-			if (Types.is_array(obj)) {
-				result = [];
-				for (var i = 0; i < obj.length; ++i)
-					result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
-				return result;
-			} else {
-				result = {};
-				for (var key in obj)
-					result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-				return result;
-			}
-		},
-
-		keyMap: function (obj, f, context) {
-			result = {};
-			for (var key in obj)
-				result[f.call(context || this, obj[key], key)] = obj[key];
-			return result;
-		},
-
-		values: function (obj) {
+		
+		/**
+		 * Serializes an object in such a way that all subscopes appear in a flat notation.
+		 * 
+		 * @param {object} obj source object
+		 * @param {string} head prefix header, usually empty
+		 * 
+		 * @return {array} serialized object
+		 */
+		serializeFlatJSON: function (obj, head) {
 			var result = [];
-			for (var key in obj)
-				result.push(obj[key]);
-			return result;
-		},
-
-		filter: function (obj, f, context) {
-			f = f || function (x) { return !!x; };
-			if (Types.is_array(obj))
-				return obj.filter(f, context);
-			var ret = {};
-			for (var key in obj) {
-				if (context ? f.apply(context, [obj[key], key]) : f(obj[key], key))
-					ret[key] = obj[key];
-			}
-			return ret;
-		},
-
-		equals: function (obj1, obj2, depth) {
-			var key = null;
-			if (depth && depth > 0) {
-				for (key in obj1) {
-					if (!(key in obj2) || !this.equals(obj1[key], obj2[key], depth-1))
-						return false;
-				}
-				for (key in obj2) {
-					if (!(key in obj1))
-						return false;
-				}
-				return true;
-			} else
-				return obj1 == obj2;
-		},
-
-		iter: function (obj, f, context) {
-			var result = null;
-			if (Types.is_array(obj)) {
-				for (var i = 0; i < obj.length; ++i) {
-					result = context ? f.apply(context, [obj[i], i]) : f(obj[i], i);
-					if (Types.is_defined(result) && !result)
-						return false;
-				}
+			if (Types.is_array(obj) && obj) {
+				obj.forEach(function (value) {
+					result = result.concat(this.serializeFlatJSON(value, head + "[]"));
+				}, this);
+			} else if (Types.is_object(obj) && obj) {
+				this.iter(obj, function (value, key) {
+					result = result.concat(this.serializeFlatJSON(value, head ? head + "[" + key + "]" : key));
+				}, this);
 			} else {
-				for (var key in obj) {
-					result = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
-					if (Types.is_defined(result) && !result)
-						return false;
-				}
+				result = [{
+					key: head,
+					value: obj
+				}];
 			}
-			return true;
-		},
-
-		intersect: function (a, b) {
-			var c = {};
-			for (var key in a) {
-				if (key in b)
-					c[key] = a[key];
-			}
-			return c;
-		},
-		
-		subset_of: function (a, b) {
-			a = Types.is_array(a) ? this.objectify(a) : a;
-			b = Types.is_array(b) ? this.objectify(b) : b;
-			for (var key in a)
-				if (a[key] != b[key])
-					return false;
-			return true;
-		},
-		
-		superset_of: function (a, b) {
-			return this.subset_of(b, a);
-		},
-
-		contains_key: function (obj, key) {
-			if (Types.is_array(obj))
-				return Types.is_defined(obj[key]);
-			else
-				return key in obj;
-		},
-
-		contains_value: function (obj, value) {
-			if (Types.is_array(obj)) {
-				for (var i = 0; i < obj.length; ++i) {
-					if (obj[i] === value)
-						return true;
-				}
-			} else {
-				for (var key in obj) {
-					if (obj[key] === value)
-						return true;
-				}
-			}
-			return false;
-		},
-
-		exists: function (obj, f, context) {
-			var success = false;
-			this.iter(obj, function () {
-				success = success || f.apply(this, arguments);
-				return !success;
-			}, context);
-			return success;
-		},
-
-		all: function (obj, f, context) {
-			var success = true;
-			this.iter(obj, function () {
-				success = success && f.apply(this, arguments);
-				return success;
-			}, context);
-			return success;
-		},
-
-		objectify: function (arr, f, context) {
-			var result = {};
-			var is_function = Types.is_function(f);
-			if (Types.is_undefined(f))
-				f = true;
-			for (var i = 0; i < arr.length; ++i)
-				result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
-				return result;
-		},
-
-		peek: function (obj) {
-			if (Types.is_array(obj))
-				return obj.length > 0 ? obj[0] : null;
-				else {
-					for (var key in obj)
-						return obj[key];
-					return null;
-				} 
-		},
-
-		poll: function (obj) {
-			if (Types.is_array(obj))
-				return obj.shift();
-			else {
-				for (var key in obj) {
-					var item = obj[key];
-					delete obj[key];
-					return item;
-				}
-				return null;
-			} 
-		},
-
-		objectBy: function () {
-			var obj = {};
-			var count = arguments.length / 2;
-			for (var i = 0; i < count; ++i)
-				obj[arguments[2 * i]] = arguments[2 * i + 1];
-			return obj;
-		},
-
-		valueByIndex: function (obj, idx) {
-			idx = idx || 0;
-			if (Types.is_array(obj))
-				return obj[idx];
-			for (var key in obj) {
-				if (idx === 0)
-					return obj[key];
-				idx--;
-			}
-			return null;
-		},
-
-		keyByIndex: function (obj, idx) {
-			idx = idx || 0;
-			if (Types.is_array(obj))
-				return idx;
-			for (var key in obj) {
-				if (idx === 0)
-					return key;
-				idx--;
-			}
-			return null;
-		},
-
-		pairArrayToObject: function (arr) {
-			var result = {};
-			for (var i = 0; i < arr.length / 2; i += 2)
-				result[arr[i]] = arr[i+1];
-			return result;
-		},
-
-		pairsToObject: function () {
-			var result = {};
-			for (var i = 0; i < arguments.length; ++i)
-				result[arguments[i][0]] = arguments[i][1];
-			return result;
-		},
-		
-		specialize: function (ordinary, concrete, keys) {
-			var result = {};
-			var iterateOver = keys ? ordinary : concrete;
-			for (var key in iterateOver)
-				if (!(key in ordinary) || ordinary[key] != concrete[key])
-					result[key] = concrete[key];
 			return result;
 		}
 
@@ -440,8 +690,21 @@ Scoped.define("module:Objs", [
 
 
 Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
+	/**
+	 * Scoped access of keys within objects.
+	 * 
+	 * @module BetaJS.Objs.Scopes
+	 */
 	return {
 
+		/**
+		 * Determines whether a scoped key exists within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 * 
+		 * @return {boolean} true if key exists within scope
+		 */
 		has: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
@@ -452,6 +715,14 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			return Types.is_defined(scope);
 		},
 
+		/**
+		 * Returns the value of a key within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 * 
+		 * @return Value for key in scope
+		 */
 		get: function (key, scope) {
 			var keys = key ? key.split(".") : [];
 			for (var i = 0; i < keys.length; ++i) {
@@ -462,6 +733,13 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			return scope;
 		},
 
+		/**
+		 * Sets the value of a key within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param name value to be set
+		 * @param {object} name scope context
+		 */
 		set: function (key, value, scope) {
 			if (!key)
 				return;
@@ -474,6 +752,12 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			scope[keys[keys.length - 1]] = value;
 		},
 
+		/**
+		 * Unsets a key within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 */
 		unset: function (key, scope) {
 			if (!key)
 				return;
@@ -486,6 +770,14 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function (Types) {
 			delete scope[keys[keys.length - 1]];
 		},
 
+		/**
+		 * Makes sure that a certain key is accessible within a scope.
+		 * 
+		 * @param {string} key key within scope
+		 * @param {object} name scope context
+		 * 
+		 * @return Touched value
+		 */
 		touch: function (key, scope) {
 			if (!key)
 				return scope;

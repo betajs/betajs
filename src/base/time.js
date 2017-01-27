@@ -154,7 +154,6 @@ Scoped.define("module:Time", [], function () {
 		 * Encode time period data from components to milliseconds
 		 * 
 		 * @param {object} data component data
-		 * @param {int} timezone timezone (optional)
 		 * 
 		 * @return {int} encoded milliseconds
 		 */
@@ -187,6 +186,15 @@ Scoped.define("module:Time", [], function () {
 		 */
 		now: function (timezone) {
 			return this.dateToTime(new Date(), timezone);
+		},
+		
+		/**
+		 * Returns the performance time in millseconds
+		 * 
+		 * @return {float} performance time
+		 */
+		perfNow: function () {
+			return typeof performance === "undefined" ? (new Date()).getTime() : performance.now();
 		},
 		
 		/**
@@ -255,11 +263,12 @@ Scoped.define("module:Time", [], function () {
 		 * 
 		 * @param {int} t time
 		 * @param {string} key component key
+		 * @param {int} timezone timezone (optional)
 		 * 
 		 * @return {int} value of time
 		 */
-		timeComponentGet: function (t, key) {
-			return this.__components[key].get(t);
+		timeComponentGet: function (t, key, timezone) {
+			return this.__components[key].get(this.timeToTimezoneBasedDate(t, timezone));
 		},
 		
 		/**

@@ -4,13 +4,26 @@ Scoped.define("module:Collections.GroupedCollection", [
     "module:Properties.Properties"
 ], function (Collection, Objs, Properties, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+
+		/**
+		 * The GroupedCollection Class allows you to create a dynamic sub collection based on another Collection instance by grouping together single items.
+		 * 
+		 * @class BetaJS.Collections.GroupedCollection
+		 */
 		return {
 
+			/**
+			 * Instantiates a GroupedCollection.
+			 * 
+			 * @param {object} parent Parent Collection
+			 * @param {object} options Standard Collection options, plus groupby, insert, remove, context, properties and create
+			 */
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				options = options || {};
 				delete options.objects;
 				this.__groupby = options.groupby;
+				this.__keepEmptyGroups = options.keepEmptyGroups;
 				this.__insertCallback = options.insert;
 				this.__removeCallback = options.remove;
 				this.__callbackContext = options.context || this;
@@ -23,58 +36,59 @@ Scoped.define("module:Collections.GroupedCollection", [
 				this.__parent.on("remove", this.__removeParentObject, this);
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__parent.off(null, null, this);
 				inherited.destroy.call(this);
 			},
 			
-			__addParentObject: function (object) {
-				var group = this.__objectToGroup(object);
-				if (!group) {
+			touchGroup: function (data, create) {
+				data = Properties.is_instance_of(data) ? data.data() : data;
+				var query = {};
+				Objs.iter(this.__groupby, function (key) {
+					query[key] = data[key];
+				});
+				var group = this.query(query).nextOrNull();
+				if (!group && create) {
 					group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
-					group.objects = {};
-					group.object_count = 0;
+					group.items = group.auto_destroy(new Collection());
 					Objs.iter(this.__groupby, function (key) {
-						group.set(key, object.get(key));
+						group.set(key, data[key]);
 					});
-					this.__addObjectToGroup(object, group);
 					this.add(group);
-				} else
-					this.__addObjectToGroup(object, group);
+				}
+				return group;
+			},
+			
+			__addParentObject: function (object) {
+				var group = this.touchGroup(object, true);
+				this.__addObjectToGroup(object, group);
 			},
 			
 			__removeParentObject: function (object) {
-				var group = this.__objectToGroup(object);
+				var group = this.touchGroup(object);
 				if (group) {
 					this.__removeObjectFromGroup(object, group);
-					if (group.object_count === 0)
+					if (!this.__keepEmptyGroups && group.items.count() === 0)
 						this.remove(group);
 				}
 			},
 			
-			__objectToGroup: function (object) {
-				var query = {};
-				Objs.iter(this.__groupby, function (key) {
-					query[key] = object.get(key);
-				});
-				return this.query(query).nextOrNull();
-			},
-			
 			__addObjectToGroup: function (object, group) {
-				group.objects[this.__parent.get_ident(object)] = object;
-				group.object_count++;
+				group.items.add(object);
 				this.__insertObject(object, group);
 			},
 			
 			__removeObjectFromGroup: function (object, group) {
-				if (!(this.__parent.get_ident(object) in group.objects))
-					return;
-				delete group.objects[this.__parent.get_ident(object)];
-				group.object_count--;
-				if (group.object_count > 0)
-					this.__removeObject(object, group);
+				group.items.remove(object);
+				this.__removeObject(object, group);
 			},
 			
+			/**
+			 * @override
+			 */
 			increase_forwards: function (steps) {
 				return this.__parent.increase_forwards(steps);
 			},
@@ -82,15 +96,23 @@ Scoped.define("module:Collections.GroupedCollection", [
 			__insertObject: function (object, group) {
 				if (this.__insertCallback)
 					this.__insertCallback.call(this.__callbackContext, object, group);
-				else
+				else {
+					/**
+					 * @event BetaJS.Collections.GroupedCollection#insert
+					 */
 					group.trigger("insert", object);
+				}
 			},
 			
 			__removeObject: function (object, group) {
 				if (this.__removeCallback)
 					this.__removeCallback.call(this.__callbackContext, object, group);
-				else
+				else {
+					/**
+					 * @event BetaJS.Collections.GroupedCollection#remove
+					 */
 					group.trigger("remove", object);
+				}
 			}
 			
 		};	

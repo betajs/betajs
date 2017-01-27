@@ -1,22 +1,92 @@
 Scoped.define("module:Trees.TreeNavigator", function () {
+	
+	/**
+	 * Abstract Tree Navigator Mixin
+	 * 
+	 * @mixin BetaJS.Trees.TreeNavigator
+	 */
 	return {		
 
+		/**
+		 * Returns the root node of a tree.
+		 * 
+		 * @return {object} Root node
+		 */
 		nodeRoot: function () {},
+
+		/**
+		 * Retrusns the id of a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {string} Id of node
+		 */
 		nodeId: function (node) {},
+
+		/**
+		 * Returns the parent of a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {object} Parent node
+		 */
 		nodeParent: function (node) {},
+
+		/**
+		 * Returns the children of a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {array} Children of the node
+		 */
 		nodeChildren: function (node) {},
+
+		/**
+		 * Watches a node for changes.
+		 * 
+		 * @param {object} node Node
+		 * @param {function} func Change callback function
+		 * @param {object} context Optional change callback context
+		 */
 		nodeWatch: function (node, func, context) {},
+
+		/**
+		 * Unwatches a node for changes.
+		 * 
+		 * @param {object} node Node
+		 * @param {function} func Change callback function
+		 * @param {object} context Optional change callback context
+		 */
 		nodeUnwatch: function (node, func, context) {},
+
+		/**
+		 * Returns the data associated with a node.
+		 * 
+		 * @param {object} node Node
+		 * @return {object} Node data
+		 */
 		nodeData: function (node) {}
 
 	};
 });
 
 
-Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Lexer", "module:Trees.TreeQueryObject"], function (Class, Lexer, TreeQueryObject, scoped) {
+Scoped.define("module:Trees.TreeQueryEngine", [
+    "module:Class",
+    "module:Parser.Lexer",
+    "module:Trees.TreeQueryObject"
+], function (Class, Lexer, TreeQueryObject, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * Tree Query Engine Class
+		 * 
+		 * @class BetaJS.Trees.TreeQueryEngine
+		 */
 		return {
 
+			/**
+			 * Create a new instance.
+			 * 
+			 * @param {object} navigator Navigator instance
+			 */
 			constructor: function (navigator) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -31,6 +101,14 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 				}));
 			},
 
+			/**
+			 * Query the tree.
+			 * 
+			 * @param {object} node Node to start the query from
+			 * @param {string} query Query string
+			 * 
+			 * @return {object} Tree query object for the query
+			 */
 			query: function (node, query) {
 				return new TreeQueryObject(this.__navigator, node, this.__lexer.lex(query));
 			}
@@ -40,10 +118,28 @@ Scoped.define("module:Trees.TreeQueryEngine", ["module:Class", "module:Parser.Le
 });
 
 
-Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.EventsMixin", "module:Objs", "module:Types"], function (Class, EventsMixin, Objs, Types, scoped) {
+Scoped.define("module:Trees.TreeQueryObject", [
+    "module:Class",
+    "module:Events.EventsMixin",
+    "module:Objs",
+    "module:Types"
+], function (Class, EventsMixin, Objs, Types, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
+		
+		/**
+		 * Object representing a tree query on a node
+		 *
+		 * @class BetaJS.Trees.TreeQueryObject
+		 */
 		return {
 
+			/**
+			 * Create new instance.
+			 * 
+			 * @param {object} navigator Navigator object
+			 * @param {object} node Node of the query
+			 * @param {object} query Lexed query
+			 */
 			constructor: function (navigator, node, query) {
 				inherited.constructor.call(this);
 				this.__navigator = navigator;
@@ -55,6 +151,9 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				this.__register(node, 0, {});
 			},
 
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				Objs.iter(this.__partials, function (partials) {
 					Objs.iter(partials.partials, function (partial) {
@@ -64,6 +163,11 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 				inherited.destroy.call(this);
 			},
 
+			/**
+			 * Returns the currently matching nodes.
+			 * 
+			 * @return {array} Matching nodes.
+			 */
 			result: function () {
 				var result = [];
 				Objs.iter(this.__result, function (value) {
@@ -136,7 +240,13 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 					this.__result[node_id].count--;
 					if (this.__result[node_id].count <= 0) {
 						delete this.__result[node_id];
+						/**
+						 * @event BetaJS.Trees.TreeQueryObject#remove
+						 */
 						this.trigger("remove", node);
+						/**
+						 * @event BetaJS.Trees.TreeQueryObject#change
+						 */
 						this.trigger("change");
 					}
 				}
@@ -184,7 +294,13 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 									node: node,
 									count: 1
 							};
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#add
+							 */
 							this.trigger("add", node);
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#change
+							 */
 							this.trigger("change");
 						} else
 							this.__result[node_id].count++;
@@ -202,7 +318,13 @@ Scoped.define("module:Trees.TreeQueryObject", ["module:Class", "module:Events.Ev
 						this.__result[node_id].count--;
 						if (this.__result[node_id].count <= 0) {
 							delete this.__result[node_id];
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#remove
+							 */
 							this.trigger("remove", node);
+							/**
+							 * @event BetaJS.Trees.TreeQueryObject#change
+							 */
 							this.trigger("change");
 						}
 					}

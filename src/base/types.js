@@ -213,6 +213,21 @@ Scoped.define("module:Types", function () {
 		},
 		
 		/**
+		 * Parses an object with given types.
+		 * 
+		 * @param {object} data object with key value pairs
+		 * @param {object} types object mapping keys to types
+		 * 
+		 * @return {object} object with properly parsed types
+		 */
+		parseTypes: function (data, types) {
+			var result = {};
+			for (var key in data)
+				result[key] = key in types ? this.parseType(data[key], types[key]) : data[key];
+			return result;
+		},
+		
+		/**
 		 * Returns the specific type of a JavaScript object
 		 * 
 		 * @param {object} obj an object instance

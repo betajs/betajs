@@ -19,7 +19,7 @@ Scoped.define("module:Channels.TransportChannel", [
 			 * 
 			 * @param {object} sender Sender Channel
 			 * @param {object} receiver Receiver Channel
-			 * @param {object} options options (timeout, tries, timer) for configuring the Transport Channel
+			 * @param {object} options options (timeout, tries, timer, auto_destroy) for configuring the Transport Channel
 			 */
 			constructor: function (sender, receiver, options) {
 				inherited.constructor.call(this);
@@ -30,6 +30,10 @@ Scoped.define("module:Channels.TransportChannel", [
 					tries: 1,
 					timer: 500
 				});
+				if (this.__options.auto_destroy) {
+					this.auto_destroy(sender);
+					this.auto_destroy(receiver);
+				}
 				this.__receiver.on("receive:send", function (data) {
 					this.__reply(data);
 				}, this);
@@ -73,7 +77,7 @@ Scoped.define("module:Channels.TransportChannel", [
 						message: message,
 						data: data,
 						stateless: true
-					});
+					}, options.serializerInfo);
 					promise.asyncSuccess(true);
 				} else {
 					this.__sent_id++;
@@ -89,7 +93,7 @@ Scoped.define("module:Channels.TransportChannel", [
 						message: message,
 						data: data,
 						id: this.__sent_id
-					});
+					}, options.serializerInfo);
 				}
 				return promise;
 			},

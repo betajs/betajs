@@ -1,13 +1,18 @@
 
 Scoped.define("module:Events.EventsMixin", [
-                                            "module:Timers.Timer",
-                                            "module:Async",
-                                            "module:Lists.LinkedList",
-                                            "module:Functions",
-                                            "module:Types",
-                                            "module:Objs"
-                                            ], function (Timer, Async, LinkedList, Functions, Types, Objs) {
+	"module:Timers.Timer",
+	"module:Async",
+	"module:Lists.LinkedList",
+	"module:Functions",
+	"module:Types",
+	"module:Objs"
+], function (Timer, Async, LinkedList, Functions, Types, Objs) {
 
+	/**
+	 * Events Mixin
+	 * 
+	 * @mixin BetaJS.Events.EventsMixin
+	 */
 	return {
 		
 		_implements: "3d63b44f-c9f0-4aa7-b39e-7cbf195122b4",
@@ -80,6 +85,14 @@ Scoped.define("module:Events.EventsMixin", [
 				object.params = params;
 		},
 
+		/**
+		 * Listen to an event(s).
+		 * 
+		 * @param {string} events event(s) to listen to
+		 * @param {function} callback event callback function
+		 * @param {object} context optional callback context
+		 * @param {object} options optional options
+		 */
 		on: function(events, callback, context, options) {
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			events = events.split(this.EVENT_SPLITTER);
@@ -98,10 +111,19 @@ Scoped.define("module:Events.EventsMixin", [
 					for (var i = 0; i < argss.length; ++i)
 						this.__call_event_object(event_object, argss[i]);
 				}
+				if (options && options.initcall)
+					this.__call_event_object(event_object, []);
 			}
 			return this;
 		},
 
+		/**
+		 * Stop listening to an event(s).
+		 * 
+		 * @param {string} events event(s) to listen to
+		 * @param {function} callback event callback function
+		 * @param {object} context optional callback context
+		 */
 		off: function(events, callback, context) {
 			this.__events_mixin_events = this.__events_mixin_events || {};
 			if (events) {
@@ -139,15 +161,29 @@ Scoped.define("module:Events.EventsMixin", [
 			return this;
 		},
 
-		triggerAsync: function () {
+		/**
+		 * Listen to an event(s) once.
+		 * 
+		 * @param {string} events event(s) to listen to
+		 * @param {function} callback event callback function
+		 * @param {object} context optional callback context
+		 * @param {object} options optional options
+		 */
+		once: function (events, callback, context, options) {
 			var self = this;
-			var args = Functions.getArguments(arguments);
-			var timeout = setTimeout(function () {
-				clearTimeout(timeout);
-				self.trigger.apply(self, args);
-			}, 0);
+			var once = Functions.once(function() {
+				self.off(events, once);
+				callback.apply(this, arguments);
+			});
+			once._callback = callback;
+			return this.on(events, once, context, options);
 		},
 
+		/**
+		 * Trigger an event(s) asynchronously.
+		 * 
+		 * @param {string} events events to be triggered
+		 */
 		trigger: function(events) {
 			if (this.__suspendedEvents > 0) {
 				this.__suspendedEventsQueue.push(arguments);
@@ -172,6 +208,26 @@ Scoped.define("module:Events.EventsMixin", [
 			return this;
 		},
 		
+		/**
+		 * Trigger an event(s) asynchronously.
+		 * 
+		 * @param {string} events events to be triggered
+		 */
+		triggerAsync: function () {
+			var self = this;
+			var args = Functions.getArguments(arguments);
+			var timeout = setTimeout(function () {
+				clearTimeout(timeout);
+				self.trigger.apply(self, args);
+			}, 0);
+			return this;
+		},
+
+		/**
+		 * Persistenly trigger an event(s).
+		 * 
+		 * @param {string} events events to be triggered
+		 */
 		persistentTrigger: function (events) {
 			this.trigger.apply(this, arguments);
 			events = events.split(this.EVENT_SPLITTER);
@@ -181,18 +237,17 @@ Scoped.define("module:Events.EventsMixin", [
 				this.__events_mixin_persistent_events[event] = this.__events_mixin_persistent_events[event] || [];
 				this.__events_mixin_persistent_events[event].push(rest);
 			}, this);
+			return this;
 		},
 
-		once: function (events, callback, context, options) {
-			var self = this;
-			var once = Functions.once(function() {
-				self.off(events, once);
-				callback.apply(this, arguments);
-			});
-			once._callback = callback;
-			return this.on(events, once, context, options);
-		},
-
+		/**
+		 * Delegate certain events to this event object.
+		 * 
+		 * @param {string} events events to be delegated
+		 * @param {object} source source event object
+		 * @param {string} prefix optional event prefix for delegation
+		 * @param {array} params optional additional event params
+		 */
 		delegateEvents: function (events, source, prefix, params) {
 			params = params || []; 
 			prefix = prefix ? prefix + ":" : "";
@@ -211,10 +266,25 @@ Scoped.define("module:Events.EventsMixin", [
 					}, this);
 				}, this);
 			}
+			return this;
 		},
 		
+		/**
+		 * Returns the parent event object in the chain.
+		 * 
+		 * @return {object} parent event object
+		 * 
+		 * @protected
+		 * @abstract
+		 */
 		_eventChain: function () {},
 		
+		/**
+		 * Trigger an event locally and up the chain.
+		 * 
+		 * @param {string} eventName name of event
+		 * @param data event data
+		 */
 		chainedTrigger: function (eventName, data) {
 			data = Objs.extend({
 				source: this,
@@ -226,20 +296,29 @@ Scoped.define("module:Events.EventsMixin", [
 				if (chain && chain.chainedTrigger)
 					chain.chainedTrigger(eventName, data);
 			}
+			return this;
 	    },
 	    
+		/**
+		 * Suspend all events until resumed.
+		 */
 	    suspendEvents: function () {
 	    	this.__suspendedEvents++;
+	    	return this;
 	    },
 	    
+		/**
+		 * Resume all events.
+		 */
 	    resumeEvents: function () {
 	    	this.__suspendedEvents--;
 	    	if (this.__suspendedEvents !== 0)
-	    		return;
+	    		return this;
 	    	Objs.iter(this.__suspendedEventsQueue, function (ev) {
 	    		this.trigger.apply(this, ev);
 	    	}, this);
 	    	this.__suspendedEventsQueue = [];
+	    	return this;
 	    }
 
 	};
@@ -247,44 +326,81 @@ Scoped.define("module:Events.EventsMixin", [
 
 
 Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixin"], function (Class, Mixin, scoped) {
+	/**
+	 * Events Class
+	 * 
+	 * @class BetaJS.Events.Events
+	 * @implements BetaJS.Events.EventsMixin
+	 */
 	return Class.extend({scoped: scoped}, Mixin);
 });
 
 
 Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], function (Ids, Objs) {
+	/**
+	 * Listen Mixin, automatically de-registering all listeners on destruction.
+	 * 
+	 * @mixin BetaJS.Events.ListenMixin
+	 */
 	return {
 
 		_notifications: {
 			"destroy": "listenOff" 
 		},
 
+		/**
+		 * Listen to an event.
+		 * 
+		 * @param {object} target target event emitter
+		 * @param {string} events event(s) to listen to
+		 * @param {function} callback event callback function
+		 * @param {object} options optional listener options
+		 */
 		listenOn: function (target, events, callback, options) {
 			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 			this.__listen_mixin_listen[Ids.objectId(target)] = target;
 			target.on(events, callback, this, options);
+			return this;
 		},
 
+		/**
+		 * Listen to an event once.
+		 * 
+		 * @param {object} target target event emitter
+		 * @param {string} events event(s) to listen to
+		 * @param {function} callback event callback function
+		 * @param {object} options optional listener options
+		 */
 		listenOnce: function (target, events, callback, options) {
 			if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
 			this.__listen_mixin_listen[Ids.objectId(target)] = target;
 			target.once(events, callback, this, options);
+			return this;
 		},
 
+		/**
+		 * Stop Listenning to an event.
+		 * 
+		 * @param {object} target target event emitter
+		 * @param {string} events event(s) to listen to
+		 * @param {function} callback event callback function
+		 */
 		listenOff: function (target, events, callback) {
 			if (!this.__listen_mixin_listen)
-				return;
+				return this;
 			if (target) {
 				target.off(events, callback, this);
 				if (!events && !callback)
 					delete this.__listen_mixin_listen[Ids.objectId(target)];
-			}
-			else
+			} else {
 				Objs.iter(this.__listen_mixin_listen, function (obj) {
 					if (obj && "off" in obj)
 						obj.off(events, callback, this);
 					if (!events && !callback)
 						delete this.__listen_mixin_listen[Ids.objectId(obj)];
 				}, this);
+			}
+			return this;
 		}		
 
 	};
@@ -292,5 +408,11 @@ Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], functi
 
 
 Scoped.define("module:Events.Listen", ["module:Class", "module:Events.ListenMixin"], function (Class, Mixin, scoped) {
+	/**
+	 * Listen Class
+	 * 
+	 * @class BetaJS.Events.Listen
+	 * @implements BetaJS.Events.ListenMixin
+	 */
 	return Class.extend({scoped: scoped}, Mixin);
 });

@@ -3,8 +3,20 @@ Scoped.define("module:Collections.MappedCollection", [
     "module:Functions"
 ], function (Collection, Functions, scoped) {
 	return Collection.extend({scoped: scoped}, function (inherited) {
+		
+		/**
+		 * The MappedCollection Class allows you to create a dynamic sub collection based on another Collection instance and a mapping function.
+		 * 
+		 * @class BetaJS.Collections.MappedCollection
+		 */
 		return {
 
+			/**
+			 * Instantiates a MappedCollection.
+			 * 
+			 * @param {object} parent Parent Collection
+			 * @param {object} options Standard Collection options, plus map and context
+			 */
 			constructor : function(parent, options) {
 				this.__parent = parent;
 				this.__parentToThis = {};
@@ -21,6 +33,9 @@ Scoped.define("module:Collections.MappedCollection", [
 				parent.iterate(this.__parentAdd, this);		
 			},
 			
+			/**
+			 * @override
+			 */
 			destroy: function () {
 				this.__parent.off(null, null, this);
 				inherited.destroy.call(this);

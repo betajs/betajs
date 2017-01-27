@@ -22,8 +22,8 @@ Scoped.define("module:Channels.SenderMultiplexer", ["module:Channels.Sender"], f
 				this.__prefix = prefix;
 			},
 						
-			_send: function (message, data) {
-				this.__sender.send(this.__prefix + ":" + message, data);
+			_send: function (message, data, serializerInfo) {
+				this.__sender.send(this.__prefix + ":" + message, data, serializerInfo);
 			}
 			
 		};

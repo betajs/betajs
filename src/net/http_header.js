@@ -8,11 +8,28 @@ Scoped.define("module:Net.HttpHeader", function () {
 		
 		HTTP_STATUS_OK : 200,
 		HTTP_STATUS_CREATED : 201,
+		HTTP_STATUS_BAD_REQUEST : 400,
+		HTTP_STATUS_UNAUTHORIZED: 401,
 		HTTP_STATUS_PAYMENT_REQUIRED : 402,
 		HTTP_STATUS_FORBIDDEN : 403,
 		HTTP_STATUS_NOT_FOUND : 404,
 		HTTP_STATUS_PRECONDITION_FAILED : 412,
 		HTTP_STATUS_INTERNAL_SERVER_ERROR : 500,
+		HTTP_STATUS_GATEWAY_TIMEOUT: 504,
+		
+		STRINGS: {
+			0: "Unknown Error",
+			200: "OK",
+			201: "Created",
+			400: "Bad Request",
+			401: "Unauthorized",
+			402: "Payment Required",
+			403: "Forbidden",
+			404: "Not found",
+			412: "Precondition Failed",
+			500: "Internal Server Error",
+			504: "Gateway timeout"
+		},
 		
 		
 		/**
@@ -24,24 +41,19 @@ Scoped.define("module:Net.HttpHeader", function () {
 		 * @return HTTP status code as a string.
 		 */
 		format: function (code, prepend_code) {
-			var ret = "";
-			if (code == this.HTTP_STATUS_OK)
-				ret = "OK";
-			else if (code == this.HTTP_STATUS_CREATED)
-				ret = "Created";
-			else if (code == this.HTTP_STATUS_PAYMENT_REQUIRED)
-				ret = "Payment Required";
-			else if (code == this.HTTP_STATUS_FORBIDDEN)
-				ret = "Forbidden";
-			else if (code == this.HTTP_STATUS_NOT_FOUND)
-				ret = "Not found";
-			else if (code == this.HTTP_STATUS_PRECONDITION_FAILED)
-				ret = "Precondition Failed";
-			else if (code == this.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-				ret = "Internal Server Error";
-			else
-				ret = "Other Error";
+			var ret = this.STRINGS[code in this.STRINGS ? code : 0];
 			return prepend_code ? (code + " " + ret) : ret;
+		},
+		
+		/**
+		 * Returns true if a status code is in the 200 region.
+		 * 
+		 * @param {int} code status code
+		 * 
+		 * @return {boolean} true if code in the 200 region
+		 */
+		isSuccessStatus: function (code) {
+			return code >= this.HTTP_STATUS_OK && code < 300;
 		}
 		
 	};

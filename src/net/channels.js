@@ -53,7 +53,7 @@ Scoped.define("module:Net.SocketReceiverChannel", ["module:Channels.Receiver"], 
 		/**
 		 * Socket Receiver Channel Class
 		 * 
-		 * @class SocketReceiverChannel
+		 * @class BetaJS.Net.SocketReceiverChannel
 		 */
 		return {
 						

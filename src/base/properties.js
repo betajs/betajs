@@ -4,10 +4,17 @@ Scoped.define("module:Properties.PropertiesMixin", [
 	"module:Strings",
 	"module:Types",
 	"module:Functions"
-	], function (Scopes, Objs, Strings, Types, Functions) {
-	
+], function (Scopes, Objs, Strings, Types, Functions) {
+
+	/**
+	 * Properties Mixin
+	 * 
+	 * @mixin BetaJS.Properties.PropertiesMixin
+	 */
 	return {
 			
+		__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
+		
 		_notifications: {
 			"construct": function () {
 				this.__properties = {
@@ -33,6 +40,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Objs.iter(this.__properties.bindings, function (value, key) {
 					this.unbind(key);
 				}, this);
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#destroy
+				 */
 				this.trigger("destroy");
 			},
 			"register_event": function (event) {
@@ -47,92 +57,6 @@ Scoped.define("module:Properties.PropertiesMixin", [
 						this.__unregisterWatcher(Strings.strip_start(event, eventType + ":"), eventType);
 				}, this);
 			}
-		},
-		
-		materializes: [],
-		
-		_resolveProps: function (key) {
-			var result = {
-				props: this,
-				key: key
-			};
-			var scope = this.data();
-			while (key) {
-				if (!scope || !Types.is_object(scope))
-					return result;
-				if (scope.__properties_guid === this.__properties_guid)
-					return scope._resolveProps(key);
-				var spl = Strings.splitFirst(key, ".");
-				if (!(spl.head in scope))
-					return result;
-				key = spl.tail;
-				scope = scope[spl.head];
-			}
-			return result;
-		},
-		
-		getProp: function (key) {
-			var resolved = this._resolveProps(key);
-			return resolved.props.get(resolved.key);
-		},
-		
-		setProp: function (key, value) {
-			var resolved = this._resolveProps(key);
-			resolved.props.set(resolved.key, value);
-		},
-		
-		uncomputeProp: function (key) {
-			var resolved = this._resolveProps(key);
-			return resolved.props.uncompute(resolved.key);
-		},
-		
-		computeProp: function (key, func) {
-			var resolved = this._resolveProps(key);
-			return resolved.props.compute(resolved.key, func);
-		},
-
-		get: function (key) {
-			return Scopes.get(key, this.__properties.data);
-		},
-		
-		_canSet: function (key, value) {
-			return true;
-		},
-		
-		_beforeSet: function (key, value) {
-			return value;
-		},
-		
-		_afterSet: function (key, value) {},
-		
-		has: function (key) {
-			return Scopes.has(key, this.__properties.data);
-		},
-		
-		setAll: function (obj) {
-			for (var key in obj)
-				this.set(key, obj[key]);
-			return this;
-		},
-		
-		keys: function (mapped) {
-			return Objs.keys(this.__properties.data, mapped);
-		},
-		
-		data: function () {
-			return this.__properties.data;
-		},
-		
-		getAll: function () {
-			return Objs.clone(this.__properties.data, 1);
-		},
-		
-		materializeAttr: function (attr) {
-			this[attr] = function (value) {
-				if (arguments.length === 0)
-					return this.get(attr);
-				this.set(attr, value);
-			};
 		},
 		
 		__registerWatcher: function (key, event) {
@@ -169,6 +93,299 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			}
 		},
 		
+		__unsetChanged: function (key, oldValue) {
+			/**
+			 * @event BetaJS.Properties.PropertiesMixin#unset
+			 */
+			this.trigger("unset", key, oldValue);
+			var keys = key ? key.split(".") : [];
+			var current = this.__properties.watchers;
+			var head = "";
+			var tail = key;
+			for (var i = 0; i < keys.length; ++i) {
+				if (current.eventCount > 0) {
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#deepunset
+					 */
+					this.trigger("deepunset:" + head, oldValue, tail);
+				}
+				if (!(keys[i] in current.children))
+					return this;
+				current = current.children[keys[i]];
+				head = head ? (head + "." + keys[i]) : keys[i];
+				tail = Strings.first_after(tail, ".");
+			}
+			function process_unset(current, key, oldValue) {
+				if (Types.is_undefined(oldValue))
+					return;
+				if (current.eventCount > 0) {
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#unset
+					 */
+					this.trigger("unset:" + key, oldValue);
+				}
+				Objs.iter(current.children, function (child, subkey) {
+					process_unset.call(this, child, key ? (key + "." + subkey) : subkey, oldValue[subkey]);
+				}, this);
+			}
+			process_unset.call(this, current, key, oldValue);
+			return this;
+		},
+		
+		__setChanged: function (key, value, oldValue, notStrong) {
+			/**
+			 * @event BetaJS.Properties.PropertiesMixin#change
+			 */
+			this.trigger("change", key, value, oldValue);
+			this._afterSet(key, value);
+			if (this.destroyed())
+				return;
+			var keys = key ? key.split(".") : [];
+			var current = this.__properties.watchers;
+			var head = "";
+			var tail = key;
+			for (var i = 0; i < keys.length; ++i) {
+				if (current.eventCount > 0) {
+					if (!notStrong) {
+						/**
+						 * @event BetaJS.Properties.PropertiesMixin#strongdeepchange
+						 */
+						this.trigger("strongdeepchange:" + head, value, oldValue, tail);
+					}
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#deepchange
+					 */
+					this.trigger("deepchange:" + head, value, oldValue, tail);
+				}
+				if (!(keys[i] in current.children))
+					return;
+				current = current.children[keys[i]];
+				head = head ? (head + "." + keys[i]) : keys[i];
+				tail = Strings.first_after(tail, ".");
+			}
+			function process_set(current, key, value, oldValue) {
+				if (value == oldValue)
+					return;
+				if (current.eventCount > 0) {
+					if (!notStrong) {
+						/**
+						 * @event BetaJS.Properties.PropertiesMixin#strongchange
+						 */
+						this.trigger("strongchange:" + key, value, oldValue);
+					}
+					/**
+					 * @event BetaJS.Properties.PropertiesMixin#change
+					 */
+					this.trigger("change:" + key, value, oldValue);
+				}
+				Objs.iter(current.children, function (child, subkey) {
+					process_set.call(this, child, key ? (key + "." + subkey) : subkey, Types.is_object(value) && value ? value[subkey] : null, Types.is_object(oldValue) && oldValue ? oldValue[subkey] : null);
+				}, this);
+			}
+			process_set.call(this, current, key, value, oldValue);
+		},
+
+		/**
+		 * Attributes that will be materialized upon initialization.
+		 */
+		materializes: [],
+		
+		/**
+		 * Resolve the scope associated with a key.
+		 * 
+		 * @param {string} key key to resolve
+		 * @return associated scope
+		 * 
+		 * @protected
+		 */
+		_resolveProps: function (key) {
+			var result = {
+				props: this,
+				key: key
+			};
+			var scope = this.data();
+			while (key) {
+				if (!scope || !Types.is_object(scope))
+					return result;
+				if (scope.__properties_guid === this.__properties_guid)
+					return scope._resolveProps(key);
+				var spl = Strings.splitFirst(key, ".");
+				if (!(spl.head in scope))
+					return result;
+				key = spl.tail;
+				scope = scope[spl.head];
+			}
+			return result;
+		},
+		
+		/**
+		 * Check whether a key can be set to a value.
+		 * 
+		 * @param {string} key key in question
+		 * @param value value in question
+		 * 
+		 * @return {boolean} true if can be set
+		 * 
+		 * @protected
+		 */
+		_canSet: function (key, value) {
+			return true;
+		},
+		
+		/**
+		 * Called before setting a value.
+		 * 
+		 * @param {string} key key in question
+		 * @param value value in question
+		 * 
+		 * @return value, possibly altered
+		 * 
+		 * @protected
+		 */
+		_beforeSet: function (key, value) {
+			return value;
+		},
+		
+		/**
+		 * Called after setting a value.
+		 * 
+		 * @param {string} key key in question
+		 * @param value value in question
+		 * 
+		 * @protected
+		 */
+		_afterSet: function (key, value) {},
+		
+		/**
+		 * Get value for key, resolving intermediate properties instances.
+		 * 
+		 * @param {string} key key to read
+		 * 
+		 * @return associated value
+		 */
+		getProp: function (key) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.get(resolved.key);
+		},
+		
+		/**
+		 * Set value for key, resolving intermediate properties instances.
+		 * 
+		 * @param {string} key to read
+		 * @param value value to write
+		 */
+		setProp: function (key, value) {
+			var resolved = this._resolveProps(key);
+			resolved.props.set(resolved.key, value);
+			return this;
+		},
+		
+		/**
+		 * Remove computation of a key.
+		 * 
+		 * @param {string} key key to remove computation for
+		 */
+		uncomputeProp: function (key) {
+			var resolved = this._resolveProps(key);
+			return resolved.props.uncompute(resolved.key);
+		},
+		
+		/**
+		 * Add computation of a key.
+		 * 
+		 * @param {string} key key to add computation for
+		 * @param {function} func function to compute the key
+		 */
+		computeProp: function (key, func) {
+			var resolved = this._resolveProps(key);
+			var args = Functions.getArguments(arguments);
+			args[0] = resolved.key;
+			return resolved.props.compute.apply(resolved.props.compute, args);
+		},
+
+		/**
+		 * Returns the value associated with a key.
+		 * 
+		 * @param {string} key key to read value for
+		 * 
+		 * @return value for key
+		 */
+		get: function (key) {
+			return Scopes.get(key, this.__properties.data);
+		},
+		
+		/**
+		 * Checks whether a key is set.
+		 * 
+		 * @param {string} key key in question
+		 * 
+		 * @return {boolean} true if key is set
+		 */
+		has: function (key) {
+			return Scopes.has(key, this.__properties.data);
+		},
+		
+		/**
+		 * Sets all attributes in a JSON object.
+		 * 
+		 * @param {object} obj JSON object data
+		 * 
+		 */
+		setAll: function (obj) {
+			for (var key in obj)
+				this.set(key, obj[key]);
+			return this;
+		},
+		
+		/**
+		 * Returns all keys of the instance, possibly mapped.
+		 * 
+		 * @param {function} mapped optional key mapping
+		 * 
+		 * @return {array} all keys
+		 */
+		keys: function (mapped) {
+			return Objs.keys(this.__properties.data, mapped);
+		},
+		
+		/**
+		 * Returns a data pointer to the raw data. Read only.
+		 * 
+		 * @return {object} data pointer
+		 */
+		data: function () {
+			return this.__properties.data;
+		},
+		
+		/**
+		 * Returns a raw data copy.
+		 * 
+		 * @return {object} raw data copy
+		 */
+		getAll: function () {
+			return Objs.clone(this.__properties.data, 1);
+		},
+		
+		/**
+		 * Materializes an attribute as a function.
+		 * 
+		 * @param {string} attr attribute to be materialized
+		 * 
+		 */
+		materializeAttr: function (attr) {
+			this[attr] = function (value) {
+				if (arguments.length === 0)
+					return this.get(attr);
+				this.set(attr, value);
+			};
+			return this;
+		},
+		
+		/**
+		 * Remove the computation of a key.
+		 * 
+		 * @param {string} key key for which the computation should be removed
+		 */
 		uncompute: function (key) {
 			if (key in this.__properties.computed) {
 				Objs.iter(this.__properties.computed[key].dependencies, function (dependency) {
@@ -179,6 +396,12 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			return this;
 		},
 		
+		/**
+		 * Add a computation for a key.
+		 * 
+		 * @param {string} key key to add computation for
+		 * @param {function} func function to compute the key
+		 */
 		compute: function (key, func) {
 			var args = Functions.matchArgs(arguments, 2, {
 				setter: "function",
@@ -237,6 +460,12 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			return this;
 		},
 		
+		/**
+		 * Removes a binding for a key and another properties instance.
+		 * 
+		 * @param {string} key key for which the binding should be removed
+		 * @param {object} props other properties instance
+		 */
 		unbind: function (key, props) {
 			if (key in this.__properties.bindings) {
 				for (var i = this.__properties.bindings[key].length - 1; i >= 0; --i) {
@@ -256,6 +485,13 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			return this;
 		},
 		
+		/**
+		 * Adds a binding for a key and another properties instance.
+		 * 
+		 * @param {string} key key for which the binding should be added
+		 * @param {object} props other properties instance
+		 * @param {object} options optional options
+		 */
 		bind: function (key, properties, options) {
 			options = Objs.extend({
 				secondKey: key,
@@ -337,71 +573,12 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			}, binding);
 			return this;
 		},
-		
-		__unsetChanged: function (key, oldValue) {
-			this.trigger("unset", key, oldValue);
-			var keys = key ? key.split(".") : [];
-			var current = this.__properties.watchers;
-			var head = "";
-			var tail = key;
-			for (var i = 0; i < keys.length; ++i) {
-				if (current.eventCount > 0)
-					this.trigger("deepunset:" + head, oldValue, tail);
-				if (!(keys[i] in current.children))
-					return this;
-				current = current.children[keys[i]];
-				head = head ? (head + "." + keys[i]) : keys[i];
-				tail = Strings.first_after(tail, ".");
-			}
-			function process_unset(current, key, oldValue) {
-				if (Types.is_undefined(oldValue))
-					return;
-				if (current.eventCount > 0)
-					this.trigger("unset:" + key, oldValue);
-				Objs.iter(current.children, function (child, subkey) {
-					process_unset.call(this, child, key ? (key + "." + subkey) : subkey, oldValue[subkey]);
-				}, this);
-			}
-			process_unset.call(this, current, key, oldValue);
-			return this;
-		},
-		
-		__setChanged: function (key, value, oldValue, notStrong) {
-			this.trigger("change", key, value, oldValue);
-			this._afterSet(key, value);
-			if (this.destroyed())
-				return;
-			var keys = key ? key.split(".") : [];
-			var current = this.__properties.watchers;
-			var head = "";
-			var tail = key;
-			for (var i = 0; i < keys.length; ++i) {
-				if (current.eventCount > 0) {
-					if (!notStrong)
-						this.trigger("strongdeepchange:" + head, value, oldValue, tail);
-					this.trigger("deepchange:" + head, value, oldValue, tail);
-				}
-				if (!(keys[i] in current.children))
-					return;
-				current = current.children[keys[i]];
-				head = head ? (head + "." + keys[i]) : keys[i];
-				tail = Strings.first_after(tail, ".");
-			}
-			function process_set(current, key, value, oldValue) {
-				if (value == oldValue)
-					return;
-				if (current.eventCount > 0) {
-					if (!notStrong)
-						this.trigger("strongchange:" + key, value, oldValue);
-					this.trigger("change:" + key, value, oldValue);
-				}
-				Objs.iter(current.children, function (child, subkey) {
-					process_set.call(this, child, key ? (key + "." + subkey) : subkey, Types.is_object(value) && value ? value[subkey] : null, Types.is_object(oldValue) && oldValue ? oldValue[subkey] : null);
-				}, this);
-			}
-			process_set.call(this, current, key, value, oldValue);
-		},
-		
+				
+		/**
+		 * Removes a key from the properties instance.
+		 * 
+		 * @param {string} key key to be removed
+		 */
 		unset: function (key) {
 			if (this.has(key)) {
 				var oldValue = this.get(key);
@@ -411,8 +588,13 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			return this;
 		},
 		
-		__properties_guid: "ec816b66-7284-43b1-a945-0600c6abfde3",
-		
+		/**
+		 * Sets a key in the properties instance.
+		 * 
+		 * @param {string} key key to be set
+		 * @param value value to be set
+		 * @param {boolean} force optional force argument
+		 */
 		set: function (key, value, force) {
 			if (Types.is_object(value) && value && value.guid == this.__properties_guid) {
 				if (value.properties)
@@ -427,12 +609,21 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				Scopes.set(key, value, this.__properties.data);
 				this.__setChanged(key, value, oldValue);
 			} else if (force) {
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#change
+				 */
 				this.trigger("change", key, value, oldValue, true);
+				/**
+				 * @event BetaJS.Properties.PropertiesMixin#change
+				 */
 				this.trigger("change:" + key, value, oldValue, true);
 			}
 			return this;
 		},
 		
+		/**
+		 * @deprecated
+		 */
 		binding: function (key) {
 			return {
 				guid: this.__properties_guid,
@@ -441,6 +632,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
 			};
 		},
 		
+		/**
+		 * @deprecated
+		 */
 		computed : function (f, dependencies) {
 			return {
 				guid: this.__properties_guid,
@@ -448,15 +642,34 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				dependencies: dependencies
 			};
 		},
-		
+
+		/**
+		 * Returns the properties unique id.
+		 * 
+		 * @return {string} unique properties id
+		 */
 		pid: function () {
 			return this.cid();
 		},
 		
+		/**
+		 * Checks whether this properties instance is a subset of another properties instance.
+		 *  
+		 * @param {object} props another properties instance or JSON object
+		 * 
+		 * @return {boolean} true if this instance is a subset of the other properties object
+		 */
 		isSubsetOf: function (props) {
 			return Objs.subset_of(this.data(), props.data ? props.data() : props);
 		},
 		
+		/**
+		 * Checks whether this properties instance is a superset of another properties instance.
+		 *  
+		 * @param {object} props another properties instance or JSON object
+		 * 
+		 * @return {boolean} true if this instance is a superset of the other properties object
+		 */
 		isSupersetOf: function (props) {
 			return Objs.superset_of(this.data(), props.data ? props.data() : props);
 		}
@@ -466,13 +679,26 @@ Scoped.define("module:Properties.PropertiesMixin", [
 
 
 Scoped.define("module:Properties.Properties", [
-	    "module:Class",
-	    "module:Objs",
-	    "module:Events.EventsMixin",
-	    "module:Properties.PropertiesMixin"
-	], function (Class, Objs, EventsMixin, PropertiesMixin, ReferenceCounterMixin, scoped) {
+    "module:Class",
+    "module:Objs",
+    "module:Events.EventsMixin",
+    "module:Properties.PropertiesMixin"
+], function (Class, Objs, EventsMixin, PropertiesMixin, ReferenceCounterMixin, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, PropertiesMixin, ReferenceCounterMixin, function (inherited) {
+		
+		/**
+		 * Properties Class
+		 * 
+		 * @class BetaJS.Properties.Properties
+		 */
 		return {
+			
+			/**
+			 * Creates a new instance.
+			 * 
+			 * @param {object} obj optional initial attributes
+			 * @param {array} materializes optional initial attributes that should be materialized
+			 */
 			constructor: function (obj, materializes) {
 				inherited.constructor.call(this);
 				if (obj)
@@ -483,6 +709,7 @@ Scoped.define("module:Properties.Properties", [
 					}, this);
 				}
 			}
+		
 		};
 	}]);
 });

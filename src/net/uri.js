@@ -46,18 +46,25 @@ Scoped.define("module:Net.Uri", [
 		 * 
 		 * @param {object} arr a key-value set of query parameters
 		 * @param {string} prefix an optional prefix to be used for generating the keys
+		 * @param {boolean} flatten flatten the components first
 		 * 
 		 * @return {string} encoded query parameters
 		 */
-		encodeUriParams: function (arr, prefix) {
+		encodeUriParams: function (arr, prefix, flatten) {
 			prefix = prefix || "";
 			var res = [];
-			Objs.iter(arr, function (value, key) {
-				if (Types.is_object(value))
-					res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
-				else
-					res.push(prefix + key + "=" + encodeURIComponent(value));
-			}, this);
+			if (flatten) {
+				Objs.iter(Objs.serializeFlatJSON(arr), function (kv) {
+					res.push(prefix + kv.key + "=" + encodeURIComponent(kv.value));
+				}, this);
+			} else {
+                Objs.iter(arr, function (value, key) {
+                	if (Types.is_object(value))
+                		res = res.concat(this.encodeUriParams(value, prefix + key + "_"));
+                    else
+                        res.push(prefix + key + "=" + encodeURIComponent(value));
+                }, this);
+			}
 			return res.join("&");
 		},
 		
@@ -114,6 +121,29 @@ Scoped.define("module:Net.Uri", [
 				if ($1) uri.queryKey[$1] = $2;
 			});
 			return uri;
+		},
+		
+		/**
+		 * Determines whether a target URI is considered cross-domain with respect to a source URI.
+		 * 
+		 * @param {string} source source URI
+		 * @param {string} target target URI
+		 * 
+		 * @return {boolean} true if target is cross-domain w.r.t. source
+		 */
+		isCrossDomainUri: function (source, target) {
+			// If target has no protocol delimiter, there is no domain given, hence source domain is used
+			if (target.indexOf("//") < 0)
+				return false;
+			// If source has no protocol delimiter but target has, it is cross-domain.
+			if (source.indexOf("//") < 0)
+				return true;
+			source = this.parse(source.toLowerCase());
+			target = this.parse(target.toLowerCase());
+			// Terminate if one of protocols is the file protocol.
+			if (source.protocol === "file" || target.protocol === "file")
+				return source.protocol === target.protocol;
+			return source.host !== target.host || source.port !== target.port;
 		}
 			
 	};

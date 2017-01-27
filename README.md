@@ -1,7 +1,8 @@
-# betajs 1.0.59
+# betajs 1.0.96
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
-
+[![NPM](https://img.shields.io/npm/v/betajs.svg?style=flat)](https://www.npmjs.com/package/betajs)
+[![Gitter Chat](https://badges.gitter.im/betajs/betajs.svg)](https://gitter.im/betajs/betajs)
 
 BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.
 
@@ -131,22 +132,22 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | Repository | [https://github.com/betajs/betajs](https://github.com/betajs/betajs) |
 | Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
 | Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
- 
+| Gitter     | [https://gitter.im/betajs/betajs](https://gitter.im/betajs/betajs) | 
 
 
 
 ## Compatability
 | Target | Versions |
 | :----- | -------: |
-| Firefox | 4 - Latest |
+| Firefox | 3 - Latest |
 | Chrome | 15 - Latest |
 | Safari | 4 - Latest |
 | Opera | 12 - Latest |
 | Internet Explorer | 6 - Latest |
 | Edge | 12 - Latest |
-| iOS | 7.0 - Latest |
-| Android | 4.0 - Latest |
-| NodeJS | 0.10 - Latest |
+| iOS | 3.0 - Latest |
+| Android | 2.2 - Latest |
+| NodeJS | 0.11 - Latest |
 
 
 ## CDN
@@ -189,5 +190,10 @@ This software may include modified and unmodified portions of:
 
 
 
+
+## Sponsors
+
+- Ziggeo
+- Browserstack
 
 
