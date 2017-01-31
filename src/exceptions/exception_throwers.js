@@ -91,7 +91,7 @@ Scoped.define("module:Exceptions.ConsoleExceptionThrower", [
 			 * @override
 			 */
 			_throwException: function (e) {
-				console.log("Exception", NativeException.ensure(e).json());
+				console.log("Exception", e.toString());
 			}
 		
 		};
