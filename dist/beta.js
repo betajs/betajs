@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.97 - 2017-01-31
+betajs - v1.0.98 - 2017-02-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.97 - 2017-01-31
+betajs - v1.0.98 - 2017-02-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.97"
+    "version": "1.0.98"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -7212,7 +7212,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return Strings.padZeros(Time.timeComponentGet(t, "month") + 1, 2);
 			},
 			"m": function (t) {
-				return Time.timeComponentGet(t, "month");
+				return Time.timeComponentGet(t, "month") + 1;
 			},
 			"d+": function (t) {
 				return Time.timeComponent(t, "day", "floor");

@@ -85,7 +85,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
 				return Strings.padZeros(Time.timeComponentGet(t, "month") + 1, 2);
 			},
 			"m": function (t) {
-				return Time.timeComponentGet(t, "month");
+				return Time.timeComponentGet(t, "month") + 1;
 			},
 			"d+": function (t) {
 				return Time.timeComponent(t, "day", "floor");
