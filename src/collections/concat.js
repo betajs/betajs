@@ -24,7 +24,8 @@ Scoped.define("module:Collections.ConcatCollection", [
 				this.__itemToParent = {};
 				options = options || {};
 				delete options.objects;
-				options.compare = Functions.as_method(this.__compareByParent, this);
+				if (!options.compare)
+					options.compare = Functions.as_method(this.__compareByParent, this);
 				inherited.constructor.call(this, options);				
 				var idx = 0;
 				Objs.iter(parents, function (parent) {
