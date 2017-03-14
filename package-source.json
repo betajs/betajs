@@ -13,6 +13,7 @@
 		"grunt-preprocess": "",
 		"grunt-closure-tools": "",
 		"grunt-node-qunit": "",
+		"grunt-githooks": "",
 		"qunit": "",
 		"grunt-jsdoc": "",
 		"grunt-shell": "",

@@ -31,13 +31,14 @@ module.exports = function(grunt) {
 	.readmeTask()
     .licenseTask()
     .packageTask()
+	.githookTask(null, "pre-commit", "check")
     
     /* Documentation */
     .docsTask();
-	
-	grunt.initConfig(gruntHelper.config);	
 
-	grunt.registerTask('default', ['package', 'readme', 'license', 'codeclimate', 'travis', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
+	grunt.initConfig(gruntHelper.config);
+
+	grunt.registerTask('default', ['package', 'githook', 'readme', 'license', 'codeclimate', 'travis', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
 	grunt.registerTask('check', ['lint', 'qunit']);
 
 };
