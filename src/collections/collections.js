@@ -458,6 +458,24 @@ Scoped.define("module:Collections.Collection", [
 			 */
 			increase_forwards: function (steps) {
 				return Promise.error(true);
+			},
+
+            /**
+			 * Returns the first item in the collection.
+			 *
+             * @returns {Object} first item
+             */
+			first: function () {
+				return this.getByIndex(0);
+			},
+
+            /**
+			 * Returns the last item in the collection
+			 *
+             * @returns {Object} last item
+             */
+			last: function () {
+				return this.getByIndex(this.count() - 1);
 			}
 			
 		};
