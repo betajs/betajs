@@ -11,3 +11,4 @@ jsdoc.conf.json
 .idea/
 /.idea
 browserstack-run.pid
+*.log
