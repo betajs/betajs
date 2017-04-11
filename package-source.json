@@ -21,7 +21,8 @@
 		"grunt-benchmark": "",
 	    "grunt-betajs-docs-compile":"~0.0.19",
 	    "betajs-scoped": "~0.0.13",
-	    "betajs-compile": "~0.0.28"
+	    "betajs-compile": "~0.0.28",
+		"js-beautify": ""
 	},
 	"main": "dist/beta.js",
 	"repository": {

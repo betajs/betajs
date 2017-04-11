@@ -13,6 +13,7 @@ module.exports = function(grunt) {
     .concatTask('concat-scoped', [require.resolve('betajs-scoped'), 'dist/' + dist + '-noscoped.js'], 'dist/' + dist + '.js')
     .uglifyTask('uglify-noscoped', 'dist/' + dist + '-noscoped.js', 'dist/' + dist + '-noscoped.min.js')
     .uglifyTask('uglify-scoped', 'dist/' + dist + '.js', 'dist/' + dist + '.min.js')
+	.jsbeautifyTask(null, "src/**/*.js")
 
     /* Testing */
     .qunitTask(null, './dist/' + dist + '.js', grunt.file.expand('./tests/*/*.js'))
@@ -38,7 +39,7 @@ module.exports = function(grunt) {
 
 	grunt.initConfig(gruntHelper.config);
 
-	grunt.registerTask('default', ['package', 'githook', 'readme', 'license', 'codeclimate', 'travis', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
+	grunt.registerTask('default', ['package', 'githook', 'readme', 'license', 'codeclimate', 'travis', "jsbeautify", 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
 	grunt.registerTask('check', ['lint', 'qunit']);
 
 };
