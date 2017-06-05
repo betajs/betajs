@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.101 - 2017-04-11
+betajs - v1.0.101 - 2017-06-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -2108,7 +2108,11 @@ Scoped.define("module:IdGenerators.IdGenerator", ["module:Class"], function(Clas
         scoped: scoped
     }, {
 
-        generate: function() {}
+        generate: function() {},
+
+        valid: function(id) {
+            return false;
+        }
 
     });
 });
@@ -2128,6 +2132,10 @@ Scoped.define("module:IdGenerators.PrefixedIdGenerator", ["module:IdGenerators.I
 
             generate: function() {
                 return this.__prefix + this.__generator.generate();
+            },
+
+            valid: function(id) {
+                return id.indexOf(this.__prefix) === 0 && this.__generator.valid(id.substring(this.__prefix.lengt));
             }
 
         };
@@ -2148,6 +2156,10 @@ Scoped.define("module:Ids.RandomIdGenerator", ["module:IdGenerators.IdGenerator"
 
             generate: function() {
                 return Tokens.generate_token(this.__length);
+            },
+
+            valid: function(id) {
+                return id.length === this.__length;
             }
 
         };
@@ -2169,6 +2181,10 @@ Scoped.define("module:IdGenerators.ConsecutiveIdGenerator", ["module:IdGenerator
             generate: function() {
                 this.__current++;
                 return this.__current;
+            },
+
+            valid: function(id) {
+                return !isNaN(id);
             }
 
         };
@@ -2191,6 +2207,10 @@ Scoped.define("module:IdGenerators.TimedIdGenerator", ["module:IdGenerators.IdGe
                 var now = Time.now();
                 this.__current = now > this.__current ? now : (this.__current + 1);
                 return this.__current;
+            },
+
+            valid: function(id) {
+                return !isNaN(id);
             }
 
         };
