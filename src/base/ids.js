@@ -69,9 +69,9 @@ Scoped.define("module:IdGenerators.IdGenerator", ["module:Class"], function(Clas
         scoped: scoped
     }, {
 
-        generate: function() {},
+        generate: function(ctx) {},
 
-        valid: function(id) {
+        valid: function(id, ctx) {
             return false;
         }
 
@@ -91,12 +91,12 @@ Scoped.define("module:IdGenerators.PrefixedIdGenerator", ["module:IdGenerators.I
                 this.__generator = generator;
             },
 
-            generate: function() {
-                return this.__prefix + this.__generator.generate();
+            generate: function(ctx) {
+                return this.__prefix + this.__generator.generate(ctx);
             },
 
-            valid: function(id) {
-                return id.indexOf(this.__prefix) === 0 && this.__generator.valid(id.substring(this.__prefix.lengt));
+            valid: function(id, ctx) {
+                return id.indexOf(this.__prefix) === 0 && this.__generator.valid(id.substring(this.__prefix.length), ctx);
             }
 
         };
@@ -115,11 +115,11 @@ Scoped.define("module:Ids.RandomIdGenerator", ["module:IdGenerators.IdGenerator"
                 this.__length = length || 16;
             },
 
-            generate: function() {
+            generate: function(ctx) {
                 return Tokens.generate_token(this.__length);
             },
 
-            valid: function(id) {
+            valid: function(id, ctx) {
                 return id.length === this.__length;
             }
 
@@ -139,12 +139,12 @@ Scoped.define("module:IdGenerators.ConsecutiveIdGenerator", ["module:IdGenerator
                 this.__current = initial || 0;
             },
 
-            generate: function() {
+            generate: function(ctx) {
                 this.__current++;
                 return this.__current;
             },
 
-            valid: function(id) {
+            valid: function(id, ctx) {
                 return !isNaN(id);
             }
 
@@ -164,13 +164,13 @@ Scoped.define("module:IdGenerators.TimedIdGenerator", ["module:IdGenerators.IdGe
                 this.__current = Time.now() - 1;
             },
 
-            generate: function() {
+            generate: function(ctx) {
                 var now = Time.now();
                 this.__current = now > this.__current ? now : (this.__current + 1);
                 return this.__current;
             },
 
-            valid: function(id) {
+            valid: function(id, ctx) {
                 return !isNaN(id);
             }
 
