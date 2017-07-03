@@ -98,3 +98,25 @@ test("test persistent events", function() {
 	QUnit.equal(y, 1);
 	QUnit.equal(z, 1);
 });
+
+
+test("test persistent events 2", function() {
+    var e = new BetaJS.Events.Events();
+    e.trigger("event1");
+    var x = 0;
+    e.on("event1", function () {
+        x++;
+    });
+    var y = 0;
+    var z = 0;
+    e.on("event2", function () {
+        y++;
+        e.on("event2", function () {
+            z++;
+        });
+    });
+    e.persistentTrigger("event2");
+    QUnit.equal(x, 0);
+    QUnit.equal(y, 1);
+    QUnit.equal(z, 1);
+});

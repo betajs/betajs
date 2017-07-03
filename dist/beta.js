@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.103 - 2017-06-12
+betajs - v1.0.104 - 2017-07-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.103 - 2017-06-12
+betajs - v1.0.104 - 2017-07-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.103"
+    "version": "1.0.104"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2700,14 +2700,13 @@ Scoped.define("module:Events.EventsMixin", [
          * @param {string} events events to be triggered
          */
         persistentTrigger: function(events) {
-            this.trigger.apply(this, arguments);
-            events = events.split(this.EVENT_SPLITTER);
             var rest = Functions.getArguments(arguments, 1);
             this.__events_mixin_persistent_events = this.__events_mixin_persistent_events || [];
-            Objs.iter(events, function(event) {
+            Objs.iter(events.split(this.EVENT_SPLITTER), function(event) {
                 this.__events_mixin_persistent_events[event] = this.__events_mixin_persistent_events[event] || [];
                 this.__events_mixin_persistent_events[event].push(rest);
             }, this);
+            this.trigger.apply(this, arguments);
             return this;
         },
 
@@ -12987,6 +12986,54 @@ Scoped.define("module:Net.SocketReceiverChannel", ["module:Channels.Receiver"], 
 
         };
     });
+});
+Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Objs, Types) {
+    return {
+
+        getCookielikeValue: function(cookies, key) {
+            return decodeURIComponent(cookies.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
+        },
+
+        createCookielikeValue: function(key, value, end, path, domain, secure) {
+            if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key))
+                return null;
+            var components = [];
+            components.push([encodeURIComponent(key), encodeURIComponent(value)]);
+            if (end) {
+                if (end === Infinity)
+                    components.push(["expires", "Fri, 31 Dec 9999 23:59:59 GMT"]);
+                else if (typeof end === "number")
+                    components.push(["max-age", end]);
+                else if (typeof end === "object")
+                    components.push(["expires", end.toUTCString()]);
+                else
+                    components.push(["expires", end]);
+            }
+            if (domain)
+                components.push(["domain", domain]);
+            if (path)
+                components.push(["path", path]);
+            if (secure)
+                components.push("secure");
+            return Objs.map(components, function(component) {
+                return Types.is_array(component) ? component.join("=") : component;
+            }).join("; ");
+        },
+
+        removeCookielikeValue: function(key, value, path, domain) {
+            return this.createCookielikeValue(key, value, new Date(0), path, domain);
+        },
+
+        hasCookielikeValue: function(cookies, key) {
+            return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(cookies);
+        },
+
+        keysCookielike: function(cookies) {
+            var base = cookies.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+            return Objs.map(base, decodeURIComponent);
+        }
+
+    };
 });
 Scoped.define("module:Net.HttpHeader", function() {
     /**

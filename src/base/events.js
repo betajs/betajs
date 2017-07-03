@@ -228,14 +228,13 @@ Scoped.define("module:Events.EventsMixin", [
          * @param {string} events events to be triggered
          */
         persistentTrigger: function(events) {
-            this.trigger.apply(this, arguments);
-            events = events.split(this.EVENT_SPLITTER);
             var rest = Functions.getArguments(arguments, 1);
             this.__events_mixin_persistent_events = this.__events_mixin_persistent_events || [];
-            Objs.iter(events, function(event) {
+            Objs.iter(events.split(this.EVENT_SPLITTER), function(event) {
                 this.__events_mixin_persistent_events[event] = this.__events_mixin_persistent_events[event] || [];
                 this.__events_mixin_persistent_events[event].push(rest);
             }, this);
+            this.trigger.apply(this, arguments);
             return this;
         },
 
