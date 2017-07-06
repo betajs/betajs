@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.104 - 2017-07-02
+betajs - v1.0.105 - 2017-07-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.104 - 2017-07-02
+betajs - v1.0.105 - 2017-07-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.104"
+    "version": "1.0.105"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -12991,6 +12991,7 @@ Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Ob
     return {
 
         getCookielikeValue: function(cookies, key) {
+            cookies = cookies || "";
             return decodeURIComponent(cookies.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
         },
 

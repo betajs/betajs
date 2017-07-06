@@ -2,6 +2,7 @@ Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Ob
     return {
 
         getCookielikeValue: function(cookies, key) {
+            cookies = cookies || "";
             return decodeURIComponent(cookies.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
         },
 
