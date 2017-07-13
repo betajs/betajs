@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.105 - 2017-07-05
+betajs - v1.0.106 - 2017-07-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.105 - 2017-07-05
+betajs - v1.0.106 - 2017-07-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1015,7 +1015,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.105"
+    "version": "1.0.106"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2207,7 +2207,7 @@ Scoped.define("module:Classes.ObjectIdScope", [
     }, Mixin, function(inherited) {
 
         /**
-         * Objecct Id Scope Class
+         * Object Id Scope Class
          * 
          * @class BetaJS.Classes.ObjectIdScope
          */
@@ -2261,6 +2261,69 @@ Scoped.define("module:Classes.ObjectIdMixin", [
         }
 
     };
+});
+
+
+Scoped.define("module:Classes.SharedObjectFactory", [
+    "module:Class"
+], function(Class, scoped) {
+    return Class.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Shared Object Factory Class
+         *
+         * @class BetaJS.Classes.SharedObjectFactory
+         */
+        return {
+
+            /**
+             * Creates a new factory.
+             *
+             * @param {function} createCallback callback function for creating an instance
+             * @param {object} createContext optional callback context
+             */
+            constructor: function(createCallback, createContext) {
+                inherited.constructor.call(this);
+                this.__createCallback = createCallback;
+                this.__createContext = createContext;
+                this.__object = null;
+            },
+
+            /**
+             * @override
+             */
+            destroy: function() {
+                if (this.__object && !this.__object.destroyed())
+                    this.__object.destroy();
+                inherited.destroy.call(this);
+            },
+
+            /**
+             * Acquire object instance.
+             *
+             * @returns {object} shared object instance
+             */
+            acquire: function() {
+                if (!this.__object || this.__object.destroyed())
+                    this.__object = this.__createCallback.call(this.__createContext || this);
+                this.__object.increaseRef();
+                return this.__object;
+            },
+
+            /**
+             * Release object instance.
+             *
+             * @param {object} obj object instance
+             */
+            release: function(obj) {
+                if (obj && obj === this.__object && !obj.destroyed())
+                    obj.decreaseRef();
+            }
+
+        };
+    });
 });
 Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properties"], function(Types, Properties) {
 

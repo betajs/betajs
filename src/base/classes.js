@@ -271,7 +271,7 @@ Scoped.define("module:Classes.ObjectIdScope", [
     }, Mixin, function(inherited) {
 
         /**
-         * Objecct Id Scope Class
+         * Object Id Scope Class
          * 
          * @class BetaJS.Classes.ObjectIdScope
          */
@@ -325,4 +325,70 @@ Scoped.define("module:Classes.ObjectIdMixin", [
         }
 
     };
+});
+
+
+Scoped.define("module:Classes.SharedObjectFactory", [
+    "module:Class"
+], function(Class, scoped) {
+    return Class.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Shared Object Factory Class
+         *
+         * @class BetaJS.Classes.SharedObjectFactory
+         */
+        return {
+
+            /**
+             * Creates a new factory.
+             *
+             * @param {function} createCallback callback function for creating an instance
+             * @param {object} createContext optional callback context
+             */
+            constructor: function(createCallback, createContext) {
+                inherited.constructor.call(this);
+                this.__createCallback = createCallback;
+                this.__createContext = createContext;
+                this.__object = null;
+            },
+
+            /**
+             * @override
+             */
+            destroy: function() {
+                if (this.__object && !this.__object.destroyed())
+                    this.__object.destroy();
+                inherited.destroy.call(this);
+            },
+
+            /**
+             * Acquire object instance.
+             *
+             * @param {object} reference optional reference
+             *
+             * @returns {object} shared object instance
+             */
+            acquire: function(reference) {
+                if (!this.__object || this.__object.destroyed())
+                    this.__object = this.__createCallback.call(this.__createContext || this);
+                this.__object.increaseRef(reference);
+                return this.__object;
+            },
+
+            /**
+             * Release object instance.
+             *
+             * @param {object} obj object instance
+             * @param {object} reference optional reference
+             */
+            release: function(obj, reference) {
+                if (obj && obj === this.__object && !obj.destroyed())
+                    obj.decreaseRef(obj);
+            }
+
+        };
+    });
 });
