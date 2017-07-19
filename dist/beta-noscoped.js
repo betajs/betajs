@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.106 - 2017-07-13
+betajs - v1.0.107 - 2017-07-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.106"
+    "version": "1.0.107"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1296,14 +1296,25 @@ Scoped.define("module:Classes.SharedObjectFactory", [
             },
 
             /**
-             * Acquire object instance.
+             * Return object instance.
              *
              * @returns {object} shared object instance
              */
-            acquire: function() {
+            value: function() {
+                return this.__object && !this.__object.destroyed() ? this.__object : null;
+            },
+
+            /**
+             * Acquire object instance.
+             *
+             * @param {object} reference optional reference
+             *
+             * @returns {object} shared object instance
+             */
+            acquire: function(reference) {
                 if (!this.__object || this.__object.destroyed())
                     this.__object = this.__createCallback.call(this.__createContext || this);
-                this.__object.increaseRef();
+                this.__object.increaseRef(reference);
                 return this.__object;
             },
 
@@ -1311,10 +1322,11 @@ Scoped.define("module:Classes.SharedObjectFactory", [
              * Release object instance.
              *
              * @param {object} obj object instance
+             * @param {object} reference optional reference
              */
-            release: function(obj) {
+            release: function(obj, reference) {
                 if (obj && obj === this.__object && !obj.destroyed())
-                    obj.decreaseRef();
+                    obj.decreaseRef(obj);
             }
 
         };

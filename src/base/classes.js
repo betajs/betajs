@@ -365,6 +365,15 @@ Scoped.define("module:Classes.SharedObjectFactory", [
             },
 
             /**
+             * Return object instance.
+             *
+             * @returns {object} shared object instance
+             */
+            value: function() {
+                return this.__object && !this.__object.destroyed() ? this.__object : null;
+            },
+
+            /**
              * Acquire object instance.
              *
              * @param {object} reference optional reference
