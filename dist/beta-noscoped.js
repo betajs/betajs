@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.107 - 2017-07-18
+betajs - v1.0.108 - 2017-07-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.107"
+    "version": "1.0.108"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1587,7 +1587,7 @@ Scoped.define("module:Events.EventsMixin", [
                     fire: function() {
                         if (obj.max_delay)
                             obj.max_delay.stop();
-                        obj.callback.apply(obj.context || this, obj.params);
+                        this._invokeCallback(obj.callback, obj.context || this, obj.params);
                     }
                 });
             if (options.max_delay)
@@ -1599,7 +1599,7 @@ Scoped.define("module:Events.EventsMixin", [
                     fire: function() {
                         if (obj.min_delay)
                             obj.min_delay.stop();
-                        obj.callback.apply(obj.context || this, obj.params);
+                        this._invokeCallback(obj.callback, obj.context || this, obj.params);
                     }
                 });
             return obj;
@@ -1612,16 +1612,31 @@ Scoped.define("module:Events.EventsMixin", [
                 object.max_delay.destroy();
         },
 
+        /**
+         * @protected
+         *
+         * Invoke event callback
+         *
+         * @param {function} callback event callback function
+         * @param {object} context callback context
+         * @param {array} params parameters
+         */
+        _invokeCallback: function(callback, context, params) {
+            callback.apply(context, params);
+        },
+
         __call_event_object: function(object, params) {
             if (object.min_delay)
                 object.min_delay.restart();
             if (object.max_delay)
                 object.max_delay.start();
             if (!object.min_delay && !object.max_delay) {
-                if (object.eventually)
-                    Async.eventually(object.callback, params, object.context || this);
-                else
-                    object.callback.apply(object.context || this, params);
+                if (object.eventually) {
+                    Async.eventually(function() {
+                        this._invokeCallback(object.callback, object.context || this, params);
+                    }, this);
+                } else
+                    this._invokeCallback(object.callback, object.context || this, params);
             } else
                 object.params = params;
         },
