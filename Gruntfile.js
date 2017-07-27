@@ -16,7 +16,7 @@ module.exports = function(grunt) {
 	.jsbeautifyTask(null, "src/**/*.js")
 
     /* Testing */
-    .qunitTask(null, './dist/' + dist + '.js', grunt.file.expand('./tests/*/*.js'))
+    .qunitjsTask(null, ['dist/' + dist + '.js', 'tests/'])
     .closureTask(null, [require.resolve('betajs-scoped'), "./dist/" + dist + "-noscoped.js"])
     .browserqunitTask(null, "tests/tests.html")
     .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: true})
@@ -40,6 +40,6 @@ module.exports = function(grunt) {
 	grunt.initConfig(gruntHelper.config);
 
 	grunt.registerTask('default', ['package', 'githook', 'readme', 'license', 'codeclimate', 'travis', "jsbeautify", 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
-	grunt.registerTask('check', ['lint', 'qunit']);
+	grunt.registerTask('check', ['lint', 'qunitjs']);
 
 };

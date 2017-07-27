@@ -1,5 +1,6 @@
-test("test channels 1", function() {
-	stop();
+
+QUnit.test("test channels 1", function(assert) {
+	var done = assert.async();
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
 	var sender_x = new BetaJS.Channels.ReceiverSender(receiver_y);
@@ -10,13 +11,17 @@ test("test channels 1", function() {
 		return BetaJS.Promise.eventualValue("return:" + message);
 	};
 	transport_x.send("test").success(function(result) {
-		QUnit.equal(result, "return:test");
-		start();
+		assert.equal(result, "return:test");
+		done();
+		BetaJS.Async.eventually(function () {
+            transport_x.destroy();
+            transport_y.destroy();
+		});
 	});
 });
 
-test("test channels 2", function() {
-	stop();stop();
+QUnit.test("test channels 2", function(assert) {
+	var done = assert.async(2);
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
 	var sender_x = new BetaJS.Channels.ReceiverSender(receiver_y);
@@ -29,15 +34,21 @@ test("test channels 2", function() {
 		return BetaJS.Promise.eventualValue("return:" + message);
 	};
 	transport_x.send("test").success(function(result) {
-		QUnit.equal(result, "return:test");
-		start();
+		assert.equal(result, "return:test");
+		done();
 	});
 	transport_b._reply = function(message, data) {
 		return BetaJS.Promise.eventualValue("ret:" + message);
 	};
 	transport_a.send("foo").success(function(result) {
-		QUnit.equal(result, "ret:foo");
-		start();
+		assert.equal(result, "ret:foo");
+		done();
+        BetaJS.Async.eventually(function () {
+        	transport_x.destroy();
+            transport_y.destroy();
+            transport_a.destroy();
+            transport_b.destroy();
+        });
 	});
 });
 

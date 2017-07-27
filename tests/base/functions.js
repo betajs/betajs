@@ -1,4 +1,4 @@
-test("test as_method", function() {
+QUnit.test("test as_method", function(assert) {
 	var Obj = {
 		a: 1,
 		
@@ -8,5 +8,5 @@ test("test as_method", function() {
 	};
 	
 	var func = BetaJS.Functions.as_method(Obj.test, Obj);
-	ok(func() == 1);
+	assert.ok(func() == 1);
 });

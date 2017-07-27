@@ -1,4 +1,4 @@
-test("test tree query engine", function() {
+QUnit.test("test tree query engine", function(assert) {
 	
 	var root = {
 		name: "root",
@@ -73,7 +73,7 @@ test("test tree query engine", function() {
 	var engine = new BetaJS.Trees.TreeQueryEngine(SimpleTree);
 	var query = engine.query(root, ">>");
 	
-	QUnit.deepEqual(query.result(), [leftleft, leftright]);
+	assert.deepEqual(query.result(), [leftleft, leftright]);
 
 	var leftmid = SimpleTree.nodeAddNode(left, "mid", {other: "value"});
 	
@@ -81,37 +81,37 @@ test("test tree query engine", function() {
 		return BetaJS.Ids.objectId(x) > BetaJS.Ids.objectId(y) ? 1 : -1;
 	};
 
-	QUnit.deepEqual(query.result(), [leftleft, leftright, leftmid]);
+	assert.deepEqual(query.result(), [leftleft, leftright, leftmid]);
 	
 	SimpleTree.nodeRemoveNode(leftleft);
 	
-	QUnit.deepEqual(query.result(), [leftright, leftmid]);
+	assert.deepEqual(query.result(), [leftright, leftmid]);
 	
 	leftleft = SimpleTree.nodeAddNode(left, "left", {test: "tester"});
 	
-	QUnit.deepEqual(query.result().sort(cmp), [leftright, leftmid, leftleft].sort(cmp));
+	assert.deepEqual(query.result().sort(cmp), [leftright, leftmid, leftleft].sort(cmp));
 	
 	var query2 = engine.query(root, ">>[label='foobar']");
 	
-	QUnit.deepEqual(query2.result(), []);
+	assert.deepEqual(query2.result(), []);
 	
 	var query2x = engine.query(root, '>>[label="foobar"]');
 	
-	QUnit.deepEqual(query2x.result(), []);
+	assert.deepEqual(query2x.result(), []);
 
 	SimpleTree.nodeSetData(leftleft, "label", "foobar");
 	
-	QUnit.deepEqual(query2.result(), [leftleft]);
+	assert.deepEqual(query2.result(), [leftleft]);
 	
 	var query3 = engine.query(leftleft, "<");
 	
-	QUnit.deepEqual(query3.result(), [left]);
+	assert.deepEqual(query3.result(), [left]);
 
 	var query4 = engine.query(left, "><");
 	
-	QUnit.deepEqual(query4.result(), [left]);
+	assert.deepEqual(query4.result(), [left]);
 	
 	var query5 = engine.query(leftleft, "<+");
 	
-	QUnit.deepEqual(query5.result(), [root, left]);
+	assert.deepEqual(query5.result(), [root, left]);
 });

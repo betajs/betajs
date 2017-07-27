@@ -1,19 +1,19 @@
 
-test("test route parser", function() {
+QUnit.test("test route parser", function(assert) {
 	var routeParser = new BetaJS.Router.RouteParser({
 		"simple": "/simple",
 		"polymorphic": "/polymorphic/(key:first|second)"
 	});
-	QUnit.deepEqual(routeParser.parse("/foobar"), null);
-	QUnit.deepEqual(routeParser.parse("/simple"), {name: "simple", args: {}});
-	QUnit.deepEqual(routeParser.parse("/polymorphic/first"), {name: "polymorphic", args: {key: "first"}});
-	QUnit.deepEqual(routeParser.parse("/polymorphic/second"), {name: "polymorphic", args: {key: "second"}});
-	QUnit.equal(routeParser.format("simple"), "/simple");
-	QUnit.equal(routeParser.format("polymorphic", {key: "first"}), "/polymorphic/first");
-	QUnit.equal(routeParser.format("polymorphic", {key: "second"}), "/polymorphic/second");
+	assert.deepEqual(routeParser.parse("/foobar"), null);
+	assert.deepEqual(routeParser.parse("/simple"), {name: "simple", args: {}});
+	assert.deepEqual(routeParser.parse("/polymorphic/first"), {name: "polymorphic", args: {key: "first"}});
+	assert.deepEqual(routeParser.parse("/polymorphic/second"), {name: "polymorphic", args: {key: "second"}});
+	assert.equal(routeParser.format("simple"), "/simple");
+	assert.equal(routeParser.format("polymorphic", {key: "first"}), "/polymorphic/first");
+	assert.equal(routeParser.format("polymorphic", {key: "second"}), "/polymorphic/second");
 });
 
-test("test router", function () {
+QUnit.test("test router", function (assert) {
 	var router = new BetaJS.Router.Router();
 	var result_simple = false;
 	router.bind("simple", "/simple", function () {
@@ -24,24 +24,24 @@ test("test router", function () {
 		result_poly = args.key;
 	});
 	router.navigate("/simple");
-	QUnit.equal(result_simple, true);
+	assert.equal(result_simple, true);
 	router.navigate("/polymorphic/second");
-	QUnit.equal(result_poly, "second");	
+	assert.equal(result_poly, "second");
 });
 
-test("test router history", function () {
+QUnit.test("test router history", function (assert) {
 	var router = new BetaJS.Router.Router();
 	router.bind("simple", "/simple");
 	router.bind("polymorphic", "/polymorphic/(key:first|second)");
 	var history = new BetaJS.Router.RouterHistory(router);
 	router.navigate("/simple");
 	router.navigate("/polymorphic/second");
-	QUnit.equal(history.count(), 2);
+	assert.equal(history.count(), 2);
 	history.back();
-	QUnit.equal(router.current().name, "simple");
+	assert.equal(router.current().name, "simple");
 });
 
-test("test router with states", function () {
+QUnit.test("test router with states", function (assert) {
 	var router = new BetaJS.Router.Router();
 	var host = new BetaJS.States.Host();
 	var binder = new BetaJS.Router.StateRouteBinder(router, host, {
@@ -52,12 +52,12 @@ test("test router with states", function () {
 	binder.register("polymorphic", "/polymorphic/(key:first|second)");
 	
 	router.navigate("/simple");	
-	QUnit.equal(host.state().state_name(), "Simple");
+	assert.equal(host.state().state_name(), "Simple");
 	router.navigate("/polymorphic/second");
-	QUnit.equal(host.state().state_name(), "Polymorphic");
-	QUnit.equal(host.get("key"), "second");
+	assert.equal(host.state().state_name(), "Polymorphic");
+	assert.equal(host.get("key"), "second");
 	host.next("Simple");
-	QUnit.equal(router.current().route, "/simple");
+	assert.equal(router.current().route, "/simple");
 	host.next("Polymorphic", {key: "first"});
-	QUnit.equal(router.current().route, "/polymorphic/first");
+	assert.equal(router.current().route, "/polymorphic/first");
 });

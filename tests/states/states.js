@@ -1,27 +1,27 @@
-test("test states w register", function() {
+QUnit.test("test states w register", function(assert) {
 	var host = new BetaJS.States.Host();
 	host.register("A", {});
 	host.register("B", {});
 	host.initialize("A");
-	QUnit.equal(host.state().state_name(), "A");
+	assert.equal(host.state().state_name(), "A");
 	host.state().next("B");
-	QUnit.equal(host.state().state_name(), "B");
+	assert.equal(host.state().state_name(), "B");
 	host.destroy();
 });
 
-test("test states w extend", function() {
+QUnit.test("test states w extend", function(assert) {
 	var host = new BetaJS.States.Host();
 	var S = BetaJS.States.State.extend("BetaJS.Test.S");
 	var A = S.extend("BetaJS.Test.A");
 	var B = S.extend("BetaJS.Test.B");
 	host.initialize("BetaJS.Test.A");
-	QUnit.equal(host.state().state_name(), "A");
+	assert.equal(host.state().state_name(), "A");
 	host.state().next("B");
-	QUnit.equal(host.state().state_name(), "B");
+	assert.equal(host.state().state_name(), "B");
 	host.destroy();
 });
 
-test("test states w router", function () {
+QUnit.test("test states w router", function (assert) {
 	var host = new BetaJS.States.Host();
 	var S = BetaJS.States.State.extend("BetaJS.Test.S");
 	var A = S.extend("BetaJS.Test.A");
@@ -33,14 +33,14 @@ test("test states w router", function () {
 	router.registerRoute("c", "C");
 	host.initialize("BetaJS.Test.A");
 	host.state().host.set("x", 42);
-	QUnit.equal(router.currentRoute(), "a");
+	assert.equal(router.currentRoute(), "a");
 	router.navigateRoute("c");
-	QUnit.equal(host.state().state_name(), "C");
-	QUnit.equal(host.get("x"), 42);
+	assert.equal(host.state().state_name(), "C");
+	assert.equal(host.get("x"), 42);
 	host.destroy();
 });
 
-test("test states host attributes", function() {
+QUnit.test("test states host attributes", function(assert) {
 	var host = new BetaJS.States.Host();
 	var S = BetaJS.States.State.extend("BetaJS.Test.S");
 	var A = S.extend("BetaJS.Test.A");
@@ -48,10 +48,10 @@ test("test states host attributes", function() {
 	host.initialize("BetaJS.Test.A", {
 		foobar: 42
 	});
-	QUnit.equal(host.get("foobar"), 42);
+	assert.equal(host.get("foobar"), 42);
 	host.state().next("B", {
 		test: 123
 	});
-	QUnit.equal(host.get("foobar"), undefined);
-	QUnit.equal(host.get("test"), 123);
+	assert.equal(host.get("foobar"), undefined);
+	assert.equal(host.get("test"), 123);
 });

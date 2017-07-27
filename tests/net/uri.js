@@ -1,24 +1,24 @@
-test("test encode uri params", function () {
-	QUnit.equal(BetaJS.Net.Uri.encodeUriParams({
+QUnit.test("test encode uri params", function (assert) {
+	assert.equal(BetaJS.Net.Uri.encodeUriParams({
 		foo: "bar",
 		test: "tester"
 	}), "foo=bar&test=tester");
-	QUnit.equal(BetaJS.Net.Uri.encodeUriParams({
+	assert.equal(BetaJS.Net.Uri.encodeUriParams({
 		foo: "Simon&Garfunkel",
 		test: "tester"
 	}), "foo=Simon%26Garfunkel&test=tester");
 });
 
 
-test("cross domain check", function () {
-	QUnit.equal(BetaJS.Net.Uri.isCrossDomainUri("http://a.com/test", "http://b.com/test"), true);
-	QUnit.equal(BetaJS.Net.Uri.isCrossDomainUri("http://a.com/test", "http://a.com/foobar"), false);	
-	QUnit.equal(BetaJS.Net.Uri.isCrossDomainUri("http://a.com/test", "/foobar"), false);
+QUnit.test("cross domain check", function (assert) {
+	assert.equal(BetaJS.Net.Uri.isCrossDomainUri("http://a.com/test", "http://b.com/test"), true);
+	assert.equal(BetaJS.Net.Uri.isCrossDomainUri("http://a.com/test", "http://a.com/foobar"), false);
+	assert.equal(BetaJS.Net.Uri.isCrossDomainUri("http://a.com/test", "/foobar"), false);
 });
 
 
-test("test encode uri params nested", function () {
-	QUnit.equal(BetaJS.Net.Uri.encodeUriParams({
+QUnit.test("test encode uri params nested", function (assert) {
+	assert.equal(BetaJS.Net.Uri.encodeUriParams({
 	    "a": "foo",
 	    "b": 5,
 	    "c": {"d": "a long string"},

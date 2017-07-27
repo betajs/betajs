@@ -1,5 +1,5 @@
 
-test("test context registry", function () {
+QUnit.test("test context registry", function (assert) {
 	
 	var registry = new BetaJS.Classes.ContextRegistry();
 	var datas = [];
@@ -17,15 +17,15 @@ test("test context registry", function () {
 		});
 	}
 	
-	QUnit.deepEqual(registry.register(datas[0], ctxs[0]), datas[0]);
-	QUnit.deepEqual(registry.register(datas[0], ctxs[1]), null);
-	QUnit.deepEqual(registry.register(datas[1], ctxs[1]), datas[1]);
-	QUnit.deepEqual(registry.register(datas[1], ctxs[0]), null);
-	QUnit.deepEqual(registry.register(datas[2], ctxs[2]), datas[2]);
-	QUnit.deepEqual(registry.register(datas[3], ctxs[2]), datas[3]);
-	QUnit.deepEqual(registry.unregister(datas[1], ctxs[0]), []);
-	QUnit.deepEqual(registry.unregister(datas[1], ctxs[1]), [datas[1]]);
-	QUnit.deepEqual(registry.unregister(datas[0], null), [datas[0]]);
-	QUnit.deepEqual(registry.unregister(null, ctxs[2]), [datas[2], datas[3]]);
+	assert.deepEqual(registry.register(datas[0], ctxs[0]), datas[0]);
+	assert.deepEqual(registry.register(datas[0], ctxs[1]), null);
+	assert.deepEqual(registry.register(datas[1], ctxs[1]), datas[1]);
+	assert.deepEqual(registry.register(datas[1], ctxs[0]), null);
+	assert.deepEqual(registry.register(datas[2], ctxs[2]), datas[2]);
+	assert.deepEqual(registry.register(datas[3], ctxs[2]), datas[3]);
+	assert.deepEqual(registry.unregister(datas[1], ctxs[0]), []);
+	assert.deepEqual(registry.unregister(datas[1], ctxs[1]), [datas[1]]);
+	assert.deepEqual(registry.unregister(datas[0], null), [datas[0]]);
+	assert.deepEqual(registry.unregister(null, ctxs[2]), [datas[2], datas[3]]);
 	
 });

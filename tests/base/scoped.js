@@ -1,3 +1,3 @@
-test("test unresolved", function () {
-	QUnit.deepEqual(Scoped.unresolved("global:BetaJS"), []);
+QUnit.test("test unresolved", function (assert) {
+	assert.deepEqual(Scoped.unresolved("global:BetaJS"), []);
 });

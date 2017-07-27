@@ -1,3 +1,3 @@
-test("infinity", function () {
-	QUnit.equal(!Infinity, false);
+QUnit.test("infinity", function (assert) {
+	assert.equal(!Infinity, false);
 });

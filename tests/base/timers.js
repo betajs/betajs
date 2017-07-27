@@ -1,4 +1,4 @@
-function test_timer(options, expected_time, check) {
+function test_timer(options, expected_time, check, assert) {
 	var count = 0;
 	var multiplier = 10;
 	try {
@@ -13,37 +13,37 @@ function test_timer(options, expected_time, check) {
 		}
 	}));
 	
-	stop();
+	var done = assert.async();
 	setTimeout(function () {
-		QUnit.equal(count, timer.fire_count(), "matching fire count");
+		assert.equal(count, timer.fire_count(), "matching fire count");
 		check(count);
-		start();
+		done();
 	}, expected_time * multiplier);
 }
 
 
-test("timer once", function () {
+QUnit.test("timer once", function (assert) {
 	
 	test_timer({once: true, delay: 1}, 1, function (count) {
-		QUnit.equal(count, 1, "expected fire count");
-	});
+		assert.equal(count, 1, "expected fire count");
+	}, assert);
 	
 });
 
 
-test("timer fire_max", function () {
+QUnit.test("timer fire_max", function (assert) {
 	
 	test_timer({delay: 1, fire_max: 5}, 5, function (count) {
-		QUnit.equal(count, 5, "expected fire count");
-	});
+		assert.equal(count, 5, "expected fire count");
+	}, assert);
 	
 });
 
 
-test("timer duration", function () {
+QUnit.test("timer duration", function (assert) {
 	
 	test_timer({delay: 1, duration: 5}, 5, function (count) {
-		ok(count <= 5, "expected fire count");
-	});
+		assert.ok(count <= 5, "expected fire count");
+	}, assert);
 	
 });

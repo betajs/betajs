@@ -140,12 +140,13 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | Target | Versions |
 | :----- | -------: |
 | Firefox | 3 - Latest |
-| Chrome | 15 - Latest |
+| Chrome | 18 - Latest |
 | Safari | 4 - Latest |
 | Opera | 12 - Latest |
 | Internet Explorer | 6 - Latest |
 | Edge | 12 - Latest |
 | iOS | 3.0 - Latest |
+| Yandex | Latest |
 | Android | 2.2 - Latest |
 | NodeJS | 0.11 - Latest |
 

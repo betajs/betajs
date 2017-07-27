@@ -1,4 +1,4 @@
-test("test rmi", function() {
+QUnit.test("test rmi", function(assert) {
 	var Stub = BetaJS.RMI.Stub.extend("", {
 		intf : ["test", "failTest"]
 	});
@@ -10,7 +10,7 @@ test("test rmi", function() {
 		test : function(a, b, c) {
 			return a + b + c;
 		},
-		
+
 		failTest: function () {
 			throw "Failed";
 		}
@@ -23,23 +23,24 @@ test("test rmi", function() {
 	stub.__send = function () {
 		return skeleton.invoke.apply(skeleton, arguments);
 	};
-	
-	stop();
+
+	assert.expect(2);
+	var done1 = assert.async();
+    var done2 = assert.async();
 
 	stub.test(1, 2, 3).success(function(result) {
-		QUnit.equal(result, 6);
-		start();
+		assert.equal(result, 6);
+		done1();
 	});
-	
-	stop();
+
 	stub.failTest().error(function (err) {
-		QUnit.equal(err, "Failed");
-		start();
+		assert.equal(err, "Failed");
+		done2();
 	});
 
 });
 
-test("test rmi client server", function() {
+QUnit.test("test rmi client server", function(assert) {
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
 	var sender_x = new BetaJS.Channels.ReceiverSender(receiver_y);
@@ -67,7 +68,7 @@ test("test rmi client server", function() {
 		test2 : function(a, b, c) {
 			return a + b + c + this.__d;
 		},
-		
+
 		failTest: function () {
 			throw "Failed";
 		}
@@ -87,34 +88,42 @@ test("test rmi client server", function() {
 
 	var stub_x = client.acquire(Stub, "x");
 	var stub_y = client.acquire(Stub, "y");
-	
-	stop(); stop(); stop(); stop();
+
+	assert.expect(4);
+	var done1 = assert.async();
+    var done2 = assert.async();
+    var done3 = assert.async();
+    var done4 = assert.async();
 
 	stub_x.test(1, 2, 3).success(function(result) {
-		QUnit.equal(result, 106);
-		start();
+		assert.equal(result, 106);
+		done1();
 	});
 
 	stub_x.test2(1, 2, 3).success(function(result) {
-		QUnit.equal(result, 106);
-		start();
+		assert.equal(result, 106);
+		done2();
 	});
 
 	stub_y.test(1, 2, 3).success(function(result) {
-		QUnit.equal(result, 1006);
-		start();
+		assert.equal(result, 1006);
+		done3();
 	});
-	
+
 	stub_x.failTest().error(function (err) {
-		QUnit.equal(err, "Failed");
-		start();
+		assert.equal(err, "Failed");
+		done4();
+        BetaJS.Async.eventually(function () {
+        	transport_x.destroy();
+        	transport_y.destroy();
+        });
 	});
 
 });
 
 
 
-test("test rmi client server create instance", function() {
+QUnit.test("test rmi client server create instance", function(assert) {
 	var receiver_x = new BetaJS.Channels.Receiver();
 	var receiver_y = new BetaJS.Channels.Receiver();
 	var sender_x = new BetaJS.Channels.ReceiverSender(receiver_y);
@@ -160,7 +169,11 @@ test("test rmi client server create instance", function() {
 	var stub = client.acquire(Stub, "generator");
 	stub.generate().success(function (x) {
 		x.foo().success(function (y) {
-			QUnit.equal(y, "bar");
+			assert.equal(y, "bar");
+            BetaJS.Async.eventually(function () {
+                transport_x.destroy();
+                transport_y.destroy();
+            });
 		});
 	});
 

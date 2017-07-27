@@ -1,4 +1,4 @@
-test("test object inheritance", function() {
+QUnit.test("test object inheritance", function(assert) {
 	var A = BetaJS.Class.extend(null, {
 		test: function (x) {
 			return x + "a";
@@ -20,12 +20,12 @@ test("test object inheritance", function() {
 		}
 	});
 	var e = new E();
-	ok(e.test("g") == "geecca" && e.test2() == "z");
-	ok(e.instance_of(B) && !B.ancestor_of(C));
+	assert.ok(e.test("g") == "geecca" && e.test2() == "z");
+	assert.ok(e.instance_of(B) && !B.ancestor_of(C));
 });
 
 
-test("test object inheritance 2", function() {
+QUnit.test("test object inheritance 2", function(assert) {
 	var A = BetaJS.Class.extend(null, {
 		test: function (x) {
 			return x + "a";
@@ -51,13 +51,13 @@ test("test object inheritance 2", function() {
 		};
 	});
 	var e = new E();
-	QUnit.equal(e.test("g"), "geecca");
-	QUnit.equal(e.test2(), "z");
-	ok(e.instance_of(B) && !B.ancestor_of(C));
+	assert.equal(e.test("g"), "geecca");
+	assert.equal(e.test2(), "z");
+	assert.ok(e.instance_of(B) && !B.ancestor_of(C));
 });
 
 
-test("test constructor & destructor", function() {
+QUnit.test("test constructor & destructor", function(assert) {
 	var A = BetaJS.Class.extend(null, {
 		_notifications: {
 			"construct": "__z"
@@ -85,17 +85,17 @@ test("test constructor & destructor", function() {
 		}
 	});
 	var b = new B(1, 2);
-	QUnit.equal(b.x, 1);
-	QUnit.equal(b.y, 2);
-	QUnit.equal(b.z, 3);
+	assert.equal(b.x, 1);
+	assert.equal(b.y, 2);
+	assert.equal(b.z, 3);
 	b.destroy();
-	QUnit.equal(typeof b.x, "undefined");
-	QUnit.equal(typeof b.y, "undefined");
-	QUnit.equal(typeof b.z, "undefined");
+	assert.equal(typeof b.x, "undefined");
+	assert.equal(typeof b.y, "undefined");
+	assert.equal(typeof b.z, "undefined");
 });
 
 
-test("test notifications", function() {
+QUnit.test("test notifications", function(assert) {
 	var A = BetaJS.Class.extend(null, {
 		_notifications: {
 			"test": "test_a"
@@ -117,10 +117,10 @@ test("test notifications", function() {
 	});
 	var b = new B();
 	b.test();
-	ok(b.x == 1 && b.y == 2);
+	assert.ok(b.x == 1 && b.y == 2);
 });
 
-test("test static inheritance", function() {
+QUnit.test("test static inheritance", function(assert) {
 	var A = BetaJS.Class.extend(null, {}, {
 		test: function (x) {
 			return x + "a";
@@ -141,29 +141,29 @@ test("test static inheritance", function() {
 			return x + "e" + this._inherited(E, "test", "e");
 		}
 	});
-	ok(E.test("g") == "geecca" && E.test2() == "z");
+	assert.ok(E.test("g") == "geecca" && E.test2() == "z");
 });
 
-test("test static variables", function() {
+QUnit.test("test static variables", function(assert) {
 	var A = BetaJS.Class.extend(null, {}, {
 		obj: {x: 1}
 	});
 	var B = A.extend(null);
 	A.obj.x = 5;
-	ok(B.obj.x == 5);
+	assert.ok(B.obj.x == 5);
 });
 
-test("test class static variables", function() {
+QUnit.test("test class static variables", function(assert) {
 	var A = BetaJS.Class.extend(null, {}, {}, {
 		obj: {x: 1}
 	});
 	var B = A.extend(null);
 	A.obj.x = 5;
-	ok(B.obj.x == 1);
+	assert.ok(B.obj.x == 1);
 });
 
 
-test("test inheritance", function() {
+QUnit.test("test inheritance", function(assert) {
 	var A = BetaJS.Class.extend(null, {
 		constructor: function () {
 			this._inherited(A, "constructor");
@@ -179,22 +179,22 @@ test("test inheritance", function() {
 		}
 	});
 	var instance = new C();
-	ok(instance.y == 1);
-	ok(instance.x == 1);
+	assert.ok(instance.y == 1);
+	assert.ok(instance.x == 1);
 });
 
 
-test("test weak destroy", function () {	
+QUnit.test("test weak destroy", function (assert) {
 	var obj = new BetaJS.Class();
-	QUnit.equal(obj.destroyed(), false);
+	assert.equal(obj.destroyed(), false);
 	obj.weakDestroy();
-	QUnit.equal(obj.destroyed(), true);
+	assert.equal(obj.destroyed(), true);
 	obj.weakDestroy();
 });
 
-test("test implements", function () {
+QUnit.test("test implements", function (assert) {
 	var obj = new BetaJS.Class();
-	QUnit.equal(obj.impl(BetaJS.Events.EventsMixin), false);
+	assert.equal(obj.impl(BetaJS.Events.EventsMixin), false);
 	obj = new BetaJS.Properties.Properties();
-	QUnit.equal(obj.impl(BetaJS.Events.EventsMixin), true);
+	assert.equal(obj.impl(BetaJS.Events.EventsMixin), true);
 });
