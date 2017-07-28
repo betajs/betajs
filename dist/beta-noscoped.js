@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.108 - 2017-07-19
+betajs - v1.0.108 - 2017-07-28
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -7659,7 +7659,8 @@ Scoped.define("module:Channels.TransportChannel", [
                 if (this.__sent[data.id]) {
                     var promise = this.__sent[data.id].promise;
                     promise[data.success ? "asyncSuccess" : "asyncError"](data.reply);
-                    delete this.__sent[data.id];
+                    if (this.__sent)
+                        delete this.__sent[data.id];
                 }
             },
 

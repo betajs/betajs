@@ -136,7 +136,8 @@ Scoped.define("module:Channels.TransportChannel", [
                 if (this.__sent[data.id]) {
                     var promise = this.__sent[data.id].promise;
                     promise[data.success ? "asyncSuccess" : "asyncError"](data.reply);
-                    delete this.__sent[data.id];
+                    if (this.__sent)
+                        delete this.__sent[data.id];
                 }
             },
 
