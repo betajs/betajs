@@ -789,6 +789,21 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function(Types) {
                 scope = scope[keys[i]];
             }
             return scope[keys[keys.length - 1]];
+        },
+
+        /**
+         * Initializes an array with pre-computed values using a callback function.
+         *
+         * @param {int} count number of elements to be generated
+         * @param {function} callback function for computing the elements
+         * @param {object} context optional context
+         * @returns {array} generated array
+         */
+        initArray: function(count, callback, context) {
+            var result = [];
+            for (var i = 0; i < count; ++i)
+                result.push(callback.call(context || this, i));
+            return result;
         }
 
     };

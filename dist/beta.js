@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.108 - 2017-07-28
+betajs - v1.0.110 - 2017-08-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.108 - 2017-07-28
+betajs - v1.0.110 - 2017-08-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.108"
+    "version": "1.0.110"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4978,6 +4978,21 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function(Types) {
                 scope = scope[keys[i]];
             }
             return scope[keys[keys.length - 1]];
+        },
+
+        /**
+         * Initializes an array with pre-computed values using a callback function.
+         *
+         * @param {int} count number of elements to be generated
+         * @param {function} callback function for computing the elements
+         * @param {object} context optional context
+         * @returns {array} generated array
+         */
+        initArray: function(count, callback, context) {
+            var result = [];
+            for (var i = 0; i < count; ++i)
+                result.push(callback.call(context || this, i));
+            return result;
         }
 
     };
@@ -5126,6 +5141,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
             "destroy": function() {
                 Objs.iter(this.__properties.bindings, function(value, key) {
                     this.unbind(key);
+                }, this);
+                Objs.iter(this.__properties.computed, function(value, key) {
+                    this.uncompute(key);
                 }, this);
                 /**
                  * @event BetaJS.Properties.PropertiesMixin#destroy
@@ -5479,6 +5497,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
             if (key in this.__properties.computed) {
                 Objs.iter(this.__properties.computed[key].dependencies, function(dependency) {
                     dependency.properties.off("change:" + dependency.key, null, dependency);
+                    if (dependency.value && !dependency.value.destroyed())
+                        dependency.value.off("change update", null, dependency);
                 }, this);
                 delete this.__properties.computed[key];
             }
@@ -5536,15 +5556,18 @@ Scoped.define("module:Properties.PropertiesMixin", [
                 var value = dep.properties.get(dep.key);
                 // Ugly way of checking whether an EventsMixin is present - please improve in the future on this
                 if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+                    dep.value = value;
                     value.on("change update", function() {
                         recompute();
                     }, dep);
                 }
                 dep.properties.on("change:" + dep.key, function(value, oldValue) {
+                    dep.value = null;
                     if (oldValue && typeof oldValue == "object" && "on" in oldValue && "off" in oldValue && "trigger" in oldValue) {
                         oldValue.off("change update", null, dep);
                     }
                     if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+                        dep.value = value;
                         value.on("change update", function() {
                             recompute();
                         }, dep);

@@ -40,6 +40,9 @@ Scoped.define("module:Properties.PropertiesMixin", [
                 Objs.iter(this.__properties.bindings, function(value, key) {
                     this.unbind(key);
                 }, this);
+                Objs.iter(this.__properties.computed, function(value, key) {
+                    this.uncompute(key);
+                }, this);
                 /**
                  * @event BetaJS.Properties.PropertiesMixin#destroy
                  */
@@ -392,6 +395,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
             if (key in this.__properties.computed) {
                 Objs.iter(this.__properties.computed[key].dependencies, function(dependency) {
                     dependency.properties.off("change:" + dependency.key, null, dependency);
+                    if (dependency.value && !dependency.value.destroyed())
+                        dependency.value.off("change update", null, dependency);
                 }, this);
                 delete this.__properties.computed[key];
             }
@@ -449,15 +454,18 @@ Scoped.define("module:Properties.PropertiesMixin", [
                 var value = dep.properties.get(dep.key);
                 // Ugly way of checking whether an EventsMixin is present - please improve in the future on this
                 if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+                    dep.value = value;
                     value.on("change update", function() {
                         recompute();
                     }, dep);
                 }
                 dep.properties.on("change:" + dep.key, function(value, oldValue) {
+                    dep.value = null;
                     if (oldValue && typeof oldValue == "object" && "on" in oldValue && "off" in oldValue && "trigger" in oldValue) {
                         oldValue.off("change update", null, dep);
                     }
                     if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
+                        dep.value = value;
                         value.on("change update", function() {
                             recompute();
                         }, dep);
