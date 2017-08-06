@@ -27,6 +27,9 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__groupby = options.groupby;
                 this.__groupbyCompute = options.groupbyCompute;
                 this.__keepEmptyGroups = options.keepEmptyGroups;
+                this.__autoIncreaseGroups = options.autoIncreaseGroups;
+                this.__generateGroupData = options.generateGroupData;
+                this.__nogaps = options.nogaps;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
                 this.__callbackContext = options.context || this;
@@ -63,6 +66,12 @@ Scoped.define("module:Collections.GroupedCollection", [
                     group.items = group.auto_destroy(new Collection());
                     group.setAll(query);
                     this.add(group);
+                    if (this.__nogaps) {
+                        if (group !== this.last())
+                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), 1), true);
+                        if (group !== this.first())
+                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), -1), true);
+                    }
                 }
                 return group;
             },
@@ -95,7 +104,34 @@ Scoped.define("module:Collections.GroupedCollection", [
              * @override
              */
             increase_forwards: function(steps) {
-                return this.__parent.increase_forwards(steps);
+                var current = this.__parent.count();
+                return this.__parent.increase_forwards(steps).success(function() {
+                    if (!this.__autoIncreaseGroups)
+                        return;
+                    var delta = this.__parent.count() - current;
+                    var current = this.last();
+                    while (delta < steps) {
+                        current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), 1), true);
+                        delta++;
+                    }
+                }, this);
+            },
+
+            /**
+             * @override
+             */
+            increase_backwards: function(steps) {
+                var current = this.__parent.count();
+                return this.__parent.increase_backwards(steps).success(function() {
+                    if (!this.__autoIncreaseGroups)
+                        return;
+                    var delta = this.__parent.count() - current;
+                    var current = this.first();
+                    while (delta < steps) {
+                        current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), -1), true);
+                        delta++;
+                    }
+                }, this);
             },
 
             __insertObject: function(object, group) {

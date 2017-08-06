@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.111 - 2017-08-06
+betajs - v1.0.112 - 2017-08-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.111"
+    "version": "1.0.112"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9163,6 +9163,15 @@ Scoped.define("module:Collections.Collection", [
             },
 
             /**
+             * Increase the view of the collection by a number of steps backwards.
+             *
+             * @param {int} steps Steps to increase
+             */
+            increase_backwards: function(steps) {
+                return Promise.error(true);
+            },
+
+            /**
              * Returns the first item in the collection.
              *
              * @returns {Object} first item
@@ -9406,6 +9415,9 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__groupby = options.groupby;
                 this.__groupbyCompute = options.groupbyCompute;
                 this.__keepEmptyGroups = options.keepEmptyGroups;
+                this.__autoIncreaseGroups = options.autoIncreaseGroups;
+                this.__generateGroupData = options.generateGroupData;
+                this.__nogaps = options.nogaps;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
                 this.__callbackContext = options.context || this;
@@ -9442,6 +9454,12 @@ Scoped.define("module:Collections.GroupedCollection", [
                     group.items = group.auto_destroy(new Collection());
                     group.setAll(query);
                     this.add(group);
+                    if (this.__nogaps) {
+                        if (group !== this.last())
+                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), 1), true);
+                        if (group !== this.first())
+                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), -1), true);
+                    }
                 }
                 return group;
             },
@@ -9474,7 +9492,34 @@ Scoped.define("module:Collections.GroupedCollection", [
              * @override
              */
             increase_forwards: function(steps) {
-                return this.__parent.increase_forwards(steps);
+                var current = this.__parent.count();
+                return this.__parent.increase_forwards(steps).success(function() {
+                    if (!this.__autoIncreaseGroups)
+                        return;
+                    var delta = this.__parent.count() - current;
+                    var current = this.last();
+                    while (delta < steps) {
+                        current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), 1), true);
+                        delta++;
+                    }
+                }, this);
+            },
+
+            /**
+             * @override
+             */
+            increase_backwards: function(steps) {
+                var current = this.__parent.count();
+                return this.__parent.increase_backwards(steps).success(function() {
+                    if (!this.__autoIncreaseGroups)
+                        return;
+                    var delta = this.__parent.count() - current;
+                    var current = this.first();
+                    while (delta < steps) {
+                        current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), -1), true);
+                        delta++;
+                    }
+                }, this);
             },
 
             __insertObject: function(object, group) {

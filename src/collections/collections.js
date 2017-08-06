@@ -463,6 +463,15 @@ Scoped.define("module:Collections.Collection", [
             },
 
             /**
+             * Increase the view of the collection by a number of steps backwards.
+             *
+             * @param {int} steps Steps to increase
+             */
+            increase_backwards: function(steps) {
+                return Promise.error(true);
+            },
+
+            /**
              * Returns the first item in the collection.
              *
              * @returns {Object} first item
