@@ -25,6 +25,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 options = options || {};
                 delete options.objects;
                 this.__groupby = options.groupby;
+                this.__groupbyCompute = options.groupbyCompute;
                 this.__keepEmptyGroups = options.keepEmptyGroups;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
@@ -46,19 +47,21 @@ Scoped.define("module:Collections.GroupedCollection", [
                 inherited.destroy.call(this);
             },
 
+            __itemDataToGroupData: function(data) {
+                data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
+                return Objs.map(this.__groupby, function(key) {
+                    return data[key];
+                });
+            },
+
             touchGroup: function(data, create) {
                 data = Properties.is_instance_of(data) ? data.data() : data;
-                var query = {};
-                Objs.iter(this.__groupby, function(key) {
-                    query[key] = data[key];
-                });
+                var query = this.__itemDataToGroupData(data);
                 var group = this.query(query).nextOrNull();
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
                     group.items = group.auto_destroy(new Collection());
-                    Objs.iter(this.__groupby, function(key) {
-                        group.set(key, data[key]);
-                    });
+                    group.setAll(query);
                     this.add(group);
                 }
                 return group;

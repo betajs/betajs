@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.110 - 2017-08-04
+betajs - v1.0.111 - 2017-08-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.110 - 2017-08-04
+betajs - v1.0.111 - 2017-08-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.110"
+    "version": "1.0.111"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4654,15 +4654,16 @@ Scoped.define("module:Objs", [
          */
         map: function(obj, f, context) {
             var result = null;
+            context = context || this;
             if (Types.is_array(obj)) {
                 result = [];
                 for (var i = 0; i < obj.length; ++i)
-                    result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
+                    result.push(f.call(context, obj[i], i));
                 return result;
             } else {
                 result = {};
                 for (var key in obj)
-                    result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+                    result[key] = f.call(context, obj[key], key);
                 return result;
             }
         },
@@ -4678,8 +4679,9 @@ Scoped.define("module:Objs", [
          */
         keyMap: function(obj, f, context) {
             result = {};
+            context = context || this;
             for (var key in obj)
-                result[f.call(context || this, obj[key], key)] = obj[key];
+                result[f.call(context, obj[key], key)] = obj[key];
             return result;
         },
 
@@ -10410,6 +10412,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 options = options || {};
                 delete options.objects;
                 this.__groupby = options.groupby;
+                this.__groupbyCompute = options.groupbyCompute;
                 this.__keepEmptyGroups = options.keepEmptyGroups;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
@@ -10431,19 +10434,21 @@ Scoped.define("module:Collections.GroupedCollection", [
                 inherited.destroy.call(this);
             },
 
+            __itemDataToGroupData: function(data) {
+                data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
+                return Objs.map(this.__groupby, function(key) {
+                    return data[key];
+                });
+            },
+
             touchGroup: function(data, create) {
                 data = Properties.is_instance_of(data) ? data.data() : data;
-                var query = {};
-                Objs.iter(this.__groupby, function(key) {
-                    query[key] = data[key];
-                });
+                var query = this.__itemDataToGroupData(data);
                 var group = this.query(query).nextOrNull();
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
                     group.items = group.auto_destroy(new Collection());
-                    Objs.iter(this.__groupby, function(key) {
-                        group.set(key, data[key]);
-                    });
+                    group.setAll(query);
                     this.add(group);
                 }
                 return group;

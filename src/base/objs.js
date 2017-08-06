@@ -465,15 +465,16 @@ Scoped.define("module:Objs", [
          */
         map: function(obj, f, context) {
             var result = null;
+            context = context || this;
             if (Types.is_array(obj)) {
                 result = [];
                 for (var i = 0; i < obj.length; ++i)
-                    result.push(context ? f.apply(context, [obj[i], i]) : f(obj[i], i));
+                    result.push(f.call(context, obj[i], i));
                 return result;
             } else {
                 result = {};
                 for (var key in obj)
-                    result[key] = context ? f.apply(context, [obj[key], key]) : f(obj[key], key);
+                    result[key] = f.call(context, obj[key], key);
                 return result;
             }
         },
@@ -489,8 +490,9 @@ Scoped.define("module:Objs", [
          */
         keyMap: function(obj, f, context) {
             result = {};
+            context = context || this;
             for (var key in obj)
-                result[f.call(context || this, obj[key], key)] = obj[key];
+                result[f.call(context, obj[key], key)] = obj[key];
             return result;
         },
 
