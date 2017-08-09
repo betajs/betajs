@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.112 - 2017-08-06
+betajs - v1.0.113 - 2017-08-09
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.112"
+    "version": "1.0.113"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9143,6 +9143,16 @@ Scoped.define("module:Collections.Collection", [
             },
 
             /**
+             * Query the collection for a single item matching some query data.
+             *
+             * @param {object} subset Query data to be matched.
+             * @return {object} Item match
+             */
+            queryOne: function(subset) {
+                return this.query(subset).next();
+            },
+
+            /**
              * Clears the whole collection.
              * 
              */
@@ -9187,6 +9197,35 @@ Scoped.define("module:Collections.Collection", [
              */
             last: function() {
                 return this.getByIndex(this.count() - 1);
+            },
+
+            /**
+             * Sets a key value pair in all items
+             *
+             * @param {string} key key of pair
+             * @param value value of pair
+             *
+             * @returns {BetaJS.Collections.Collection}
+             */
+            allSet: function(key, value) {
+                this.iterate(function(obj) {
+                    obj.set(key, value);
+                });
+                return this;
+            },
+
+            /**
+             * Sets a set of key-value pairs in all items
+             *
+             * @param {object} data key-value pair to be set
+             *
+             * @returns {BetaJS.Collections.Collection}
+             */
+            allSetAll: function(data) {
+                this.iterate(function(obj) {
+                    obj.setAll(data);
+                });
+                return this;
             }
 
         };
@@ -9440,9 +9479,11 @@ Scoped.define("module:Collections.GroupedCollection", [
 
             __itemDataToGroupData: function(data) {
                 data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
-                return Objs.map(this.__groupby, function(key) {
-                    return data[key];
+                var result = {};
+                this.__groupby.forEach(function(key) {
+                    result[key] = data[key];
                 });
+                return result;
             },
 
             touchGroup: function(data, create) {

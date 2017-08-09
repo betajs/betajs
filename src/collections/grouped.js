@@ -52,9 +52,11 @@ Scoped.define("module:Collections.GroupedCollection", [
 
             __itemDataToGroupData: function(data) {
                 data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
-                return Objs.map(this.__groupby, function(key) {
-                    return data[key];
+                var result = {};
+                this.__groupby.forEach(function(key) {
+                    result[key] = data[key];
                 });
+                return result;
             },
 
             touchGroup: function(data, create) {

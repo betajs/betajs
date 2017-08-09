@@ -443,6 +443,16 @@ Scoped.define("module:Collections.Collection", [
             },
 
             /**
+             * Query the collection for a single item matching some query data.
+             *
+             * @param {object} subset Query data to be matched.
+             * @return {object} Item match
+             */
+            queryOne: function(subset) {
+                return this.query(subset).next();
+            },
+
+            /**
              * Clears the whole collection.
              * 
              */
@@ -487,6 +497,35 @@ Scoped.define("module:Collections.Collection", [
              */
             last: function() {
                 return this.getByIndex(this.count() - 1);
+            },
+
+            /**
+             * Sets a key value pair in all items
+             *
+             * @param {string} key key of pair
+             * @param value value of pair
+             *
+             * @returns {BetaJS.Collections.Collection}
+             */
+            allSet: function(key, value) {
+                this.iterate(function(obj) {
+                    obj.set(key, value);
+                });
+                return this;
+            },
+
+            /**
+             * Sets a set of key-value pairs in all items
+             *
+             * @param {object} data key-value pair to be set
+             *
+             * @returns {BetaJS.Collections.Collection}
+             */
+            allSetAll: function(data) {
+                this.iterate(function(obj) {
+                    obj.setAll(data);
+                });
+                return this;
             }
 
         };
