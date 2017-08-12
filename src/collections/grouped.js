@@ -34,6 +34,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__removeCallback = options.remove;
                 this.__callbackContext = options.context || this;
                 this.__propertiesClass = options.properties || Properties;
+                this.__itemsAttribute = options.itemsAttribute || "items";
                 this.__createProperties = options.create;
                 inherited.constructor.call(this, options);
                 Objs.iter(this.__groupby, this.add_secondary_index, this);
@@ -50,23 +51,18 @@ Scoped.define("module:Collections.GroupedCollection", [
                 inherited.destroy.call(this);
             },
 
-            __itemDataToGroupData: function(data) {
-                data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
-                var result = {};
-                this.__groupby.forEach(function(key) {
-                    result[key] = data[key];
-                });
-                return result;
-            },
-
             touchGroup: function(data, create) {
                 data = Properties.is_instance_of(data) ? data.data() : data;
-                var query = this.__itemDataToGroupData(data);
+                data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
+                var query = {};
+                this.__groupby.forEach(function(key) {
+                    query[key] = data[key];
+                });
                 var group = this.query(query).nextOrNull();
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
-                    group.items = group.auto_destroy(new Collection());
-                    group.setAll(query);
+                    group[this.__itemsAttribute] = group.auto_destroy(new Collection());
+                    group.setAll(data);
                     this.add(group);
                     if (this.__nogaps) {
                         if (group !== this.last())
@@ -87,18 +83,18 @@ Scoped.define("module:Collections.GroupedCollection", [
                 var group = this.touchGroup(object);
                 if (group) {
                     this.__removeObjectFromGroup(object, group);
-                    if (!this.__keepEmptyGroups && group.items.count() === 0)
+                    if (!this.__keepEmptyGroups && group[this.__itemsAttribute].count() === 0)
                         this.remove(group);
                 }
             },
 
             __addObjectToGroup: function(object, group) {
-                group.items.add(object);
+                group[this.__itemsAttribute].add(object);
                 this.__insertObject(object, group);
             },
 
             __removeObjectFromGroup: function(object, group) {
-                group.items.remove(object);
+                group[this.__itemsAttribute].remove(object);
                 this.__removeObject(object, group);
             },
 

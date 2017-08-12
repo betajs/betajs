@@ -36,6 +36,8 @@ Scoped.define("module:Events.EventsMixin", [
             };
             if (options.eventually)
                 obj.eventually = options.eventually;
+            if (options.off_on_destroyed)
+                obj.off_on_destroyed = options.off_on_destroyed;
             if (options.min_delay)
                 obj.min_delay = new Timer({
                     delay: options.min_delay,
@@ -45,7 +47,7 @@ Scoped.define("module:Events.EventsMixin", [
                     fire: function() {
                         if (obj.max_delay)
                             obj.max_delay.stop();
-                        this._invokeCallback(obj.callback, obj.context || this, obj.params);
+                        this.__invokeCallback(obj);
                     }
                 });
             if (options.max_delay)
@@ -57,7 +59,7 @@ Scoped.define("module:Events.EventsMixin", [
                     fire: function() {
                         if (obj.min_delay)
                             obj.min_delay.stop();
-                        this._invokeCallback(obj.callback, obj.context || this, obj.params);
+                        this.__invokeCallback(obj);
                     }
                 });
             return obj;
@@ -68,6 +70,13 @@ Scoped.define("module:Events.EventsMixin", [
                 object.min_delay.destroy();
             if (object.max_delay)
                 object.max_delay.destroy();
+        },
+
+        __invokeCallback: function(obj, params) {
+            if (obj.off_on_destroyed && obj.context && obj.context.destroyed())
+                this.off(null, null, obj);
+            else
+                this._invokeCallback(obj.callback, obj.context || this, params || obj.params);
         },
 
         /**
@@ -91,10 +100,10 @@ Scoped.define("module:Events.EventsMixin", [
             if (!object.min_delay && !object.max_delay) {
                 if (object.eventually) {
                     Async.eventually(function() {
-                        this._invokeCallback(object.callback, object.context || this, params);
+                        this.__invokeCallback(object, params);
                     }, this);
                 } else
-                    this._invokeCallback(object.callback, object.context || this, params);
+                    this.__invokeCallback(object, params);
             } else
                 object.params = params;
         },

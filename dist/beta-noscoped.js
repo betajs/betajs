@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.113 - 2017-08-09
+betajs - v1.0.114 - 2017-08-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.113"
+    "version": "1.0.114"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1578,6 +1578,8 @@ Scoped.define("module:Events.EventsMixin", [
             };
             if (options.eventually)
                 obj.eventually = options.eventually;
+            if (options.off_on_destroyed)
+                obj.off_on_destroyed = options.off_on_destroyed;
             if (options.min_delay)
                 obj.min_delay = new Timer({
                     delay: options.min_delay,
@@ -1587,7 +1589,7 @@ Scoped.define("module:Events.EventsMixin", [
                     fire: function() {
                         if (obj.max_delay)
                             obj.max_delay.stop();
-                        this._invokeCallback(obj.callback, obj.context || this, obj.params);
+                        this.__invokeCallback(obj);
                     }
                 });
             if (options.max_delay)
@@ -1599,7 +1601,7 @@ Scoped.define("module:Events.EventsMixin", [
                     fire: function() {
                         if (obj.min_delay)
                             obj.min_delay.stop();
-                        this._invokeCallback(obj.callback, obj.context || this, obj.params);
+                        this.__invokeCallback(obj);
                     }
                 });
             return obj;
@@ -1610,6 +1612,13 @@ Scoped.define("module:Events.EventsMixin", [
                 object.min_delay.destroy();
             if (object.max_delay)
                 object.max_delay.destroy();
+        },
+
+        __invokeCallback: function(obj, params) {
+            if (obj.off_on_destroyed && obj.context && obj.context.destroyed())
+                this.off(null, null, obj);
+            else
+                this._invokeCallback(obj.callback, obj.context || this, params || obj.params);
         },
 
         /**
@@ -1633,10 +1642,10 @@ Scoped.define("module:Events.EventsMixin", [
             if (!object.min_delay && !object.max_delay) {
                 if (object.eventually) {
                     Async.eventually(function() {
-                        this._invokeCallback(object.callback, object.context || this, params);
+                        this.__invokeCallback(object, params);
                     }, this);
                 } else
-                    this._invokeCallback(object.callback, object.context || this, params);
+                    this.__invokeCallback(object, params);
             } else
                 object.params = params;
         },
@@ -9461,6 +9470,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__removeCallback = options.remove;
                 this.__callbackContext = options.context || this;
                 this.__propertiesClass = options.properties || Properties;
+                this.__itemsAttribute = options.itemsAttribute || "items";
                 this.__createProperties = options.create;
                 inherited.constructor.call(this, options);
                 Objs.iter(this.__groupby, this.add_secondary_index, this);
@@ -9477,23 +9487,18 @@ Scoped.define("module:Collections.GroupedCollection", [
                 inherited.destroy.call(this);
             },
 
-            __itemDataToGroupData: function(data) {
-                data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
-                var result = {};
-                this.__groupby.forEach(function(key) {
-                    result[key] = data[key];
-                });
-                return result;
-            },
-
             touchGroup: function(data, create) {
                 data = Properties.is_instance_of(data) ? data.data() : data;
-                var query = this.__itemDataToGroupData(data);
+                data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
+                var query = {};
+                this.__groupby.forEach(function(key) {
+                    query[key] = data[key];
+                });
                 var group = this.query(query).nextOrNull();
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
-                    group.items = group.auto_destroy(new Collection());
-                    group.setAll(query);
+                    group[this.__itemsAttribute] = group.auto_destroy(new Collection());
+                    group.setAll(data);
                     this.add(group);
                     if (this.__nogaps) {
                         if (group !== this.last())
@@ -9514,18 +9519,18 @@ Scoped.define("module:Collections.GroupedCollection", [
                 var group = this.touchGroup(object);
                 if (group) {
                     this.__removeObjectFromGroup(object, group);
-                    if (!this.__keepEmptyGroups && group.items.count() === 0)
+                    if (!this.__keepEmptyGroups && group[this.__itemsAttribute].count() === 0)
                         this.remove(group);
                 }
             },
 
             __addObjectToGroup: function(object, group) {
-                group.items.add(object);
+                group[this.__itemsAttribute].add(object);
                 this.__insertObject(object, group);
             },
 
             __removeObjectFromGroup: function(object, group) {
-                group.items.remove(object);
+                group[this.__itemsAttribute].remove(object);
                 this.__removeObject(object, group);
             },
 
