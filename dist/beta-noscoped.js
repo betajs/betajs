@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.114 - 2017-08-12
+betajs - v1.0.115 - 2017-09-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.114"
+    "version": "1.0.115"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -8745,6 +8745,7 @@ Scoped.define("module:Collections.Collection", [
                     };
                 }
                 options = options || {};
+                this.bulk_operations = 0;
                 this.__indices = {};
                 if (options.release_references)
                     this.__release_references = true;
@@ -8974,6 +8975,7 @@ Scoped.define("module:Collections.Collection", [
              * 
              */
             replace_objects: function(objects, keep_others) {
+                this.bulk_operations++;
                 var addQueue = [];
                 var ids = {};
                 Objs.iter(objects, function(oriObject) {
@@ -9006,6 +9008,7 @@ Scoped.define("module:Collections.Collection", [
                 }
                 while (addQueue.length > 0)
                     this.add(addQueue.shift());
+                this.bulk_operations--;
                 return this;
             },
 

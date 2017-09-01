@@ -36,6 +36,7 @@ Scoped.define("module:Collections.Collection", [
                     };
                 }
                 options = options || {};
+                this.bulk_operations = 0;
                 this.__indices = {};
                 if (options.release_references)
                     this.__release_references = true;
@@ -265,6 +266,7 @@ Scoped.define("module:Collections.Collection", [
              * 
              */
             replace_objects: function(objects, keep_others) {
+                this.bulk_operations++;
                 var addQueue = [];
                 var ids = {};
                 Objs.iter(objects, function(oriObject) {
@@ -297,6 +299,7 @@ Scoped.define("module:Collections.Collection", [
                 }
                 while (addQueue.length > 0)
                     this.add(addQueue.shift());
+                this.bulk_operations--;
                 return this;
             },
 
