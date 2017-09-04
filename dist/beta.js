@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.115 - 2017-09-01
+betajs - v1.0.116 - 2017-09-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.115 - 2017-09-01
+betajs - v1.0.116 - 2017-09-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.115"
+    "version": "1.0.116"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11741,11 +11741,15 @@ Scoped.define("module:Promise", [
         mapSuccess: function(func, ctx) {
             var promise = Promise.create();
             this.forwardError(promise).success(function(value, pr) {
-                var result = func.call(ctx || promise, value, pr);
-                if (Promise.is(result))
-                    result.forwardCallback(promise);
-                else
-                    promise.asyncSuccess(result);
+                try {
+                    var result = func.call(ctx || promise, value, pr);
+                    if (Promise.is(result))
+                        result.forwardCallback(promise);
+                    else
+                        promise.asyncSuccess(result);
+                } catch (e) {
+                    promise.asyncError(e);
+                }
             });
             return promise;
         },

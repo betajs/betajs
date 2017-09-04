@@ -515,11 +515,15 @@ Scoped.define("module:Promise", [
         mapSuccess: function(func, ctx) {
             var promise = Promise.create();
             this.forwardError(promise).success(function(value, pr) {
-                var result = func.call(ctx || promise, value, pr);
-                if (Promise.is(result))
-                    result.forwardCallback(promise);
-                else
-                    promise.asyncSuccess(result);
+                try {
+                    var result = func.call(ctx || promise, value, pr);
+                    if (Promise.is(result))
+                        result.forwardCallback(promise);
+                    else
+                        promise.asyncSuccess(result);
+                } catch (e) {
+                    promise.asyncError(e);
+                }
             });
             return promise;
         },
