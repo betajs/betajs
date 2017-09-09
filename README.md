@@ -148,7 +148,7 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | iOS | 3.0 - Latest |
 | Yandex | Latest |
 | Android | 2.2 - Latest |
-| NodeJS | 0.11 - Latest |
+| NodeJS | 4.0 - Latest |
 
 
 ## CDN
@@ -171,6 +171,7 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 | Name | URL |
 | :----- | -------: |
 | betajs-scoped | [Open](https://github.com/betajs/betajs-scoped) |
+| betajs-shims | [Open](https://github.com/betajs/betajs-shims) |
 
 
 ## Main Contributors

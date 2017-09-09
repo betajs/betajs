@@ -22,6 +22,7 @@
         "Victor Lingenthal"
     ],
     "devDependencies": {
+        "betajs-shims": "~0.0.13",
         "lodash": "",
         "grunt": "",
         "grunt-contrib-jshint": "",
@@ -79,10 +80,11 @@
             "iOS": "3.0 - Latest",
             "Yandex": "Latest",
             "Android": "2.2 - Latest",
-            "NodeJS": "0.11 - Latest"
+            "NodeJS": "4.0 - Latest"
         },
         "weakDependencies": {
-            "betajs-scoped": "https://github.com/betajs/betajs-scoped"
+            "betajs-scoped": "https://github.com/betajs/betajs-scoped",
+            "betajs-shims": "https://github.com/betajs/betajs-shims"
         },
         "tests": {
             "Test Suite": "http://rawgit.com/betajs/betajs/master/tests/tests.html"
