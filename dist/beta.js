@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.116 - 2017-09-04
+betajs - v1.0.117 - 2017-09-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.116 - 2017-09-04
+betajs - v1.0.117 - 2017-09-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.116"
+    "version": "1.0.117"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -12913,6 +12913,43 @@ Scoped.define("module:Loggers.LogListenerFilter", [
         };
     });
 });
+Scoped.define("module:Loggers.LoggableMixin", [
+    "module:Loggers.Logger",
+    "module:Objs",
+    "module:Functions"
+], function(Logger) {
+
+    /**
+     * LoggableMixin Mixin
+     *
+     * @mixin BetaJS.Loggers.LoggableMixin
+     */
+    return {
+
+        /**
+         * Returns the base logger.
+         *
+         * @returns {object} base logger
+         */
+        baseLogger: function() {
+            if (!this._baseLogger)
+                this._baseLogger = Logger.global();
+            return this._baseLogger;
+        },
+
+        /**
+         * Returns the logger.
+         *
+         * @returns {object} logger
+         */
+        logger: function() {
+            if (!this._logger)
+                this._logger = this.baseLogger().tag(this.cls.classname, this.cid());
+            return this._logger;
+        }
+
+    };
+});
 Scoped.define("module:Loggers.Logger", [
     "module:Class",
     "module:Objs",
@@ -13108,6 +13145,30 @@ Scoped.define("module:Loggers.Logger", [
     });
 
     return Cls;
+});
+Scoped.define("module:Loggers.TagLogAugment", [
+    "module:Loggers.AbstractLogAugment"
+], function(AbstractLogAugment, scoped) {
+    return AbstractLogAugment.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Tag Log Augment Class
+         * 
+         * @class BetaJS.Loggers.TagLogAugment
+         */
+        return {
+
+            /**
+             * @override
+             */
+            augmentMessage: function(source, msg, depth) {
+                return msg.tags.join(",");
+            }
+
+        };
+    });
 });
 Scoped.define("module:Net.SocketSenderChannel", [
     "module:Channels.Sender"
