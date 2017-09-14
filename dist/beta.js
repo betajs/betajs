@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.117 - 2017-09-13
+betajs - v1.0.118 - 2017-09-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.117 - 2017-09-13
+betajs - v1.0.118 - 2017-09-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.117"
+    "version": "1.0.118"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -10360,6 +10360,7 @@ Scoped.define("module:Collections.FilteredCollection", [
                 inherited.constructor.call(this, options);
                 this.__parent.on("add", this.add, this);
                 this.__parent.on("remove", this.__selfRemove, this);
+                this.__parent.on("change", this.add, this);
                 this.setFilter(options.filter, options.context);
             },
 

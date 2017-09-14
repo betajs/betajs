@@ -26,6 +26,7 @@ Scoped.define("module:Collections.FilteredCollection", [
                 inherited.constructor.call(this, options);
                 this.__parent.on("add", this.add, this);
                 this.__parent.on("remove", this.__selfRemove, this);
+                this.__parent.on("change", this.add, this);
                 this.setFilter(options.filter, options.context);
             },
 
