@@ -259,6 +259,15 @@ Scoped.define("module:Collections.Collection", [
             },
 
             /**
+             * Checks whether a bulk operation is in progress.
+             *
+             * @returns {boolean} true if in progress
+             */
+            bulkOperationInProgress: function() {
+                return this.bulk_operations > 0;
+            },
+
+            /**
              * Replace objects by other objects with the same id.
              * 
              * @param {array} object New objects with ids

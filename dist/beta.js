@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.118 - 2017-09-14
+betajs - v1.0.119 - 2017-09-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.118 - 2017-09-14
+betajs - v1.0.119 - 2017-09-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.118"
+    "version": "1.0.119"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9976,6 +9976,15 @@ Scoped.define("module:Collections.Collection", [
             },
 
             /**
+             * Checks whether a bulk operation is in progress.
+             *
+             * @returns {boolean} true if in progress
+             */
+            bulkOperationInProgress: function() {
+                return this.bulk_operations > 0;
+            },
+
+            /**
              * Replace objects by other objects with the same id.
              * 
              * @param {array} object New objects with ids
@@ -10449,8 +10458,9 @@ Scoped.define("module:Collections.FilteredCollection", [
 Scoped.define("module:Collections.GroupedCollection", [
     "module:Collections.Collection",
     "module:Objs",
-    "module:Properties.Properties"
-], function(Collection, Objs, Properties, scoped) {
+    "module:Properties.Properties",
+    "module:Functions"
+], function(Collection, Objs, Properties, Functions, scoped) {
     return Collection.extend({
         scoped: scoped
     }, function(inherited) {
@@ -10510,6 +10520,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
                     group[this.__itemsAttribute] = group.auto_destroy(new Collection());
+                    group[this.__itemsAttribute].bulkOperationInProgress = Functions.as_method(this.bulkOperationInProgress, this);
                     group.setAll(data);
                     this.add(group);
                     if (this.__nogaps) {
@@ -10561,6 +10572,13 @@ Scoped.define("module:Collections.GroupedCollection", [
                         delta++;
                     }
                 }, this);
+            },
+
+            /**
+             * @override
+             */
+            bulkOperationInProgress: function() {
+                return inherited.bulkOperationInProgress.call(this) || this.__parent.bulkOperationInProgress();
             },
 
             /**

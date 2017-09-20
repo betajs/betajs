@@ -1,8 +1,9 @@
 Scoped.define("module:Collections.GroupedCollection", [
     "module:Collections.Collection",
     "module:Objs",
-    "module:Properties.Properties"
-], function(Collection, Objs, Properties, scoped) {
+    "module:Properties.Properties",
+    "module:Functions"
+], function(Collection, Objs, Properties, Functions, scoped) {
     return Collection.extend({
         scoped: scoped
     }, function(inherited) {
@@ -62,6 +63,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
                     group[this.__itemsAttribute] = group.auto_destroy(new Collection());
+                    group[this.__itemsAttribute].bulkOperationInProgress = Functions.as_method(this.bulkOperationInProgress, this);
                     group.setAll(data);
                     this.add(group);
                     if (this.__nogaps) {
@@ -113,6 +115,13 @@ Scoped.define("module:Collections.GroupedCollection", [
                         delta++;
                     }
                 }, this);
+            },
+
+            /**
+             * @override
+             */
+            bulkOperationInProgress: function() {
+                return inherited.bulkOperationInProgress.call(this) || this.__parent.bulkOperationInProgress();
             },
 
             /**
