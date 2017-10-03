@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.119 - 2017-09-19
+betajs - v1.0.120 - 2017-10-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.119 - 2017-09-19
+betajs - v1.0.120 - 2017-10-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.119"
+    "version": "1.0.120"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5981,18 +5981,18 @@ Scoped.define("module:Sort", [
 Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
     /**
      * String Utilities
-     * 
+     *
      * @module BetaJS.Strings
      */
     return {
 
         /**
          * Escapes a string to be used as an exact match in a regular expression.
-         * 
+         *
          * @param {string} s string in question
-         * 
+         *
          * @return {string} escaped string
-         * 
+         *
          * @link http://stackoverflow.com/a/3561711
          */
         regexEscape: function(s) {
@@ -6001,11 +6001,11 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Pads a string from the left with characters if necessary.
-         * 
+         *
          * @param {string} s string that should be padded
          * @param {string} padding padding string that should be used (e.g. whitespace)
          * @param {int} length minimum length of result string
-         * 
+         *
          * @return {string} padded string
          */
         padLeft: function(s, padding, length) {
@@ -6016,10 +6016,10 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Pads a string from the left with zeros ('0') if necessary.
-         * 
+         *
          * @param {string} s string that should be padded
          * @param {int} length minimum length of result string
-         * 
+         *
          * @return {string} zero-padded string
          */
         padZeros: function(s, length) {
@@ -6178,11 +6178,11 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Replaces all occurrences of a substring with something else.
-         * 
+         *
          * @param {string} s input string
          * @param {string} sub search string
          * @param {string} wth replacement string
-         * 
+         *
          * @return {string} input with all occurrences of the search string replaced by the replacement string
          */
         replaceAll: function(s, sub, wth) {
@@ -6193,9 +6193,9 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Capitalizes all first characters of all words in a string.
-         * 
+         *
          * @param {string} input input string
-         * 
+         *
          * @return {string} input with all first characters capitalized
          */
         capitalize: function(input) {
@@ -6206,9 +6206,9 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Extracts the name from an email address name string (e.g. 'Foo Bar <foobar@domain.com>')
-         * 
+         *
          * @param {string} input email address name input string
-         * 
+         *
          * @return {string} name included in the string
          */
         email_get_name: function(input) {
@@ -6225,9 +6225,9 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Extracts the email from an email address name string (e.g. 'Foo Bar <foobar@domain.com>')
-         * 
+         *
          * @param {string} input email address name input string
-         * 
+         *
          * @return {string} email included in the string
          */
         email_get_email: function(input) {
@@ -6244,9 +6244,9 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Extracts the salutatory name from an email address name string (normally the first name)
-         * 
+         *
          * @param {string} input email address name input string
-         * 
+         *
          * @return {string} salutatory name
          */
         email_get_salutatory_name: function(input) {
@@ -6255,10 +6255,10 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Splits a string into two by the first occurrence of a delimiter
-         * 
+         *
          * @param {string} s input string
          * @param {string} delimiter delimiter string
-         * 
+         *
          * @return {object} a json object, mapping 'head' to the region left and 'tail' to region right to the delimiter
          */
         splitFirst: function(s, delimiter) {
@@ -6271,10 +6271,10 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Splits a string into two by the last occurrence of a delimiter
-         * 
+         *
          * @param {string} s input string
          * @param {string} delimiter delimiter string
-         * 
+         *
          * @return {object} a json object, mapping 'head' to the region left and 'tail' to region right to the delimiter
          */
         splitLast: function(s, delimiter) {
@@ -6287,10 +6287,10 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Replace all groups in a regular expression string by string parameters.
-         * 
+         *
          * @param {string} regex regular expression with groups as a string
          * @param {array} args array of string parameters
-         * 
+         *
          * @return {string} regular expression with groups being replaced by string parameters
          */
         regexReplaceGroups: function(regex, args) {
@@ -6309,9 +6309,9 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
 
         /**
          * Given a regular expression with named capture groups (e.g. '(foobar:\d+)'), compute a normal regular expression with mappings to the named groups.
-         * 
+         *
          * @param {string} regex regular expression with named capture groups
-         * 
+         *
          * @return {object} mapping object
          */
         namedCaptureRegex: function(regex) {
@@ -6350,6 +6350,28 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
                 exec: exec,
                 mapBack: mapBack
             };
+        },
+
+        /**
+         * Given an int, returns the short form of its ordinal value
+         *
+         * @param {int} i An integer
+         *
+         * @return {string} The ordinal value of the number
+         */
+        ordinalSuffix: function(i) {
+            var j = i % 10,
+                k = i % 100;
+            if (j === 1 && k !== 11) {
+                return i + "st";
+            }
+            if (j === 2 && k !== 12) {
+                return i + "nd";
+            }
+            if (j === 3 && k !== 13) {
+                return i + "rd";
+            }
+            return i + "th";
         }
 
     };
