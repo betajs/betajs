@@ -101,7 +101,7 @@ Scoped.define("module:Events.EventsMixin", [
                 if (object.eventually) {
                     Async.eventually(function() {
                         this.__invokeCallback(object, params);
-                    }, this);
+                    }, this, object.eventually === true ? 0 : object.eventually);
                 } else
                     this.__invokeCallback(object, params);
             } else
@@ -360,7 +360,11 @@ Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixi
 });
 
 
-Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], function(Ids, Objs) {
+Scoped.define("module:Events.ListenMixin", [
+    "module:Ids",
+    "module:Objs",
+    "module:Types"
+], function(Ids, Objs, Types) {
     /**
      * Listen Mixin, automatically de-registering all listeners on destruction.
      * 
@@ -375,55 +379,69 @@ Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], functi
         /**
          * Listen to an event.
          * 
-         * @param {object} target target event emitter
+         * @param {object} targets target(s) event emitter
          * @param {string} events event(s) to listen to
          * @param {function} callback event callback function
          * @param {object} options optional listener options
          */
-        listenOn: function(target, events, callback, options) {
-            if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
-            this.__listen_mixin_listen[Ids.objectId(target)] = target;
-            target.on(events, callback, this, options);
+        listenOn: function(targets, events, callback, options) {
+            if (!this.__listen_mixin_listen)
+                this.__listen_mixin_listen = {};
+            if (!Types.is_array(targets))
+                targets = [targets];
+            targets.forEach(function(target) {
+                this.__listen_mixin_listen[Ids.objectId(target)] = target;
+                target.on(events, callback, this, options);
+            }, this);
             return this;
         },
 
         /**
          * Listen to an event once.
-         * 
-         * @param {object} target target event emitter
+         *
+         * @param {object} targets target(s) event emitter
          * @param {string} events event(s) to listen to
          * @param {function} callback event callback function
          * @param {object} options optional listener options
          */
-        listenOnce: function(target, events, callback, options) {
-            if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
-            this.__listen_mixin_listen[Ids.objectId(target)] = target;
-            target.once(events, callback, this, options);
+        listenOnce: function(targets, events, callback, options) {
+            if (!this.__listen_mixin_listen)
+                this.__listen_mixin_listen = {};
+            if (!Types.is_array(targets))
+                targets = [targets];
+            targets.forEach(function(target) {
+                this.__listen_mixin_listen[Ids.objectId(target)] = target;
+                target.once(events, callback, this, options);
+            }, this);
             return this;
         },
 
         /**
          * Stop Listenning to an event.
-         * 
-         * @param {object} target target event emitter
+         *
+         * @param {object} targets target(s) event emitter
          * @param {string} events event(s) to listen to
          * @param {function} callback event callback function
          */
-        listenOff: function(target, events, callback) {
+        listenOff: function(targets, events, callback) {
             if (!this.__listen_mixin_listen)
                 return this;
-            if (target) {
-                target.off(events, callback, this);
-                if (!events && !callback)
-                    delete this.__listen_mixin_listen[Ids.objectId(target)];
-            } else {
-                Objs.iter(this.__listen_mixin_listen, function(obj) {
-                    if (obj && "off" in obj)
-                        obj.off(events, callback, this);
+            if (!Types.is_array(targets))
+                targets = [targets];
+            targets.forEach(function(target) {
+                if (target) {
+                    target.off(events, callback, this);
                     if (!events && !callback)
-                        delete this.__listen_mixin_listen[Ids.objectId(obj)];
-                }, this);
-            }
+                        delete this.__listen_mixin_listen[Ids.objectId(target)];
+                } else {
+                    Objs.iter(this.__listen_mixin_listen, function(obj) {
+                        if (obj && "off" in obj)
+                            obj.off(events, callback, this);
+                        if (!events && !callback)
+                            delete this.__listen_mixin_listen[Ids.objectId(obj)];
+                    }, this);
+                }
+            }, this);
             return this;
         }
 

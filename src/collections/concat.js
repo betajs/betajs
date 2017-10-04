@@ -30,7 +30,12 @@ Scoped.define("module:Collections.ConcatCollection", [
                     options.compare = Functions.as_method(this.__compareByParent, this);
                 inherited.constructor.call(this, options);
                 var idx = 0;
+                this.__firstParent = null;
+                this.__lastParent = null;
                 Objs.iter(parents, function(parent) {
+                    if (!this.__firstParent)
+                        this.__firstParent = parent;
+                    this.__lastParent = parent;
                     this.__parents[parent.cid()] = {
                         idx: idx,
                         parent: parent
@@ -56,6 +61,29 @@ Scoped.define("module:Collections.ConcatCollection", [
                     parent.parent.off(null, null, this);
                 }, this);
                 inherited.destroy.call(this);
+            },
+
+            /**
+             * @override
+             */
+            bulkOperationInProgress: function() {
+                return inherited.bulkOperationInProgress.call(this) || Objs.exists(this.__parents, function(parent) {
+                    return parent.bulkOperationInProgress();
+                });
+            },
+
+            /**
+             * @override
+             */
+            increase_forwards: function(steps) {
+                return this.__lastParent.increase_forwards(steps);
+            },
+
+            /**
+             * @override
+             */
+            increase_backwards: function(steps) {
+                return this.__firstParent.increase_forwards(steps);
             },
 
             __parentAdd: function(parent, item) {

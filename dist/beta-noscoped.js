@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.120 - 2017-10-03
+betajs - v1.0.121 - 2017-10-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.120"
+    "version": "1.0.121"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1643,7 +1643,7 @@ Scoped.define("module:Events.EventsMixin", [
                 if (object.eventually) {
                     Async.eventually(function() {
                         this.__invokeCallback(object, params);
-                    }, this);
+                    }, this, object.eventually === true ? 0 : object.eventually);
                 } else
                     this.__invokeCallback(object, params);
             } else
@@ -1902,7 +1902,11 @@ Scoped.define("module:Events.Events", ["module:Class", "module:Events.EventsMixi
 });
 
 
-Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], function(Ids, Objs) {
+Scoped.define("module:Events.ListenMixin", [
+    "module:Ids",
+    "module:Objs",
+    "module:Types"
+], function(Ids, Objs, Types) {
     /**
      * Listen Mixin, automatically de-registering all listeners on destruction.
      * 
@@ -1917,55 +1921,69 @@ Scoped.define("module:Events.ListenMixin", ["module:Ids", "module:Objs"], functi
         /**
          * Listen to an event.
          * 
-         * @param {object} target target event emitter
+         * @param {object} targets target(s) event emitter
          * @param {string} events event(s) to listen to
          * @param {function} callback event callback function
          * @param {object} options optional listener options
          */
-        listenOn: function(target, events, callback, options) {
-            if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
-            this.__listen_mixin_listen[Ids.objectId(target)] = target;
-            target.on(events, callback, this, options);
+        listenOn: function(targets, events, callback, options) {
+            if (!this.__listen_mixin_listen)
+                this.__listen_mixin_listen = {};
+            if (!Types.is_array(targets))
+                targets = [targets];
+            targets.forEach(function(target) {
+                this.__listen_mixin_listen[Ids.objectId(target)] = target;
+                target.on(events, callback, this, options);
+            }, this);
             return this;
         },
 
         /**
          * Listen to an event once.
-         * 
-         * @param {object} target target event emitter
+         *
+         * @param {object} targets target(s) event emitter
          * @param {string} events event(s) to listen to
          * @param {function} callback event callback function
          * @param {object} options optional listener options
          */
-        listenOnce: function(target, events, callback, options) {
-            if (!this.__listen_mixin_listen) this.__listen_mixin_listen = {};
-            this.__listen_mixin_listen[Ids.objectId(target)] = target;
-            target.once(events, callback, this, options);
+        listenOnce: function(targets, events, callback, options) {
+            if (!this.__listen_mixin_listen)
+                this.__listen_mixin_listen = {};
+            if (!Types.is_array(targets))
+                targets = [targets];
+            targets.forEach(function(target) {
+                this.__listen_mixin_listen[Ids.objectId(target)] = target;
+                target.once(events, callback, this, options);
+            }, this);
             return this;
         },
 
         /**
          * Stop Listenning to an event.
-         * 
-         * @param {object} target target event emitter
+         *
+         * @param {object} targets target(s) event emitter
          * @param {string} events event(s) to listen to
          * @param {function} callback event callback function
          */
-        listenOff: function(target, events, callback) {
+        listenOff: function(targets, events, callback) {
             if (!this.__listen_mixin_listen)
                 return this;
-            if (target) {
-                target.off(events, callback, this);
-                if (!events && !callback)
-                    delete this.__listen_mixin_listen[Ids.objectId(target)];
-            } else {
-                Objs.iter(this.__listen_mixin_listen, function(obj) {
-                    if (obj && "off" in obj)
-                        obj.off(events, callback, this);
+            if (!Types.is_array(targets))
+                targets = [targets];
+            targets.forEach(function(target) {
+                if (target) {
+                    target.off(events, callback, this);
                     if (!events && !callback)
-                        delete this.__listen_mixin_listen[Ids.objectId(obj)];
-                }, this);
-            }
+                        delete this.__listen_mixin_listen[Ids.objectId(target)];
+                } else {
+                    Objs.iter(this.__listen_mixin_listen, function(obj) {
+                        if (obj && "off" in obj)
+                            obj.off(events, callback, this);
+                        if (!events && !callback)
+                            delete this.__listen_mixin_listen[Ids.objectId(obj)];
+                    }, this);
+                }
+            }, this);
             return this;
         }
 
@@ -9306,7 +9324,12 @@ Scoped.define("module:Collections.ConcatCollection", [
                     options.compare = Functions.as_method(this.__compareByParent, this);
                 inherited.constructor.call(this, options);
                 var idx = 0;
+                this.__firstParent = null;
+                this.__lastParent = null;
                 Objs.iter(parents, function(parent) {
+                    if (!this.__firstParent)
+                        this.__firstParent = parent;
+                    this.__lastParent = parent;
                     this.__parents[parent.cid()] = {
                         idx: idx,
                         parent: parent
@@ -9332,6 +9355,29 @@ Scoped.define("module:Collections.ConcatCollection", [
                     parent.parent.off(null, null, this);
                 }, this);
                 inherited.destroy.call(this);
+            },
+
+            /**
+             * @override
+             */
+            bulkOperationInProgress: function() {
+                return inherited.bulkOperationInProgress.call(this) || Objs.exists(this.__parents, function(parent) {
+                    return parent.bulkOperationInProgress();
+                });
+            },
+
+            /**
+             * @override
+             */
+            increase_forwards: function(steps) {
+                return this.__lastParent.increase_forwards(steps);
+            },
+
+            /**
+             * @override
+             */
+            increase_backwards: function(steps) {
+                return this.__firstParent.increase_forwards(steps);
             },
 
             __parentAdd: function(parent, item) {
@@ -9533,7 +9579,9 @@ Scoped.define("module:Collections.GroupedCollection", [
                 var group = this.query(query).nextOrNull();
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
-                    group[this.__itemsAttribute] = group.auto_destroy(new Collection());
+                    group[this.__itemsAttribute] = group.auto_destroy(new Collection({
+                        compare: this.__parent.get_compare()
+                    }));
                     group[this.__itemsAttribute].bulkOperationInProgress = Functions.as_method(this.bulkOperationInProgress, this);
                     group.setAll(data);
                     this.add(group);
