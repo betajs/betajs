@@ -33,6 +33,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__nogaps = options.nogaps;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
+                this.__afterGroupCreate = options.afterGroupCreate;
                 this.__callbackContext = options.context || this;
                 this.__propertiesClass = options.properties || Properties;
                 this.__itemsAttribute = options.itemsAttribute || "items";
@@ -68,6 +69,8 @@ Scoped.define("module:Collections.GroupedCollection", [
                     group[this.__itemsAttribute].bulkOperationInProgress = Functions.as_method(this.bulkOperationInProgress, this);
                     group.setAll(data);
                     this.add(group);
+                    if (this.__afterGroupCreate)
+                        this.__afterGroupCreate.call(this.__callbackContext, group);
                     if (this.__nogaps) {
                         if (group !== this.last())
                             this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), 1), true);

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.121 - 2017-10-04
+betajs - v1.0.122 - 2017-10-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.121"
+    "version": "1.0.122"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9550,6 +9550,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__nogaps = options.nogaps;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
+                this.__afterGroupCreate = options.afterGroupCreate;
                 this.__callbackContext = options.context || this;
                 this.__propertiesClass = options.properties || Properties;
                 this.__itemsAttribute = options.itemsAttribute || "items";
@@ -9585,6 +9586,8 @@ Scoped.define("module:Collections.GroupedCollection", [
                     group[this.__itemsAttribute].bulkOperationInProgress = Functions.as_method(this.bulkOperationInProgress, this);
                     group.setAll(data);
                     this.add(group);
+                    if (this.__afterGroupCreate)
+                        this.__afterGroupCreate.call(this.__callbackContext, group);
                     if (this.__nogaps) {
                         if (group !== this.last())
                             this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), 1), true);
