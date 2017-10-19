@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.122 - 2017-10-07
+betajs - v1.0.123 - 2017-10-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1007,7 +1007,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.122 - 2017-10-07
+betajs - v1.0.123 - 2017-10-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.122"
+    "version": "1.0.123"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4613,6 +4613,45 @@ Scoped.define("module:Objs", [
                     c[key] = a[key];
             }
             return c;
+        },
+
+        /**
+         * Determines whether two objects have the same set of keys.
+         *
+         * @param {object} a object one
+         * @param {object} b object two
+         *
+         * @return {boolean} true if same keys
+         */
+        keyEquals: function(a, b) {
+            for (var key in a)
+                if (!(key in b))
+                    return false;
+            for (key in b)
+                if (!(key in a))
+                    return false;
+            return true;
+        },
+
+        /**
+         * Splits an object into two according to a callback function
+         *
+         * @param {object} obj object to split
+         * @param {function} f function to determine how to split
+         * @param {object} ctx optional context
+         *
+         * @return {array} two element array of two split objects
+         */
+        splitObject: function(obj, f, ctx) {
+            var x = {};
+            var y = {};
+            Objs.iter(obj, function(value, key) {
+                if (f.apply(this, arguments))
+                    x[key] = value;
+                else
+                    y[key] = value;
+            }, ctx);
+            return [x, y];
         },
 
         /**

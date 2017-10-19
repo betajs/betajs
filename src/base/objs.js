@@ -400,6 +400,45 @@ Scoped.define("module:Objs", [
         },
 
         /**
+         * Determines whether two objects have the same set of keys.
+         *
+         * @param {object} a object one
+         * @param {object} b object two
+         *
+         * @return {boolean} true if same keys
+         */
+        keyEquals: function(a, b) {
+            for (var key in a)
+                if (!(key in b))
+                    return false;
+            for (key in b)
+                if (!(key in a))
+                    return false;
+            return true;
+        },
+
+        /**
+         * Splits an object into two according to a callback function
+         *
+         * @param {object} obj object to split
+         * @param {function} f function to determine how to split
+         * @param {object} ctx optional context
+         *
+         * @return {array} two element array of two split objects
+         */
+        splitObject: function(obj, f, ctx) {
+            var x = {};
+            var y = {};
+            Objs.iter(obj, function(value, key) {
+                if (f.apply(this, arguments))
+                    x[key] = value;
+                else
+                    y[key] = value;
+            }, ctx);
+            return [x, y];
+        },
+
+        /**
          * Creates the difference object of two objects.
          * 
          * @param {object} a object one
