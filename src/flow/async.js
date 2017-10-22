@@ -1,5 +1,20 @@
 Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
 
+    var clearImmediate = Functions.global_method("clearImmediate") ||
+        Functions.global_method("cancelAnimationFrame") ||
+        Functions.global_method("webkitCancelAnimationFrame") ||
+        Functions.global_method("mozCancelAnimationFrame") ||
+        Functions.global_method("clearTimeout");
+
+    var setImmediate = Functions.global_method("setImmediate") ||
+        Functions.global_method("requestAnimationFrame") ||
+        Functions.global_method("webkitRequestAnimationFrame") ||
+        Functions.global_method("mozRequestAnimationFrame") ||
+        function(cb) {
+            return setTimeout(cb, 0);
+        };
+
+
     var __eventuallyOnce = {};
     var __eventuallyOnceIdx = 1;
 
@@ -67,11 +82,20 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                 context: "object",
                 time: "number"
             });
-            var timer = setTimeout(function() {
-                clearTimeout(timer);
+            args.time = args.time || 0;
+            var result = {};
+            var cb = function() {
+                result.clear(result.handle);
                 args.func.apply(args.context || this, args.params || []);
-            }, args.time || 0);
-            return timer;
+            };
+            if (args.time > 0) {
+                result.clear = clearTimeout;
+                result.handle = setTimeout(cb, args.time);
+            } else {
+                result.clear = clearImmediate;
+                result.handle = setImmediate(cb);
+            }
+            return result;
         },
 
 
@@ -82,7 +106,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
          * 
          */
         clearEventually: function(ev) {
-            clearTimeout(ev);
+            ev.clear(ev.handle);
         },
 
 

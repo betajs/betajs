@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.123 - 2017-10-18
+betajs - v1.0.124 - 2017-10-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.123"
+    "version": "1.0.124"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2036,6 +2036,18 @@ Scoped.define("module:Functions", ["module:Types"], function(Types) {
             return function() {
                 return func.apply(instance, arguments);
             };
+        },
+
+
+        /**
+         * Takes a function name and returns the method call on the global object as a function
+         *
+         * @param {function} func function
+         * @return method call
+         */
+        global_method: function(func) {
+            var f = Scoped.getGlobal(func);
+            return f ? this.as_method(f, Scoped.getGlobal()) : f;
         },
 
 
@@ -10230,6 +10242,21 @@ Scoped.define("module:Exceptions.NativeException", [
 });
 Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
 
+    var clearImmediate = Functions.global_method("clearImmediate") ||
+        Functions.global_method("cancelAnimationFrame") ||
+        Functions.global_method("webkitCancelAnimationFrame") ||
+        Functions.global_method("mozCancelAnimationFrame") ||
+        Functions.global_method("clearTimeout");
+
+    var setImmediate = Functions.global_method("setImmediate") ||
+        Functions.global_method("requestAnimationFrame") ||
+        Functions.global_method("webkitRequestAnimationFrame") ||
+        Functions.global_method("mozRequestAnimationFrame") ||
+        function(cb) {
+            return setTimeout(cb, 0);
+        };
+
+
     var __eventuallyOnce = {};
     var __eventuallyOnceIdx = 1;
 
@@ -10297,11 +10324,20 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                 context: "object",
                 time: "number"
             });
-            var timer = setTimeout(function() {
-                clearTimeout(timer);
+            args.time = args.time || 0;
+            var result = {};
+            var cb = function() {
+                result.clear(result.handle);
                 args.func.apply(args.context || this, args.params || []);
-            }, args.time || 0);
-            return timer;
+            };
+            if (args.time > 0) {
+                result.clear = clearTimeout;
+                result.handle = setTimeout(cb, args.time);
+            } else {
+                result.clear = clearImmediate;
+                result.handle = setImmediate(cb);
+            }
+            return result;
         },
 
 
@@ -10312,7 +10348,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
          * 
          */
         clearEventually: function(ev) {
-            clearTimeout(ev);
+            ev.clear(ev.handle);
         },
 
 

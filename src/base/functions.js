@@ -36,6 +36,18 @@ Scoped.define("module:Functions", ["module:Types"], function(Types) {
 
 
         /**
+         * Takes a function name and returns the method call on the global object as a function
+         *
+         * @param {function} func function
+         * @return method call
+         */
+        global_method: function(func) {
+            var f = Scoped.getGlobal(func);
+            return f ? this.as_method(f, Scoped.getGlobal()) : f;
+        },
+
+
+        /**
          * Takes a function and returns a function that calls the original function on the first call and returns the return value on all subsequent call. In other words a lazy function cache.
          * 
          * @param {function} func function
