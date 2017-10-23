@@ -1,10 +1,12 @@
 Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
 
+    var clearTimeoutGlobal = Functions.global_method("clearTimeout");
+
     var clearImmediate = Functions.global_method("clearImmediate") ||
         Functions.global_method("cancelAnimationFrame") ||
         Functions.global_method("webkitCancelAnimationFrame") ||
         Functions.global_method("mozCancelAnimationFrame") ||
-        Functions.global_method("clearTimeout");
+        clearTimeoutGlobal;
 
     var setImmediate = Functions.global_method("setImmediate") ||
         Functions.global_method("requestAnimationFrame") ||
@@ -89,7 +91,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                 args.func.apply(args.context || this, args.params || []);
             };
             if (args.time > 0) {
-                result.clear = clearTimeout;
+                result.clear = clearTimeoutGlobal;
                 result.handle = setTimeout(cb, args.time);
             } else {
                 result.clear = clearImmediate;

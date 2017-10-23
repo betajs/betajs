@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.124 - 2017-10-22
+betajs - v1.0.125 - 2017-10-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.124 - 2017-10-22
+betajs - v1.0.125 - 2017-10-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.124"
+    "version": "1.0.125"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -10580,8 +10580,9 @@ Scoped.define("module:Collections.GroupedCollection", [
     "module:Collections.Collection",
     "module:Objs",
     "module:Properties.Properties",
-    "module:Functions"
-], function(Collection, Objs, Properties, Functions, scoped) {
+    "module:Functions",
+    "module:Promise"
+], function(Collection, Objs, Properties, Functions, Promise, scoped) {
     return Collection.extend({
         scoped: scoped
     }, function(inherited) {
@@ -10613,6 +10614,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__removeCallback = options.remove;
                 this.__afterGroupCreate = options.afterGroupCreate;
                 this.__callbackContext = options.context || this;
+                this.__ignoreParentIncrease = options.ignoreParentIncrease;
                 this.__propertiesClass = options.properties || Properties;
                 this.__itemsAttribute = options.itemsAttribute || "items";
                 this.__createProperties = options.create;
@@ -10687,11 +10689,12 @@ Scoped.define("module:Collections.GroupedCollection", [
              * @override
              */
             increase_forwards: function(steps) {
-                var current = this.__parent.count();
-                return this.__parent.increase_forwards(steps).success(function() {
+                var oldCount = this.__parent.count();
+                var promise = this.__ignoreParentIncrease ? Promise.create(true) : this.__parent.increase_forwards(steps);
+                return promise.success(function() {
                     if (!this.__autoIncreaseGroups)
                         return;
-                    var delta = this.__parent.count() - current;
+                    var delta = this.__parent.count() - oldCount;
                     var current = this.last();
                     while (delta < steps) {
                         current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), 1), true);
@@ -10711,11 +10714,12 @@ Scoped.define("module:Collections.GroupedCollection", [
              * @override
              */
             increase_backwards: function(steps) {
-                var current = this.__parent.count();
-                return this.__parent.increase_backwards(steps).success(function() {
+                var oldCount = this.__parent.count();
+                var promise = this.__ignoreParentIncrease ? Promise.create(true) : this.__parent.increase_backwards(steps);
+                return promise.success(function() {
                     if (!this.__autoIncreaseGroups)
                         return;
-                    var delta = this.__parent.count() - current;
+                    var delta = this.__parent.count() - oldCount;
                     var current = this.first();
                     while (delta < steps) {
                         current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), -1), true);
@@ -11252,11 +11256,13 @@ Scoped.define("module:Exceptions.NativeException", [
 });
 Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
 
+    var clearTimeoutGlobal = Functions.global_method("clearTimeout");
+
     var clearImmediate = Functions.global_method("clearImmediate") ||
         Functions.global_method("cancelAnimationFrame") ||
         Functions.global_method("webkitCancelAnimationFrame") ||
         Functions.global_method("mozCancelAnimationFrame") ||
-        Functions.global_method("clearTimeout");
+        clearTimeoutGlobal;
 
     var setImmediate = Functions.global_method("setImmediate") ||
         Functions.global_method("requestAnimationFrame") ||
@@ -11341,7 +11347,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                 args.func.apply(args.context || this, args.params || []);
             };
             if (args.time > 0) {
-                result.clear = clearTimeout;
+                result.clear = clearTimeoutGlobal;
                 result.handle = setTimeout(cb, args.time);
             } else {
                 result.clear = clearImmediate;

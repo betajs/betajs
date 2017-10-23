@@ -2,8 +2,9 @@ Scoped.define("module:Collections.GroupedCollection", [
     "module:Collections.Collection",
     "module:Objs",
     "module:Properties.Properties",
-    "module:Functions"
-], function(Collection, Objs, Properties, Functions, scoped) {
+    "module:Functions",
+    "module:Promise"
+], function(Collection, Objs, Properties, Functions, Promise, scoped) {
     return Collection.extend({
         scoped: scoped
     }, function(inherited) {
@@ -35,6 +36,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__removeCallback = options.remove;
                 this.__afterGroupCreate = options.afterGroupCreate;
                 this.__callbackContext = options.context || this;
+                this.__ignoreParentIncrease = options.ignoreParentIncrease;
                 this.__propertiesClass = options.properties || Properties;
                 this.__itemsAttribute = options.itemsAttribute || "items";
                 this.__createProperties = options.create;
@@ -109,11 +111,12 @@ Scoped.define("module:Collections.GroupedCollection", [
              * @override
              */
             increase_forwards: function(steps) {
-                var current = this.__parent.count();
-                return this.__parent.increase_forwards(steps).success(function() {
+                var oldCount = this.__parent.count();
+                var promise = this.__ignoreParentIncrease ? Promise.create(true) : this.__parent.increase_forwards(steps);
+                return promise.success(function() {
                     if (!this.__autoIncreaseGroups)
                         return;
-                    var delta = this.__parent.count() - current;
+                    var delta = this.__parent.count() - oldCount;
                     var current = this.last();
                     while (delta < steps) {
                         current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), 1), true);
@@ -133,11 +136,12 @@ Scoped.define("module:Collections.GroupedCollection", [
              * @override
              */
             increase_backwards: function(steps) {
-                var current = this.__parent.count();
-                return this.__parent.increase_backwards(steps).success(function() {
+                var oldCount = this.__parent.count();
+                var promise = this.__ignoreParentIncrease ? Promise.create(true) : this.__parent.increase_backwards(steps);
+                return promise.success(function() {
                     if (!this.__autoIncreaseGroups)
                         return;
-                    var delta = this.__parent.count() - current;
+                    var delta = this.__parent.count() - oldCount;
                     var current = this.first();
                     while (delta < steps) {
                         current = this.touchGroup(this.__generateGroupData.call(this.__callbackContext, current.data(), -1), true);
