@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.125 - 2017-10-22
+betajs - v1.0.126 - 2017-10-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.125"
+    "version": "1.0.126"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -10248,13 +10248,15 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
 
     var clearTimeoutGlobal = Functions.global_method("clearTimeout");
 
-    var clearImmediate = Functions.global_method("clearImmediate") ||
+    var clearImmediate =
+        Functions.global_method("clearImmediate") ||
         Functions.global_method("cancelAnimationFrame") ||
         Functions.global_method("webkitCancelAnimationFrame") ||
         Functions.global_method("mozCancelAnimationFrame") ||
         clearTimeoutGlobal;
 
-    var setImmediate = Functions.global_method("setImmediate") ||
+    var setImmediate =
+        Functions.global_method("setImmediate") ||
         Functions.global_method("requestAnimationFrame") ||
         Functions.global_method("webkitRequestAnimationFrame") ||
         Functions.global_method("mozRequestAnimationFrame") ||
@@ -10354,7 +10356,8 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
          * 
          */
         clearEventually: function(ev) {
-            ev.clear(ev.handle);
+            if (ev && ev.clear && ev.handle)
+                ev.clear(ev.handle);
         },
 
 
