@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.126 - 2017-10-25
+betajs - v1.0.127 - 2017-10-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.126 - 2017-10-25
+betajs - v1.0.127 - 2017-10-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.126"
+    "version": "1.0.127"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6273,6 +6273,69 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             return input.replace(/\w\S*/g, function(txt) {
                 return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
             });
+        },
+
+        /**
+         * Converts string to pascal case
+         *
+         * @param {string} s input string
+         *
+         * @return {string} input in pascal case
+         */
+        pascalCase: function(s) {
+            return s.replace(/[A-Z][a-z0-9]/g, function(txt) {
+                return " " + txt;
+            }).replace(/[A-Za-z0-9]+/g, function(txt) {
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            }).replace(/[-_\s]/g, "");
+        },
+
+        /**
+         * Converts string to camel case
+         *
+         * @param {string} s input string
+         *
+         * @return {string} input in camel case
+         */
+        camelCase: function(s) {
+            var txt = this.pascalCase(s);
+            return txt.charAt(0).toLowerCase() + txt.substr(1);
+        },
+
+        /**
+         * Converts string to train case
+         *
+         * @param {string} s input string
+         *
+         * @return {string} input in train case
+         */
+        trainCase: function(s) {
+            var txt = this.pascalCase(s);
+            return txt.replace(/[A-Z]/g, function(txt) {
+                return "-" + txt;
+            }).substring(1);
+        },
+
+        /**
+         * Converts string to snake case
+         *
+         * @param {string} s input string
+         *
+         * @return {string} input in snake case
+         */
+        snakeCase: function(s) {
+            return this.trainCase(s).replace(/-/g, "_").toLowerCase();
+        },
+
+        /**
+         * Converts string to kebab case
+         *
+         * @param {string} s input string
+         *
+         * @return {string} input in kebab case
+         */
+        kebabCase: function(s) {
+            return this.trainCase(s).toLowerCase();
         },
 
         /**

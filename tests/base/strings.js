@@ -26,3 +26,58 @@ QUnit.test("named capture groups", function (assert) {
 	var str = BetaJS.Strings.regexReplaceGroups(regex, back);
 	assert.equal(str, "/abc/def/geh/ijk/lmn/opq/456");
 });
+
+QUnit.test("pascal case", function (assert) {
+	assert.equal(BetaJS.Strings.pascalCase("pascalCase"), "PascalCase");
+    assert.equal(BetaJS.Strings.pascalCase("PascalCase"), "PascalCase");
+    assert.equal(BetaJS.Strings.pascalCase("pascal_case"), "PascalCase");
+    assert.equal(BetaJS.Strings.pascalCase("pascal-case"), "PascalCase");
+    assert.equal(BetaJS.Strings.pascalCase("pascal case"), "PascalCase");
+    assert.equal(BetaJS.Strings.pascalCase("PASCAL_CASE"), "PascalCase");
+    assert.equal(BetaJS.Strings.pascalCase("PASCAL-CASE"), "PascalCase");
+    assert.equal(BetaJS.Strings.pascalCase("PASCAL CASE"), "PascalCase");
+});
+
+QUnit.test("camel case", function (assert) {
+    assert.equal(BetaJS.Strings.camelCase("camelCase"), "camelCase");
+    assert.equal(BetaJS.Strings.camelCase("CamelCase"), "camelCase");
+    assert.equal(BetaJS.Strings.camelCase("camel_case"), "camelCase");
+    assert.equal(BetaJS.Strings.camelCase("camel-case"), "camelCase");
+    assert.equal(BetaJS.Strings.camelCase("camel case"), "camelCase");
+    assert.equal(BetaJS.Strings.camelCase("CAMEL_CASE"), "camelCase");
+    assert.equal(BetaJS.Strings.camelCase("CAMEL-CASE"), "camelCase");
+    assert.equal(BetaJS.Strings.camelCase("CAMEL CASE"), "camelCase");
+});
+
+QUnit.test("snake case", function (assert) {
+    assert.equal(BetaJS.Strings.snakeCase("snakeCase"), "snake_case");
+    assert.equal(BetaJS.Strings.snakeCase("SnakeCase"), "snake_case");
+    assert.equal(BetaJS.Strings.snakeCase("snake_case"), "snake_case");
+    assert.equal(BetaJS.Strings.snakeCase("snake-case"), "snake_case");
+    assert.equal(BetaJS.Strings.snakeCase("snake case"), "snake_case");
+    assert.equal(BetaJS.Strings.snakeCase("SNAKE_CASE"), "snake_case");
+    assert.equal(BetaJS.Strings.snakeCase("SNAKE-CASE"), "snake_case");
+    assert.equal(BetaJS.Strings.snakeCase("SNAKE CASE"), "snake_case");
+});
+
+QUnit.test("kebab case", function (assert) {
+    assert.equal(BetaJS.Strings.kebabCase("kebabCase"), "kebab-case");
+    assert.equal(BetaJS.Strings.kebabCase("KebabCase"), "kebab-case");
+    assert.equal(BetaJS.Strings.kebabCase("kebab_case"), "kebab-case");
+    assert.equal(BetaJS.Strings.kebabCase("kebab-case"), "kebab-case");
+    assert.equal(BetaJS.Strings.kebabCase("kebab case"), "kebab-case");
+    assert.equal(BetaJS.Strings.kebabCase("KEBAB_CASE"), "kebab-case");
+    assert.equal(BetaJS.Strings.kebabCase("KEBAB-CASE"), "kebab-case");
+    assert.equal(BetaJS.Strings.kebabCase("KEBAB CASE"), "kebab-case");
+});
+
+QUnit.test("train case", function (assert) {
+    assert.equal(BetaJS.Strings.trainCase("trainCase"), "Train-Case");
+    assert.equal(BetaJS.Strings.trainCase("TrainCase"), "Train-Case");
+    assert.equal(BetaJS.Strings.trainCase("train_case"), "Train-Case");
+    assert.equal(BetaJS.Strings.trainCase("train-case"), "Train-Case");
+    assert.equal(BetaJS.Strings.trainCase("train case"), "Train-Case");
+    assert.equal(BetaJS.Strings.trainCase("TRAIN_CASE"), "Train-Case");
+    assert.equal(BetaJS.Strings.trainCase("TRAIN-CASE"), "Train-Case");
+    assert.equal(BetaJS.Strings.trainCase("TRAIN CASE"), "Train-Case");
+});
