@@ -7,8 +7,9 @@ Scoped.define("module:Ajax.Support", [
     "module:Types",
     "module:Net.Uri",
     "module:Net.HttpHeader",
-    "module:Async"
-], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader, Async) {
+    "module:Async",
+    "module:Time"
+], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader, Async, Time) {
 
     /**
      * Ajax Support Module
@@ -141,6 +142,8 @@ Scoped.define("module:Ajax.Support", [
                 context: this,
                 query: {},
                 jsonp: undefined,
+                noCache: undefined,
+                noCacheParam: null,
                 postmessage: undefined,
                 contentType: "urlencoded", // json
                 resilience: 1,
@@ -172,6 +175,8 @@ Scoped.define("module:Ajax.Support", [
             }
             if (options.wrapStatus && options.wrapStatusParam)
                 options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.wrapStatusParam, "true"));
+            if (options.noCache && options.noCacheParam)
+                options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.noCacheParam, Time.now()));
             delete options.mapMethods;
             delete options.mapMethodsKey;
             if (options.contentType === "urlencoded" && !Types.is_empty(options.data)) {

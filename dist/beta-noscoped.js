@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.127 - 2017-10-26
+betajs - v1.0.128 - 2017-10-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.127"
+    "version": "1.0.128"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -25,8 +25,9 @@ Scoped.define("module:Ajax.Support", [
     "module:Types",
     "module:Net.Uri",
     "module:Net.HttpHeader",
-    "module:Async"
-], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader, Async) {
+    "module:Async",
+    "module:Time"
+], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader, Async, Time) {
 
     /**
      * Ajax Support Module
@@ -159,6 +160,8 @@ Scoped.define("module:Ajax.Support", [
                 context: this,
                 query: {},
                 jsonp: undefined,
+                noCache: undefined,
+                noCacheParam: null,
                 postmessage: undefined,
                 contentType: "urlencoded", // json
                 resilience: 1,
@@ -190,6 +193,8 @@ Scoped.define("module:Ajax.Support", [
             }
             if (options.wrapStatus && options.wrapStatusParam)
                 options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.wrapStatusParam, "true"));
+            if (options.noCache && options.noCacheParam)
+                options.uri = Uri.appendUriParams(options.uri, Objs.objectBy(options.noCacheParam, Time.now()));
             delete options.mapMethods;
             delete options.mapMethodsKey;
             if (options.contentType === "urlencoded" && !Types.is_empty(options.data)) {
