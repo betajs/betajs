@@ -1,6 +1,8 @@
 Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
 
-    var clearTimeoutGlobal = Functions.global_method("clearTimeout");
+    var clearTimeoutGlobal = function(h) {
+        return clearTimeout(h);
+    };
 
     var clearImmediate =
         Functions.global_method("clearImmediate") ||

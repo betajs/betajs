@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.128 - 2017-10-30
+betajs - v1.0.129 - 2017-10-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.128 - 2017-10-30
+betajs - v1.0.129 - 2017-10-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.128"
+    "version": "1.0.129"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11324,7 +11324,9 @@ Scoped.define("module:Exceptions.NativeException", [
 });
 Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
 
-    var clearTimeoutGlobal = Functions.global_method("clearTimeout");
+    var clearTimeoutGlobal = function(h) {
+        return clearTimeout(h);
+    };
 
     var clearImmediate =
         Functions.global_method("clearImmediate") ||
