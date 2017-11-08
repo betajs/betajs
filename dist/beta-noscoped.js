@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.129 - 2017-10-30
+betajs - v1.0.130 - 2017-11-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.129"
+    "version": "1.0.130"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3950,6 +3950,23 @@ Scoped.define("module:Objs", [
                 }];
             }
             return result;
+        },
+
+        /**
+         * Converts an object into an array by calling a custom function for combining key and value.
+         *
+         * @param {object} obj source object
+         * @param f a function for combining key and value
+         * @param {object} context optional function context
+         *
+         * @return {array} resulint arrayarray
+         */
+        objectToArray: function(obj, f, ctx) {
+            var a = [];
+            this.iter(obj, function(value, key) {
+                a.push(f.call(this, key, value));
+            }, ctx);
+            return a;
         }
 
     };

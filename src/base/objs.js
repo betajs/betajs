@@ -725,6 +725,23 @@ Scoped.define("module:Objs", [
                 }];
             }
             return result;
+        },
+
+        /**
+         * Converts an object into an array by calling a custom function for combining key and value.
+         *
+         * @param {object} obj source object
+         * @param f a function for combining key and value
+         * @param {object} context optional function context
+         *
+         * @return {array} resulint arrayarray
+         */
+        objectToArray: function(obj, f, ctx) {
+            var a = [];
+            this.iter(obj, function(value, key) {
+                a.push(f.call(this, key, value));
+            }, ctx);
+            return a;
         }
 
     };
