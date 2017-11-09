@@ -68,7 +68,7 @@ Scoped.define("module:Collections.ConcatCollection", [
              */
             bulkOperationInProgress: function() {
                 return inherited.bulkOperationInProgress.call(this) || Objs.exists(this.__parents, function(parent) {
-                    return parent.bulkOperationInProgress();
+                    return parent.parent.bulkOperationInProgress();
                 });
             },
 

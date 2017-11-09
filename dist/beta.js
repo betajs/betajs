@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.130 - 2017-11-08
+betajs - v1.0.131 - 2017-11-09
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.130 - 2017-11-08
+betajs - v1.0.131 - 2017-11-09
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.130"
+    "version": "1.0.131"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -10508,7 +10508,7 @@ Scoped.define("module:Collections.ConcatCollection", [
              */
             bulkOperationInProgress: function() {
                 return inherited.bulkOperationInProgress.call(this) || Objs.exists(this.__parents, function(parent) {
-                    return parent.bulkOperationInProgress();
+                    return parent.parent.bulkOperationInProgress();
                 });
             },
 

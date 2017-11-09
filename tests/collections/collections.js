@@ -167,6 +167,8 @@ QUnit.test("test concat collection", function (assert) {
     });
 	var concat_list = new BetaJS.Collections.ConcatCollection([list1, list2]);
 	assert.equal(concat_list.count(), 5);
+	list2.remove(objs2[2]);
+    assert.equal(concat_list.count(), 4);
 });
 
 
