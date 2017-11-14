@@ -2,6 +2,11 @@ QUnit.test("test nl2br", function(assert) {
 	assert.ok(BetaJS.Strings.nl2br("abc\ndef\ngeh") == "abc<br />\ndef<br />\ngeh");
 });
 
+QUnit.test("test strip end", function(assert) {
+    assert.ok(BetaJS.Strings.strip_end("/foo/bar", "/"), "/foo/bar");
+    assert.ok(BetaJS.Strings.strip_end("/foo/bar/", "/"), "/foo/bar");
+});
+
 QUnit.test("test htmlentities", function(assert) {
 	assert.ok(BetaJS.Strings.htmlentities("<test>") == "&lt;test&gt;");
 });

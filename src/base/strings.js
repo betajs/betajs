@@ -122,6 +122,16 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             return this.starts_with(s, needle) ? s.substring(needle.length) : s;
         },
 
+        /** Removes sub string from a string if string ends with sub string
+         *
+         * @param s string in question
+         * @param needle sub string
+         * @return string without sub string if it ends with sub string otherwise it returns the original string
+         */
+        strip_end: function(s, needle) {
+            return this.ends_with(s, needle) ? s.substring(0, s.length - needle.length) : s;
+        },
+
         /**
          * Returns the complete remaining part of a string after the last occurrence of a sub string
          *

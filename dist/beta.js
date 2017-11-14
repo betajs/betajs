@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.131 - 2017-11-09
+betajs - v1.0.132 - 2017-11-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.131 - 2017-11-09
+betajs - v1.0.132 - 2017-11-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.131"
+    "version": "1.0.132"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6193,6 +6193,16 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
          */
         strip_start: function(s, needle) {
             return this.starts_with(s, needle) ? s.substring(needle.length) : s;
+        },
+
+        /** Removes sub string from a string if string ends with sub string
+         *
+         * @param s string in question
+         * @param needle sub string
+         * @return string without sub string if it ends with sub string otherwise it returns the original string
+         */
+        strip_end: function(s, needle) {
+            return this.ends_with(s, needle) ? s.substring(0, s.length - needle.length) : s;
         },
 
         /**
