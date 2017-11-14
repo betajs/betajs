@@ -309,6 +309,7 @@ Scoped.define("module:Collections.Collection", [
                 while (addQueue.length > 0)
                     this.add(addQueue.shift());
                 this.bulk_operations--;
+                this.trigger("replaced-objects");
                 return this;
             },
 
