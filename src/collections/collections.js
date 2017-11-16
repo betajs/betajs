@@ -417,6 +417,38 @@ Scoped.define("module:Collections.Collection", [
             },
 
             /**
+             * Checks whether an item exists
+             *
+             * @param {function} cb Item callback
+             * @param {object} context Context for callback
+             * @returns {boolean} true if element exists
+             *
+             */
+            has: function(cb, context) {
+                var result = false;
+                this.iterate(function(item) {
+                    result = result || cb.call(this, item);
+                }, context);
+                return result;
+            },
+
+            /**
+             * Checks whether something holds for all items
+             *
+             * @param {function} cb Item callback
+             * @param {object} context Context for callback
+             * @returns {boolean} true if holds for all items
+             *
+             */
+            forall: function(cb, context) {
+                var result = true;
+                this.iterate(function(item) {
+                    result = result && cb.call(this, item);
+                }, context);
+                return result;
+            },
+
+            /**
              * Creates an iterator instance for the collection.
              * 
              * @return {object} Iterator instance

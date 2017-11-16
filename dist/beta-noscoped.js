@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.133 - 2017-11-14
+betajs - v1.0.134 - 2017-11-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.133"
+    "version": "1.0.134"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9309,6 +9309,38 @@ Scoped.define("module:Collections.Collection", [
             iterate: function(cb, context) {
                 this.__data.iterate(cb, context);
                 return this;
+            },
+
+            /**
+             * Checks whether an item exists
+             *
+             * @param {function} cb Item callback
+             * @param {object} context Context for callback
+             * @returns {boolean} true if element exists
+             *
+             */
+            has: function(cb, context) {
+                var result = false;
+                this.iterate(function(item) {
+                    result = result || cb.call(this, item);
+                }, context);
+                return result;
+            },
+
+            /**
+             * Checks whether something holds for all items
+             *
+             * @param {function} cb Item callback
+             * @param {object} context Context for callback
+             * @returns {boolean} true if holds for all items
+             *
+             */
+            forall: function(cb, context) {
+                var result = true;
+                this.iterate(function(item) {
+                    result = result && cb.call(this, item);
+                }, context);
+                return result;
             },
 
             /**
