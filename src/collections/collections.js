@@ -209,10 +209,11 @@ Scoped.define("module:Collections.Collection", [
              * @param {object} object Object whose attribute has changed
              * @param {string} key Key of changed attribute
              * @param value New value of the object
+             * @param oldValue Old value of the object
              * @fires BetaJS.Collections.Collection#update
              * @fires BetaJS.Collections.Collection#change
              */
-            _object_changed: function(object, key, value) {
+            _object_changed: function(object, key, value, oldValue) {
                 /**
                  * @event BetaJS.Collections.Collection#update
                  */
@@ -220,8 +221,8 @@ Scoped.define("module:Collections.Collection", [
                 /**
                  * @event BetaJS.Collections.Collection#change
                  */
-                this.trigger("change", object, key, value);
-                this.trigger("change:" + key, object, value);
+                this.trigger("change", object, key, value, oldValue);
+                this.trigger("change:" + key, object, value, oldValue);
                 this.__data.re_index(this.getIndex(object));
             },
 

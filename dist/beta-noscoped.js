@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.134 - 2017-11-16
+betajs - v1.0.135 - 2017-11-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.134"
+    "version": "1.0.135"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9104,10 +9104,11 @@ Scoped.define("module:Collections.Collection", [
              * @param {object} object Object whose attribute has changed
              * @param {string} key Key of changed attribute
              * @param value New value of the object
+             * @param oldValue Old value of the object
              * @fires BetaJS.Collections.Collection#update
              * @fires BetaJS.Collections.Collection#change
              */
-            _object_changed: function(object, key, value) {
+            _object_changed: function(object, key, value, oldValue) {
                 /**
                  * @event BetaJS.Collections.Collection#update
                  */
@@ -9115,8 +9116,8 @@ Scoped.define("module:Collections.Collection", [
                 /**
                  * @event BetaJS.Collections.Collection#change
                  */
-                this.trigger("change", object, key, value);
-                this.trigger("change:" + key, object, value);
+                this.trigger("change", object, key, value, oldValue);
+                this.trigger("change:" + key, object, value, oldValue);
                 this.__data.re_index(this.getIndex(object));
             },
 
@@ -9761,7 +9762,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 var group = this.query(query).nextOrNull();
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
-                    group[this.__itemsAttribute] = group.auto_destroy(new Collection({
+                    group[this.__itemsAttribute] = group[this.__itemsAttribute] || group.auto_destroy(new Collection({
                         compare: this.__parent.get_compare()
                     }));
                     group[this.__itemsAttribute].bulkOperationInProgress = Functions.as_method(this.bulkOperationInProgress, this);

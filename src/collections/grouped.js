@@ -65,7 +65,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 var group = this.query(query).nextOrNull();
                 if (!group && create) {
                     group = this.__createProperties ? this.__createProperties.call(this.__callbackContext) : new this.__propertiesClass();
-                    group[this.__itemsAttribute] = group.auto_destroy(new Collection({
+                    group[this.__itemsAttribute] = group[this.__itemsAttribute] || group.auto_destroy(new Collection({
                         compare: this.__parent.get_compare()
                     }));
                     group[this.__itemsAttribute].bulkOperationInProgress = Functions.as_method(this.bulkOperationInProgress, this);
