@@ -287,13 +287,34 @@ Scoped.define("module:Promise", [
          * @param {object} context method context
          * @param {int} resilience number of times to call
          * @param {array} args arguments for method
+         * @param {int} delay optional delay in-between tries
          * 
          * @return {object} promise
          */
-        resilience: function(method, context, resilience, args) {
+        resilience: function(method, context, resilience, args, delay) {
+            if (delay)
+                method = this.delayPromiseMethod(method, delay);
             return method.apply(context, args).mapError(function(error) {
                 return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
             }, this);
+        },
+
+        /**
+         * Creates a new method returning a promise based on a method returning a promise by delaying the underlaying method.
+         *
+         * @param {function} method original method
+         * @param {int} delay delay time
+         * @returns {function} delayed method
+         */
+        delayPromiseMethod: function(method, delay) {
+            var self = this;
+            return function() {
+                var promise = self.create();
+                Async.eventually(function() {
+                    method.apply(this, arguments).forwardCallback(promise);
+                }, arguments, this, delay);
+                return promise;
+            };
         }
 
     };
@@ -502,6 +523,24 @@ Scoped.define("module:Promise", [
          */
         asyncCallbackFunc: function() {
             return Functions.as_method(this.asyncCallback, this);
+        },
+
+        /**
+         * Generates a context-less function for the asynchronous success.
+         *
+         * @return {function} context-less function
+         */
+        asyncSuccessFunc: function() {
+            return Functions.as_method(this.asyncSuccess, this);
+        },
+
+        /**
+         * Generates a context-less function for the asynchronous error.
+         *
+         * @return {function} context-less function
+         */
+        asyncErrorFunc: function() {
+            return Functions.as_method(this.asyncError, this);
         },
 
         /**

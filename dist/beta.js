@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.135 - 2017-11-26
+betajs - v1.0.136 - 2017-11-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.135 - 2017-11-26
+betajs - v1.0.136 - 2017-11-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.135"
+    "version": "1.0.136"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11822,13 +11822,34 @@ Scoped.define("module:Promise", [
          * @param {object} context method context
          * @param {int} resilience number of times to call
          * @param {array} args arguments for method
+         * @param {int} delay optional delay in-between tries
          * 
          * @return {object} promise
          */
-        resilience: function(method, context, resilience, args) {
+        resilience: function(method, context, resilience, args, delay) {
+            if (delay)
+                method = this.delayPromiseMethod(method, delay);
             return method.apply(context, args).mapError(function(error) {
                 return resilience === 0 ? error : this.resilience(method, context, resilience - 1, args);
             }, this);
+        },
+
+        /**
+         * Creates a new method returning a promise based on a method returning a promise by delaying the underlaying method.
+         *
+         * @param {function} method original method
+         * @param {int} delay delay time
+         * @returns {function} delayed method
+         */
+        delayPromiseMethod: function(method, delay) {
+            var self = this;
+            return function() {
+                var promise = self.create();
+                Async.eventually(function() {
+                    method.apply(this, arguments).forwardCallback(promise);
+                }, arguments, this, delay);
+                return promise;
+            };
         }
 
     };
@@ -12037,6 +12058,24 @@ Scoped.define("module:Promise", [
          */
         asyncCallbackFunc: function() {
             return Functions.as_method(this.asyncCallback, this);
+        },
+
+        /**
+         * Generates a context-less function for the asynchronous success.
+         *
+         * @return {function} context-less function
+         */
+        asyncSuccessFunc: function() {
+            return Functions.as_method(this.asyncSuccess, this);
+        },
+
+        /**
+         * Generates a context-less function for the asynchronous error.
+         *
+         * @return {function} context-less function
+         */
+        asyncErrorFunc: function() {
+            return Functions.as_method(this.asyncError, this);
         },
 
         /**
