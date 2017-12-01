@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.136 - 2017-11-30
+betajs - v1.0.136 - 2017-12-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.136 - 2017-11-30
+betajs - v1.0.136 - 2017-12-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -11845,9 +11845,10 @@ Scoped.define("module:Promise", [
             var self = this;
             return function() {
                 var promise = self.create();
+                var args = Functions.getArguments(arguments);
                 Async.eventually(function() {
-                    method.apply(this, arguments).forwardCallback(promise);
-                }, arguments, this, delay);
+                    method.apply(this, args).forwardCallback(promise);
+                }, this, delay);
                 return promise;
             };
         }

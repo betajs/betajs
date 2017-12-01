@@ -310,9 +310,10 @@ Scoped.define("module:Promise", [
             var self = this;
             return function() {
                 var promise = self.create();
+                var args = Functions.getArguments(arguments);
                 Async.eventually(function() {
-                    method.apply(this, arguments).forwardCallback(promise);
-                }, arguments, this, delay);
+                    method.apply(this, args).forwardCallback(promise);
+                }, this, delay);
                 return promise;
             };
         }
