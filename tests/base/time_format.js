@@ -32,7 +32,7 @@ QUnit.test("test plus day format", function(assert) {
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Monday");
 	t = BetaJS.Time.updateTime(t, {day: (BetaJS.Time.timeComponentGet(t,("day")) + 1)});
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Tuesday");
-	t = BetaJS.Time.dateToTime(new Date(2017, 0, 31)); //2018-1-31
+	t = BetaJS.Time.dateToTime(new Date(2018, 0, 31)); //2018-1-31
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Wednesday");
 	t = BetaJS.Time.updateTime(t, {day: (BetaJS.Time.timeComponentGet(t,("day")) + 1)});
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Thursday");
