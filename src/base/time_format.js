@@ -205,15 +205,16 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
          * Returns the week number
          *
          * @param {int} time time
-         * @return {string} three letter weekday string
+         * @param {int} timezone timezone
+         * @return {int} number of the week in a year
          */
-        weekNumber: function(time) {
-            var base = new Date(time);
+        weekNumber: function(time, timezone) {
+            var base = new Date(time + Time.timezoneBias(timezone));
             var d = new Date(Date.UTC(base.getFullYear(), base.getMonth(), base.getDate()));
             var dayNum = d.getUTCDay() || 7;
             d.setUTCDate(d.getUTCDate() + 4 - dayNum);
             var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         },
 
         /**
