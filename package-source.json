@@ -1,76 +1,82 @@
 {
-	"name": "betajs",
-	"version": "1.0.138",
-	"description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
-	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
-	"devDependencies": {
-		"betajs-shims": "~0.0.13",
-		"lodash": "",
-		"grunt": "",
-		"grunt-contrib-jshint": "",
-		"grunt-contrib-concat": "",
-		"grunt-contrib-uglify": "~2.3.0",
-		"grunt-contrib-clean": "",
-		"grunt-preprocess": "",
-		"grunt-closure-tools": "",
-		"grunt-githooks": "",
-		"qunitjs": "",
-		"grunt-jsdoc": "",
-		"grunt-shell": "",
-		"grunt-template": "",
-		"grunt-benchmark": "",
-	    "grunt-betajs-docs-compile":"~0.0.19",
-	    "betajs-scoped": "~0.0.13",
-	    "betajs-compile": "~0.0.28",
-		"js-beautify": ""
-	},
-	"main": "dist/beta.js",
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/betajs/betajs.git"
-	},
-	"scripts": {
-		"test": "grunt check"
-	},
-	"meta": {
-		"sponsors": ["Ziggeo", "Browserstack"],
-		"guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		"installdoc": "docsrc/common/install.md",
-		"summarydoc": "docsrc/common/summary.md",
-		"badges": {
-			"codeclimate": true,
-			"travis": true,
-			"npm": true,
-			"gitter": true
-		},
-		"credits": [
-			"Underscore, MIT Software License, (c) 2009-2013 Jeremy Ashkenas, DocumentCloud",
-			"parseUri, MIT Software License, (c) Steven Levithan"
-		],
-		"compatability": {
-			"Firefox": "3 - Latest",
-			"Chrome": "18 - Latest",
-			"Safari": "4 - Latest",
-			"Opera": "12 - Latest",
-			"Internet Explorer": "6 - Latest",
-			"Edge": "12 - Latest",
-			"iOS": "3.0 - Latest",
-			"Yandex": "Latest",
-			"Android": "2.2 - Latest",
-			"NodeJS": "4.0 - Latest"
-		},
-		"weakDependencies": {
-			"betajs-scoped": "https://github.com/betajs/betajs-scoped",
-			"betajs-shims": "https://github.com/betajs/betajs-shims"
-		},
-		"tests": {
-			"Test Suite": "http://rawgit.com/betajs/betajs/master/tests/tests.html"
-		},
-		"cdn": {
-			"beta.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta.js",
-			"beta.min.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta.min.js",
-			"beta-noscoped.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.js",
-			"beta-noscoped.min.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.min.js"
-		}
-	} 
+    "name": "betajs",
+    "version": "1.0.139",
+    "description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
+    "contributors": [
+        "Oliver Friedmann",
+        "Victor Lingenthal"
+    ],
+    "devDependencies": {
+        "betajs-shims": "~0.0.13",
+        "lodash": "",
+        "grunt": "",
+        "grunt-contrib-jshint": "",
+        "grunt-contrib-concat": "",
+        "grunt-contrib-uglify": "~2.3.0",
+        "grunt-contrib-clean": "",
+        "grunt-preprocess": "",
+        "grunt-closure-tools": "",
+        "grunt-githooks": "",
+        "qunitjs": "",
+        "grunt-jsdoc": "",
+        "grunt-shell": "",
+        "grunt-template": "",
+        "grunt-benchmark": "",
+        "grunt-betajs-docs-compile": "~0.0.19",
+        "betajs-scoped": "~0.0.13",
+        "betajs-compile": "~0.0.28",
+        "js-beautify": ""
+    },
+    "main": "dist/beta.js",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/betajs/betajs.git"
+    },
+    "scripts": {
+        "test": "grunt check"
+    },
+    "meta": {
+        "sponsors": [
+            "Ziggeo",
+            "Browserstack"
+        ],
+        "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
+        "installdoc": "docsrc/common/install.md",
+        "summarydoc": "docsrc/common/summary.md",
+        "badges": {
+            "codeclimate": true,
+            "travis": true,
+            "npm": true,
+            "gitter": true
+        },
+        "credits": [
+            "Underscore, MIT Software License, (c) 2009-2013 Jeremy Ashkenas, DocumentCloud",
+            "parseUri, MIT Software License, (c) Steven Levithan"
+        ],
+        "compatability": {
+            "Firefox": "3 - Latest",
+            "Chrome": "18 - Latest",
+            "Safari": "4 - Latest",
+            "Opera": "12 - Latest",
+            "Internet Explorer": "6 - Latest",
+            "Edge": "12 - Latest",
+            "iOS": "3.0 - Latest",
+            "Yandex": "Latest",
+            "Android": "2.2 - Latest",
+            "NodeJS": "4.0 - Latest"
+        },
+        "weakDependencies": {
+            "betajs-scoped": "https://github.com/betajs/betajs-scoped",
+            "betajs-shims": "https://github.com/betajs/betajs-shims"
+        },
+        "tests": {
+            "Test Suite": "http://rawgit.com/betajs/betajs/master/tests/tests.html"
+        },
+        "cdn": {
+            "beta.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta.js",
+            "beta.min.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta.min.js",
+            "beta-noscoped.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.js",
+            "beta-noscoped.min.js": "http://cdn.rawgit.com/betajs/betajs/master/dist/beta-noscoped.min.js"
+        }
+    }
 }

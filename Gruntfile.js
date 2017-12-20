@@ -32,6 +32,7 @@ module.exports = function(grunt) {
 	.readmeTask()
     .licenseTask()
     .packageTask()
+	.autoincreasepackageTask(null, "package-source.json")
 	.githookTask(null, "pre-commit", "check")
     
     /* Documentation */
@@ -39,7 +40,7 @@ module.exports = function(grunt) {
 
 	grunt.initConfig(gruntHelper.config);
 
-	grunt.registerTask('default', ['package', 'githook', 'readme', 'license', 'codeclimate', 'travis', "jsbeautify", 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
+	grunt.registerTask('default', ['autoincreasepackage', 'package', 'githook', 'readme', 'license', 'codeclimate', 'travis', "jsbeautify", 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
 	grunt.registerTask('check', ['lint', 'qunitjs']);
 
 };

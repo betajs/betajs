@@ -3,8 +3,9 @@ Scoped.define("module:Collections.GroupedCollection", [
     "module:Objs",
     "module:Properties.Properties",
     "module:Functions",
-    "module:Promise"
-], function(Collection, Objs, Properties, Functions, Promise, scoped) {
+    "module:Promise",
+    "module:Async"
+], function(Collection, Objs, Properties, Functions, Promise, Async, scoped) {
     return Collection.extend({
         scoped: scoped
     }, function(inherited) {
@@ -32,6 +33,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__autoIncreaseGroups = options.autoIncreaseGroups;
                 this.__generateGroupData = options.generateGroupData;
                 this.__nogaps = options.nogaps;
+                this.__lazyNogaps = options.lazyNogaps;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
                 this.__afterGroupCreate = options.afterGroupCreate;
@@ -55,7 +57,11 @@ Scoped.define("module:Collections.GroupedCollection", [
                 inherited.destroy.call(this);
             },
 
-            touchGroup: function(data, create) {
+            touchGroup: function(data, create, lazy) {
+                if (lazy) {
+                    Async.eventually(this.touchGroup, [data, create], this);
+                    return;
+                }
                 data = Properties.is_instance_of(data) ? data.data() : data;
                 data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
                 var query = {};
@@ -75,9 +81,9 @@ Scoped.define("module:Collections.GroupedCollection", [
                         this.__afterGroupCreate.call(this.__callbackContext, group);
                     if (this.__nogaps) {
                         if (group !== this.last())
-                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), 1), true);
+                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), 1), true, this.__lazyNogaps);
                         if (group !== this.first())
-                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), -1), true);
+                            this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), -1), true, this.__lazyNogaps);
                     }
                 }
                 return group;
