@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.139 - 2017-12-20
+betajs - v1.0.140 - 2017-12-23
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.139 - 2017-12-20
+betajs - v1.0.140 - 2017-12-23
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.139"
+    "version": "1.0.140"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4848,6 +4848,23 @@ Scoped.define("module:Objs", [
                 f = true;
             for (var i = 0; i < arr.length; ++i)
                 result[arr[i]] = is_function ? f.apply(context || this, [arr[i], i]) : f;
+            return result;
+        },
+
+        /**
+         * Converts an object into an array using a function to merge value and key.
+         *
+         * @param {object} obj obj to be converted
+         * @param f a function mapping the value and key to an item instance of the array
+         * @param {object} context optional function context
+         *
+         * @return {array} converted array
+         */
+        arrayify: function(obj, f, context) {
+            var result = [];
+            this.iter(obj, function(value, key) {
+                result.push(f.call(this, value, key));
+            }, context);
             return result;
         },
 

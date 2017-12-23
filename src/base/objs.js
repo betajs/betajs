@@ -617,6 +617,23 @@ Scoped.define("module:Objs", [
         },
 
         /**
+         * Converts an object into an array using a function to merge value and key.
+         *
+         * @param {object} obj obj to be converted
+         * @param f a function mapping the value and key to an item instance of the array
+         * @param {object} context optional function context
+         *
+         * @return {array} converted array
+         */
+        arrayify: function(obj, f, context) {
+            var result = [];
+            this.iter(obj, function(value, key) {
+                result.push(f.call(this, value, key));
+            }, context);
+            return result;
+        },
+
+        /**
          * Creates an object by pairing up the arguments to key value pairs.
          * 
          * @return {object} created object
