@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.140 - 2017-12-23
+betajs - v1.0.141 - 2018-01-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.140"
+    "version": "1.0.141"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1284,10 +1284,11 @@ Scoped.define("module:Classes.SharedObjectFactory", [
              * @param {function} createCallback callback function for creating an instance
              * @param {object} createContext optional callback context
              */
-            constructor: function(createCallback, createContext) {
+            constructor: function(createCallback, createContext, createArgs) {
                 inherited.constructor.call(this);
                 this.__createCallback = createCallback;
                 this.__createContext = createContext;
+                this.__createArgs = createArgs || [];
                 this.__object = null;
             },
 
@@ -1310,6 +1311,15 @@ Scoped.define("module:Classes.SharedObjectFactory", [
             },
 
             /**
+             * Return true if acquired.
+             *
+             * @returns {boolean} true if acquired
+             */
+            isAcquired: function() {
+                return !!this.value();
+            },
+
+            /**
              * Acquire object instance.
              *
              * @param {object} reference optional reference
@@ -1318,7 +1328,7 @@ Scoped.define("module:Classes.SharedObjectFactory", [
              */
             acquire: function(reference) {
                 if (!this.__object || this.__object.destroyed())
-                    this.__object = this.__createCallback.call(this.__createContext || this);
+                    this.__object = this.__createCallback.apply(this.__createContext || this, this.__createArgs);
                 this.__object.increaseRef(reference);
                 return this.__object;
             },
@@ -1332,6 +1342,58 @@ Scoped.define("module:Classes.SharedObjectFactory", [
             release: function(obj, reference) {
                 if (obj && obj === this.__object && !obj.destroyed())
                     obj.decreaseRef(obj);
+            }
+
+        };
+    });
+});
+
+
+Scoped.define("module:Classes.SharedObjectFactoryPool", [
+    "module:Class",
+    "module:Objs",
+    "module:Functions"
+], function(Class, Objs, Functions, scoped) {
+    return Class.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Shared Object Factory Pool Class
+         *
+         * @class BetaJS.Classes.SharedObjectFactoryPool
+         */
+        return {
+
+            /**
+             * Creates a new factory pool.
+             *
+             * @param {function} createCallback callback function for creating a shared object factory instance
+             * @param {object} createContext optional callback context
+             */
+            constructor: function(createCallback, createContext) {
+                inherited.constructor.call(this);
+                this.__createCallback = createCallback;
+                this.__createContext = createContext;
+                this.__cache = {};
+            },
+
+            /**
+             * @override
+             */
+            destroy: function() {
+                Objs.iter(this.__cache, function(instance) {
+                    instance.weakDestroy();
+                }, this);
+                inherited.destroy.call(this);
+            },
+
+            acquire: function() {
+                var args = Functions.getArguments(arguments);
+                var serialized = JSON.stringify(args);
+                if (!this.__cache[serialized] || this.__cache[serialized].destroyed())
+                    this.__cache[serialized] = this.__createCallback.apply(this.__createContext || this, args);
+                return this.__cache[serialized];
             }
 
         };
