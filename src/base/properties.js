@@ -372,6 +372,18 @@ Scoped.define("module:Properties.PropertiesMixin", [
         },
 
         /**
+         * Iterates over all key-value pairs.
+         *
+         * @param {function} cb callback function
+         * @param {object} ctx optional context
+         *
+         */
+        iterate: function(cb, ctx) {
+            Objs.iter(this.getAll(), cb, ctx);
+            return this;
+        },
+
+        /**
          * Materializes an attribute as a function.
          * 
          * @param {string} attr attribute to be materialized

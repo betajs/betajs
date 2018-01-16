@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.141 - 2018-01-08
+betajs - v1.0.142 - 2018-01-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.141 - 2018-01-08
+betajs - v1.0.142 - 2018-01-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.141"
+    "version": "1.0.142"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5654,6 +5654,18 @@ Scoped.define("module:Properties.PropertiesMixin", [
          */
         getAll: function() {
             return Objs.clone(this.__properties.data, 1);
+        },
+
+        /**
+         * Iterates over all key-value pairs.
+         *
+         * @param {function} cb callback function
+         * @param {object} ctx optional context
+         *
+         */
+        iterate: function(cb, ctx) {
+            Objs.iter(this.getAll(), cb, ctx);
+            return this;
         },
 
         /**
