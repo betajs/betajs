@@ -62,6 +62,8 @@ Scoped.define("module:Collections.GroupedCollection", [
                     Async.eventually(this.touchGroup, [data, create], this);
                     return;
                 }
+                if (this.destroyed())
+                    return;
                 data = Properties.is_instance_of(data) ? data.data() : data;
                 data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
                 var query = {};

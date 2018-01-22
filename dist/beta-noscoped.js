@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.142 - 2018-01-16
+betajs - v1.0.143 - 2018-01-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.142"
+    "version": "1.0.143"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9866,6 +9866,8 @@ Scoped.define("module:Collections.GroupedCollection", [
                     Async.eventually(this.touchGroup, [data, create], this);
                     return;
                 }
+                if (this.destroyed())
+                    return;
                 data = Properties.is_instance_of(data) ? data.data() : data;
                 data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
                 var query = {};
