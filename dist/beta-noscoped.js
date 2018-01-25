@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.143 - 2018-01-22
+betajs - v1.0.144 - 2018-01-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.143"
+    "version": "1.0.144"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2038,13 +2038,13 @@ Scoped.define("module:Events.ListenMixin", [
             if (!Types.is_array(targets))
                 targets = [targets];
             targets.forEach(function(target) {
-                if (target) {
+                if (target && !target.destroyed()) {
                     target.off(events, callback, this);
                     if (!events && !callback)
                         delete this.__listen_mixin_listen[Ids.objectId(target)];
                 } else {
                     Objs.iter(this.__listen_mixin_listen, function(obj) {
-                        if (obj && "off" in obj)
+                        if (obj && "off" in obj && !obj.destroyed())
                             obj.off(events, callback, this);
                         if (!events && !callback)
                             delete this.__listen_mixin_listen[Ids.objectId(obj)];
@@ -15137,6 +15137,8 @@ Scoped.define("module:States.State", [
                 obj.start();
                 host.suspendEvents();
                 obj = host.state();
+                if (!obj || obj.destroyed())
+                    return;
                 Objs.iter(hostArgs, function(dummy, key) {
                     if (!obj.__hostArgs[key])
                         host.unset(key);

@@ -429,13 +429,13 @@ Scoped.define("module:Events.ListenMixin", [
             if (!Types.is_array(targets))
                 targets = [targets];
             targets.forEach(function(target) {
-                if (target) {
+                if (target && !target.destroyed()) {
                     target.off(events, callback, this);
                     if (!events && !callback)
                         delete this.__listen_mixin_listen[Ids.objectId(target)];
                 } else {
                     Objs.iter(this.__listen_mixin_listen, function(obj) {
-                        if (obj && "off" in obj)
+                        if (obj && "off" in obj && !obj.destroyed())
                             obj.off(events, callback, this);
                         if (!events && !callback)
                             delete this.__listen_mixin_listen[Ids.objectId(obj)];

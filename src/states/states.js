@@ -482,6 +482,8 @@ Scoped.define("module:States.State", [
                 obj.start();
                 host.suspendEvents();
                 obj = host.state();
+                if (!obj || obj.destroyed())
+                    return;
                 Objs.iter(hostArgs, function(dummy, key) {
                     if (!obj.__hostArgs[key])
                         host.unset(key);
