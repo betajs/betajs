@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.144 - 2018-01-25
+betajs - v1.0.145 - 2018-02-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.144"
+    "version": "1.0.145"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9836,8 +9836,8 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__keepEmptyGroups = options.keepEmptyGroups;
                 this.__autoIncreaseGroups = options.autoIncreaseGroups;
                 this.__generateGroupData = options.generateGroupData;
-                this.__nogaps = options.nogaps;
-                this.__lazyNogaps = options.lazyNogaps;
+                this.__nogaps = !!options.nogaps;
+                this.__lazyNogaps = !!options.lazyNogaps;
                 this.__insertCallback = options.insert;
                 this.__removeCallback = options.remove;
                 this.__afterGroupCreate = options.afterGroupCreate;
@@ -9862,12 +9862,10 @@ Scoped.define("module:Collections.GroupedCollection", [
             },
 
             touchGroup: function(data, create, lazy) {
-                if (lazy) {
-                    Async.eventually(this.touchGroup, [data, create], this);
-                    return;
-                }
                 if (this.destroyed())
                     return;
+                if (lazy)
+                    return Async.eventually(this.touchGroup, [data, create], this);
                 data = Properties.is_instance_of(data) ? data.data() : data;
                 data = this.__groupbyCompute ? this.__groupbyCompute.call(this.__callbackContext, data) : data;
                 var query = {};
@@ -9885,6 +9883,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                     this.add(group);
                     if (this.__afterGroupCreate)
                         this.__afterGroupCreate.call(this.__callbackContext, group);
+                    this.trigger("touchgroup", group);
                     if (this.__nogaps) {
                         if (group !== this.last())
                             this.touchGroup(this.__generateGroupData.call(this.__callbackContext, group.data(), 1), true, this.__lazyNogaps);
