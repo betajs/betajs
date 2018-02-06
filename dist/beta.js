@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.145 - 2018-02-04
+betajs - v1.0.146 - 2018-02-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.145 - 2018-02-04
+betajs - v1.0.146 - 2018-02-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.145"
+    "version": "1.0.146"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5283,6 +5283,39 @@ Scoped.define("module:Parser.Lexer", [
         };
     });
 });
+Scoped.define("module:Properties.ObservableMixin", [], function() {
+
+    /**
+     * Properties Observable Mixin
+     *
+     * @mixin BetaJS.Properties.ObservableMixin
+     */
+    return {
+
+        __observable_guid: "48994ac3-7e0b-4ed5-8995-f146215dc795",
+
+        /**
+         * Returns the value associated with a key.
+         *
+         * @param {string} key key to read value for
+         *
+         * @return value for key
+         */
+        get: function(key) {},
+
+        /**
+         * Checks whether a key is set.
+         *
+         * @param {string} key key in question
+         *
+         * @return {boolean} true if key is set
+         */
+        hasKey: function(key) {}
+
+    };
+});
+
+
 Scoped.define("module:Properties.PropertiesMixin", [
     "module:Objs.Scopes",
     "module:Objs",
@@ -5613,6 +5646,17 @@ Scoped.define("module:Properties.PropertiesMixin", [
          */
         has: function(key) {
             return Scopes.has(key, this.__properties.data);
+        },
+
+        /**
+         * Checks whether a key is set.
+         *
+         * @param {string} key key in question
+         *
+         * @return {boolean} true if key is set
+         */
+        hasKey: function(key) {
+            return this.has(key);
         },
 
         /**
@@ -5998,11 +6042,12 @@ Scoped.define("module:Properties.Properties", [
     "module:Class",
     "module:Objs",
     "module:Events.EventsMixin",
+    "module:Properties.ObservableMixin",
     "module:Properties.PropertiesMixin"
-], function(Class, Objs, EventsMixin, PropertiesMixin, ReferenceCounterMixin, scoped) {
+], function(Class, Objs, EventsMixin, ObservableMixin, PropertiesMixin, scoped) {
     return Class.extend({
         scoped: scoped
-    }, [EventsMixin, PropertiesMixin, ReferenceCounterMixin, function(inherited) {
+    }, [EventsMixin, ObservableMixin, PropertiesMixin, function(inherited) {
 
         /**
          * Properties Class
@@ -10017,16 +10062,17 @@ Scoped.define("module:Collections.Collection", [
     "module:Functions",
     "module:Lists.ArrayList",
     "module:Ids",
+    "module:Properties.ObservableMixin",
     "module:Properties.Properties",
     "module:Iterators.ArrayIterator",
     "module:Iterators.FilteredIterator",
     "module:Iterators.ObjectValuesIterator",
     "module:Types",
     "module:Promise"
-], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
+], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, ObservableMixin, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
     return Class.extend({
         scoped: scoped
-    }, [EventsMixin, function(inherited) {
+    }, [EventsMixin, ObservableMixin, function(inherited) {
 
         /**
          * A collection class for managing a list of Properties-based objects.
@@ -10071,6 +10117,36 @@ Scoped.define("module:Collections.Collection", [
                 };
                 if ("objects" in options)
                     this.add_objects(options.objects);
+            },
+
+            /**
+             * Returns the value associated with an observable key.
+             *
+             * @param {string} key key to read value for
+             *
+             * @return value for key
+             */
+            get: function(key) {
+                switch (key) {
+                    case "observable_count":
+                        return this.count();
+                }
+                return undefined;
+            },
+
+            /**
+             * Checks whether an observable key is set.
+             *
+             * @param {string} key key in question
+             *
+             * @return {boolean} true if key is set
+             */
+            hasKey: function(key) {
+                switch (key) {
+                    case "observable_count":
+                        return true;
+                }
+                return false;
             },
 
             /**
@@ -10266,6 +10342,7 @@ Scoped.define("module:Collections.Collection", [
                      * @event BetaJS.Collections.Collection#update
                      */
                     this.trigger("update");
+                    this.trigger("change:observable_count", this.count());
                     this.__load_item(object);
                 }
                 return ident;
@@ -10379,6 +10456,7 @@ Scoped.define("module:Collections.Collection", [
                  * @event BetaJS.Collections.Collection#remove
                  */
                 this.trigger("remove", object);
+                this.trigger("change:observable_count", this.count());
                 this.__unload_item(object);
                 /**
                  * @event BetaJS.Collections.Collection#update

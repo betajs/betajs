@@ -1,3 +1,36 @@
+Scoped.define("module:Properties.ObservableMixin", [], function() {
+
+    /**
+     * Properties Observable Mixin
+     *
+     * @mixin BetaJS.Properties.ObservableMixin
+     */
+    return {
+
+        __observable_guid: "48994ac3-7e0b-4ed5-8995-f146215dc795",
+
+        /**
+         * Returns the value associated with a key.
+         *
+         * @param {string} key key to read value for
+         *
+         * @return value for key
+         */
+        get: function(key) {},
+
+        /**
+         * Checks whether a key is set.
+         *
+         * @param {string} key key in question
+         *
+         * @return {boolean} true if key is set
+         */
+        hasKey: function(key) {}
+
+    };
+});
+
+
 Scoped.define("module:Properties.PropertiesMixin", [
     "module:Objs.Scopes",
     "module:Objs",
@@ -328,6 +361,17 @@ Scoped.define("module:Properties.PropertiesMixin", [
          */
         has: function(key) {
             return Scopes.has(key, this.__properties.data);
+        },
+
+        /**
+         * Checks whether a key is set.
+         *
+         * @param {string} key key in question
+         *
+         * @return {boolean} true if key is set
+         */
+        hasKey: function(key) {
+            return this.has(key);
         },
 
         /**
@@ -713,11 +757,12 @@ Scoped.define("module:Properties.Properties", [
     "module:Class",
     "module:Objs",
     "module:Events.EventsMixin",
+    "module:Properties.ObservableMixin",
     "module:Properties.PropertiesMixin"
-], function(Class, Objs, EventsMixin, PropertiesMixin, ReferenceCounterMixin, scoped) {
+], function(Class, Objs, EventsMixin, ObservableMixin, PropertiesMixin, scoped) {
     return Class.extend({
         scoped: scoped
-    }, [EventsMixin, PropertiesMixin, ReferenceCounterMixin, function(inherited) {
+    }, [EventsMixin, ObservableMixin, PropertiesMixin, function(inherited) {
 
         /**
          * Properties Class

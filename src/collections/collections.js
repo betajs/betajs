@@ -5,16 +5,17 @@ Scoped.define("module:Collections.Collection", [
     "module:Functions",
     "module:Lists.ArrayList",
     "module:Ids",
+    "module:Properties.ObservableMixin",
     "module:Properties.Properties",
     "module:Iterators.ArrayIterator",
     "module:Iterators.FilteredIterator",
     "module:Iterators.ObjectValuesIterator",
     "module:Types",
     "module:Promise"
-], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
+], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, ObservableMixin, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
     return Class.extend({
         scoped: scoped
-    }, [EventsMixin, function(inherited) {
+    }, [EventsMixin, ObservableMixin, function(inherited) {
 
         /**
          * A collection class for managing a list of Properties-based objects.
@@ -59,6 +60,36 @@ Scoped.define("module:Collections.Collection", [
                 };
                 if ("objects" in options)
                     this.add_objects(options.objects);
+            },
+
+            /**
+             * Returns the value associated with an observable key.
+             *
+             * @param {string} key key to read value for
+             *
+             * @return value for key
+             */
+            get: function(key) {
+                switch (key) {
+                    case "observable_count":
+                        return this.count();
+                }
+                return undefined;
+            },
+
+            /**
+             * Checks whether an observable key is set.
+             *
+             * @param {string} key key in question
+             *
+             * @return {boolean} true if key is set
+             */
+            hasKey: function(key) {
+                switch (key) {
+                    case "observable_count":
+                        return true;
+                }
+                return false;
             },
 
             /**
@@ -254,6 +285,7 @@ Scoped.define("module:Collections.Collection", [
                      * @event BetaJS.Collections.Collection#update
                      */
                     this.trigger("update");
+                    this.trigger("change:observable_count", this.count());
                     this.__load_item(object);
                 }
                 return ident;
@@ -367,6 +399,7 @@ Scoped.define("module:Collections.Collection", [
                  * @event BetaJS.Collections.Collection#remove
                  */
                 this.trigger("remove", object);
+                this.trigger("change:observable_count", this.count());
                 this.__unload_item(object);
                 /**
                  * @event BetaJS.Collections.Collection#update
