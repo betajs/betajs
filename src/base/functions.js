@@ -34,7 +34,6 @@ Scoped.define("module:Functions", ["module:Types"], function(Types) {
             };
         },
 
-
         /**
          * Takes a function name and returns the method call on the global object as a function
          *

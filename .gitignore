@@ -12,3 +12,4 @@ jsdoc.conf.json
 /.idea
 browserstack-run.pid
 *.log
+package-lock.json

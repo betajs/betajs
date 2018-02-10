@@ -46,7 +46,7 @@ Scoped.define("module:Iterators.Iterator", [
             /**
              * Determines whether there are more elements in the iterator.
              * Should be overwritten by subclass.
-             * 
+             *
              * @return {boolean} true if more elements present
              */
             hasNext: function() {
@@ -74,13 +74,16 @@ Scoped.define("module:Iterators.Iterator", [
 
             /**
              * Materializes the iterator as an array.
-             * 
+             *
+             * @param {boolean} keep do not destroy iterator
              * @return {array} array of elements in iterator
              */
-            asArray: function() {
+            asArray: function(keep) {
                 var arr = [];
                 while (this.hasNext())
                     arr.push(this.next());
+                if (!keep)
+                    this.weakDestroy();
                 return arr;
             },
 
@@ -89,13 +92,16 @@ Scoped.define("module:Iterators.Iterator", [
              * 
              * @param {function} cb callback function
              * @param {object} ctx optional callback context
+             * @param {boolean} keep do not destroy iterator
              */
-            iterate: function(cb, ctx) {
+            iterate: function(cb, ctx, keep) {
                 while (this.hasNext()) {
                     var result = cb.call(ctx || this, this.next());
                     if (result === false)
-                        return;
+                        break;
                 }
+                if (!keep)
+                    this.weakDestroy();
             },
 
             /**
@@ -108,8 +114,10 @@ Scoped.define("module:Iterators.Iterator", [
              * @return {object} finish promise
              */
             asyncIterate: function(cb, ctx, time) {
-                if (!this.hasNext())
+                if (!this.hasNext()) {
+                    this.destroy();
                     return Promise.value(true);
+                }
                 var result = cb.call(ctx || this, this.next());
                 if (result === false)
                     return Promise.value(true);

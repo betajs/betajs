@@ -29,10 +29,11 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
                 result = obj.constructor;
         });
         var has_constructor = Types.is_defined(result);
-        if (!has_constructor)
+        if (!has_constructor) {
             result = function() {
                 parent.prototype.constructor.apply(this, arguments);
             };
+        }
 
         // Add Parent Statics
         Objs.extend(result, parent);
@@ -124,8 +125,11 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
         delete result.prototype._notifications;
         delete result.prototype._implements;
 
-        if (!has_constructor)
-            result.prototype.constructor = parent.prototype.constructor;
+        if (!has_constructor) {
+            result.prototype.constructor = function() {
+                parent.prototype.constructor.apply(this, arguments);
+            };
+        }
 
         return result;
     };
@@ -349,8 +353,9 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
      * Automatically destroys an object when this object is being destroyed.
      * 
      * @param {object} obj
+     * @param {boolean} returnSource return source object instead of obj
      */
-    Class.prototype.auto_destroy = function(obj) {
+    Class.prototype.auto_destroy = function(obj, returnSource) {
         if (obj) {
             if (!this.__auto_destroy_list)
                 this.__auto_destroy_list = [];
@@ -360,7 +365,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
             for (var i = 0; i < target.length; ++i)
                 this.__auto_destroy_list.push(target[i]);
         }
-        return obj;
+        return returnSource ? this : obj;
     };
 
     /**

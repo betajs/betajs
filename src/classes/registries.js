@@ -347,9 +347,10 @@ Scoped.define("module:Classes.ContextRegistry", [
              * @return {object} Iterator
              */
             iterator: function() {
-                return new MappedIterator(this.customIterator(), function(item) {
+                var customIt = this.customIterator();
+                return (new MappedIterator(customIt, function(item) {
                     return item.data;
-                });
+                })).auto_destroy(customIt, true);
             }
 
         };

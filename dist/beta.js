@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.146 - 2018-02-05
+betajs - v1.0.147 - 2018-02-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.146 - 2018-02-05
+betajs - v1.0.147 - 2018-02-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.146"
+    "version": "1.0.147"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1475,10 +1475,11 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
                 result = obj.constructor;
         });
         var has_constructor = Types.is_defined(result);
-        if (!has_constructor)
+        if (!has_constructor) {
             result = function() {
                 parent.prototype.constructor.apply(this, arguments);
             };
+        }
 
         // Add Parent Statics
         Objs.extend(result, parent);
@@ -1570,8 +1571,11 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
         delete result.prototype._notifications;
         delete result.prototype._implements;
 
-        if (!has_constructor)
-            result.prototype.constructor = parent.prototype.constructor;
+        if (!has_constructor) {
+            result.prototype.constructor = function() {
+                parent.prototype.constructor.apply(this, arguments);
+            };
+        }
 
         return result;
     };
@@ -1795,8 +1799,9 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
      * Automatically destroys an object when this object is being destroyed.
      * 
      * @param {object} obj
+     * @param {boolean} returnSource return source object instead of obj
      */
-    Class.prototype.auto_destroy = function(obj) {
+    Class.prototype.auto_destroy = function(obj, returnSource) {
         if (obj) {
             if (!this.__auto_destroy_list)
                 this.__auto_destroy_list = [];
@@ -1806,7 +1811,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
             for (var i = 0; i < target.length; ++i)
                 this.__auto_destroy_list.push(target[i]);
         }
-        return obj;
+        return returnSource ? this : obj;
     };
 
     /**
@@ -3114,7 +3119,6 @@ Scoped.define("module:Functions", ["module:Types"], function(Types) {
                 return func.apply(instance, arguments);
             };
         },
-
 
         /**
          * Takes a function name and returns the method call on the global object as a function
@@ -9792,9 +9796,10 @@ Scoped.define("module:Classes.ContextRegistry", [
              * @return {object} Iterator
              */
             iterator: function() {
-                return new MappedIterator(this.customIterator(), function(item) {
+                var customIt = this.customIterator();
+                return (new MappedIterator(customIt, function(item) {
                     return item.data;
-                });
+                })).auto_destroy(customIt, true);
             }
 
         };
@@ -13223,7 +13228,7 @@ Scoped.define("module:Iterators.Iterator", [
             /**
              * Determines whether there are more elements in the iterator.
              * Should be overwritten by subclass.
-             * 
+             *
              * @return {boolean} true if more elements present
              */
             hasNext: function() {
@@ -13251,13 +13256,16 @@ Scoped.define("module:Iterators.Iterator", [
 
             /**
              * Materializes the iterator as an array.
-             * 
+             *
+             * @param {boolean} keep do not destroy iterator
              * @return {array} array of elements in iterator
              */
-            asArray: function() {
+            asArray: function(keep) {
                 var arr = [];
                 while (this.hasNext())
                     arr.push(this.next());
+                if (!keep)
+                    this.weakDestroy();
                 return arr;
             },
 
@@ -13266,13 +13274,16 @@ Scoped.define("module:Iterators.Iterator", [
              * 
              * @param {function} cb callback function
              * @param {object} ctx optional callback context
+             * @param {boolean} keep do not destroy iterator
              */
-            iterate: function(cb, ctx) {
+            iterate: function(cb, ctx, keep) {
                 while (this.hasNext()) {
                     var result = cb.call(ctx || this, this.next());
                     if (result === false)
-                        return;
+                        break;
                 }
+                if (!keep)
+                    this.weakDestroy();
             },
 
             /**
@@ -13285,8 +13296,10 @@ Scoped.define("module:Iterators.Iterator", [
              * @return {object} finish promise
              */
             asyncIterate: function(cb, ctx, time) {
-                if (!this.hasNext())
+                if (!this.hasNext()) {
+                    this.destroy();
                     return Promise.value(true);
+                }
                 var result = cb.call(ctx || this, this.next());
                 if (result === false)
                     return Promise.value(true);
