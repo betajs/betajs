@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.147 - 2018-02-10
+betajs - v1.0.148 - 2018-03-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.147"
+    "version": "1.0.148"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6812,13 +6812,13 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
                 return Time.timeComponentGet(t, "year") % 100;
             },
             "l+": function(t) {
-                return t;
+                return t.getTime();
             },
             "l": function(t) {
-                return Time.timeComponent(t, "millisecond", "floor");
+                return Time.timeComponentGet(t, "millisecond");
             },
             "L": function(t) {
-                return Time.timeComponent(t, "millisecond", "floor") % 10;
+                return Math.floor(Time.timeComponentGet(t, "millisecond") / 10);
             },
             "tt": function(t) {
                 return Time.timeModulo(t, "hour", "floor") < 12 ? 'am' : 'pm';

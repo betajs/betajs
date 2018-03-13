@@ -39,3 +39,8 @@ QUnit.test("test plus day format", function(assert) {
 	assert.equal(BetaJS.TimeFormat.format("m", t), 2);
 	assert.equal(BetaJS.TimeFormat.format("d", t), 1);
 });
+
+QUnit.test("millisecond", function (assert) {
+	assert.equal(BetaJS.TimeFormat.format("ss.l", 1234), "01.234");
+    assert.equal(BetaJS.TimeFormat.format("ss.L", 1234), "01.23");
+});

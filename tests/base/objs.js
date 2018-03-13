@@ -48,3 +48,30 @@ QUnit.test("test iter object", function (assert) {
 	});
 	assert.ok(BetaJS.Objs.equals(obj, {"d": "a", "e": "b", "f": "c"}, 1));
 });
+
+QUnit.test("test tree extend", function (assert) {
+	assert.deepEqual({
+		level1: 2,
+		level2: {
+			level1: 4,
+            first1: 7,
+            second1: 8
+		},
+		first1: 5,
+		second1: 6
+	}, BetaJS.Objs.tree_extend({
+		level1: 1,
+		level2: {
+			level1: 3,
+			first1: 7
+		},
+		first1: 5
+	}, {
+		level1: 2,
+		level2: {
+			level1: 4,
+			second1: 8
+		},
+		second1: 6
+	}));
+});
