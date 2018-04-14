@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.148 - 2018-03-13
+betajs - v1.0.149 - 2018-04-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.148"
+    "version": "1.0.149"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6469,6 +6469,24 @@ Scoped.define("module:Time", [], function() {
         },
 
         /**
+         * Reads the current timezone offset.
+         *
+         * @return {int} timezone offset in minutes
+         */
+        getTimezoneOffset: function() {
+            return this.__timezoneOffset === undefined ? (new Date()).getTimezoneOffset() : this.__timezoneOffset;
+        },
+
+        /**
+         * Overwrites the current timezone offset.
+         *
+         * @param {int} timezoneOffset timezone offset in minutes (undefined to disable overwrite)
+         */
+        setTimezoneOffset: function(timezoneOffset) {
+            this.__timezoneOffset = timezoneOffset;
+        },
+
+        /**
          * Computes the timezone bias in milliseconds from UTC
          * 
          * @param {int} timezone bias in minutes; can be true to use current time zone; can be undefined to use UTC
@@ -6477,7 +6495,7 @@ Scoped.define("module:Time", [], function() {
          */
         timezoneBias: function(timezone) {
             if (timezone === true)
-                timezone = (new Date()).getTimezoneOffset();
+                timezone = this.getTimezoneOffset();
             if (typeof timezone == "undefined" || timezone === null || timezone === false)
                 timezone = 0;
             return timezone * 60 * 1000;
