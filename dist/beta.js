@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.149 - 2018-04-14
+betajs - v1.0.150 - 2018-05-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.149 - 2018-04-14
+betajs - v1.0.150 - 2018-05-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.149"
+    "version": "1.0.150"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4300,8 +4300,9 @@ Scoped.define("module:Maths", [], function() {
     };
 });
 Scoped.define("module:Objs", [
-    "module:Types"
-], function(Types) {
+    "module:Types",
+    "module:Functions"
+], function(Types, Functions) {
 
     /**
      * Object and Array Manipulation Routines
@@ -4447,6 +4448,24 @@ Scoped.define("module:Objs", [
                     target[key] = this.clone(source[key], depth);
             }
             return target;
+        },
+
+        /**
+         * Extend target object by source objects, modifying target object in-place.
+         *
+         */
+        multi_extend: function() {
+            var args = Functions.getArguments(arguments);
+            var depth = -1;
+            if (!Types.is_object(args[args.length - 1])) {
+                depth = args[args.length - 1];
+                args.pop();
+            }
+            while (args.length > 1) {
+                args[1] = this.extend(args[0], args[1], depth);
+                args.shift();
+            }
+            return args[0];
         },
 
         /**

@@ -1,6 +1,7 @@
 Scoped.define("module:Objs", [
-    "module:Types"
-], function(Types) {
+    "module:Types",
+    "module:Functions"
+], function(Types, Functions) {
 
     /**
      * Object and Array Manipulation Routines
@@ -146,6 +147,24 @@ Scoped.define("module:Objs", [
                     target[key] = this.clone(source[key], depth);
             }
             return target;
+        },
+
+        /**
+         * Extend target object by source objects, modifying target object in-place.
+         *
+         */
+        multi_extend: function() {
+            var args = Functions.getArguments(arguments);
+            var depth = -1;
+            if (!Types.is_object(args[args.length - 1])) {
+                depth = args[args.length - 1];
+                args.pop();
+            }
+            while (args.length > 1) {
+                args[1] = this.extend(args[0], args[1], depth);
+                args.shift();
+            }
+            return args[0];
         },
 
         /**
