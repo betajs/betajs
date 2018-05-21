@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.150 - 2018-05-17
+betajs - v1.0.151 - 2018-05-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.150"
+    "version": "1.0.151"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -10676,6 +10676,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                         args.callback.apply(args.callbackCtx || this);
                     }
                 }, args.interval || 1);
+                return timer;
             }
         },
 
@@ -11075,6 +11076,35 @@ Scoped.define("module:Promise", [
                 }, this, delay);
                 return promise;
             };
+        },
+
+        /**
+         * Wait asynchronously for a condition to be met.
+         *
+         * @param {function} condition condition function
+         * @param {object} conditionCtx condition context (optional)
+         * @param {int} interval interval time between checks (optional, default 1)
+         * @param {int} timeout optional timeout
+         *
+         * @return {object} promise
+         *
+         */
+        waitFor: function(condition, conditionCtx, interval, timeout) {
+            var promise = this.create();
+            var successTimer, errorTimer;
+            if (timeout) {
+                errorTimer = setTimeout(function() {
+                    if (successTimer)
+                        clearInterval(successTimer);
+                    promise.asyncError(true);
+                }, timeout);
+            }
+            successTimer = Async.waitFor(condition, conditionCtx, function() {
+                if (errorTimer)
+                    clearTimeout(errorTimer);
+                promise.asyncSuccess(true);
+            }, interval);
+            return promise;
         }
 
     };

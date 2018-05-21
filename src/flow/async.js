@@ -67,6 +67,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                         args.callback.apply(args.callbackCtx || this);
                     }
                 }, args.interval || 1);
+                return timer;
             }
         },
 

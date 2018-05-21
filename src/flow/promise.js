@@ -316,6 +316,35 @@ Scoped.define("module:Promise", [
                 }, this, delay);
                 return promise;
             };
+        },
+
+        /**
+         * Wait asynchronously for a condition to be met.
+         *
+         * @param {function} condition condition function
+         * @param {object} conditionCtx condition context (optional)
+         * @param {int} interval interval time between checks (optional, default 1)
+         * @param {int} timeout optional timeout
+         *
+         * @return {object} promise
+         *
+         */
+        waitFor: function(condition, conditionCtx, interval, timeout) {
+            var promise = this.create();
+            var successTimer, errorTimer;
+            if (timeout) {
+                errorTimer = setTimeout(function() {
+                    if (successTimer)
+                        clearInterval(successTimer);
+                    promise.asyncError(true);
+                }, timeout);
+            }
+            successTimer = Async.waitFor(condition, conditionCtx, function() {
+                if (errorTimer)
+                    clearTimeout(errorTimer);
+                promise.asyncSuccess(true);
+            }, interval);
+            return promise;
         }
 
     };
