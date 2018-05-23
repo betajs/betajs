@@ -155,7 +155,7 @@ Scoped.define("module:Objs", [
          */
         multi_extend: function() {
             var args = Functions.getArguments(arguments);
-            var depth = -1;
+            var depth;
             if (!Types.is_object(args[args.length - 1])) {
                 depth = args[args.length - 1];
                 args.pop();
