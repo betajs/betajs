@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.152 - 2018-05-23
+betajs - v1.0.152 - 2018-06-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -266,7 +266,7 @@ Scoped.define("module:Ajax.AjaxWrapper", [
              */
             constructor: function(options) {
                 inherited.constructor.call(this);
-                this._options = options;
+                this.options = options;
             },
 
             /**
@@ -278,7 +278,7 @@ Scoped.define("module:Ajax.AjaxWrapper", [
              * @return {object} promise for the ajax call
              */
             execute: function(options, progress, progressCtx) {
-                return Support.execute(Objs.extend(Objs.clone(this._options, 1), options), progress, progressCtx);
+                return Support.execute(Objs.extend(Objs.clone(this.options, 1), options), progress, progressCtx);
             }
 
         };
