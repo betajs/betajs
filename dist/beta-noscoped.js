@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.152 - 2018-06-10
+betajs - v1.0.154 - 2018-06-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.152"
+    "version": "1.0.154"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1477,8 +1477,8 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
                         return false;
                 return true;
             } else if (Types.is_object(a) && Types.is_object(b)) {
-                if ((a && !b) || (b && !a))
-                    return a || b;
+                if (!a || !b)
+                    return a === b;
                 for (var key in a)
                     if (!this.deepEqual(a[key], b[key], depth - 1))
                         return false;
@@ -9130,8 +9130,6 @@ Scoped.define("module:Collections.Collection", [
                 this.__indices = {};
                 if (options.release_references)
                     this.__release_references = true;
-                if (options.indices)
-                    Objs.iter(options.indices, this.add_secondary_index, this);
                 var list_options = {};
                 if ("compare" in options)
                     list_options.compare = options.compare;
@@ -9149,6 +9147,10 @@ Scoped.define("module:Collections.Collection", [
                 };
                 if ("objects" in options)
                     this.add_objects(options.objects);
+                if (options.indices)
+                    Objs.iter(options.indices, this.add_secondary_index, this);
+                if (options.uniqueness)
+                    this.__uniqueness = options.uniqueness;
             },
 
             /**
@@ -9461,7 +9463,13 @@ Scoped.define("module:Collections.Collection", [
              * @return {boolean} True if contained
              */
             exists: function(object) {
-                return this.__data.exists(object);
+                if (this.__data.exists(object))
+                    return true;
+                if (!this.__uniqueness)
+                    return false;
+                if (this.__indices[this.__uniqueness])
+                    return !!this.get_by_secondary_index(this.__uniqueness, object.get(this.__uniqueness), true);
+                return !!this.queryOne(Objs.objectBy(this.__uniqueness, object.get(this.__uniqueness)));
             },
 
             /**

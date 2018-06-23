@@ -41,8 +41,6 @@ Scoped.define("module:Collections.Collection", [
                 this.__indices = {};
                 if (options.release_references)
                     this.__release_references = true;
-                if (options.indices)
-                    Objs.iter(options.indices, this.add_secondary_index, this);
                 var list_options = {};
                 if ("compare" in options)
                     list_options.compare = options.compare;
@@ -60,6 +58,10 @@ Scoped.define("module:Collections.Collection", [
                 };
                 if ("objects" in options)
                     this.add_objects(options.objects);
+                if (options.indices)
+                    Objs.iter(options.indices, this.add_secondary_index, this);
+                if (options.uniqueness)
+                    this.__uniqueness = options.uniqueness;
             },
 
             /**
@@ -372,7 +374,13 @@ Scoped.define("module:Collections.Collection", [
              * @return {boolean} True if contained
              */
             exists: function(object) {
-                return this.__data.exists(object);
+                if (this.__data.exists(object))
+                    return true;
+                if (!this.__uniqueness)
+                    return false;
+                if (this.__indices[this.__uniqueness])
+                    return !!this.get_by_secondary_index(this.__uniqueness, object.get(this.__uniqueness), true);
+                return !!this.queryOne(Objs.objectBy(this.__uniqueness, object.get(this.__uniqueness)));
             },
 
             /**

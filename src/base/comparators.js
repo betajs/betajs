@@ -71,8 +71,8 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
                         return false;
                 return true;
             } else if (Types.is_object(a) && Types.is_object(b)) {
-                if ((a && !b) || (b && !a))
-                    return a || b;
+                if (!a || !b)
+                    return a === b;
                 for (var key in a)
                     if (!this.deepEqual(a[key], b[key], depth - 1))
                         return false;
