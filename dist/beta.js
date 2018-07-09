@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.154 - 2018-06-22
+betajs - v1.0.154 - 2018-07-09
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.154 - 2018-06-22
+betajs - v1.0.154 - 2018-07-09
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10421,8 +10421,10 @@ Scoped.define("module:Collections.Collection", [
                     if (!old)
                         addQueue.push(obj);
                     else if (is_prop) {
+                        /*
                         this.remove(old);
                         this.add(obj);
+                        */
                     } else {
                         obj.destroy();
                         old.setAll(oriObject);

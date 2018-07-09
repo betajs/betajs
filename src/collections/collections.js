@@ -322,8 +322,10 @@ Scoped.define("module:Collections.Collection", [
                     if (!old)
                         addQueue.push(obj);
                     else if (is_prop) {
+                        /*
                         this.remove(old);
                         this.add(obj);
+                        */
                     } else {
                         obj.destroy();
                         old.setAll(oriObject);
