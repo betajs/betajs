@@ -1,4 +1,4 @@
-# betajs 1.0.154
+# betajs 1.0.156
 [![Build Status](https://api.travis-ci.org/betajs/betajs.svg?branch=master)](https://travis-ci.org/betajs/betajs)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs)
 [![NPM](https://img.shields.io/npm/v/betajs.svg?style=flat)](https://www.npmjs.com/package/betajs)
@@ -127,11 +127,11 @@ The BetaJS module contains a variety of low-level helper libraries, particularly
 ## Links
 | Resource   | URL |
 | :--------- | --: |
-| Homepage   | [http://betajs.com](http://betajs.com) |
+| Homepage   | [https://betajs.com](https://betajs.com) |
 | Git        | [git://github.com/betajs/betajs.git](git://github.com/betajs/betajs.git) |
 | Repository | [https://github.com/betajs/betajs](https://github.com/betajs/betajs) |
-| Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
-| Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
+| Blog       | [https://blog.betajs.com](https://blog.betajs.com) | 
+| Twitter    | [https://twitter.com/thebetajs](https://twitter.com/thebetajs) | 
 | Gitter     | [https://gitter.im/betajs/betajs](https://gitter.im/betajs/betajs) | 
 
 
