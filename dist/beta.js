@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.156 - 2018-08-28
+betajs - v1.0.157 - 2018-08-28
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.156 - 2018-08-28
+betajs - v1.0.157 - 2018-08-28
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.156"
+    "version": "1.0.157"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -7976,18 +7976,18 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
             var c = Time.decodeTime(currentTime, timezone);
             // Same day. Return time.
             if (t.year === c.year && t.month === c.month && t.day === c.day)
-                return this.format(this.HOURS_MINUTES_TT, time, timezone);
+                return this.format('hh:MM tt', time, timezone);
             // Less than 7 days. Return week day.
             if (currentTime - time < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
-                return this.format(this.WEEKDAY, time, timezone);
+                return this.format('dddd', time, timezone);
             // Last 2 months?
             if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
-                return this.format(this.LETTER_MONTH_AND_DAY, time, timezone);
+                return this.format('mmm d', time, timezone);
             // Last 11 month?
             if (t.year === c.year || (t.year + 1 === c.year && t.month > c.month))
-                return this.format(this.LETTER_MONTH, time, timezone);
+                return this.format('mmm', time, timezone);
             // Return year
-            return this.format(this.FULL_YEAR, time, timezone);
+            return this.format('yyyy', time, timezone);
         }
 
     };

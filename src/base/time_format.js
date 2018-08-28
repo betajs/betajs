@@ -231,18 +231,18 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
             var c = Time.decodeTime(currentTime, timezone);
             // Same day. Return time.
             if (t.year === c.year && t.month === c.month && t.day === c.day)
-                return this.format(this.HOURS_MINUTES_TT, time, timezone);
+                return this.format('hh:MM tt', time, timezone);
             // Less than 7 days. Return week day.
             if (currentTime - time < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
-                return this.format(this.WEEKDAY, time, timezone);
+                return this.format('dddd', time, timezone);
             // Last 2 months?
             if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
-                return this.format(this.LETTER_MONTH_AND_DAY, time, timezone);
+                return this.format('mmm d', time, timezone);
             // Last 11 month?
             if (t.year === c.year || (t.year + 1 === c.year && t.month > c.month))
-                return this.format(this.LETTER_MONTH, time, timezone);
+                return this.format('mmm', time, timezone);
             // Return year
-            return this.format(this.FULL_YEAR, time, timezone);
+            return this.format('yyyy', time, timezone);
         }
 
     };
