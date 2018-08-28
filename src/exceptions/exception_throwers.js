@@ -99,7 +99,7 @@ Scoped.define("module:Exceptions.ConsoleExceptionThrower", [
              * @override
              */
             _throwException: function(e) {
-                console.log("Exception", e.toString());
+                console.warn(e.toString());
             }
 
         };

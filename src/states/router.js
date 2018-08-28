@@ -287,8 +287,10 @@ Scoped.define("module:Router.Router", [
 
 
 Scoped.define("module:Router.RouteBinder", [
-    "module:Class", "module:Types"
-], function(Class, Types, scoped) {
+    "module:Class",
+    "module:Types",
+    "module:Comparators"
+], function(Class, Types, Comparators, scoped) {
     return Class.extend({
         scoped: scoped
     }, function(inherited) {
@@ -352,6 +354,7 @@ Scoped.define("module:Router.RouteBinder", [
              * @param {string} currentRoute current route
              */
             setLocalRoute: function(currentRoute) {
+                this._lastLocalRoute = currentRoute;
                 this._setLocalRoute(currentRoute);
                 return this;
             },
@@ -362,10 +365,13 @@ Scoped.define("module:Router.RouteBinder", [
              * @param {string} route new global route
              */
             setGlobalRoute: function(route) {
-                if (Types.is_string(route))
-                    this._router.navigate(route);
-                else
-                    this._router.dispatch(route.name, route.args);
+                if (Types.is_string(route)) {
+                    if (!this._lastLocalRoute || route !== this._lastLocalRoute.route)
+                        this._router.navigate(route);
+                } else {
+                    if (!this._lastLocalRoute || route.name !== this._lastLocalRoute.name || !Comparators.deepEqual(route.args, this._lastLocalRoute.args, 2))
+                        this._router.dispatch(route.name, route.args);
+                }
                 return this;
             }
 
@@ -565,6 +571,15 @@ Scoped.define("module:Router.RouterHistory", [
             },
 
             /**
+             * Pops and returns last history entry.
+             *
+             * @return {object} last history entry
+             */
+            pop: function() {
+                return this._history.pop();
+            },
+
+            /**
              * Returns a history item.
              * 
              * @param {int} index optional index, counting from the start.
@@ -587,14 +602,14 @@ Scoped.define("module:Router.RouterHistory", [
                     return null;
                 index = index || 0;
                 while (index >= 0 && this.count() > 1) {
-                    var removed = this._history.pop();
+                    var removed = this.pop();
                     /**
                      * @event BetaJS.Router.RouterHistory#remove
                      */
                     this.trigger("remove", removed);
                     --index;
                 }
-                var item = this._history.pop();
+                var item = this.pop();
                 /**
                  * @event BetaJS.Router.RouterHistory#change
                  */
