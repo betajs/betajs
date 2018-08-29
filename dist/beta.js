@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.157 - 2018-08-28
+betajs - v1.0.157 - 2018-08-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.157 - 2018-08-28
+betajs - v1.0.157 - 2018-08-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -11800,7 +11800,7 @@ Scoped.define("module:Promise", [
          * @param {boolean} finished does this promise have its final value / error
          */
         Promise: function(value, error, finished) {
-            this.__value = error ? null : (value || null);
+            this.__value = error ? null : (value === undefined ? null : value);
             this.__error = error ? error : null;
             this.__isFinished = finished;
             this.__hasError = !!error;

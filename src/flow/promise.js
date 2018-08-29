@@ -20,7 +20,7 @@ Scoped.define("module:Promise", [
          * @param {boolean} finished does this promise have its final value / error
          */
         Promise: function(value, error, finished) {
-            this.__value = error ? null : (value || null);
+            this.__value = error ? null : (value === undefined ? null : value);
             this.__error = error ? error : null;
             this.__isFinished = finished;
             this.__hasError = !!error;
