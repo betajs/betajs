@@ -1,4 +1,8 @@
-Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
+Scoped.define("module:Async", [
+    "module:Types",
+    "module:Functions",
+    "module:Time"
+], function(Types, Functions, Time) {
 
     var clearTimeoutGlobal = function(h) {
         return clearTimeout(h);
@@ -41,6 +45,10 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
          * @param {function} callback callback function
          * @param {object} callbackCtx callback context (optional)
          * @param {int} interval interval time between checks (optional, default 1)
+         * @param {function} timeoutCallback timeout callback function (optional)
+         * @param {object} timeoutCallbackCtx timeout callback context (optional)
+         * @param {int} timeout timeout (optional, default unlimited)
+         *
          * 
          */
         waitFor: function() {
@@ -49,7 +57,10 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                 conditionCtx: "object",
                 callback: true,
                 callbackCtx: "object",
-                interval: "int"
+                interval: "number",
+                timeoutCallback: "function",
+                timeoutCallbackCtx: "object",
+                timeout: "number"
             });
             var h = function() {
                 try {
@@ -58,6 +69,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                     return false;
                 }
             };
+            var t = Time.now();
             if (h())
                 args.callback.apply(args.callbackCtx || this);
             else {
@@ -65,6 +77,10 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                     if (h()) {
                         clearInterval(timer);
                         args.callback.apply(args.callbackCtx || this);
+                    } else if (args.timeout && Time.now() - t >= args.timeout) {
+                        clearInterval(timer);
+                        if (args.timeoutCallback)
+                            args.timeoutCallback.apply(args.timeoutCallbackCtx || args.callbackCtx || this);
                     }
                 }, args.interval || 1);
                 return timer;

@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.157 - 2018-08-29
+betajs - v1.0.159 - 2018-09-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.157"
+    "version": "1.0.159"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -10617,7 +10617,11 @@ Scoped.define("module:Exceptions.NativeException", [
 
     return NativeException;
 });
-Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Types, Functions) {
+Scoped.define("module:Async", [
+    "module:Types",
+    "module:Functions",
+    "module:Time"
+], function(Types, Functions, Time) {
 
     var clearTimeoutGlobal = function(h) {
         return clearTimeout(h);
@@ -10660,6 +10664,10 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
          * @param {function} callback callback function
          * @param {object} callbackCtx callback context (optional)
          * @param {int} interval interval time between checks (optional, default 1)
+         * @param {function} timeoutCallback timeout callback function (optional)
+         * @param {object} timeoutCallbackCtx timeout callback context (optional)
+         * @param {int} timeout timeout (optional, default unlimited)
+         *
          * 
          */
         waitFor: function() {
@@ -10668,7 +10676,10 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                 conditionCtx: "object",
                 callback: true,
                 callbackCtx: "object",
-                interval: "int"
+                interval: "number",
+                timeoutCallback: "function",
+                timeoutCallbackCtx: "object",
+                timeout: "number"
             });
             var h = function() {
                 try {
@@ -10677,6 +10688,7 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                     return false;
                 }
             };
+            var t = Time.now();
             if (h())
                 args.callback.apply(args.callbackCtx || this);
             else {
@@ -10684,6 +10696,10 @@ Scoped.define("module:Async", ["module:Types", "module:Functions"], function(Typ
                     if (h()) {
                         clearInterval(timer);
                         args.callback.apply(args.callbackCtx || this);
+                    } else if (args.timeout && Time.now() - t >= args.timeout) {
+                        clearInterval(timer);
+                        if (args.timeoutCallback)
+                            args.timeoutCallback.apply(args.timeoutCallbackCtx || args.callbackCtx || this);
                     }
                 }, args.interval || 1);
                 return timer;
