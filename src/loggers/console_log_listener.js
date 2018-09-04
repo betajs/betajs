@@ -13,10 +13,23 @@ Scoped.define("module:Loggers.ConsoleLogListener", [
         return {
 
             /**
+             * Creates a new instance.
+             *
+             * @param {object} options options argument
+             */
+            constructor: function(options) {
+                inherited.constructor.call(this);
+                this._options = options || {};
+            },
+
+            /**
              * @override
              */
             message: function(source, msg) {
-                console[msg.type].apply(console, msg.args.concat(msg.augments));
+                var args = msg.args.concat(msg.augments);
+                if (this._options.single)
+                    args = [args.join(" | ")];
+                console[msg.type].apply(console, args);
             }
 
         };

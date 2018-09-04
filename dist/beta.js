@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.159 - 2018-09-03
+betajs - v1.0.160 - 2018-09-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.159 - 2018-09-03
+betajs - v1.0.160 - 2018-09-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.159"
+    "version": "1.0.160"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11663,7 +11663,7 @@ Scoped.define("module:Async", [
      * 
      * @module BetaJS.Async
      */
-    return {
+    var Module = {
 
 
         /**
@@ -11714,6 +11714,18 @@ Scoped.define("module:Async", [
                 }, args.interval || 1);
                 return timer;
             }
+        },
+
+        /**
+         * Creates a function that executes a function asynchronously.
+         *
+         * @param {function} f function to be executed asynchronously
+         * @returns {function} asynchronous function
+         */
+        asyncify: function(f) {
+            return function() {
+                Module.eventually(f, this);
+            };
         },
 
 
@@ -11792,6 +11804,8 @@ Scoped.define("module:Async", [
         }
 
     };
+
+    return Module;
 
 });
 Scoped.define("module:Promise", [
@@ -12096,7 +12110,7 @@ Scoped.define("module:Promise", [
         },
 
         /**
-         * Creates a new method returning a promise based on a method returning a promise by delaying the underlaying method.
+         * Creates a new method returning a promise based on a method returning a promise by delaying the underlying method.
          *
          * @param {function} method original method
          * @param {int} delay delay time
@@ -12157,6 +12171,17 @@ Scoped.define("module:Promise", [
          */
         success: function(f, context, options) {
             return this.callback(f, context, options, "success");
+        },
+
+        /**
+         * Be notified when the promise is successful asynchronously.
+         *
+         * @param {function} f callback function
+         * @param {object} context optional callback context
+         * @param {object} options optional options
+         */
+        asuccess: function(f, context, options) {
+            return this.success(Async.asyncify(f), context, options);
         },
 
         /**
@@ -13447,10 +13472,23 @@ Scoped.define("module:Loggers.ConsoleLogListener", [
         return {
 
             /**
+             * Creates a new instance.
+             *
+             * @param {object} options options argument
+             */
+            constructor: function(options) {
+                inherited.constructor.call(this);
+                this._options = options || {};
+            },
+
+            /**
              * @override
              */
             message: function(source, msg) {
-                console[msg.type].apply(console, msg.args.concat(msg.augments));
+                var args = msg.args.concat(msg.augments);
+                if (this._options.single)
+                    args = [args.join(" | ")];
+                console[msg.type].apply(console, args);
             }
 
         };
@@ -13812,6 +13850,45 @@ Scoped.define("module:Loggers.TagLogAugment", [
              */
             augmentMessage: function(source, msg, depth) {
                 return msg.tags.join(",");
+            }
+
+        };
+    });
+});
+Scoped.define("module:Loggers.TimeLogAugment", [
+    "module:Loggers.AbstractLogAugment",
+    "module:Time"
+], function(AbstractLogAugment, Time, scoped) {
+    return AbstractLogAugment.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Time Log Augment Class
+         * 
+         * @class BetaJS.Loggers.TimeLogAugment
+         */
+        return {
+
+            /**
+             * Creates a new instance.
+             *
+             * @param {object} options options argument
+             */
+            constructor: function(options) {
+                inherited.constructor.call(this);
+                this._options = options || {};
+                this.__last = Time.now();
+            },
+
+            /**
+             * @override
+             */
+            augmentMessage: function(source, msg, depth) {
+                var now = Time.now();
+                var delta = now - this.__last;
+                this.__last = now;
+                return now + (this._options.delta ? " (+" + delta + "ms)" : "");
             }
 
         };

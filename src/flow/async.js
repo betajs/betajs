@@ -34,7 +34,7 @@ Scoped.define("module:Async", [
      * 
      * @module BetaJS.Async
      */
-    return {
+    var Module = {
 
 
         /**
@@ -85,6 +85,18 @@ Scoped.define("module:Async", [
                 }, args.interval || 1);
                 return timer;
             }
+        },
+
+        /**
+         * Creates a function that executes a function asynchronously.
+         *
+         * @param {function} f function to be executed asynchronously
+         * @returns {function} asynchronous function
+         */
+        asyncify: function(f) {
+            return function() {
+                Module.eventually(f, this);
+            };
         },
 
 
@@ -150,7 +162,7 @@ Scoped.define("module:Async", [
             };
             for (var key in __eventuallyOnce) {
                 var record = __eventuallyOnce[key];
-                if (record.func == func && record.params == params && record.context == context)
+                if (record.func === func && record.params === params && record.context === context)
                     return;
             }
             __eventuallyOnceIdx++;
@@ -163,5 +175,7 @@ Scoped.define("module:Async", [
         }
 
     };
+
+    return Module;
 
 });

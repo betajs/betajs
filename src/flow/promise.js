@@ -300,7 +300,7 @@ Scoped.define("module:Promise", [
         },
 
         /**
-         * Creates a new method returning a promise based on a method returning a promise by delaying the underlaying method.
+         * Creates a new method returning a promise based on a method returning a promise by delaying the underlying method.
          *
          * @param {function} method original method
          * @param {int} delay delay time
@@ -361,6 +361,17 @@ Scoped.define("module:Promise", [
          */
         success: function(f, context, options) {
             return this.callback(f, context, options, "success");
+        },
+
+        /**
+         * Be notified when the promise is successful asynchronously.
+         *
+         * @param {function} f callback function
+         * @param {object} context optional callback context
+         * @param {object} options optional options
+         */
+        asuccess: function(f, context, options) {
+            return this.success(Async.asyncify(f), context, options);
         },
 
         /**
