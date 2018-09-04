@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.160 - 2018-09-04
+betajs - v1.0.161 - 2018-09-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.160"
+    "version": "1.0.161"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -7719,8 +7719,9 @@ Scoped.define("module:Channels.Receiver", [
 
 Scoped.define("module:Channels.ReceiverSender", [
     "module:Channels.Sender",
+    "module:Channels.Receiver",
     "module:Async"
-], function(Sender, Async, scoped) {
+], function(Sender, Receiver, Async, scoped) {
     return Sender.extend({
         scoped: scoped
     }, function(inherited) {
@@ -7738,18 +7739,22 @@ Scoped.define("module:Channels.ReceiverSender", [
              * @param {object} receiver Receiver object
              * @param {boolean} async Handle every invocation asynchronously
              * @param {int} delay Delay time for asynchronous invocation
+             * @param {boolean} json Convert to JSON (optional, false)
              */
-            constructor: function(receiver, async, delay) {
+            constructor: function(receiver, async, delay, json) {
                 inherited.constructor.call(this);
                 this.__receiver = receiver;
                 this.__async = async;
                 this.__delay = delay;
+                this.__json = json;
             },
 
             /**
              * @override
              */
             _send: function(message, data, serializerInfo) {
+                if (this.__json)
+                    data = JSON.parse(JSON.stringify(data));
                 if (this.__async) {
                     Async.eventually(function() {
                         this.__receiver._receive(message, data);
@@ -7759,6 +7764,16 @@ Scoped.define("module:Channels.ReceiverSender", [
             }
 
         };
+    }, {
+
+        createPair: function(async, delay, json) {
+            var receiver = new Receiver();
+            return {
+                sender: new this(receiver, async, delay, json),
+                receiver: receiver
+            };
+        }
+
     });
 });
 
@@ -10781,7 +10796,7 @@ Scoped.define("module:Async", [
             };
             for (var key in __eventuallyOnce) {
                 var record = __eventuallyOnce[key];
-                if (record.func == func && record.params == params && record.context == context)
+                if (record.func === func && record.params === params && record.context === context)
                     return;
             }
             __eventuallyOnceIdx++;

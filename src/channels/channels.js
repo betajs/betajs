@@ -80,8 +80,9 @@ Scoped.define("module:Channels.Receiver", [
 
 Scoped.define("module:Channels.ReceiverSender", [
     "module:Channels.Sender",
+    "module:Channels.Receiver",
     "module:Async"
-], function(Sender, Async, scoped) {
+], function(Sender, Receiver, Async, scoped) {
     return Sender.extend({
         scoped: scoped
     }, function(inherited) {
@@ -99,18 +100,22 @@ Scoped.define("module:Channels.ReceiverSender", [
              * @param {object} receiver Receiver object
              * @param {boolean} async Handle every invocation asynchronously
              * @param {int} delay Delay time for asynchronous invocation
+             * @param {boolean} json Convert to JSON (optional, false)
              */
-            constructor: function(receiver, async, delay) {
+            constructor: function(receiver, async, delay, json) {
                 inherited.constructor.call(this);
                 this.__receiver = receiver;
                 this.__async = async;
                 this.__delay = delay;
+                this.__json = json;
             },
 
             /**
              * @override
              */
             _send: function(message, data, serializerInfo) {
+                if (this.__json)
+                    data = JSON.parse(JSON.stringify(data));
                 if (this.__async) {
                     Async.eventually(function() {
                         this.__receiver._receive(message, data);
@@ -120,6 +125,16 @@ Scoped.define("module:Channels.ReceiverSender", [
             }
 
         };
+    }, {
+
+        createPair: function(async, delay, json) {
+            var receiver = new Receiver();
+            return {
+                sender: new this(receiver, async, delay, json),
+                receiver: receiver
+            };
+        }
+
     });
 });
 
