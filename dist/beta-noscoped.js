@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.161 - 2018-09-04
+betajs - v1.0.161 - 2018-09-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -5377,6 +5377,10 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
         },
 
         EMAIL_ADDRESS_REGEX: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+
+        STRICT_URL_REGEX: /^\w+:\/\/[^\s]+$/,
+
+        PERMISSIVE_URL_REGEX: /^[\w\.]+\.(com|de|co\.uk|fr|net|org|edu)[^\s]*$/,
 
         /** Determines whether a string is a syntactically valid email address
          *
