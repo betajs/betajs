@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.161 - 2018-09-05
+betajs - v1.0.162 - 2018-09-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.161"
+    "version": "1.0.162"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -243,19 +243,18 @@ Scoped.define("module:Ajax.Support", [
 });
 
 
-Scoped.define("module:Ajax.AjaxWrapper", [
+Scoped.define("module:Ajax.AbstractAjaxWrapper", [
     "module:Class",
-    "module:Objs",
-    "module:Ajax.Support"
-], function(Class, Objs, Support, scoped) {
+    "module:Objs"
+], function(Class, Objs, scoped) {
     return Class.extend({
         scoped: scoped
     }, function(inherited) {
 
         /**
-         * Ajax Wrapper Class
+         * Abstract Ajax Wrapper Class
          * 
-         * @class BetaJS.Ajax.AjaxWrapper
+         * @class BetaJS.Ajax.AbstractAjaxWrapper
          */
         return {
 
@@ -278,10 +277,72 @@ Scoped.define("module:Ajax.AjaxWrapper", [
              * @return {object} promise for the ajax call
              */
             execute: function(options, progress, progressCtx) {
-                return Support.execute(Objs.extend(Objs.clone(this.options, 1), options), progress, progressCtx);
+                return this._execute(Objs.extend(Objs.clone(this.options, 1), options), progress, progressCtx);
+            },
+
+            _execute: function(options, progress, progressCtx) {
+                throw "Not implemented";
             }
 
         };
+    });
+});
+
+
+Scoped.define("module:Ajax.HookedAjaxWrapper", [
+    "module:Ajax.AbstractAjaxWrapper",
+    "module:Ajax.Support"
+], function(AbstractAjaxWrapper, Support, scoped) {
+    return AbstractAjaxWrapper.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Hooked Ajax Wrapper Class
+         *
+         * @class BetaJS.Ajax.HookedAjaxWrapper
+         */
+        return {
+
+            /**
+             * Creates an instance.
+             *
+             * @param {object} ajaxWrapper Ajax Wrapper Class
+             * @param {function} hookCallback hook callback function
+             * @param {object} hookCallbackCtx hook callback ctx
+             * @param {object} options common options for ajax calls
+             */
+            constructor: function(ajaxWrapper, hookCallback, hookCallbackCtx, options) {
+                inherited.constructor.call(this, options);
+                this.ajaxWrapper = ajaxWrapper;
+                this.hookCallback = hookCallback;
+                this.hookCallbackCtx = hookCallbackCtx;
+            },
+
+            _execute: function(options, progress, progressCtx) {
+                return this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
+            }
+
+        };
+    });
+});
+
+
+Scoped.define("module:Ajax.AjaxWrapper", [
+    "module:Ajax.AbstractAjaxWrapper",
+    "module:Ajax.Support"
+], function(AbstractAjaxWrapper, Support, scoped) {
+    /**
+     * Ajax Wrapper Class
+     *
+     * @class BetaJS.Ajax.AjaxWrapper
+     */
+    return AbstractAjaxWrapper.extend({
+        scoped: scoped
+    }, {
+        _execute: function(options, progress, progressCtx) {
+            return Support.execute(options, progress, progressCtx);
+        }
     });
 });
 Scoped.define("module:Ajax.AjaxException", [
