@@ -99,7 +99,7 @@ Scoped.define("module:Objs", [
          * @return cloned object or array
          */
         clone: function(item, depth) {
-            if (!depth || depth === 0)
+            if (!item || !depth || depth === 0)
                 return item;
             if (Types.is_array(item))
                 return item.slice(0);

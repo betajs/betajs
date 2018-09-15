@@ -12,7 +12,7 @@ Scoped.define("module:Types", function() {
          * @return true if x is an object
          */
         is_object: function(x) {
-            return typeof x == "object";
+            return typeof x === "object";
         },
 
         /**
@@ -33,7 +33,7 @@ Scoped.define("module:Types", function() {
          * @return true if x is undefined
          */
         is_undefined: function(x) {
-            return typeof x == "undefined";
+            return typeof x === "undefined";
         },
 
         /**
@@ -64,7 +64,7 @@ Scoped.define("module:Types", function() {
          * @return true if x is defined
          */
         is_defined: function(x) {
-            return typeof x != "undefined";
+            return typeof x !== "undefined";
         },
 
         /**
@@ -97,7 +97,7 @@ Scoped.define("module:Types", function() {
          * @return true if x is a a string
          */
         is_string: function(x) {
-            return typeof x == "string";
+            return typeof x === "string";
         },
 
         /**
@@ -107,7 +107,7 @@ Scoped.define("module:Types", function() {
          * @return true if x is a function
          */
         is_function: function(x) {
-            return typeof x == "function";
+            return typeof x === "function";
         },
 
         /**
@@ -117,7 +117,7 @@ Scoped.define("module:Types", function() {
          * @return true if x is boolean
          */
         is_boolean: function(x) {
-            return typeof x == "boolean";
+            return typeof x === "boolean";
         },
 
         /**
@@ -133,7 +133,7 @@ Scoped.define("module:Types", function() {
          */
         compare: function(x, y) {
             if (this.is_boolean(x) && this.is_boolean(y))
-                return x == y ? 0 : (x ? 1 : -1);
+                return x === y ? 0 : (x ? 1 : -1);
             if (this.is_array(x) && this.is_array(y)) {
                 var len_x = x.length;
                 var len_y = y.length;
@@ -143,7 +143,7 @@ Scoped.define("module:Types", function() {
                     if (c !== 0)
                         return c;
                 }
-                return len_x == len_y ? 0 : (len_x > len_y ? 1 : -1);
+                return len_x === len_y ? 0 : (len_x > len_y ? 1 : -1);
             }
             return x.localeCompare(y);
         },
@@ -171,7 +171,7 @@ Scoped.define("module:Types", function() {
          * @return array
          */
         parseArray: function(x) {
-            return x.split(",");
+            return this.is_string(x) ? x.split(",") : x;
         },
 
         /**
@@ -187,6 +187,53 @@ Scoped.define("module:Types", function() {
         },
 
         /**
+         * Returns whether argument is a number
+         *
+         * @param x argument
+         * @return true if x is a number
+         */
+        isNumber: function(x) {
+            return typeof x === "number";
+        },
+
+        /**
+         * Parses an integer string
+         *
+         * @param x integer as a string
+         * @return integer value
+         */
+        parseInt: function(x) {
+            return this.isNumber(x) ? x : parseInt(x, 10);
+        },
+
+        /**
+         * Parses a float string
+         *
+         * @param x float as a string
+         * @return float value
+         */
+        parseFloat: function(x) {
+            return this.isNumber(x) ? x : parseFloat(x);
+        },
+
+        /**
+         * Parses a date time string
+         *
+         * @param x date time as a string
+         * @return integer value
+         */
+        parseDateTime: function(x) {
+            if (typeof x === "number")
+                return x;
+            if (x === null || x === undefined)
+                return 0;
+            if (typeof x === "object")
+                x = x.toString();
+            var d = new Date(x);
+            return isNaN(d.getTime()) ? parseInt(x, 10) : d.getTime();
+        },
+
+        /**
          * Parses a value given a specific type.
          * 
          * @param x value to be parsed
@@ -194,22 +241,31 @@ Scoped.define("module:Types", function() {
          * @return parsed value
          */
         parseType: function(x, type) {
-            if (!this.is_string(x))
-                return x;
-            type = type.toLowerCase();
-            if (type == "bool" || type == "boolean")
-                return this.parseBool(x);
-            if (type == "int" || type == "integer")
-                return parseInt(x, 10);
-            if (type == "date" || type == "time" || type == "datetime")
-                return parseInt(x, 10);
-            if (type == "float" || type == "double")
-                return parseFloat(x);
-            if (type == "array")
-                return this.parseArray(x);
-            if (type == "object")
-                return JSON.parse(x);
-            return x;
+            switch (type.toLowerCase()) {
+                case "bool":
+                case "boolean":
+                    return this.parseBool(x);
+                case "int":
+                case "integer":
+                case "number":
+                    return this.parseInt(x);
+                case "date":
+                case "time":
+                case "datetime":
+                    return this.parseDateTime(x);
+                case "float":
+                case "double":
+                    return this.parseFloat(x);
+                case "array":
+                    return this.parseArray(x);
+                case "object":
+                case "json":
+                    return typeof x === "string" ? JSON.parse(x) : x;
+                case "id":
+                    return typeof x === "object" && x ? x.toString() : x;
+                default:
+                    return x;
+            }
         },
 
         /**
