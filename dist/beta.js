@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.164 - 2018-09-15
+betajs - v1.0.164 - 2018-10-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.164 - 2018-09-15
+betajs - v1.0.164 - 2018-10-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -7706,6 +7706,22 @@ Scoped.define("module:Time", [], function() {
          */
         now: function(timezone) {
             return this.dateToTime(new Date(), timezone);
+        },
+
+        /**
+         * Returns the earliest time in the future in milliseconds that has not been queried before.
+         *
+         * @param {int} delta delta (optional, default 1)
+         * @param {int} timezone timezone (optional)
+         *
+         * @return {int} earliest time in the future
+         */
+        uniqueAtLeastNow: function(delta, timezone) {
+            var candidate = this.now(timezone);
+            if (this.__unique_at_least_now && this.__unique_at_least_now >= candidate)
+                candidate = this.__unique_at_least_now + (delta || 1);
+            this.__unique_at_least_now = candidate;
+            return candidate;
         },
 
         /**

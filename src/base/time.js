@@ -244,6 +244,22 @@ Scoped.define("module:Time", [], function() {
         },
 
         /**
+         * Returns the earliest time in the future in milliseconds that has not been queried before.
+         *
+         * @param {int} delta delta (optional, default 1)
+         * @param {int} timezone timezone (optional)
+         *
+         * @return {int} earliest time in the future
+         */
+        uniqueAtLeastNow: function(delta, timezone) {
+            var candidate = this.now(timezone);
+            if (this.__unique_at_least_now && this.__unique_at_least_now >= candidate)
+                candidate = this.__unique_at_least_now + (delta || 1);
+            this.__unique_at_least_now = candidate;
+            return candidate;
+        },
+
+        /**
          * Returns the performance time in millseconds
          * 
          * @return {float} performance time
