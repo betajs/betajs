@@ -32,9 +32,13 @@ Scoped.define("module:Loggers.Logger", [
              * Adds a new augment to the logger.
              * 
              * @param {object} augment augment to be added
+             * @param {string} prefix optional prefix
              */
-            addAugment: function(augment) {
-                this.__augments[augment.cid()] = augment;
+            addAugment: function(augment, prefix) {
+                this.__augments[augment.cid()] = {
+                    augment: augment,
+                    prefix: prefix
+                };
                 return this;
             },
 
@@ -156,7 +160,7 @@ Scoped.define("module:Loggers.Logger", [
                 msg.tags = this.__tags.concat(msg.tags || []);
                 msg.augments = msg.augments || [];
                 Objs.iter(this.__augments, function(augment) {
-                    msg.augments.push(augment.augmentMessage(source, msg, depth));
+                    msg.augments.push((augment.prefix ? augment.prefix + ":" : "") + augment.augment.augmentMessage(source, msg, depth));
                 }, this);
                 Objs.iter(this.__listeners, function(listener) {
                     listener.message(this, msg, depth + 1);

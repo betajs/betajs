@@ -18,7 +18,7 @@ Scoped.define("module:Loggers.CallOriginLogAugment", [
              */
             augmentMessage: function(source, msg, depth) {
                 var stack = Functions.getStackTrace(depth * 3 + 6);
-                return stack[0];
+                return stack[0].trim();
             }
 
         };

@@ -1,7 +1,8 @@
 Scoped.define("module:Loggers.TimeLogAugment", [
     "module:Loggers.AbstractLogAugment",
-    "module:Time"
-], function(AbstractLogAugment, Time, scoped) {
+    "module:Time",
+    "module:TimeFormat"
+], function(AbstractLogAugment, Time, TimeFormat, scoped) {
     return AbstractLogAugment.extend({
         scoped: scoped
     }, function(inherited) {
@@ -31,7 +32,7 @@ Scoped.define("module:Loggers.TimeLogAugment", [
                 var now = Time.now();
                 var delta = now - this.__last;
                 this.__last = now;
-                return now + (this._options.delta ? " (+" + delta + "ms)" : "");
+                return (this._options.time_format ? TimeFormat.format(this._options.time_format, now) : now) + (this._options.delta ? " (+" + delta + "ms)" : "");
             }
 
         };

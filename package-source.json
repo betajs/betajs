@@ -1,6 +1,6 @@
 {
     "name": "betajs",
-    "version": "1.0.165",
+    "version": "1.0.166",
     "description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
     "contributors": [
         "Oliver Friedmann",

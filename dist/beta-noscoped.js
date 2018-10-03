@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.164 - 2018-10-01
+betajs - v1.0.166 - 2018-10-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,7 +10,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.164"
+    "version": "1.0.166"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -12592,7 +12592,7 @@ Scoped.define("module:Loggers.CallOriginLogAugment", [
              */
             augmentMessage: function(source, msg, depth) {
                 var stack = Functions.getStackTrace(depth * 3 + 6);
-                return stack[0];
+                return stack[0].trim();
             }
 
         };
@@ -12810,9 +12810,13 @@ Scoped.define("module:Loggers.Logger", [
              * Adds a new augment to the logger.
              * 
              * @param {object} augment augment to be added
+             * @param {string} prefix optional prefix
              */
-            addAugment: function(augment) {
-                this.__augments[augment.cid()] = augment;
+            addAugment: function(augment, prefix) {
+                this.__augments[augment.cid()] = {
+                    augment: augment,
+                    prefix: prefix
+                };
                 return this;
             },
 
@@ -12934,7 +12938,7 @@ Scoped.define("module:Loggers.Logger", [
                 msg.tags = this.__tags.concat(msg.tags || []);
                 msg.augments = msg.augments || [];
                 Objs.iter(this.__augments, function(augment) {
-                    msg.augments.push(augment.augmentMessage(source, msg, depth));
+                    msg.augments.push((augment.prefix ? augment.prefix + ":" : "") + augment.augment.augmentMessage(source, msg, depth));
                 }, this);
                 Objs.iter(this.__listeners, function(listener) {
                     listener.message(this, msg, depth + 1);
@@ -12972,6 +12976,59 @@ Scoped.define("module:Loggers.Logger", [
 
     return Cls;
 });
+Scoped.define("module:Loggers.StaticLogAugment", [
+    "module:Loggers.AbstractLogAugment"
+], function(AbstractLogAugment, scoped) {
+    return AbstractLogAugment.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Static Log Augment Class
+         * 
+         * @class BetaJS.Loggers.StaticLogAugment
+         */
+        return {
+
+            /**
+             * Creates a new instance.
+             *
+             * @param value value
+             */
+            constructor: function(value) {
+                inherited.constructor.call(this);
+                this.__value = value;
+            },
+
+            /**
+             * Returns current value.
+             *
+             * @return value
+             */
+            getValue: function() {
+                return this.__value;
+            },
+
+            /**
+             * Set current value.
+             *
+             * @param value current value
+             */
+            setValue: function(value) {
+                this.__value = value;
+                return this;
+            },
+
+            /**
+             * @override
+             */
+            augmentMessage: function(source, msg, depth) {
+                return this.__value;
+            }
+
+        };
+    });
+});
 Scoped.define("module:Loggers.TagLogAugment", [
     "module:Loggers.AbstractLogAugment"
 ], function(AbstractLogAugment, scoped) {
@@ -12998,8 +13055,9 @@ Scoped.define("module:Loggers.TagLogAugment", [
 });
 Scoped.define("module:Loggers.TimeLogAugment", [
     "module:Loggers.AbstractLogAugment",
-    "module:Time"
-], function(AbstractLogAugment, Time, scoped) {
+    "module:Time",
+    "module:TimeFormat"
+], function(AbstractLogAugment, Time, TimeFormat, scoped) {
     return AbstractLogAugment.extend({
         scoped: scoped
     }, function(inherited) {
@@ -13029,7 +13087,7 @@ Scoped.define("module:Loggers.TimeLogAugment", [
                 var now = Time.now();
                 var delta = now - this.__last;
                 this.__last = now;
-                return now + (this._options.delta ? " (+" + delta + "ms)" : "");
+                return (this._options.time_format ? TimeFormat.format(this._options.time_format, now) : now) + (this._options.delta ? " (+" + delta + "ms)" : "");
             }
 
         };
