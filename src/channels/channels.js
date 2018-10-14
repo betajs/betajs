@@ -36,7 +36,18 @@ Scoped.define("module:Channels.Sender", [
              * @param data Custom message data
              * @param serializerInfo Custom serializer information
              */
-            _send: function(message, data, serializerInfo) {}
+            _send: function(message, data, serializerInfo) {},
+
+            /**
+             * Connect sender directly to a receiver.
+             *
+             * @param {object} receiver receiver object
+             */
+            connectToReceiver: function(receiver) {
+                receiver.connectToSender(this);
+                return this;
+            }
+
 
         }
     ]);
@@ -71,6 +82,16 @@ Scoped.define("module:Channels.Receiver", [
                  */
                 this.trigger("receive", message, data);
                 this.trigger("receive:" + message, data);
+            },
+
+            /**
+             * Connect receiver directly to a sender.
+             *
+             * @param {object} sender sender object
+             */
+            connectToSender: function(sender) {
+                this.on("receive", sender.send, sender);
+                return this;
             }
 
         }

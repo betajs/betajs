@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.166 - 2018-10-03
+betajs - v1.0.167 - 2018-10-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.166 - 2018-10-03
+betajs - v1.0.167 - 2018-10-14
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.166"
+    "version": "1.0.167"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -8821,7 +8821,18 @@ Scoped.define("module:Channels.Sender", [
              * @param data Custom message data
              * @param serializerInfo Custom serializer information
              */
-            _send: function(message, data, serializerInfo) {}
+            _send: function(message, data, serializerInfo) {},
+
+            /**
+             * Connect sender directly to a receiver.
+             *
+             * @param {object} receiver receiver object
+             */
+            connectToReceiver: function(receiver) {
+                receiver.connectToSender(this);
+                return this;
+            }
+
 
         }
     ]);
@@ -8856,6 +8867,16 @@ Scoped.define("module:Channels.Receiver", [
                  */
                 this.trigger("receive", message, data);
                 this.trigger("receive:" + message, data);
+            },
+
+            /**
+             * Connect receiver directly to a sender.
+             *
+             * @param {object} sender sender object
+             */
+            connectToSender: function(sender) {
+                this.on("receive", sender.send, sender);
+                return this;
             }
 
         }
@@ -9207,7 +9228,7 @@ Scoped.define("module:Channels.TransportChannel", [
                     this.__received[data.id].time = Time.now();
                     this.__received[data.id].returned = false;
                     this.__received[data.id].success = false;
-                    this._reply(data.message, data.data).success(function(result) {
+                    Promise.value(this._reply(data.message, data.data)).success(function(result) {
                         this.__received[data.id].reply = result;
                         this.__received[data.id].success = true;
                     }, this).error(function(error) {

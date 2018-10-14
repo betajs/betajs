@@ -110,7 +110,7 @@ Scoped.define("module:Channels.TransportChannel", [
                     this.__received[data.id].time = Time.now();
                     this.__received[data.id].returned = false;
                     this.__received[data.id].success = false;
-                    this._reply(data.message, data.data).success(function(result) {
+                    Promise.value(this._reply(data.message, data.data)).success(function(result) {
                         this.__received[data.id].reply = result;
                         this.__received[data.id].success = true;
                     }, this).error(function(error) {
