@@ -114,6 +114,8 @@ Scoped.define("module:Channels.TransportChannel", [
                         this.__received[data.id].reply = result;
                         this.__received[data.id].success = true;
                     }, this).error(function(error) {
+                        if (error && error.constructor && error.constructor === Error)
+                            error = error.toString();
                         this.__received[data.id].reply = error;
                     }, this).callback(function() {
                         this.__received[data.id].returned = true;

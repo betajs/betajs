@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.167 - 2018-10-14
+betajs - v1.0.168 - 2018-10-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.167 - 2018-10-14
+betajs - v1.0.168 - 2018-10-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.167"
+    "version": "1.0.168"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9232,6 +9232,8 @@ Scoped.define("module:Channels.TransportChannel", [
                         this.__received[data.id].reply = result;
                         this.__received[data.id].success = true;
                     }, this).error(function(error) {
+                        if (error && error.constructor && error.constructor === Error)
+                            error = error.toString();
                         this.__received[data.id].reply = error;
                     }, this).callback(function() {
                         this.__received[data.id].returned = true;
