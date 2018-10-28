@@ -5289,6 +5289,18 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
     return {
 
         /**
+         * Uppercases first character in string.
+         *
+         * @param {string} s string in question
+         *
+         * @return {string} uppercased string
+         */
+        ucFirst: function(s) {
+            s += '';
+            return s.charAt(0).toUpperCase() + s.substr(1);
+        },
+
+        /**
          * Escapes a string to be used as an exact match in a regular expression.
          *
          * @param {string} s string in question
