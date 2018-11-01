@@ -481,6 +481,25 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
                 return i + "rd";
             }
             return i + "th";
+        },
+
+        __cachedRegExp: {},
+
+        /**
+         * Returns a reg exp object for a reg exp string from a cache.
+         *
+         * @param {string} regexString reg exp string
+         * @param {string} regexOptions reg exp options string
+         *
+         * @returns {object} RegExp object
+         */
+        cachedRegExp: function(regexString, regexOptions) {
+            regexOptions = regexOptions || "";
+            if (!this.__cachedRegExp[regexString])
+                this.__cachedRegExp[regexString] = {};
+            if (!this.__cachedRegExp[regexString][regexOptions])
+                this.__cachedRegExp[regexString][regexOptions] = new RegExp(regexString, regexOptions);
+            return this.__cachedRegExp[regexString][regexOptions];
         }
 
     };

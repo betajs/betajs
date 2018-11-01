@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.168 - 2018-10-21
+betajs - v1.0.170 - 2018-11-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.168 - 2018-10-21
+betajs - v1.0.170 - 2018-11-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.168"
+    "version": "1.0.170"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6773,6 +6773,25 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
                 return i + "rd";
             }
             return i + "th";
+        },
+
+        __cachedRegExp: {},
+
+        /**
+         * Returns a reg exp object for a reg exp string from a cache.
+         *
+         * @param {string} regexString reg exp string
+         * @param {string} regexOptions reg exp options string
+         *
+         * @returns {object} RegExp object
+         */
+        cachedRegExp: function(regexString, regexOptions) {
+            regexOptions = regexOptions || "";
+            if (!this.__cachedRegExp[regexString])
+                this.__cachedRegExp[regexString] = {};
+            if (!this.__cachedRegExp[regexString][regexOptions])
+                this.__cachedRegExp[regexString][regexOptions] = new RegExp(regexString, regexOptions);
+            return this.__cachedRegExp[regexString][regexOptions];
         }
 
     };
