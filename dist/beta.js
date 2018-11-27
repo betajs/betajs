@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.170 - 2018-11-01
+betajs - v1.0.171 - 2018-11-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.170 - 2018-11-01
+betajs - v1.0.171 - 2018-11-27
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.170"
+    "version": "1.0.171"
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3555,6 +3555,16 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
             var regex = keepScopes ? this.IDENTIFIER_SCOPE_REGEX : this.IDENTIFIER_REGEX;
             code = this.removeStrings(code);
             return Objs.filter(code.match(regex), this.isIdentifier, this);
+        },
+
+        /**
+         * Return function parameter names
+         *
+         * @param {string} func JavaScript function to extract parameter names
+         * @return {array} array of extracted parameter names
+         */
+        extractFunctionParameterNames: function(func) {
+            return (func.toString().match(/function \((.*)\).*/))[1].replace(/\s*/g, "").split(",");
         }
 
     };
@@ -5139,6 +5149,21 @@ Scoped.define("module:Objs", [
                 a.push(f.call(this, key, value));
             }, ctx);
             return a;
+        },
+
+        /**
+         * Initializes an array with pre-computed values using a callback function.
+         *
+         * @param {int} count number of elements to be generated
+         * @param {function} callback function for computing the elements
+         * @param {object} context optional context
+         * @returns {array} generated array
+         */
+        initArray: function(count, callback, context) {
+            var result = [];
+            for (var i = 0; i < count; ++i)
+                result.push(callback.call(context || this, i));
+            return result;
         }
 
     };
@@ -5244,21 +5269,6 @@ Scoped.define("module:Objs.Scopes", ["module:Types"], function(Types) {
                 scope = scope[keys[i]];
             }
             return scope[keys[keys.length - 1]];
-        },
-
-        /**
-         * Initializes an array with pre-computed values using a callback function.
-         *
-         * @param {int} count number of elements to be generated
-         * @param {function} callback function for computing the elements
-         * @param {object} context optional context
-         * @returns {array} generated array
-         */
-        initArray: function(count, callback, context) {
-            var result = [];
-            for (var i = 0; i < count; ++i)
-                result.push(callback.call(context || this, i));
-            return result;
         }
 
     };

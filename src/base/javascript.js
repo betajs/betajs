@@ -68,6 +68,16 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
             var regex = keepScopes ? this.IDENTIFIER_SCOPE_REGEX : this.IDENTIFIER_REGEX;
             code = this.removeStrings(code);
             return Objs.filter(code.match(regex), this.isIdentifier, this);
+        },
+
+        /**
+         * Return function parameter names
+         *
+         * @param {string} func JavaScript function to extract parameter names
+         * @return {array} array of extracted parameter names
+         */
+        extractFunctionParameterNames: function(func) {
+            return (func.toString().match(/function \((.*)\).*/))[1].replace(/\s*/g, "").split(",");
         }
 
     };
