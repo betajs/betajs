@@ -79,7 +79,7 @@
             "Edge": "12 - Latest",
             "iOS": "3.0 - Latest",
             "Yandex": "Latest",
-            "Android": "2.2 - Latest",
+            "Android": "4.4 - Latest",
             "NodeJS": "4.0 - Latest"
         },
         "weakDependencies": {
