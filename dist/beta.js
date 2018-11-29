@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.171 - 2018-11-27
+betajs - v1.0.172 - 2018-11-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.171 - 2018-11-27
+betajs - v1.0.172 - 2018-11-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.171"
+    "version": "1.0.172",
+    "datetime": 1543507777660
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6802,6 +6803,19 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             if (!this.__cachedRegExp[regexString][regexOptions])
                 this.__cachedRegExp[regexString][regexOptions] = new RegExp(regexString, regexOptions);
             return this.__cachedRegExp[regexString][regexOptions];
+        },
+
+        IP_ADDRESS_REGEXP: /^\d+\.\d+\.\d+\.\d+$/,
+
+        /**
+         * Checks whether a given string is an IP address.
+         *
+         * @param {string} str potential ip address
+         *
+         * @returns {boolean} true if ip address
+         */
+        isIPAddress: function(str) {
+            return this.IP_ADDRESS_REGEXP.test(str);
         }
 
     };

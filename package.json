@@ -1,5 +1,5 @@
 {
-    "homepage": "http://betajs.com",
+    "homepage": "https://betajs.com",
     "license": "Apache-2.0",
     "licenses": [
         {
@@ -15,7 +15,7 @@
         "url": "https://github.com/betajs/betajs/issues"
     },
     "name": "betajs",
-    "version": "1.0.171",
+    "version": "1.0.172",
     "description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
     "contributors": [
         "Oliver Friedmann",
@@ -51,8 +51,8 @@
         "test": "grunt check"
     },
     "meta": {
-        "blog": "http://blog.betajs.com",
-        "twitter": "http://twitter.com/thebetajs",
+        "blog": "https://blog.betajs.com",
+        "twitter": "https://twitter.com/thebetajs",
         "sponsors": [
             "Ziggeo",
             "Browserstack"

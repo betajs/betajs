@@ -500,6 +500,19 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             if (!this.__cachedRegExp[regexString][regexOptions])
                 this.__cachedRegExp[regexString][regexOptions] = new RegExp(regexString, regexOptions);
             return this.__cachedRegExp[regexString][regexOptions];
+        },
+
+        IP_ADDRESS_REGEXP: /^\d+\.\d+\.\d+\.\d+$/,
+
+        /**
+         * Checks whether a given string is an IP address.
+         *
+         * @param {string} str potential ip address
+         *
+         * @returns {boolean} true if ip address
+         */
+        isIPAddress: function(str) {
+            return this.IP_ADDRESS_REGEXP.test(str);
         }
 
     };
