@@ -39,3 +39,46 @@ Scoped.define("module:Channels.SimulatorSender", [
         };
     });
 });
+
+
+
+Scoped.define("module:Channels.SimulatorReceiver", [
+    "module:Channels.Receiver"
+], function(Receiver, scoped) {
+    return Receiver.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Receiver Simulating Online / Offline behavior
+         *
+         * @class BetaJS.Channels.SimulatorReceiver
+         */
+        return {
+
+            /**
+             * Attribute for setting / online offline
+             *
+             * @member {boolean} online online / offline setting
+             */
+            online: true,
+
+            /**
+             * Create a new instance given an inner receiver channel.
+             *
+             * @param {object} receiver receiver instance
+             *
+             * @return {object} simulated receiver instance
+             */
+            constructor: function(receiver) {
+                inherited.constructor.call(this);
+                this.__receiver = receiver;
+                this.__receiver.on("receive", function(message, data) {
+                    if (this.online)
+                        this._receive(message, data);
+                }, this);
+            }
+
+        };
+    });
+});

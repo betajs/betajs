@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.172 - 2018-11-29
+betajs - v1.0.172 - 2018-12-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1009,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.172 - 2018-11-29
+betajs - v1.0.172 - 2018-12-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,7 +1021,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.172",
-    "datetime": 1543507777660
+    "datetime": 1543787454451
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9166,6 +9166,49 @@ Scoped.define("module:Channels.SimulatorSender", [
             _send: function(message, data) {
                 if (this.online)
                     this.__sender.send(message, data);
+            }
+
+        };
+    });
+});
+
+
+
+Scoped.define("module:Channels.SimulatorReceiver", [
+    "module:Channels.Receiver"
+], function(Receiver, scoped) {
+    return Receiver.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Receiver Simulating Online / Offline behavior
+         *
+         * @class BetaJS.Channels.SimulatorReceiver
+         */
+        return {
+
+            /**
+             * Attribute for setting / online offline
+             *
+             * @member {boolean} online online / offline setting
+             */
+            online: true,
+
+            /**
+             * Create a new instance given an inner receiver channel.
+             *
+             * @param {object} receiver receiver instance
+             *
+             * @return {object} simulated receiver instance
+             */
+            constructor: function(receiver) {
+                inherited.constructor.call(this);
+                this.__receiver = receiver;
+                this.__receiver.on("receive", function(message, data) {
+                    if (this.online)
+                        this._receive(message, data);
+                }, this);
             }
 
         };
