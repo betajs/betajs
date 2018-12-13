@@ -32,6 +32,17 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
         },
 
         /**
+         * Transforms a string with asterisks as placeholders to a regular expression
+         *
+         * @param {string} s string in question
+         *
+         * @return {string} escaped string
+         */
+        asteriskPatternToRegex: function(s) {
+            return s.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&').replace(/\*/g, '.*');
+        },
+
+        /**
          * Pads a string from the left with characters if necessary.
          *
          * @param {string} s string that should be padded

@@ -144,6 +144,8 @@ Scoped.define("module:Ajax.Support", [
                 jsonp: undefined,
                 noCache: undefined,
                 noCacheParam: null,
+                signingFunction: null,
+                signUrl: false,
                 postmessage: undefined,
                 contentType: "urlencoded", // json
                 resilience: 1,
@@ -186,6 +188,18 @@ Scoped.define("module:Ajax.Support", [
             }
             options.isCorsRequest = typeof document !== "undefined" && Uri.isCrossDomainUri(document.location.href, options.uri);
             return options;
+        },
+
+        /**
+         * Finalizes a uri via signing if activated
+         *
+         * @param {object} options Options for the Ajax command
+         * @param {string} uri Pre-Final uri
+         *
+         * @return {string} Final uri
+         */
+        finalizeUri: function(options, uri) {
+            return options.signUrl && options.signingFunction ? options.signingFunction(options, uri) : uri;
         },
 
         /**

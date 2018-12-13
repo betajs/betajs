@@ -86,3 +86,12 @@ QUnit.test("train case", function (assert) {
     assert.equal(BetaJS.Strings.trainCase("TRAIN-CASE"), "Train-Case");
     assert.equal(BetaJS.Strings.trainCase("TRAIN CASE"), "Train-Case");
 });
+
+QUnit.test("asterisk pattern escape", function (assert) {
+    var pattern = BetaJS.Strings.asteriskPatternToRegex("Foo*Bar");
+    assert.equal(pattern, "Foo.*Bar");
+    var r = new RegExp("^" + pattern + "$", "g");
+    assert.equal(!!("FooBar".match(r)), true);
+    assert.equal(!!("Foo Baz Bar".match(r)), true);
+    assert.equal(!!("Foo Bar Baz".match(r)), false);
+});

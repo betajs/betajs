@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.172 - 2018-12-02
+betajs - v1.0.174 - 2018-12-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.172",
-    "datetime": 1543787454451
+    "version": "1.0.174",
+    "datetime": 1544744357263
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -163,6 +163,8 @@ Scoped.define("module:Ajax.Support", [
                 jsonp: undefined,
                 noCache: undefined,
                 noCacheParam: null,
+                signingFunction: null,
+                signUrl: false,
                 postmessage: undefined,
                 contentType: "urlencoded", // json
                 resilience: 1,
@@ -205,6 +207,18 @@ Scoped.define("module:Ajax.Support", [
             }
             options.isCorsRequest = typeof document !== "undefined" && Uri.isCrossDomainUri(document.location.href, options.uri);
             return options;
+        },
+
+        /**
+         * Finalizes a uri via signing if activated
+         *
+         * @param {object} options Options for the Ajax command
+         * @param {string} uri Pre-Final uri
+         *
+         * @return {string} Final uri
+         */
+        finalizeUri: function(options, uri) {
+            return options.signUrl && options.signingFunction ? options.signingFunction(options, uri) : uri;
         },
 
         /**
@@ -5322,6 +5336,17 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
          */
         regexEscape: function(s) {
             return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        },
+
+        /**
+         * Transforms a string with asterisks as placeholders to a regular expression
+         *
+         * @param {string} s string in question
+         *
+         * @return {string} escaped string
+         */
+        asteriskPatternToRegex: function(s) {
+            return s.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&').replace(/\*/g, '.*');
         },
 
         /**
