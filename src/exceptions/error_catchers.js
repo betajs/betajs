@@ -15,7 +15,7 @@ Scoped.define("module:Exceptions.ErrorCatcher", [
             /**
              * Creates an instance.
              * 
-             * @param {object} thrower TODO
+             * @param {object} thrower thrower instance
              */
             constructor: function(thrower) {
                 inherited.constructor.call(this);

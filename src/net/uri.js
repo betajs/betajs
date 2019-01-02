@@ -1,8 +1,9 @@
 Scoped.define("module:Net.Uri", [
     "module:Objs",
     "module:Types",
-    "module:Strings"
-], function(Objs, Types, Strings) {
+    "module:Strings",
+    "module:Sort"
+], function(Objs, Types, Strings, Sort) {
 
     var parse_strict_regex = /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/;
     var parse_loose_regex = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
@@ -144,6 +145,20 @@ Scoped.define("module:Net.Uri", [
             if (source.protocol === "file" || target.protocol === "file")
                 return source.protocol === target.protocol;
             return source.host !== target.host || source.port !== target.port;
+        },
+
+        /**
+         * Normalizes the query of a uri by sorting keys alphabetically.
+         *
+         * @param {string} uri source URI
+         *
+         * @return {string} normalized uri
+         */
+        normalizeUri: function(uri) {
+            var q = uri.indexOf("?");
+            return q >= 0 ? uri.substring(0, q) + "?" + this.encodeUriParams(Sort.sort_object(this.decodeUriParams(uri.substring(q + 1)), function(x, y) {
+                return x.localeCompare(y);
+            })) : uri;
         }
 
     };

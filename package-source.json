@@ -1,6 +1,6 @@
 {
     "name": "betajs",
-    "version": "1.0.175",
+    "version": "1.0.176",
     "description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
     "contributors": [
         "Oliver Friedmann",
@@ -34,7 +34,8 @@
     },
     "scripts": {
         "test": "grunt check",
-        "relink": "npm link betajs-shims && npm link betajs-compile && npm link betajs-scoped"
+        "relink": "npm link betajs-shims && npm link betajs-compile && npm link betajs-scoped",
+        "reinstall": "rm -f package-lock.json && rm -rf node_modules && npm i && npm run relink"
     },
     "meta": {
         "sponsors": [
