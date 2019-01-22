@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.176 - 2019-01-02
+betajs - v1.0.176 - 2019-01-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.176 - 2019-01-02
+betajs - v1.0.176 - 2019-01-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.176",
-    "datetime": 1546463241432
+    "datetime": 1548097588933
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1194,6 +1194,7 @@ Scoped.define("module:Ajax.Support", [
                 });
             }
             options.method = options.method.toUpperCase();
+            options.methodSupportsPayload = options.method === "POST" || options.method === "PATCH" || options.method === "PUT";
             if (options.baseUri)
                 options.uri = options.uri ? options.baseUri + options.uri : options.baseUri;
             delete options.baseUri;

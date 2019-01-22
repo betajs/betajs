@@ -168,6 +168,7 @@ Scoped.define("module:Ajax.Support", [
                 });
             }
             options.method = options.method.toUpperCase();
+            options.methodSupportsPayload = options.method === "POST" || options.method === "PATCH" || options.method === "PUT";
             if (options.baseUri)
                 options.uri = options.uri ? options.baseUri + options.uri : options.baseUri;
             delete options.baseUri;
