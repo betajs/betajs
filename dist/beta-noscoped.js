@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.176 - 2019-01-21
+betajs - v1.0.178 - 2019-01-23
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.176",
-    "datetime": 1548097588933
+    "version": "1.0.178",
+    "datetime": 1548241256229
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -306,8 +306,9 @@ Scoped.define("module:Ajax.AbstractAjaxWrapper", [
 
 
 Scoped.define("module:Ajax.HookedAjaxWrapper", [
-    "module:Ajax.AbstractAjaxWrapper"
-], function(AbstractAjaxWrapper, scoped) {
+    "module:Ajax.AbstractAjaxWrapper",
+    "module:Promise"
+], function(AbstractAjaxWrapper, Promise, scoped) {
     return AbstractAjaxWrapper.extend({
         scoped: scoped
     }, function(inherited) {
@@ -332,9 +333,12 @@ Scoped.define("module:Ajax.HookedAjaxWrapper", [
                 this.ajaxWrapper = ajaxWrapper;
                 this.hookCallback = hookCallback;
                 this.hookCallbackCtx = hookCallbackCtx;
+                this.online = true;
             },
 
             _execute: function(options, progress, progressCtx) {
+                if (!this.online)
+                    return Promise.error("offline");
                 return this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
             }
 

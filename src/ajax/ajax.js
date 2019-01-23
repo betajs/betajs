@@ -287,8 +287,9 @@ Scoped.define("module:Ajax.AbstractAjaxWrapper", [
 
 
 Scoped.define("module:Ajax.HookedAjaxWrapper", [
-    "module:Ajax.AbstractAjaxWrapper"
-], function(AbstractAjaxWrapper, scoped) {
+    "module:Ajax.AbstractAjaxWrapper",
+    "module:Promise"
+], function(AbstractAjaxWrapper, Promise, scoped) {
     return AbstractAjaxWrapper.extend({
         scoped: scoped
     }, function(inherited) {
@@ -313,9 +314,12 @@ Scoped.define("module:Ajax.HookedAjaxWrapper", [
                 this.ajaxWrapper = ajaxWrapper;
                 this.hookCallback = hookCallback;
                 this.hookCallbackCtx = hookCallbackCtx;
+                this.online = true;
             },
 
             _execute: function(options, progress, progressCtx) {
+                if (!this.online)
+                    return Promise.error("offline");
                 return this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
             }
 
