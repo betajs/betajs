@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.178 - 2019-01-23
+betajs - v1.0.178 - 2019-02-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -11,7 +11,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.178",
-    "datetime": 1548241256229
+    "datetime": 1550534055830
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1732,7 +1732,7 @@ Scoped.define("module:Events.EventsMixin", [
                 obj.eventually = options.eventually;
             if (options.off_on_destroyed)
                 obj.off_on_destroyed = options.off_on_destroyed;
-            if (options.min_delay)
+            if (options.min_delay) {
                 obj.min_delay = new Timer({
                     delay: options.min_delay,
                     once: true,
@@ -1744,7 +1744,8 @@ Scoped.define("module:Events.EventsMixin", [
                         this.__invokeCallback(obj);
                     }
                 });
-            if (options.max_delay)
+            }
+            if (options.max_delay) {
                 obj.max_delay = new Timer({
                     delay: options.max_delay,
                     once: true,
@@ -1756,6 +1757,9 @@ Scoped.define("module:Events.EventsMixin", [
                         this.__invokeCallback(obj);
                     }
                 });
+            }
+            if (options.norecursion)
+                obj.no_recursion = true;
             return obj;
         },
 
@@ -1767,10 +1771,18 @@ Scoped.define("module:Events.EventsMixin", [
         },
 
         __invokeCallback: function(obj, params) {
-            if (obj.off_on_destroyed && obj.context && obj.context.destroyed())
+            if (obj.off_on_destroyed && obj.context && obj.context.destroyed()) {
                 this.off(null, null, obj);
-            else
+                return;
+            }
+            if (obj.no_recursion && obj.in_recursion)
+                return;
+            obj.in_recursion = true;
+            try {
                 this._invokeCallback(obj.callback, obj.context || this, params || obj.params);
+            } finally {
+                obj.in_recursion = false;
+            }
         },
 
         /**
