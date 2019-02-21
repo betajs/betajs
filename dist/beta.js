@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.178 - 2019-02-18
+betajs - v1.0.179 - 2019-02-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.178 - 2019-02-18
+betajs - v1.0.179 - 2019-02-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1017,8 +1017,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.178",
-    "datetime": 1550534055830
+    "version": "1.0.179",
+    "datetime": 1550721276131
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5682,12 +5682,13 @@ Scoped.define("module:Properties.PropertiesMixin", [
          * 
          * @param {string} key key in question
          * @param value value in question
+         * @param oldValue oldValue in question
          * 
          * @return value, possibly altered
          * 
          * @protected
          */
-        _beforeSet: function(key, value) {
+        _beforeSet: function(key, value, oldValue) {
             return value;
         },
 
@@ -6085,8 +6086,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
                     this.compute(key, value.func, value.dependencies);
                 return this;
             }
-            value = this._beforeSet(key, value);
             var oldValue = this.get(key);
+            value = this._beforeSet(key, value, oldValue);
             if (oldValue !== value) {
                 Scopes.set(key, value, this.__properties.data);
                 this.__setChanged(key, value, oldValue);

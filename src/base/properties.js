@@ -275,12 +275,13 @@ Scoped.define("module:Properties.PropertiesMixin", [
          * 
          * @param {string} key key in question
          * @param value value in question
+         * @param oldValue oldValue in question
          * 
          * @return value, possibly altered
          * 
          * @protected
          */
-        _beforeSet: function(key, value) {
+        _beforeSet: function(key, value, oldValue) {
             return value;
         },
 
@@ -678,8 +679,8 @@ Scoped.define("module:Properties.PropertiesMixin", [
                     this.compute(key, value.func, value.dependencies);
                 return this;
             }
-            value = this._beforeSet(key, value);
             var oldValue = this.get(key);
+            value = this._beforeSet(key, value, oldValue);
             if (oldValue !== value) {
                 Scopes.set(key, value, this.__properties.data);
                 this.__setChanged(key, value, oldValue);
