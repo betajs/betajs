@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.179 - 2019-02-20
+betajs - v1.0.181 - 2019-04-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.179",
-    "datetime": 1550721276131
+    "version": "1.0.181",
+    "datetime": 1554773326001
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -818,6 +818,29 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 
     Class.prototype.__destroyedDestroy = function() {
         throw ("Trying to destroy destroyed object " + this.cid() + ": " + this.cls.classname + ".");
+    };
+
+    /**
+     * Protects a function from being called recursively.
+     *
+     * @param ident string identifier of function
+     * @param func function to be called
+     */
+    Class.prototype.recursionProtection = function(ident, func) {
+        this.__recursionProtection = this.__recursionProtection || {};
+        if (this.__recursionProtection[ident])
+            return undefined;
+        this.__recursionProtection[ident] = true;
+        try {
+            var result = func.apply(this);
+            if (this && this.__recursionProtection)
+                delete this.__recursionProtection[ident];
+            return result;
+        } catch (e) {
+            if (this && this.__recursionProtection)
+                delete this.__recursionProtection[ident];
+            throw e;
+        }
     };
 
     /**

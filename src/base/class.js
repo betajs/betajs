@@ -305,6 +305,29 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
     };
 
     /**
+     * Protects a function from being called recursively.
+     *
+     * @param ident string identifier of function
+     * @param func function to be called
+     */
+    Class.prototype.recursionProtection = function(ident, func) {
+        this.__recursionProtection = this.__recursionProtection || {};
+        if (this.__recursionProtection[ident])
+            return undefined;
+        this.__recursionProtection[ident] = true;
+        try {
+            var result = func.apply(this);
+            if (this && this.__recursionProtection)
+                delete this.__recursionProtection[ident];
+            return result;
+        } catch (e) {
+            if (this && this.__recursionProtection)
+                delete this.__recursionProtection[ident];
+            throw e;
+        }
+    };
+
+    /**
      * Enable garbage collection for this instance.
      */
     Class.prototype.enableGc = function(gc) {
