@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.181 - 2019-04-08
+betajs - v1.0.181 - 2019-04-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.181 - 2019-04-08
+betajs - v1.0.181 - 2019-04-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1018,7 +1018,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.181",
-    "datetime": 1554773326001
+    "datetime": 1556209382311
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2343,9 +2343,53 @@ Scoped.define("module:Classes.ObjectIdScope", [
 });
 
 
+Scoped.define("module:Classes.SingletonMixin", [], function() {
+    /**
+     * SingletonMixin
+     *
+     * @mixin BetaJS.Classes.SingletonMixin
+     */
+    return {
+
+        _notifications: {
+            construct: "__singleton_create",
+            destroy: "__singleton_destroy"
+        },
+
+        __singleton_create: function() {
+            if (this.cls.__singleton)
+                throw ("Can only create a single instance of " + this.cls.classname);
+            this.cls.__singleton = this;
+        },
+
+        __singleton_destroy: function() {
+            this.cls.__singleton = null;
+        }
+
+    };
+});
+
+
+Scoped.define("module:Classes.SingletonClassMixin", [], function() {
+    /**
+     * SingletonMixinClass
+     *
+     * @mixin BetaJS.Classes.SingletonMixinClass
+     */
+    return {
+
+        singleton: function() {
+            this.__singleton = this.__singleton || new this();
+            return this.__singleton;
+        }
+
+    };
+});
+
+
 Scoped.define("module:Classes.ObjectIdMixin", [
-    "module:Classes.ObjectIdScope", "module:Objs", "module:Ids"
-], function(ObjectIdScope, Objs, Ids) {
+    "module:Classes.ObjectIdScope"
+], function(ObjectIdScope) {
 
     /**
      * Object Id Mixin

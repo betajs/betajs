@@ -292,9 +292,53 @@ Scoped.define("module:Classes.ObjectIdScope", [
 });
 
 
+Scoped.define("module:Classes.SingletonMixin", [], function() {
+    /**
+     * SingletonMixin
+     *
+     * @mixin BetaJS.Classes.SingletonMixin
+     */
+    return {
+
+        _notifications: {
+            construct: "__singleton_create",
+            destroy: "__singleton_destroy"
+        },
+
+        __singleton_create: function() {
+            if (this.cls.__singleton)
+                throw ("Can only create a single instance of " + this.cls.classname);
+            this.cls.__singleton = this;
+        },
+
+        __singleton_destroy: function() {
+            this.cls.__singleton = null;
+        }
+
+    };
+});
+
+
+Scoped.define("module:Classes.SingletonClassMixin", [], function() {
+    /**
+     * SingletonMixinClass
+     *
+     * @mixin BetaJS.Classes.SingletonMixinClass
+     */
+    return {
+
+        singleton: function() {
+            this.__singleton = this.__singleton || new this();
+            return this.__singleton;
+        }
+
+    };
+});
+
+
 Scoped.define("module:Classes.ObjectIdMixin", [
-    "module:Classes.ObjectIdScope", "module:Objs", "module:Ids"
-], function(ObjectIdScope, Objs, Ids) {
+    "module:Classes.ObjectIdScope"
+], function(ObjectIdScope) {
 
     /**
      * Object Id Mixin
