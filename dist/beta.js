@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.181 - 2019-04-25
+betajs - v1.0.182 - 2019-05-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.181 - 2019-04-25
+betajs - v1.0.182 - 2019-05-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1017,8 +1017,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.181",
-    "datetime": 1556209382311
+    "version": "1.0.182",
+    "datetime": 1557959173088
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -12596,6 +12596,34 @@ Scoped.define("module:Promise", [
             else
                 this.__callbacks.push(record);
             return this;
+        },
+
+        /**
+         * Be notified when the promise does not finish with a certain time.
+         *
+         * @param {int} delay delay timeout
+         * @param {function} f callback function
+         * @param {object} context callback context
+         */
+        timeout: function(delay, f, context) {
+            var ev = Async.eventually(f, context, delay);
+            return this.callback(function() {
+                Async.clearEventually(ev);
+            });
+        },
+
+        /**
+         * Timeout with an error.
+         *
+         * @param {int} delay delay timeout
+         * @param error error value
+         */
+        timeoutError: function(delay, error) {
+            if (!delay)
+                return this;
+            return this.timeout(delay, function() {
+                this.asyncError(error);
+            }, this);
         },
 
         /**

@@ -410,6 +410,34 @@ Scoped.define("module:Promise", [
         },
 
         /**
+         * Be notified when the promise does not finish with a certain time.
+         *
+         * @param {int} delay delay timeout
+         * @param {function} f callback function
+         * @param {object} context callback context
+         */
+        timeout: function(delay, f, context) {
+            var ev = Async.eventually(f, context, delay);
+            return this.callback(function() {
+                Async.clearEventually(ev);
+            });
+        },
+
+        /**
+         * Timeout with an error.
+         *
+         * @param {int} delay delay timeout
+         * @param error error value
+         */
+        timeoutError: function(delay, error) {
+            if (!delay)
+                return this;
+            return this.timeout(delay, function() {
+                this.asyncError(error);
+            }, this);
+        },
+
+        /**
          * Trigger the result.
          * 
          * @param {object} record optional specific callback record
