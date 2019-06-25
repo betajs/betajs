@@ -8,11 +8,13 @@ Scoped.define("module:Collections.Collection", [
     "module:Properties.ObservableMixin",
     "module:Properties.Properties",
     "module:Iterators.ArrayIterator",
+    "module:Iterators.MappedIterator",
+    "module:Iterators.ConcatIterator",
     "module:Iterators.FilteredIterator",
     "module:Iterators.ObjectValuesIterator",
     "module:Types",
     "module:Promise"
-], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, ObservableMixin, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
+], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, ObservableMixin, Properties, ArrayIterator, MappedIterator, ConcatIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
     return Class.extend({
         scoped: scoped
     }, [EventsMixin, ObservableMixin, function(inherited) {
@@ -509,6 +511,11 @@ Scoped.define("module:Collections.Collection", [
              * @return {object} Iterator instance
              */
             iterateSecondaryIndexValue: function(key, value) {
+                if (Types.is_array(value)) {
+                    return new ConcatIterator(new MappedIterator(new ArrayIterator(value), function(v) {
+                        return this.iterateSecondaryIndexValue(key, v);
+                    }, this));
+                }
                 return new ObjectValuesIterator(this.__indices[key][value]);
             },
 
@@ -523,6 +530,7 @@ Scoped.define("module:Collections.Collection", [
                 for (var index_key in this.__indices) {
                     if (index_key in subset) {
                         iterator = this.iterateSecondaryIndexValue(index_key, subset[index_key]);
+                        delete subset[index_key];
                         break;
                     }
                 }

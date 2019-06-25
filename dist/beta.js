@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.182 - 2019-05-15
+betajs - v1.0.184 - 2019-06-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.182 - 2019-05-15
+betajs - v1.0.184 - 2019-06-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1017,8 +1017,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.182",
-    "datetime": 1557959173088
+    "version": "1.0.184",
+    "datetime": 1561496565551
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1028,6 +1028,7 @@ Scoped.define("module:Ajax.Support", [
     "module:Ajax.NoCandidateAjaxException",
     "module:Ajax.ReturnDataParseException",
     "module:Ajax.RequestException",
+    "module:Ajax.TimeoutException",
     "module:Promise",
     "module:Objs",
     "module:Types",
@@ -1035,7 +1036,7 @@ Scoped.define("module:Ajax.Support", [
     "module:Net.HttpHeader",
     "module:Async",
     "module:Time"
-], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader, Async, Time) {
+], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, TimeoutException, Promise, Objs, Types, Uri, HttpHeader, Async, Time) {
 
     /**
      * Ajax Support Module
@@ -1150,6 +1151,16 @@ Scoped.define("module:Ajax.Support", [
             } catch (e) {
                 promise.asyncError(new RequestException(status, status_text, data));
             }
+        },
+
+        /**
+         * Return error to a promise object.
+         *
+         * @param {object} promise Promise object
+         *
+         */
+        promiseTimeoutException: function(promise) {
+            promise.asyncError(new TimeoutException(status, status_text, data));
         },
 
         /**
@@ -1410,6 +1421,25 @@ Scoped.define("module:Ajax.NoCandidateAjaxException", [
          * No Candidate Ajax Exception Class
          * 
          * @class BetaJS.Ajax.NoCandidateAjaxException
+         */
+        return {
+
+        };
+    });
+});
+
+
+Scoped.define("module:Ajax.TimeoutException", [
+    "module:Ajax.AjaxException"
+], function(Exception, scoped) {
+    return Exception.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Timeout Exception Class
+         *
+         * @class BetaJS.Ajax.Timeout
          */
         return {
 
@@ -10486,11 +10516,13 @@ Scoped.define("module:Collections.Collection", [
     "module:Properties.ObservableMixin",
     "module:Properties.Properties",
     "module:Iterators.ArrayIterator",
+    "module:Iterators.MappedIterator",
+    "module:Iterators.ConcatIterator",
     "module:Iterators.FilteredIterator",
     "module:Iterators.ObjectValuesIterator",
     "module:Types",
     "module:Promise"
-], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, ObservableMixin, Properties, ArrayIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
+], function(Class, EventsMixin, Objs, Functions, ArrayList, Ids, ObservableMixin, Properties, ArrayIterator, MappedIterator, ConcatIterator, FilteredIterator, ObjectValuesIterator, Types, Promise, scoped) {
     return Class.extend({
         scoped: scoped
     }, [EventsMixin, ObservableMixin, function(inherited) {
@@ -10987,6 +11019,11 @@ Scoped.define("module:Collections.Collection", [
              * @return {object} Iterator instance
              */
             iterateSecondaryIndexValue: function(key, value) {
+                if (Types.is_array(value)) {
+                    return new ConcatIterator(new MappedIterator(new ArrayIterator(value), function(v) {
+                        return this.iterateSecondaryIndexValue(key, v);
+                    }, this));
+                }
                 return new ObjectValuesIterator(this.__indices[key][value]);
             },
 
@@ -11001,6 +11038,7 @@ Scoped.define("module:Collections.Collection", [
                 for (var index_key in this.__indices) {
                     if (index_key in subset) {
                         iterator = this.iterateSecondaryIndexValue(index_key, subset[index_key]);
+                        delete subset[index_key];
                         break;
                     }
                 }
@@ -13703,6 +13741,56 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
             }
 
         };
+    });
+});
+
+
+Scoped.define("module:Iterators.ConcatIterator", ["module:Iterators.Iterator"], function(Iterator, scoped) {
+    return Iterator.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * ConcatIterator Class
+         *
+         * @class BetaJS.Iterators.ConcatIterator
+         */
+        return {
+
+            /**
+             * Creates an Iterator of an iterator of iterators
+             *
+             * @param {object} iterators iterators
+             */
+            constructor: function(iterators) {
+                inherited.constructor.call(this);
+                this.__iterators = iterators;
+                this.__current = null;
+            },
+
+            __ensure: function() {
+                while ((!this.__current || !this.__current.hasNext()) && this.__iterators.hasNext())
+                    this.__current = this.__iterators.next();
+                return this.__current;
+            },
+
+            /**
+             * @override
+             */
+            hasNext: function() {
+                var iterator = this.__ensure();
+                return iterator && iterator.hasNext();
+            },
+
+            /**
+             * @override
+             */
+            next: function() {
+                return this.__ensure().next();
+            }
+
+        };
+
     });
 });
 Scoped.extend("module:Iterators", [

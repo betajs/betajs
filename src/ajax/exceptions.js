@@ -45,6 +45,25 @@ Scoped.define("module:Ajax.NoCandidateAjaxException", [
 });
 
 
+Scoped.define("module:Ajax.TimeoutException", [
+    "module:Ajax.AjaxException"
+], function(Exception, scoped) {
+    return Exception.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * Timeout Exception Class
+         *
+         * @class BetaJS.Ajax.Timeout
+         */
+        return {
+
+        };
+    });
+});
+
+
 Scoped.define("module:Ajax.ReturnDataParseException", [
     "module:Ajax.AjaxException"
 ], function(Exception, scoped) {

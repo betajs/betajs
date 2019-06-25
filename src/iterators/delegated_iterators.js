@@ -455,3 +455,53 @@ Scoped.define("module:Iterators.PartiallySortedIterator", ["module:Iterators.Ite
         };
     });
 });
+
+
+Scoped.define("module:Iterators.ConcatIterator", ["module:Iterators.Iterator"], function(Iterator, scoped) {
+    return Iterator.extend({
+        scoped: scoped
+    }, function(inherited) {
+
+        /**
+         * ConcatIterator Class
+         *
+         * @class BetaJS.Iterators.ConcatIterator
+         */
+        return {
+
+            /**
+             * Creates an Iterator of an iterator of iterators
+             *
+             * @param {object} iterators iterators
+             */
+            constructor: function(iterators) {
+                inherited.constructor.call(this);
+                this.__iterators = iterators;
+                this.__current = null;
+            },
+
+            __ensure: function() {
+                while ((!this.__current || !this.__current.hasNext()) && this.__iterators.hasNext())
+                    this.__current = this.__iterators.next();
+                return this.__current;
+            },
+
+            /**
+             * @override
+             */
+            hasNext: function() {
+                var iterator = this.__ensure();
+                return iterator && iterator.hasNext();
+            },
+
+            /**
+             * @override
+             */
+            next: function() {
+                return this.__ensure().next();
+            }
+
+        };
+
+    });
+});

@@ -2,6 +2,7 @@ Scoped.define("module:Ajax.Support", [
     "module:Ajax.NoCandidateAjaxException",
     "module:Ajax.ReturnDataParseException",
     "module:Ajax.RequestException",
+    "module:Ajax.TimeoutException",
     "module:Promise",
     "module:Objs",
     "module:Types",
@@ -9,7 +10,7 @@ Scoped.define("module:Ajax.Support", [
     "module:Net.HttpHeader",
     "module:Async",
     "module:Time"
-], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, Promise, Objs, Types, Uri, HttpHeader, Async, Time) {
+], function(NoCandidateAjaxException, ReturnDataParseException, RequestException, TimeoutException, Promise, Objs, Types, Uri, HttpHeader, Async, Time) {
 
     /**
      * Ajax Support Module
@@ -124,6 +125,16 @@ Scoped.define("module:Ajax.Support", [
             } catch (e) {
                 promise.asyncError(new RequestException(status, status_text, data));
             }
+        },
+
+        /**
+         * Return error to a promise object.
+         *
+         * @param {object} promise Promise object
+         *
+         */
+        promiseTimeoutException: function(promise) {
+            promise.asyncError(new TimeoutException(status, status_text, data));
         },
 
         /**

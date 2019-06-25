@@ -191,6 +191,7 @@ QUnit.test("test collection query", function (assert) {
 	assert.equal(list.query({"text": "C Example X"}).asArray().length, 2);
 	list.add(new BetaJS.Properties.Properties({"text": "C Example X"}));
 	assert.equal(list.query({"text": "C Example X"}).asArray().length, 3);
+	assert.equal(list.query({"text": ["C Example X", "A Example Z"]}).asArray().length, 4);
 });
 
 
