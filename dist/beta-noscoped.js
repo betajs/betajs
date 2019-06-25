@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.184 - 2019-06-25
+betajs - v1.0.185 - 2019-06-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.184",
-    "datetime": 1561496565551
+    "version": "1.0.185",
+    "datetime": 1561496672013
 };
 });
 Scoped.require(['module:'], function (mod) {
