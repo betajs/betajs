@@ -557,6 +557,12 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             return this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED;
         },
 
+        /**
+         * Normalizes a search text in regards to umlauts etc.
+         *
+         * @param {string} text search text to be normalized
+         * @returns {string} normalized search text
+         */
         normalizeSearchText: function(text) {
             Objs.iter(this.NORMALIZE_SEARCH_TEXT_MAPS_REGEX(), function(searchReplace) {
                 text = text.replace(searchReplace.search, searchReplace.replace);

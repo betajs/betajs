@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.186 - 2019-07-01
+betajs - v1.0.187 - 2019-07-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.186 - 2019-07-01
+betajs - v1.0.187 - 2019-07-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1017,8 +1017,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.186",
-    "datetime": 1562023459159
+    "version": "1.0.187",
+    "datetime": 1562023527393
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6986,6 +6986,12 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             return this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED;
         },
 
+        /**
+         * Normalizes a search text in regards to umlauts etc.
+         *
+         * @param {string} text search text to be normalized
+         * @returns {string} normalized search text
+         */
         normalizeSearchText: function(text) {
             Objs.iter(this.NORMALIZE_SEARCH_TEXT_MAPS_REGEX(), function(searchReplace) {
                 text = text.replace(searchReplace.search, searchReplace.replace);
