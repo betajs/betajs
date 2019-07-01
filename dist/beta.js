@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.185 - 2019-06-25
+betajs - v1.0.186 - 2019-07-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.185 - 2019-06-25
+betajs - v1.0.186 - 2019-07-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1017,8 +1017,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.185",
-    "datetime": 1561496672013
+    "version": "1.0.186",
+    "datetime": 1562023459159
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6953,6 +6953,44 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
          */
         isIPAddress: function(str) {
             return this.IP_ADDRESS_REGEXP.test(str);
+        },
+
+        NORMALIZE_SEARCH_TEXT_MAPS: {
+            "\\u00dc": "Ue",
+            "\\u00fc": "ue",
+            "\\u00c4": "Ae",
+            "\\u00e4": "ae",
+            "\\u00d6": "Oe",
+            "\\u00f6": "oe",
+            "\\u00df": "ss",
+            "Ue": "U",
+            "ue": "u",
+            "Ae": "A",
+            "ae": "a",
+            "Oe": "O",
+            "oe": "o",
+            "\\W": " ",
+            "\\s+": " "
+        },
+
+        NORMALIZE_SEARCH_TEXT_MAPS_REGEX: function() {
+            if (!this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED) {
+                this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED = [];
+                Objs.iter(this.NORMALIZE_SEARCH_TEXT_MAPS, function(value, key) {
+                    this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED.push({
+                        search: new RegExp(key, "g"),
+                        replace: value
+                    });
+                }, this);
+            }
+            return this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED;
+        },
+
+        normalizeSearchText: function(text) {
+            Objs.iter(this.NORMALIZE_SEARCH_TEXT_MAPS_REGEX(), function(searchReplace) {
+                text = text.replace(searchReplace.search, searchReplace.replace);
+            });
+            return text.trim();
         }
 
     };

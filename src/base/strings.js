@@ -524,6 +524,44 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
          */
         isIPAddress: function(str) {
             return this.IP_ADDRESS_REGEXP.test(str);
+        },
+
+        NORMALIZE_SEARCH_TEXT_MAPS: {
+            "\\u00dc": "Ue",
+            "\\u00fc": "ue",
+            "\\u00c4": "Ae",
+            "\\u00e4": "ae",
+            "\\u00d6": "Oe",
+            "\\u00f6": "oe",
+            "\\u00df": "ss",
+            "Ue": "U",
+            "ue": "u",
+            "Ae": "A",
+            "ae": "a",
+            "Oe": "O",
+            "oe": "o",
+            "\\W": " ",
+            "\\s+": " "
+        },
+
+        NORMALIZE_SEARCH_TEXT_MAPS_REGEX: function() {
+            if (!this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED) {
+                this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED = [];
+                Objs.iter(this.NORMALIZE_SEARCH_TEXT_MAPS, function(value, key) {
+                    this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED.push({
+                        search: new RegExp(key, "g"),
+                        replace: value
+                    });
+                }, this);
+            }
+            return this.NORMALIZE_SEARCH_TEXT_MAPS_CACHED;
+        },
+
+        normalizeSearchText: function(text) {
+            Objs.iter(this.NORMALIZE_SEARCH_TEXT_MAPS_REGEX(), function(searchReplace) {
+                text = text.replace(searchReplace.search, searchReplace.replace);
+            });
+            return text.trim();
         }
 
     };
