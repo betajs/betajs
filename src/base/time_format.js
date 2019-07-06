@@ -217,23 +217,61 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
             return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         },
 
+        // /**
+        //  * Format most significant part of date / time relative to current time
+        //  *
+        //  * @param {int} time date/time to be formatted
+        //  * @param {int} currentTime relative to current time (optional)
+        //  * @param {int} timezone time zone bias (optional)
+        //  * @return {string} formatted time
+        //  */
+        // formatRelativeMostSignificant: function(time, currentTime, timezone) {
+        //     currentTime = currentTime || Time.now();
+        //     var t = Time.decodeTime(time, timezone);
+        //     var c = Time.decodeTime(currentTime, timezone);
+        //     // Same day. Return time.
+        //     if (t.year === c.year && t.month === c.month && t.day === c.day)
+        //         return this.format('hh:MM tt', time, timezone);
+        //     // Less than 7 days. Return week day.
+        //     if (currentTime - time < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
+        //         return this.format('dddd', time, timezone);
+        //     // Last 2 months?
+        //     if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
+        //         return this.format('mmm d', time, timezone);
+        //     // Last 11 month?
+        //     if (t.year === c.year || (t.year + 1 === c.year && t.month > c.month))
+        //         return this.format('mmm', time, timezone);
+        //     // Return year
+        //     return this.format('yyyy', time, timezone);
+        // },
+
         /**
          * Format most significant part of date / time relative to current time
-         * 
+         *
          * @param {int} time date/time to be formatted
          * @param {int} currentTime relative to current time (optional)
          * @param {int} timezone time zone bias (optional)
          * @return {string} formatted time
          */
         formatRelativeMostSignificant: function(time, currentTime, timezone) {
+            if (time === Infinity)
+                return 'Someday';
+
             currentTime = currentTime || Time.now();
             var t = Time.decodeTime(time, timezone);
             var c = Time.decodeTime(currentTime, timezone);
-            // Same day. Return time.
+
+            // Yesterday + time
+            if (t.year === c.year && t.month === c.month && t.day === c.day - 1)
+                return 'Yesterday ' + this.format('hh:MM tt', time, timezone);
+            // Today + time
             if (t.year === c.year && t.month === c.month && t.day === c.day)
-                return this.format('hh:MM tt', time, timezone);
+                return 'Today ' + this.format('hh:MM tt', time, timezone);
+            // Tomorrow + time.
+            if (t.year === c.year && t.month === c.month && t.day === c.day + 1)
+                return 'Tomorrow ' + this.format('hh:MM tt', time, timezone);
             // Less than 7 days. Return week day.
-            if (currentTime - time < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
+            if (Math.abs(currentTime - time) < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
                 return this.format('dddd', time, timezone);
             // Last 2 months?
             if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
