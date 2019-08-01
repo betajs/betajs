@@ -630,6 +630,11 @@ Scoped.define("module:Promise", [
                     else
                         promise.asyncSuccess(result);
                 } catch (e) {
+                    if (this.__callbacks.every(function(cb) {
+                            return cb.type === "success";
+                        })) {
+                        console.warn(e);
+                    }
                     promise.asyncError(e);
                 }
             });
