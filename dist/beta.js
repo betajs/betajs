@@ -1018,7 +1018,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.188",
-    "datetime": 1562405933278
+    "datetime": 1562423183844
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -7972,14 +7972,8 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
             if (t.year === c.year && t.month === c.month && t.day === c.day + 1)
                 return 'Tomorrow ' + this.format('hh:MM tt', time, timezone);
             // Less than 7 days. Return week day.
-            if (Math.abs(currentTime - time) < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday) {
-                console.log('why');
-                console.log(currentTime);
-                console.log(time);
-                console.log(Math.abs(currentTime - time) < 7 * 24 * 60 * 60 * 1000);
-
+            if (Math.abs(currentTime - time) < 7 * 24 * 60 * 60 * 1000 && t.weekday !== c.weekday)
                 return this.format('dddd', time, timezone);
-            }
             // Last 2 months?
             if ((t.year === c.year && t.month + 1 >= c.month) || (t.year + 1 === c.year && t.month + 1 >= c.month + 12 - 1))
                 return this.format('mmm d', time, timezone);
