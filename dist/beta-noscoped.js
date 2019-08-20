@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.188 - 2019-07-31
+betajs - v1.0.189 - 2019-08-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.188",
-    "datetime": 1564619956226
+    "version": "1.0.189",
+    "datetime": 1566263518602
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11903,6 +11903,24 @@ Scoped.define("module:Promise", [
                 }
             });
             return promise;
+        },
+
+        /**
+         * Maps the success value of the promise asynchronously to a function that might return another promise.
+         *
+         * @param {function} func success callback
+         * @param {object} ctx optional context
+         *
+         * @return {object} promise
+         */
+        mapASuccess: function(func, ctx) {
+            return this.mapSuccess(function(result) {
+                var promise = Promise.create();
+                Async.eventually(function() {
+                    Promise.box(func, ctx, [result]).forwardCallback(promise);
+                });
+                return promise;
+            });
         },
 
         /**

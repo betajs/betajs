@@ -642,6 +642,24 @@ Scoped.define("module:Promise", [
         },
 
         /**
+         * Maps the success value of the promise asynchronously to a function that might return another promise.
+         *
+         * @param {function} func success callback
+         * @param {object} ctx optional context
+         *
+         * @return {object} promise
+         */
+        mapASuccess: function(func, ctx) {
+            return this.mapSuccess(function(result) {
+                var promise = Promise.create();
+                Async.eventually(function() {
+                    Promise.box(func, ctx, [result]).forwardCallback(promise);
+                });
+                return promise;
+            });
+        },
+
+        /**
          * Maps the error value of the promise to a function that might return another promise.
          * 
          * @param {function} func error callback
