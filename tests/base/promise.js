@@ -94,3 +94,49 @@ QUnit.test("promise test 7", function(assert) {
 	promise1.asyncSuccess(4);
 	promise2.asyncError(10);
 });
+
+QUnit.test("promise mapSuccess", function (assert) {
+	var done = assert.async();
+	var log = "";
+
+	var promise = BetaJS.Promise.create();
+
+	promise.mapSuccess(function (v) {
+		log += "3";
+		return v * 2;
+	}).success(function (r) {
+		log += "4";
+		assert.equal(r, 10);
+		assert.equal(log, "134");
+	});
+
+	log += "1";
+	promise.asyncSuccess(5);
+	log += "2";
+	assert.equal(log, "1342");
+	done();
+
+});
+
+QUnit.test("promise mapASuccess", function (assert) {
+	var done = assert.async();
+	var log = "";
+
+	var promise = BetaJS.Promise.create();
+
+	promise.mapASuccess(function (v) {
+		log += "3";
+		return v * 2;
+	}).success(function (r) {
+		log += "4";
+		assert.equal(r, 10);
+		assert.equal(log, "1234");
+		done();
+	});
+
+	log += "1";
+	promise.asyncSuccess(5);
+	log += "2";
+	assert.equal(log, "12");
+
+});

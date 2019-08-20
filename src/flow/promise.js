@@ -630,10 +630,33 @@ Scoped.define("module:Promise", [
                     else
                         promise.asyncSuccess(result);
                 } catch (e) {
+                    if (this.__callbacks.every(function(cb) {
+                            return cb.type === "success";
+                        })) {
+                        console.warn(e);
+                    }
                     promise.asyncError(e);
                 }
             });
             return promise;
+        },
+
+        /**
+         * Maps the success value of the promise asynchronously to a function that might return another promise.
+         *
+         * @param {function} func success callback
+         * @param {object} ctx optional context
+         *
+         * @return {object} promise
+         */
+        mapASuccess: function(func, ctx) {
+            return this.mapSuccess(function(result) {
+                var promise = Promise.create();
+                Async.eventually(function() {
+                    Promise.box(func, ctx, [result]).forwardCallback(promise);
+                });
+                return promise;
+            });
         },
 
         /**
