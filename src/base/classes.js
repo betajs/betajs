@@ -431,13 +431,14 @@ Scoped.define("module:Classes.SharedObjectFactory", [
              * Acquire object instance.
              *
              * @param {object} reference optional reference
+             * @param {boolean} autoDecreaseRef automatically decrease reference upon destruction
              *
              * @returns {object} shared object instance
              */
-            acquire: function(reference) {
+            acquire: function(reference, autoDecreaseRef) {
                 if (!this.__object || this.__object.destroyed())
                     this.__object = this.__createCallback.apply(this.__createContext || this, this.__createArgs);
-                this.__object.increaseRef(reference);
+                this.__object.increaseRef(reference, autoDecreaseRef);
                 return this.__object;
             },
 

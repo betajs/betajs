@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.191 - 2019-08-19
+betajs - v1.0.192 - 2019-08-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.191 - 2019-08-19
+betajs - v1.0.192 - 2019-08-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1017,8 +1017,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.191",
-    "datetime": 1566263947299
+    "version": "1.0.192",
+    "datetime": 1566494961303
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1819,10 +1819,16 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
     Class.prototype.destroy = function() {
         this._notify("destroy");
         if (this.__auto_destroy_list) {
-            for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
-                if ("destroy" in this.__auto_destroy_list[i])
-                    this.__auto_destroy_list[i].weakDestroy();
-            }
+            this.__auto_destroy_list.forEach(function(obj) {
+                if ("destroy" in obj)
+                    obj.weakDestroy();
+            }, this);
+        }
+        if (this.__auto_decrease_ref_list) {
+            this.__auto_decrease_ref_list.forEach(function(obj) {
+                if ("decreaseRef" in obj)
+                    obj.decreaseRef(this);
+            }, this);
         }
         var cid = this.cid();
         for (var key in this)
@@ -1945,6 +1951,25 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
     };
 
     /**
+     * Automatically decreases an object reference when this object is being destroyed.
+     *
+     * @param {object} obj
+     * @param {boolean} returnSource return source object instead of obj
+     */
+    Class.prototype.auto_decrease_ref = function(obj, returnSource) {
+        if (obj) {
+            if (!this.__auto_decrease_ref_list)
+                this.__auto_decrease_ref_list = [];
+            var target = obj;
+            if (!Types.is_array(target))
+                target = [target];
+            for (var i = 0; i < target.length; ++i)
+                this.__auto_decrease_ref_list.push(target[i]);
+        }
+        return returnSource ? this : obj;
+    };
+
+    /**
      * Notify all notifications listeners of an internal notification event.
      * 
      * @param {string} name notification name
@@ -1989,8 +2014,9 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
      * Increases the reference counter of this instance.
      * 
      * @param {object} reference optional reference object
+     * @param {boolean} autoDecreaseRef automatically decrease reference upon destruction
      */
-    Class.prototype.increaseRef = function(reference) {
+    Class.prototype.increaseRef = function(reference, autoDecreaseRef) {
         this.__referenceCount = this.__referenceCount || 0;
         this.__referenceCount++;
         this.__referenceObjects = this.__referenceObjects || {};
@@ -1999,6 +2025,8 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
                 this.__referenceObjects[reference.cid()] = reference;
             else
                 this.__referenceCount--;
+            if (autoDecreaseRef)
+                reference.auto_decrease_ref(this);
         }
         return this;
     };
@@ -2512,13 +2540,14 @@ Scoped.define("module:Classes.SharedObjectFactory", [
              * Acquire object instance.
              *
              * @param {object} reference optional reference
+             * @param {boolean} autoDecreaseRef automatically decrease reference upon destruction
              *
              * @returns {object} shared object instance
              */
-            acquire: function(reference) {
+            acquire: function(reference, autoDecreaseRef) {
                 if (!this.__object || this.__object.destroyed())
                     this.__object = this.__createCallback.apply(this.__createContext || this, this.__createArgs);
-                this.__object.increaseRef(reference);
+                this.__object.increaseRef(reference, autoDecreaseRef);
                 return this.__object;
             },
 

@@ -266,10 +266,16 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
     Class.prototype.destroy = function() {
         this._notify("destroy");
         if (this.__auto_destroy_list) {
-            for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
-                if ("destroy" in this.__auto_destroy_list[i])
-                    this.__auto_destroy_list[i].weakDestroy();
-            }
+            this.__auto_destroy_list.forEach(function(obj) {
+                if ("destroy" in obj)
+                    obj.weakDestroy();
+            }, this);
+        }
+        if (this.__auto_decrease_ref_list) {
+            this.__auto_decrease_ref_list.forEach(function(obj) {
+                if ("decreaseRef" in obj)
+                    obj.decreaseRef(this);
+            }, this);
         }
         var cid = this.cid();
         for (var key in this)
@@ -392,6 +398,25 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
     };
 
     /**
+     * Automatically decreases an object reference when this object is being destroyed.
+     *
+     * @param {object} obj
+     * @param {boolean} returnSource return source object instead of obj
+     */
+    Class.prototype.auto_decrease_ref = function(obj, returnSource) {
+        if (obj) {
+            if (!this.__auto_decrease_ref_list)
+                this.__auto_decrease_ref_list = [];
+            var target = obj;
+            if (!Types.is_array(target))
+                target = [target];
+            for (var i = 0; i < target.length; ++i)
+                this.__auto_decrease_ref_list.push(target[i]);
+        }
+        return returnSource ? this : obj;
+    };
+
+    /**
      * Notify all notifications listeners of an internal notification event.
      * 
      * @param {string} name notification name
@@ -436,8 +461,9 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
      * Increases the reference counter of this instance.
      * 
      * @param {object} reference optional reference object
+     * @param {boolean} autoDecreaseRef automatically decrease reference upon destruction
      */
-    Class.prototype.increaseRef = function(reference) {
+    Class.prototype.increaseRef = function(reference, autoDecreaseRef) {
         this.__referenceCount = this.__referenceCount || 0;
         this.__referenceCount++;
         this.__referenceObjects = this.__referenceObjects || {};
@@ -446,6 +472,8 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
                 this.__referenceObjects[reference.cid()] = reference;
             else
                 this.__referenceCount--;
+            if (autoDecreaseRef)
+                reference.auto_decrease_ref(this);
         }
         return this;
     };
