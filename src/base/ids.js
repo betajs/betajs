@@ -104,7 +104,7 @@ Scoped.define("module:IdGenerators.PrefixedIdGenerator", ["module:IdGenerators.I
 });
 
 
-Scoped.define("module:Ids.RandomIdGenerator", ["module:IdGenerators.IdGenerator", "module:Tokens"], function(IdGenerator, Tokens, scoped) {
+Scoped.define("module:IdGenerators.RandomIdGenerator", ["module:IdGenerators.IdGenerator", "module:Tokens"], function(IdGenerator, Tokens, scoped) {
     return IdGenerator.extend({
         scoped: scoped
     }, function(inherited) {

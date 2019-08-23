@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.192 - 2019-08-22
+betajs - v1.0.193 - 2019-08-23
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.192",
-    "datetime": 1566495312431
+    "version": "1.0.193",
+    "datetime": 1566592352696
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2560,7 +2560,7 @@ Scoped.define("module:IdGenerators.PrefixedIdGenerator", ["module:IdGenerators.I
 });
 
 
-Scoped.define("module:Ids.RandomIdGenerator", ["module:IdGenerators.IdGenerator", "module:Tokens"], function(IdGenerator, Tokens, scoped) {
+Scoped.define("module:IdGenerators.RandomIdGenerator", ["module:IdGenerators.IdGenerator", "module:Tokens"], function(IdGenerator, Tokens, scoped) {
     return IdGenerator.extend({
         scoped: scoped
     }, function(inherited) {
