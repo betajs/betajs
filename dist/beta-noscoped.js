@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.193 - 2019-08-23
+betajs - v1.0.195 - 2019-09-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.193",
-    "datetime": 1566592352696
+    "version": "1.0.195",
+    "datetime": 1567481828197
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11676,6 +11676,43 @@ Scoped.define("module:Promise", [
                 promise.asyncSuccess(true);
             }, interval);
             return promise;
+        },
+
+        /**
+         * Exclusively execute a promise-based function by postponing execution of further calls by waiting for the
+         * promise completion.
+         *
+         * @param {function} promiseFunc promise function
+         * @param {object} ctx function context (optional)
+         *
+         * @return {function} exclusive function
+         *
+         */
+        exclusiveExecution: function(promiseFunc, ctx) {
+            var currentPromise = null;
+            var promiseQueue = [];
+            return function() {
+                var args = arguments;
+                var resultPromise = null;
+                if (!currentPromise) {
+                    currentPromise = promiseFunc.apply(ctx, args);
+                    resultPromise = currentPromise;
+                } else {
+                    var promise = Promise.create();
+                    promiseQueue.push(promise);
+                    resultPromise = promise.mapSuccess(function() {
+                        return promiseFunc.apply(this, args);
+                    }, ctx);
+                }
+                resultPromise.callback(function() {
+                    currentPromise = null;
+                    if (promiseQueue.length > 0) {
+                        currentPromise = promiseQueue.shift();
+                        currentPromise.asyncSuccess(true);
+                    }
+                });
+                return resultPromise;
+            };
         }
 
     };

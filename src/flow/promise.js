@@ -345,6 +345,43 @@ Scoped.define("module:Promise", [
                 promise.asyncSuccess(true);
             }, interval);
             return promise;
+        },
+
+        /**
+         * Exclusively execute a promise-based function by postponing execution of further calls by waiting for the
+         * promise completion.
+         *
+         * @param {function} promiseFunc promise function
+         * @param {object} ctx function context (optional)
+         *
+         * @return {function} exclusive function
+         *
+         */
+        exclusiveExecution: function(promiseFunc, ctx) {
+            var currentPromise = null;
+            var promiseQueue = [];
+            return function() {
+                var args = arguments;
+                var resultPromise = null;
+                if (!currentPromise) {
+                    currentPromise = promiseFunc.apply(ctx, args);
+                    resultPromise = currentPromise;
+                } else {
+                    var promise = Promise.create();
+                    promiseQueue.push(promise);
+                    resultPromise = promise.mapSuccess(function() {
+                        return promiseFunc.apply(this, args);
+                    }, ctx);
+                }
+                resultPromise.callback(function() {
+                    currentPromise = null;
+                    if (promiseQueue.length > 0) {
+                        currentPromise = promiseQueue.shift();
+                        currentPromise.asyncSuccess(true);
+                    }
+                });
+                return resultPromise;
+            };
         }
 
     };
