@@ -1,10 +1,10 @@
 /*!
-betajs - v1.0.195 - 2019-09-02
+betajs - v1.0.196 - 2019-10-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
 /** @flow **//*!
-betajs-scoped - v0.0.19 - 2018-04-07
+betajs-scoped - v0.0.22 - 2019-10-23
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -242,13 +242,15 @@ return {
 	 */
 	upgrade: function (namespace/* : ?string */) {
 		var current = Globals.get(namespace || Attach.__namespace);
-		if (current && Helper.typeOf(current) == "object" && current.guid == this.guid && Helper.typeOf(current.version) == "string") {
+		if (current && Helper.typeOf(current) === "object" && current.guid === this.guid && Helper.typeOf(current.version) === "string") {
+			if (this.upgradable === false || current.upgradable === false)
+				return current;
 			var my_version = this.version.split(".");
 			var current_version = current.version.split(".");
 			var newer = false;
 			for (var i = 0; i < Math.min(my_version.length, current_version.length); ++i) {
 				newer = parseInt(my_version[i], 10) > parseInt(current_version[i], 10);
-				if (my_version[i] != current_version[i]) 
+				if (my_version[i] !== current_version[i])
 					break;
 			}
 			return newer ? this.attach(namespace) : current;				
@@ -267,7 +269,7 @@ return {
 		if (namespace)
 			Attach.__namespace = namespace;
 		var current = Globals.get(Attach.__namespace);
-		if (current == this)
+		if (current === this)
 			return this;
 		Attach.__revert = current;
 		if (current) {
@@ -312,7 +314,7 @@ return {
 	 */
 	exports: function (mod, object, forceExport) {
 		mod = mod || (typeof module != "undefined" ? module : null);
-		if (typeof mod == "object" && mod && "exports" in mod && (forceExport || mod.exports == this || !mod.exports || Helper.isEmpty(mod.exports)))
+		if (typeof mod == "object" && mod && "exports" in mod && (forceExport || mod.exports === this || !mod.exports || Helper.isEmpty(mod.exports)))
 			mod.exports = object || this;
 		return this;
 	}	
@@ -828,7 +830,7 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 		
 		
 		/**
-		 * Extends a potentiall existing name space once a list of name space locators is available.
+		 * Extends a potentially existing name space once a list of name space locators is available.
 		 * 
 		 * @param {string} namespaceLocator the name space that is to be defined
 		 * @param {array} dependencies a list of name space locator dependencies (optional)
@@ -964,7 +966,9 @@ var Public = Helper.extend(rootScope, (function () {
 return {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '0.0.19',
+	version: '0.0.22',
+
+	upgradable: true,
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -1006,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.195 - 2019-09-02
+betajs - v1.0.196 - 2019-10-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1017,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.195",
-    "datetime": 1567481828197
+    "version": "1.0.196",
+    "datetime": 1572452532045
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1780,6 +1784,13 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
                     return parent.extend.apply(parent, args);
                 });
             }
+        },
+
+        /**
+         * Placeholder for an abstract function that should never be called.
+         */
+        abstractFunction: function() {
+            throw "AbstractFunction";
         },
 
         /**
@@ -5246,7 +5257,7 @@ Scoped.define("module:Objs", [
          * @param {object} secondary Object to be merged into.
          * @param {object} primary Object to be merged in
          * 
-         * @return {object} Recurisvely merged object
+         * @return {object} Recursively merged object
          */
         tree_merge: function(secondary, primary) {
             secondary = secondary || {};
@@ -5318,6 +5329,24 @@ Scoped.define("module:Objs", [
             var result = [];
             for (var i = 0; i < count; ++i)
                 result.push(callback.call(context || this, i));
+            return result;
+        },
+
+        /**
+         * Merge key / values from two objects; merge value with callback function on intersection of both objects
+         *
+         * @param {object} obj1 first object
+         * @param {object} obj2 second object
+         * @param {function} merger merging function
+         * @param {object} mergerCtx optional context
+         */
+        customMerge: function(obj1, obj2, merger, mergerCtx) {
+            var result = {};
+            for (var key1 in obj1)
+                result[key1] = key1 in obj2 ? merger.call(mergerCtx, key1, obj1[key1], obj2[key1]) : obj1[key1];
+            for (var key2 in obj2)
+                if (!(key2 in obj1))
+                    result[key2] = obj2[key2];
             return result;
         }
 
@@ -12413,20 +12442,27 @@ Scoped.define("module:Promise", [
         },
 
         /**
-         * Turns a function call into a promise, mapping exceptions to errors.
+         * Turns a function call or a native promise into a promise, mapping exceptions to errors.
          * 
-         * @param {function} f function
+         * @param {function} f function or native promise
          * @param {object} ctx optional function context
          * @param {array} params optional function parameters
          * 
          * @return {object} promise
          */
         box: function(f, ctx, params) {
-            try {
-                var result = f.apply(ctx || this, params || []);
-                return this.is(result) ? result : this.value(result);
-            } catch (e) {
-                return this.error(e);
+            if (f && 'then' in f && 'catch' in f) {
+                var promise = this.create();
+                f.then(promise.asyncSuccessFunc());
+                f['catch'](promise.asyncErrorFunc());
+                return promise;
+            } else {
+                try {
+                    var result = f.apply(ctx || this, params || []);
+                    return this.is(result) ? result : this.value(result);
+                } catch (e) {
+                    return this.error(e);
+                }
             }
         },
 
@@ -12747,6 +12783,18 @@ Scoped.define("module:Promise", [
          */
         asuccess: function(f, context, options) {
             return this.success(Async.asyncify(f), context, options);
+        },
+
+        /**
+         * Set an object value once value is known.
+         *
+         * @param {object} obj object
+         * @param {string} key key to set value for
+         */
+        valueify: function(obj, key) {
+            return this.success(function(value) {
+                obj[key] = value;
+            });
         },
 
         /**

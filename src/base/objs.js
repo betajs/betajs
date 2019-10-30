@@ -720,7 +720,7 @@ Scoped.define("module:Objs", [
          * @param {object} secondary Object to be merged into.
          * @param {object} primary Object to be merged in
          * 
-         * @return {object} Recurisvely merged object
+         * @return {object} Recursively merged object
          */
         tree_merge: function(secondary, primary) {
             secondary = secondary || {};
@@ -792,6 +792,24 @@ Scoped.define("module:Objs", [
             var result = [];
             for (var i = 0; i < count; ++i)
                 result.push(callback.call(context || this, i));
+            return result;
+        },
+
+        /**
+         * Merge key / values from two objects; merge value with callback function on intersection of both objects
+         *
+         * @param {object} obj1 first object
+         * @param {object} obj2 second object
+         * @param {function} merger merging function
+         * @param {object} mergerCtx optional context
+         */
+        customMerge: function(obj1, obj2, merger, mergerCtx) {
+            var result = {};
+            for (var key1 in obj1)
+                result[key1] = key1 in obj2 ? merger.call(mergerCtx, key1, obj1[key1], obj2[key1]) : obj1[key1];
+            for (var key2 in obj2)
+                if (!(key2 in obj1))
+                    result[key2] = obj2[key2];
             return result;
         }
 

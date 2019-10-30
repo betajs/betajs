@@ -75,20 +75,27 @@ Scoped.define("module:Promise", [
         },
 
         /**
-         * Turns a function call into a promise, mapping exceptions to errors.
+         * Turns a function call or a native promise into a promise, mapping exceptions to errors.
          * 
-         * @param {function} f function
+         * @param {function} f function or native promise
          * @param {object} ctx optional function context
          * @param {array} params optional function parameters
          * 
          * @return {object} promise
          */
         box: function(f, ctx, params) {
-            try {
-                var result = f.apply(ctx || this, params || []);
-                return this.is(result) ? result : this.value(result);
-            } catch (e) {
-                return this.error(e);
+            if (f && 'then' in f && 'catch' in f) {
+                var promise = this.create();
+                f.then(promise.asyncSuccessFunc());
+                f['catch'](promise.asyncErrorFunc());
+                return promise;
+            } else {
+                try {
+                    var result = f.apply(ctx || this, params || []);
+                    return this.is(result) ? result : this.value(result);
+                } catch (e) {
+                    return this.error(e);
+                }
             }
         },
 
@@ -409,6 +416,18 @@ Scoped.define("module:Promise", [
          */
         asuccess: function(f, context, options) {
             return this.success(Async.asyncify(f), context, options);
+        },
+
+        /**
+         * Set an object value once value is known.
+         *
+         * @param {object} obj object
+         * @param {string} key key to set value for
+         */
+        valueify: function(obj, key) {
+            return this.success(function(value) {
+                obj[key] = value;
+            });
         },
 
         /**

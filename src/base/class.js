@@ -230,6 +230,13 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
         },
 
         /**
+         * Placeholder for an abstract function that should never be called.
+         */
+        abstractFunction: function() {
+            throw "AbstractFunction";
+        },
+
+        /**
          * @deprecated
          */
         _inherited: function(cls, func) {
