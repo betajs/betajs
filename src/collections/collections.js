@@ -312,6 +312,8 @@ Scoped.define("module:Collections.Collection", [
              * 
              */
             replace_objects: function(objects, keep_others) {
+                if (this.destroyed())
+                    return this;
                 this.bulk_operations++;
                 var addQueue = [];
                 var ids = {};

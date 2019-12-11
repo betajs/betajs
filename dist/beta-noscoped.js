@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.196 - 2019-10-30
+betajs - v1.0.196 - 2019-12-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -11,7 +11,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.196",
-    "datetime": 1572452532045
+    "datetime": 1576024965910
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9949,6 +9949,8 @@ Scoped.define("module:Collections.Collection", [
              * 
              */
             replace_objects: function(objects, keep_others) {
+                if (this.destroyed())
+                    return this;
                 this.bulk_operations++;
                 var addQueue = [];
                 var ids = {};
