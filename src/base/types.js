@@ -304,6 +304,47 @@ Scoped.define("module:Types", function() {
          */
         is_pure_object: function(obj) {
             return this.is_object(obj) && (obj.toString().toLowerCase() === '[object]' || obj.toString().toLowerCase() === '[object object]');
+        },
+
+        /**
+         * Takes a value of any type and recursively tries to aggressively replace strings by more specific types.
+         *
+         * @param data input data
+         *
+         * @returns typefied data
+         */
+        typefy: function(data) {
+            var simplify = function(data) {
+                var len = data.length;
+                ["'", '"'].forEach(function(c) {
+                    if (data.indexOf(c) === 0 && data.lastIndexOf(c) === data.length - c.length)
+                        data = data.substring(c.length, data.length - 2 * c.length + 1);
+                });
+                data = data.trim();
+                return data.length < len ? simplify(data) : data;
+            };
+            switch (typeof(data)) {
+                case "object":
+                    if (Array.isArray(data)) {
+                        return data.map(typefy);
+                    } else {
+                        for (var key in data)
+                            data[key] = typefy(data[key]);
+                        return data;
+                    }
+                    break;
+                case "string":
+                    data = simplify(data);
+                    if (data === "true")
+                        return true;
+                    if (data === "false")
+                        return false;
+                    if (parseInt(data, 10) + "" === data)
+                        return parseInt(data, 10);
+                    return data;
+                default:
+                    return data;
+            }
         }
 
     };
