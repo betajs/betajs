@@ -11,7 +11,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.198",
-    "datetime": 1576700275119
+    "datetime": 1576700336003
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -8121,14 +8121,12 @@ Scoped.define("module:Types", function() {
             };
             switch (typeof(data)) {
                 case "object":
-                    if (Array.isArray(data)) {
-                        return data.map(typefy);
-                    } else {
+                    if (!Array.isArray(data)) {
                         for (var key in data)
                             data[key] = typefy(data[key]);
                         return data;
                     }
-                    break;
+                    return data.map(typefy);
                 case "string":
                     data = simplify(data);
                     if (data === "true")

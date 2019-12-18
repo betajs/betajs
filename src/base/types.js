@@ -325,14 +325,12 @@ Scoped.define("module:Types", function() {
             };
             switch (typeof(data)) {
                 case "object":
-                    if (Array.isArray(data)) {
-                        return data.map(typefy);
-                    } else {
+                    if (!Array.isArray(data)) {
                         for (var key in data)
                             data[key] = typefy(data[key]);
                         return data;
                     }
-                    break;
+                    return data.map(typefy);
                 case "string":
                     data = simplify(data);
                     if (data === "true")
