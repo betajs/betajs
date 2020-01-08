@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.198 - 2019-12-18
+betajs - v1.0.200 - 2020-01-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.198",
-    "datetime": 1576700336003
+    "version": "1.0.200",
+    "datetime": 1578521323150
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2457,6 +2457,47 @@ Scoped.define("module:Functions", ["module:Types"], function(Types) {
             if (Types.is_string(method))
                 method = context[method];
             return method.apply(context, this.getArguments(arguments, 2));
+        }
+
+    };
+});
+Scoped.define("module:Events.HooksMixin", [
+    "module:Promise",
+    "module:Functions"
+], function(Promise, Functions) {
+
+    var sequential = function(promise, funcs) {
+        if (funcs.length > 0) {
+            return promise.mapSuccess(function(result) {
+                var func = funcs.shift();
+                return sequential(Promise.value(func(result)), funcs);
+            });
+        } else
+            return promise;
+    };
+
+    /**
+     * Hooks Mixin
+     * 
+     * @mixin BetaJS.Events.HooksMixin
+     */
+    return {
+
+        _implements: "e07d77f0-d9d5-41dc-ae4d-20fb8af0a334",
+
+        _notifications: {
+            "construct": function() {
+                this.__methodHooks = {};
+            }
+        },
+
+        registerHook: function(method, func, ctx) {
+            this.__methodHooks[method] = this.__methodHooks[method] || [];
+            this.__methodHooks[method].push(Functions.as_method(func, ctx || this));
+        },
+
+        invokeHook: function(method, result) {
+            return sequential(Promise.value(result), this.__methodHooks[method] || []);
         }
 
     };
