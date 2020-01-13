@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.200 - 2020-01-08
+betajs - v1.0.201 - 2020-01-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.200",
-    "datetime": 1578521323150
+    "version": "1.0.201",
+    "datetime": 1578951637096
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -179,6 +179,7 @@ Scoped.define("module:Ajax.Support", [
                 postmessage: undefined,
                 contentType: "urlencoded", // json
                 resilience: 1,
+                resilience_filter: null,
                 resilience_delay: 1000,
                 cors: false,
                 sendContentType: true,
@@ -256,7 +257,11 @@ Scoped.define("module:Ajax.Support", [
                 if (!resilience || resilience <= 1)
                     return promise;
                 var returnPromise = Promise.create();
-                promise.forwardSuccess(returnPromise).error(function() {
+                promise.forwardSuccess(returnPromise).error(function(err) {
+                    if (RequestException.is_class_instance(err) && options.resilience_filter && options.resilience_filter(err)) {
+                        returnPromise.error(err);
+                        return;
+                    }
                     Async.eventually(function() {
                         helper(resilience - 1).forwardCallback(returnPromise);
                     }, options.resilience_delay);
@@ -1616,6 +1621,33 @@ Scoped.define("module:Classes.SharedObjectFactoryPool", [
 
         };
     });
+});
+
+
+
+Scoped.define("module:Classes.CriticalSectionMixin", [
+    "module:Promise"
+], function(Promise) {
+
+    return {
+
+        criticalSection: function(name, cb) {
+            this.__criticalSections = this.__criticalSections || {};
+            this.__criticalSections[name] = this.__criticalSections[name] || [];
+            var promise = Promise.create();
+            this.__criticalSections[name].push(promise);
+            if (this.__criticalSections[name].length === 1)
+                promise.asyncSuccess(true);
+            return promise.mapSuccess(function() {
+                return Promise.box(cb, this).callback(function() {
+                    this.__criticalSections[name].shift();
+                    if (this.__criticalSections[name].length > 0)
+                        this.__criticalSections[name][0].asyncSuccess(true);
+                }, this);
+            }, this);
+        }
+
+    };
 });
 Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properties"], function(Types, Properties) {
 

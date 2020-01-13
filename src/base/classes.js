@@ -508,3 +508,30 @@ Scoped.define("module:Classes.SharedObjectFactoryPool", [
         };
     });
 });
+
+
+
+Scoped.define("module:Classes.CriticalSectionMixin", [
+    "module:Promise"
+], function(Promise) {
+
+    return {
+
+        criticalSection: function(name, cb) {
+            this.__criticalSections = this.__criticalSections || {};
+            this.__criticalSections[name] = this.__criticalSections[name] || [];
+            var promise = Promise.create();
+            this.__criticalSections[name].push(promise);
+            if (this.__criticalSections[name].length === 1)
+                promise.asyncSuccess(true);
+            return promise.mapSuccess(function() {
+                return Promise.box(cb, this).callback(function() {
+                    this.__criticalSections[name].shift();
+                    if (this.__criticalSections[name].length > 0)
+                        this.__criticalSections[name][0].asyncSuccess(true);
+                }, this);
+            }, this);
+        }
+
+    };
+});

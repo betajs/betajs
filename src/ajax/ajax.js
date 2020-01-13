@@ -160,6 +160,7 @@ Scoped.define("module:Ajax.Support", [
                 postmessage: undefined,
                 contentType: "urlencoded", // json
                 resilience: 1,
+                resilience_filter: null,
                 resilience_delay: 1000,
                 cors: false,
                 sendContentType: true,
@@ -237,7 +238,11 @@ Scoped.define("module:Ajax.Support", [
                 if (!resilience || resilience <= 1)
                     return promise;
                 var returnPromise = Promise.create();
-                promise.forwardSuccess(returnPromise).error(function() {
+                promise.forwardSuccess(returnPromise).error(function(err) {
+                    if (RequestException.is_class_instance(err) && options.resilience_filter && options.resilience_filter(err)) {
+                        returnPromise.error(err);
+                        return;
+                    }
                     Async.eventually(function() {
                         helper(resilience - 1).forwardCallback(returnPromise);
                     }, options.resilience_delay);
