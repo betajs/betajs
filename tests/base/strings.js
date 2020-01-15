@@ -95,3 +95,8 @@ QUnit.test("asterisk pattern escape", function (assert) {
     assert.equal(!!("Foo Baz Bar".match(r)), true);
     assert.equal(!!("Foo Bar Baz".match(r)), false);
 });
+
+QUnit.test("normalize search text", function (assert) {
+    assert.equal(BetaJS.Strings.normalizeSearchText("Foo\nBar"), "Foo Bar");
+    assert.equal(BetaJS.Strings.normalizeSearchText("Question"), "Question");
+});

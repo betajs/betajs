@@ -534,12 +534,14 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             "\\u00d6": "Oe",
             "\\u00f6": "oe",
             "\\u00df": "ss",
+            /*
             "Ue": "U",
             "ue": "u",
             "Ae": "A",
             "ae": "a",
             "Oe": "O",
             "oe": "o",
+             */
             "\\W": " ",
             "\\s+": " "
         },
