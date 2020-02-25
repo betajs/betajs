@@ -47,6 +47,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__parent.iterate(this.__addParentObject, this);
                 this.__parent.on("add", this.__addParentObject, this);
                 this.__parent.on("remove", this.__removeParentObject, this);
+                this.__objectToGroup = {};
             },
 
             /**
@@ -92,11 +93,13 @@ Scoped.define("module:Collections.GroupedCollection", [
 
             __addParentObject: function(object) {
                 var group = this.touchGroup(object, true);
+                if (object.cid)
+                    this.__objectToGroup[object.cid()] = group;
                 this.__addObjectToGroup(object, group);
             },
 
             __removeParentObject: function(object) {
-                var group = this.touchGroup(object);
+                var group = object.cid && this.__objectToGroup[object.cid()] ? this.__objectToGroup[object.cid()] : this.touchGroup(object);
                 if (group) {
                     this.__removeObjectFromGroup(object, group);
                     if (!this.__keepEmptyGroups && group[this.__itemsAttribute].count() === 0)

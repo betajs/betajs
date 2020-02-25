@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.201 - 2020-01-14
+betajs - v1.0.203 - 2020-02-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.201",
-    "datetime": 1579055706652
+    "version": "1.0.203",
+    "datetime": 1582639311870
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -10653,6 +10653,7 @@ Scoped.define("module:Collections.GroupedCollection", [
                 this.__parent.iterate(this.__addParentObject, this);
                 this.__parent.on("add", this.__addParentObject, this);
                 this.__parent.on("remove", this.__removeParentObject, this);
+                this.__objectToGroup = {};
             },
 
             /**
@@ -10698,11 +10699,13 @@ Scoped.define("module:Collections.GroupedCollection", [
 
             __addParentObject: function(object) {
                 var group = this.touchGroup(object, true);
+                if (object.cid)
+                    this.__objectToGroup[object.cid()] = group;
                 this.__addObjectToGroup(object, group);
             },
 
             __removeParentObject: function(object) {
-                var group = this.touchGroup(object);
+                var group = object.cid && this.__objectToGroup[object.cid()] ? this.__objectToGroup[object.cid()] : this.touchGroup(object);
                 if (group) {
                     this.__removeObjectFromGroup(object, group);
                     if (!this.__keepEmptyGroups && group[this.__itemsAttribute].count() === 0)
