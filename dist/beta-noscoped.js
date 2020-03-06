@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.203 - 2020-02-25
+betajs - v1.0.204 - 2020-03-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.203",
-    "datetime": 1582639311870
+    "version": "1.0.204",
+    "datetime": 1583520127669
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5081,6 +5081,31 @@ Scoped.define("module:Properties.PropertiesMixin", [
                 }, this);
                 delete this.__properties.computed[key];
             }
+            return this;
+        },
+
+        bicompute: function(left, right, leftToRight, rightToLeft) {
+            leftToRight.call(this);
+            var exclusive = false;
+            [
+                [left, leftToRight],
+                [right, rightToLeft]
+            ].forEach(function(direction) {
+                direction[0].forEach(function(key) {
+                    this.on("change:" + key, function() {
+                        if (exclusive)
+                            return;
+                        try {
+                            exclusive = true;
+                            direction[1].call(this);
+                            exclusive = false;
+                        } catch (e) {
+                            exclusive = false;
+                            throw e;
+                        }
+                    }, this);
+                }, this);
+            }, this);
             return this;
         },
 

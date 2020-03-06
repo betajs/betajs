@@ -460,6 +460,31 @@ Scoped.define("module:Properties.PropertiesMixin", [
             return this;
         },
 
+        bicompute: function(left, right, leftToRight, rightToLeft) {
+            leftToRight.call(this);
+            var exclusive = false;
+            [
+                [left, leftToRight],
+                [right, rightToLeft]
+            ].forEach(function(direction) {
+                direction[0].forEach(function(key) {
+                    this.on("change:" + key, function() {
+                        if (exclusive)
+                            return;
+                        try {
+                            exclusive = true;
+                            direction[1].call(this);
+                            exclusive = false;
+                        } catch (e) {
+                            exclusive = false;
+                            throw e;
+                        }
+                    }, this);
+                }, this);
+            }, this);
+            return this;
+        },
+
         /**
          * Add a computation for a key.
          * 
