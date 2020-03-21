@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.204 - 2020-03-06
+betajs - v1.0.205 - 2020-03-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.204 - 2020-03-06
+betajs - v1.0.205 - 2020-03-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.204",
-    "datetime": 1583520127669
+    "version": "1.0.205",
+    "datetime": 1584760438226
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5420,6 +5420,14 @@ Scoped.define("module:Objs", [
             for (var key2 in obj2)
                 if (!(key2 in obj1))
                     result[key2] = obj2[key2];
+            return result;
+        },
+
+        indexizeArray: function(arr, keyName) {
+            var result = {};
+            arr.forEach(function(value) {
+                result[value[keyName]] = value;
+            });
             return result;
         }
 

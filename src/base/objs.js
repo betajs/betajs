@@ -811,6 +811,14 @@ Scoped.define("module:Objs", [
                 if (!(key2 in obj1))
                     result[key2] = obj2[key2];
             return result;
+        },
+
+        indexizeArray: function(arr, keyName) {
+            var result = {};
+            arr.forEach(function(value) {
+                result[value[keyName]] = value;
+            });
+            return result;
         }
 
     };
