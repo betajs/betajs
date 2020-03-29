@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.205 - 2020-03-20
+betajs - v1.0.205 - 2020-03-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -11,7 +11,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.205",
-    "datetime": 1584760438226
+    "datetime": 1585494646122
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -8162,6 +8162,8 @@ Scoped.define("module:Types", function() {
                     return this.parseFloat(x);
                 case "array":
                     return this.parseArray(x);
+                case "jsonarray":
+                    return typeof x === "string" ? JSON.parse(x) : x;
                 case "object":
                 case "json":
                     return typeof x === "string" ? JSON.parse(x) : x;

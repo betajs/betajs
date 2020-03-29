@@ -258,6 +258,8 @@ Scoped.define("module:Types", function() {
                     return this.parseFloat(x);
                 case "array":
                     return this.parseArray(x);
+                case "jsonarray":
+                    return typeof x === "string" ? JSON.parse(x) : x;
                 case "object":
                 case "json":
                     return typeof x === "string" ? JSON.parse(x) : x;
