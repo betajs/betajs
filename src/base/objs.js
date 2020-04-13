@@ -819,6 +819,12 @@ Scoped.define("module:Objs", [
                 result[value[keyName]] = value;
             });
             return result;
+        },
+
+        filterOutValues: function(obj, values) {
+            return this.filter(obj, function(value) {
+                return !values.includes(value);
+            });
         }
 
     };
