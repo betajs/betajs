@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.207 - 2020-04-13
+betajs - v1.0.208 - 2020-05-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.207",
-    "datetime": 1586787089039
+    "version": "1.0.208",
+    "datetime": 1590791116836
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4047,7 +4047,7 @@ Scoped.define("module:Objs", [
         splitObject: function(obj, f, ctx) {
             var x = {};
             var y = {};
-            Objs.iter(obj, function(value, key) {
+            this.iter(obj, function(value, key) {
                 if (f.apply(this, arguments))
                     x[key] = value;
                 else
@@ -11542,6 +11542,16 @@ Scoped.define("module:Promise", [
             this.__hasError = !!error;
             this.__resultPromise = null;
             this.__callbacks = [];
+        },
+
+        fromNativePromise: function(nativePromise) {
+            var promise = this.create();
+            nativePromise.then(function(value) {
+                promise.asyncSuccess(value);
+            })['catch'](function(error) {
+                promise.asyncError(error);
+            });
+            return promise;
         },
 
         /**

@@ -28,6 +28,16 @@ Scoped.define("module:Promise", [
             this.__callbacks = [];
         },
 
+        fromNativePromise: function(nativePromise) {
+            var promise = this.create();
+            nativePromise.then(function(value) {
+                promise.asyncSuccess(value);
+            })['catch'](function(error) {
+                promise.asyncError(error);
+            });
+            return promise;
+        },
+
         /**
          * Create a new promise instance. (Simplified)
          * 

@@ -448,7 +448,7 @@ Scoped.define("module:Objs", [
         splitObject: function(obj, f, ctx) {
             var x = {};
             var y = {};
-            Objs.iter(obj, function(value, key) {
+            this.iter(obj, function(value, key) {
                 if (f.apply(this, arguments))
                     x[key] = value;
                 else
