@@ -535,3 +535,42 @@ Scoped.define("module:Classes.CriticalSectionMixin", [
 
     };
 });
+
+
+
+Scoped.define("module:Classes.CacheHash", [
+    "module:Class"
+], function(Class, scoped) {
+    return Class.extend({
+        scoped: scoped
+    }, function(inherited) {
+        return {
+
+            constructor: function(prefix) {
+                inherited.constructor.call(this);
+                this.__prefix = prefix || "";
+                this.__counter = 0;
+                this.__cache = {};
+                this.__hash = {};
+            },
+
+            hashKey: function(key) {
+                if (key in this.__hash)
+                    return this.__hash[key];
+                var c = this.__prefix + this.__counter++;
+                this.__hash[key] = c;
+                this.__cache[c] = key;
+                return c;
+            },
+
+            hash: function() {
+                return this.__hash;
+            },
+
+            cache: function() {
+                return this.__cache;
+            }
+
+        };
+    });
+});

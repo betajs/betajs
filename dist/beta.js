@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.208 - 2020-05-29
+betajs - v1.0.208 - 2020-06-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.208 - 2020-05-29
+betajs - v1.0.208 - 2020-06-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1022,7 +1022,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.208",
-    "datetime": 1590791116836
+    "datetime": 1591146329170
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2659,6 +2659,45 @@ Scoped.define("module:Classes.CriticalSectionMixin", [
         }
 
     };
+});
+
+
+
+Scoped.define("module:Classes.CacheHash", [
+    "module:Class"
+], function(Class, scoped) {
+    return Class.extend({
+        scoped: scoped
+    }, function(inherited) {
+        return {
+
+            constructor: function(prefix) {
+                inherited.constructor.call(this);
+                this.__prefix = prefix || "";
+                this.__counter = 0;
+                this.__cache = {};
+                this.__hash = {};
+            },
+
+            hashKey: function(key) {
+                if (key in this.__hash)
+                    return this.__hash[key];
+                var c = this.__prefix + this.__counter++;
+                this.__hash[key] = c;
+                this.__cache[c] = key;
+                return c;
+            },
+
+            hash: function() {
+                return this.__hash;
+            },
+
+            cache: function() {
+                return this.__cache;
+            }
+
+        };
+    });
 });
 Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properties"], function(Types, Properties) {
 
