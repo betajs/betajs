@@ -416,6 +416,10 @@ Scoped.define("module:Properties.PropertiesMixin", [
             return Objs.clone(this.__properties.data, 1);
         },
 
+        clone: function() {
+            return new(this.cls)(this.getAll());
+        },
+
         /**
          * Iterates over all key-value pairs.
          *
