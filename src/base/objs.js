@@ -825,6 +825,28 @@ Scoped.define("module:Objs", [
             return this.filter(obj, function(value) {
                 return !values.includes(value);
             });
+        },
+
+        mergeSortedArrays: function(arr1, arr2, compare) {
+            compare = compare || function(a, b) {
+                return a > b ? 1 : (a < b ? -1 : 0);
+            };
+            var result = [];
+            var i = 0;
+            arr1.forEach(function(el1) {
+                while (i < arr2.length && compare(el1, arr2[i]) > 0) {
+                    result.push(arr2[i]);
+                    i++;
+                }
+                result.push(el1);
+                while (i < arr2.length && compare(el1, arr2[i]) === 0)
+                    i++;
+            });
+            while (i < arr2.length) {
+                result.push(arr2[i]);
+                i++;
+            }
+            return result;
         }
 
     };

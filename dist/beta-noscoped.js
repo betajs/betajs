@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.209 - 2020-06-17
+betajs - v1.0.210 - 2020-06-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.209",
-    "datetime": 1592366859664
+    "version": "1.0.210",
+    "datetime": 1593229159743
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4463,6 +4463,28 @@ Scoped.define("module:Objs", [
             return this.filter(obj, function(value) {
                 return !values.includes(value);
             });
+        },
+
+        mergeSortedArrays: function(arr1, arr2, compare) {
+            compare = compare || function(a, b) {
+                return a > b ? 1 : (a < b ? -1 : 0);
+            };
+            var result = [];
+            var i = 0;
+            arr1.forEach(function(el1) {
+                while (i < arr2.length && compare(el1, arr2[i]) > 0) {
+                    result.push(arr2[i]);
+                    i++;
+                }
+                result.push(el1);
+                while (i < arr2.length && compare(el1, arr2[i]) === 0)
+                    i++;
+            });
+            while (i < arr2.length) {
+                result.push(arr2[i]);
+                i++;
+            }
+            return result;
         }
 
     };
