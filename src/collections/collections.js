@@ -625,6 +625,14 @@ Scoped.define("module:Collections.Collection", [
                     obj.setAll(data);
                 });
                 return this;
+            },
+
+            asJSON: function() {
+                var result = [];
+                this.iterate(function(p) {
+                    result.push(p.data());
+                });
+                return result;
             }
 
         };
