@@ -6,7 +6,18 @@ Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Ob
             return decodeURIComponent(cookies.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
         },
 
-        createCookielikeValue: function(key, value, end, path, domain, secure) {
+        /**
+         *
+         * @param {string} key
+         * @param {string} value
+         * @param {Date} end
+         * @param {string} path
+         * @param {string} domain
+         * @param {boolean} secure
+         * @param {string} sameSite
+         * @return {null|*}
+         */
+        createCookielikeValue: function(key, value, end, path, domain, secure, sameSite) {
             if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key))
                 return null;
             var components = [];
@@ -27,8 +38,13 @@ Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Ob
                 components.push(["path", path]);
             if (secure)
                 components.push("secure");
+            // Any cookie that requests SameSite=None but is not marked Secure will be rejected.
+            sameSite = sameSite || 'None';
+            if (sameSite === 'None' && secure)
+                console.warn('You have set sameSite cookie as None or it was set by default, but want it will be secure as well. It could be ignored');
+            components.push("SameSite", sameSite);
             return Objs.map(components, function(component) {
-                return Types.is_array(component) ? component.join("=") : component;
+                components.push(["path", path]);
             }).join("; ");
         },
 
