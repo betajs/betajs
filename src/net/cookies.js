@@ -40,8 +40,6 @@ Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Ob
                 components.push("secure");
             // Any cookie that requests SameSite=None but is not marked Secure will be rejected.
             sameSite = sameSite || 'None';
-            if (sameSite === 'None' && secure)
-                console.warn('You have set sameSite cookie as None or it was set by default, but want it will be secure as well. It could be ignored');
             components.push("SameSite", sameSite);
             return Objs.map(components, function(component) {
                 return Types.is_array(component) ? component.join("=") : component;

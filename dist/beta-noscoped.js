@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.211 - 2020-07-17
+betajs - v1.0.213 - 2020-08-10
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.211",
-    "datetime": 1595041264379
+    "version": "1.0.213",
+    "datetime": 1597033255788
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -14004,7 +14004,18 @@ Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Ob
             return decodeURIComponent(cookies.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
         },
 
-        createCookielikeValue: function(key, value, end, path, domain, secure) {
+        /**
+         *
+         * @param {string} key
+         * @param {string} value
+         * @param {Date} end
+         * @param {string} path
+         * @param {string} domain
+         * @param {boolean} secure
+         * @param {string} sameSite
+         * @return {null|*}
+         */
+        createCookielikeValue: function(key, value, end, path, domain, secure, sameSite) {
             if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key))
                 return null;
             var components = [];
@@ -14025,6 +14036,9 @@ Scoped.define("module:Net.Cookies", ["module:Objs", "module:Types"], function(Ob
                 components.push(["path", path]);
             if (secure)
                 components.push("secure");
+            // Any cookie that requests SameSite=None but is not marked Secure will be rejected.
+            sameSite = sameSite || 'None';
+            components.push("SameSite", sameSite);
             return Objs.map(components, function(component) {
                 return Types.is_array(component) ? component.join("=") : component;
             }).join("; ");
