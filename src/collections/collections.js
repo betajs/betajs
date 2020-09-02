@@ -64,6 +64,8 @@ Scoped.define("module:Collections.Collection", [
                     Objs.iter(options.indices, this.add_secondary_index, this);
                 if (options.uniqueness)
                     this.__uniqueness = options.uniqueness;
+                if (options.progressiveUniqueness)
+                    this.__progressiveUniqueness = options.progressiveUniqueness;
             },
 
             /**
@@ -272,6 +274,12 @@ Scoped.define("module:Collections.Collection", [
             add: function(object) {
                 if (!Class.is_class_instance(object))
                     object = new Properties(object);
+                if (this.__progressiveUniqueness && this.__indices[this.__progressiveUniqueness]) {
+                    var obj = this.get_by_secondary_index(this.__progressiveUniqueness, object.get(this.__progressiveUniqueness), true);
+                    if (obj && obj !== object) {
+                        this.remove(obj);
+                    }
+                }
                 if (this.exists(object))
                     return null;
                 var ident = this.__data.add(object);

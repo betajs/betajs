@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.213 - 2020-08-10
+betajs - v1.0.214 - 2020-09-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.213",
-    "datetime": 1597033255788
+    "version": "1.0.214",
+    "datetime": 1599077354482
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9921,6 +9921,8 @@ Scoped.define("module:Collections.Collection", [
                     Objs.iter(options.indices, this.add_secondary_index, this);
                 if (options.uniqueness)
                     this.__uniqueness = options.uniqueness;
+                if (options.progressiveUniqueness)
+                    this.__progressiveUniqueness = options.progressiveUniqueness;
             },
 
             /**
@@ -10129,6 +10131,12 @@ Scoped.define("module:Collections.Collection", [
             add: function(object) {
                 if (!Class.is_class_instance(object))
                     object = new Properties(object);
+                if (this.__progressiveUniqueness && this.__indices[this.__progressiveUniqueness]) {
+                    var obj = this.get_by_secondary_index(this.__progressiveUniqueness, object.get(this.__progressiveUniqueness), true);
+                    if (obj && obj !== object) {
+                        this.remove(obj);
+                    }
+                }
                 if (this.exists(object))
                     return null;
                 var ident = this.__data.add(object);
