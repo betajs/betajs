@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.214 - 2020-09-02
+betajs - v1.0.215 - 2020-10-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.214",
-    "datetime": 1599077354482
+    "version": "1.0.215",
+    "datetime": 1601607987996
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -2755,65 +2755,57 @@ Scoped.define("module:IdGenerators.TimedIdGenerator", ["module:IdGenerators.IdGe
 Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
     /**
      * JavaScript Simple Parse Functions
-     * 
+     *
      * @module BetaJS.JavaScript
      */
     return {
-
         STRING_SINGLE_QUOTATION_REGEX: /'[^']*'/g,
         STRING_DOUBLE_QUOTATION_REGEX: /"[^"]*"/g,
-
         PROPER_IDENTIFIER_REGEX: /^[a-zA-Z_][a-zA-Z_0-9]*$/,
         IDENTIFIER_REGEX: /[a-zA-Z_][a-zA-Z_0-9]*/g,
         IDENTIFIER_SCOPE_REGEX: /[a-zA-Z_][a-zA-Z_0-9\.]*/g,
-
         RESERVED: Objs.objectify([
             "if", "then", "else", "return", "var"
         ], true),
-
         /**
          * Is string a JS-reserved keyword?
-         * 
+         *
          * @param {string} key string in question
          * @return {boolean} true if reserved
          */
         isReserved: function(key) {
             return key in this.RESERVED;
         },
-
         /**
          * Is string a valid JS identifier?
-         * 
+         *
          * @param {string} key string in question
          * @return {boolean} true if identifier
          */
         isIdentifier: function(key) {
             return !this.isReserved(key);
         },
-
         /**
          * Is string a valid proper JS identifier?
-         * 
+         *
          * @param {string} key string in question
          * @return {boolean} true if identifier
          */
         isProperIdentifier: function(key) {
             return this.isIdentifier(key) && this.PROPER_IDENTIFIER_REGEX.test(key);
         },
-
         /**
          * Remove string definitions from JS code.
-         * 
+         *
          * @param {string} code input code
          * @return {string} code without strings
          */
         removeStrings: function(code) {
             return code.replace(this.STRING_SINGLE_QUOTATION_REGEX, "").replace(this.STRING_DOUBLE_QUOTATION_REGEX, "");
         },
-
         /**
          * Return JS identifiers from a piece of code.
-         * 
+         *
          * @param {string} code input code
          * @param {boolean} keepScopes keep scopes, e.g. `foo.bar` instead of `foo` and `bar` (default: false)
          * @return {array} array of extracted identifiers
@@ -2823,7 +2815,6 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
             code = this.removeStrings(code);
             return Objs.filter(code.match(regex), this.isIdentifier, this);
         },
-
         /**
          * Return function parameter names
          *
@@ -2833,9 +2824,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
         extractFunctionParameterNames: function(func) {
             return (func.toString().match(/function \((.*)\).*/))[1].replace(/\s*/g, "").split(",");
         }
-
     };
-
 });
 Scoped.define("module:KeyValue.KeyValueStore", [
     "module:Class",
@@ -3615,25 +3604,23 @@ Scoped.define("module:Lists.ArrayList", ["module:Lists.AbstractList", "module:Id
 Scoped.define("module:Maths", [], function() {
     /**
      * This module contains auxilary math functions.
-     * 
+     *
      * @module BetaJS.Maths
      */
     return {
-
         /**
          * Ceiling an integer to be a multiple of another integer.
-         * 
+         *
          * @param {int} number the number to be ceiled
          * @param {int} steps the multiple
          * @param {int} max an optional maximum
-         * 
+         *
          * @return {int} ceiled integer
          */
         discreteCeil: function(number, steps, max) {
             var x = Math.ceil(number / steps) * steps;
             return max && x > max ? 0 : x;
         }
-
     };
 });
 Scoped.define("module:Objs", [
@@ -7575,44 +7562,42 @@ Scoped.define("module:Time", [], function() {
 Scoped.define("module:Tokens", function() {
     /**
      * Unique Token Generation
-     * 
+     *
      * @module BetaJS.Tokens
      */
     return {
-
         /**
          * Generates a random token
-         * 
+         *
          * @param {integer} length optional length of token, default is 16
          * @return {string} generated token
          */
         generate_token: function(length) {
-            length = length || 16;
+            if (length === void 0) {
+                length = 16;
+            }
             var s = "";
             while (s.length < length)
                 s += Math.random().toString(36).substr(2);
             return s.substr(0, length);
         },
-
         /**
          * Generated a simple hash value from a string.
-         * 
+         *
          * @param {string} input string
          * @return {integer} simple hash value
-         * @see http://jsperf.com/string-hashing-methods 
+         * @see http://jsperf.com/string-hashing-methods
          */
         simple_hash: function(s) {
+            if (s.length == 0)
+                return 0;
             var nHash = 0;
-            if (!s.length)
-                return nHash;
-            for (var i = 0, imax = s.length, n; i < imax; ++i) {
-                n = s.charCodeAt(i);
-                nHash = ((nHash << 5) - nHash) + n;
+            for (var i = 0; i < s.length; ++i) {
+                nHash = ((nHash << 5) - nHash) + s.charCodeAt(i);
                 nHash = nHash & nHash;
             }
             return Math.abs(nHash);
         }
-
     };
 });
 Scoped.define("module:Trees.TreeNavigator", function() {
