@@ -38,9 +38,13 @@ module.exports = function(grunt) {
     /* Documentation */
     .docsTask();
 
+    gruntHelper.config.shell.tsbuild = {
+		command: "tsc --outDir src/tsbuild src/**/*.ts"
+	};
+
 	grunt.initConfig(gruntHelper.config);
 
-	grunt.registerTask('default', ['autoincreasepackage', 'package', 'githook', 'readme', 'license', 'codeclimate', 'travis', "jsbeautify", 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
+	grunt.registerTask('default', ['autoincreasepackage', 'package', 'githook', 'readme', 'license', 'codeclimate', 'travis', "jsbeautify", 'shell:tsbuild', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
 	grunt.registerTask('check', ['lint', 'qunitjs']);
 
 };

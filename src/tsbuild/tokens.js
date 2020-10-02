@@ -1,4 +1,4 @@
-Scoped.define("module:Tokens", function() {
+Scoped.define("module:Tokens", function () {
     /**
      * Unique Token Generation
      *
@@ -11,10 +11,8 @@ Scoped.define("module:Tokens", function() {
          * @param {integer} length optional length of token, default is 16
          * @return {string} generated token
          */
-        generate_token: function(length) {
-            if (length === void 0) {
-                length = 16;
-            }
+        generate_token: function (length) {
+            if (length === void 0) { length = 16; }
             var s = "";
             while (s.length < length)
                 s += Math.random().toString(36).substr(2);
@@ -27,7 +25,7 @@ Scoped.define("module:Tokens", function() {
          * @return {integer} simple hash value
          * @see http://jsperf.com/string-hashing-methods
          */
-        simple_hash: function(s) {
+        simple_hash: function (s) {
             if (s.length == 0)
                 return 0;
             var nHash = 0;

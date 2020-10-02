@@ -1,4 +1,4 @@
-Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
+Scoped.define("module:JavaScript", ["module:Objs"], function (Objs) {
     /**
      * JavaScript Simple Parse Functions
      *
@@ -19,7 +19,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
          * @param {string} key string in question
          * @return {boolean} true if reserved
          */
-        isReserved: function(key) {
+        isReserved: function (key) {
             return key in this.RESERVED;
         },
         /**
@@ -28,7 +28,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
          * @param {string} key string in question
          * @return {boolean} true if identifier
          */
-        isIdentifier: function(key) {
+        isIdentifier: function (key) {
             return !this.isReserved(key);
         },
         /**
@@ -37,7 +37,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
          * @param {string} key string in question
          * @return {boolean} true if identifier
          */
-        isProperIdentifier: function(key) {
+        isProperIdentifier: function (key) {
             return this.isIdentifier(key) && this.PROPER_IDENTIFIER_REGEX.test(key);
         },
         /**
@@ -46,7 +46,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
          * @param {string} code input code
          * @return {string} code without strings
          */
-        removeStrings: function(code) {
+        removeStrings: function (code) {
             return code.replace(this.STRING_SINGLE_QUOTATION_REGEX, "").replace(this.STRING_DOUBLE_QUOTATION_REGEX, "");
         },
         /**
@@ -56,7 +56,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
          * @param {boolean} keepScopes keep scopes, e.g. `foo.bar` instead of `foo` and `bar` (default: false)
          * @return {array} array of extracted identifiers
          */
-        extractIdentifiers: function(code, keepScopes) {
+        extractIdentifiers: function (code, keepScopes) {
             var regex = keepScopes ? this.IDENTIFIER_SCOPE_REGEX : this.IDENTIFIER_REGEX;
             code = this.removeStrings(code);
             return Objs.filter(code.match(regex), this.isIdentifier, this);
@@ -67,7 +67,7 @@ Scoped.define("module:JavaScript", ["module:Objs"], function(Objs) {
          * @param {string} func JavaScript function to extract parameter names
          * @return {array} array of extracted parameter names
          */
-        extractFunctionParameterNames: function(func) {
+        extractFunctionParameterNames: function (func) {
             return (func.toString().match(/function \((.*)\).*/))[1].replace(/\s*/g, "").split(",");
         }
     };

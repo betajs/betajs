@@ -1,4 +1,4 @@
-Scoped.define("module:Maths", [], function() {
+Scoped.define("module:Maths", [], function () {
     /**
      * This module contains auxilary math functions.
      *
@@ -14,7 +14,7 @@ Scoped.define("module:Maths", [], function() {
          *
          * @return {int} ceiled integer
          */
-        discreteCeil: function(number, steps, max) {
+        discreteCeil: function (number, steps, max) {
             var x = Math.ceil(number / steps) * steps;
             return max && x > max ? 0 : x;
         }
