@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.216 - 2020-10-02
+betajs - v1.0.217 - 2020-11-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.216 - 2020-10-02
+betajs - v1.0.217 - 2020-11-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.216",
-    "datetime": 1601663753151
+    "version": "1.0.217",
+    "datetime": 1604600138845
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -6378,6 +6378,21 @@ Scoped.define("module:Properties.PropertiesMixin", [
          */
         isSupersetOf: function(props) {
             return Objs.superset_of(this.data(), props.data ? props.data() : props);
+        },
+
+        /**
+         * ES5 only
+         */
+        getProxy: function() {
+            var self = this;
+            return new Proxy(this.__properties.data, {
+                get: function(target, prop, receiver) {
+                    return self.get(prop);
+                },
+                set: function(target, prop, value) {
+                    self.set(prop, value);
+                }
+            });
         }
 
     };

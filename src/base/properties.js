@@ -777,6 +777,21 @@ Scoped.define("module:Properties.PropertiesMixin", [
          */
         isSupersetOf: function(props) {
             return Objs.superset_of(this.data(), props.data ? props.data() : props);
+        },
+
+        /**
+         * ES5 only
+         */
+        getProxy: function() {
+            var self = this;
+            return new Proxy(this.__properties.data, {
+                get: function(target, prop, receiver) {
+                    return self.get(prop);
+                },
+                set: function(target, prop, value) {
+                    self.set(prop, value);
+                }
+            });
         }
 
     };
