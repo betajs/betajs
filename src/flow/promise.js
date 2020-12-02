@@ -10,7 +10,7 @@ Scoped.define("module:Promise", [
      * 
      * @class BetaJS.Promise
      */
-    var Promise = {
+    var PromiseCls = {
 
         /**
          * Creates a new promise instance.
@@ -217,6 +217,17 @@ Scoped.define("module:Promise", [
             return promise;
         },
 
+        /*
+         *
+         * Promise.conditional(BOOLEAN_CONDITION, function () {
+         *      return ... promise ....;
+         * }, DEFAULT_VALUE)
+         *
+         */
+        conditional: function(condition, promiseFactory, defaultValue) {
+            return condition ? promiseFactory() : this.value(defaultValue);
+        },
+
         /**
          * Takes a function and calls with a number of arguments, some of which might be promises and turns it into actual values.
          * 
@@ -384,7 +395,7 @@ Scoped.define("module:Promise", [
                     currentPromise = promiseFunc.apply(ctx, args);
                     resultPromise = currentPromise;
                 } else {
-                    var promise = Promise.create();
+                    var promise = PromiseCls.create();
                     promiseQueue.push(promise);
                     resultPromise = promise.mapSuccess(function() {
                         return promiseFunc.apply(this, args);
@@ -403,7 +414,7 @@ Scoped.define("module:Promise", [
 
     };
 
-    Objs.extend(Promise.Promise.prototype, {
+    Objs.extend(PromiseCls.Promise.prototype, {
         classGuid: "7e3ed52f-22da-4e9c-95a4-e9bb877a3935",
 
         /**
@@ -687,11 +698,11 @@ Scoped.define("module:Promise", [
          * @return {object} promise
          */
         mapSuccess: function(func, ctx) {
-            var promise = Promise.create();
+            var promise = PromiseCls.create();
             this.forwardError(promise).success(function(value, pr) {
                 try {
                     var result = func.call(ctx || promise, value, pr);
-                    if (Promise.is(result))
+                    if (PromiseCls.is(result))
                         result.forwardCallback(promise);
                     else
                         promise.asyncSuccess(result);
@@ -717,9 +728,9 @@ Scoped.define("module:Promise", [
          */
         mapASuccess: function(func, ctx) {
             return this.mapSuccess(function(result) {
-                var promise = Promise.create();
+                var promise = PromiseCls.create();
                 Async.eventually(function() {
-                    Promise.box(func, ctx, [result]).forwardCallback(promise);
+                    PromiseCls.box(func, ctx, [result]).forwardCallback(promise);
                 });
                 return promise;
             });
@@ -734,10 +745,10 @@ Scoped.define("module:Promise", [
          * @return {object} promise
          */
         mapError: function(func, ctx) {
-            var promise = Promise.create();
+            var promise = PromiseCls.create();
             this.forwardSuccess(promise).error(function(err, pr) {
                 var result = func.call(ctx || promise, err, pr);
-                if (Promise.is(result))
+                if (PromiseCls.is(result))
                     result.forwardCallback(promise);
                 else
                     promise.asyncError(result);
@@ -754,10 +765,10 @@ Scoped.define("module:Promise", [
          * @return {object} promise
          */
         mapCallback: function(func, ctx) {
-            var promise = Promise.create();
+            var promise = PromiseCls.create();
             this.callback(function(err, value, pr) {
                 var result = func.call(ctx || promise, err, value, pr);
-                if (Promise.is(result))
+                if (PromiseCls.is(result))
                     result.forwardCallback(promise);
                 else
                     promise.asyncCallback(err ? result : err, err ? value : result, pr);
@@ -773,10 +784,23 @@ Scoped.define("module:Promise", [
          * @return {object} promise
          */
         and: function(promises) {
-            var result = Promise.and(this);
+            var result = PromiseCls.and(this);
             return result.and(promises);
+        },
+
+        toNativePromise: function() {
+            var self = this;
+            return new Promise(function(resolve, reject) {
+                self.callback(function(error, value) {
+                    if (error)
+                        reject(error);
+                    else
+                        resolve(value);
+                });
+            });
         }
+
     });
 
-    return Promise;
+    return PromiseCls;
 });
