@@ -6,6 +6,16 @@ Scoped.define("module:Types", function() {
      */
     return {
         /**
+         * Returns whether argument is an object and is not null
+         *
+         * @param x argument
+         * @return true if x is an object
+         */
+        is_object_instance: function(x) {
+            return this.is_object(x) && !this.is_null(x);
+        },
+
+        /**
          * Returns whether argument is an object
          * 
          * @param x argument
@@ -223,10 +233,8 @@ Scoped.define("module:Types", function() {
          * @return integer value
          */
         parseDateTime: function(x) {
-            if (typeof x === "number")
+            if (typeof x === "number" || this.is_none(x))
                 return x;
-            if (x === null || x === undefined)
-                return 0;
             if (typeof x === "object")
                 x = x.toString();
             var d = new Date(x);
