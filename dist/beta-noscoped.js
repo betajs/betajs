@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.218 - 2020-12-02
+betajs - v1.0.219 - 2021-01-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.218",
-    "datetime": 1606949461303
+    "version": "1.0.219",
+    "datetime": 1611084456894
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -7844,6 +7844,16 @@ Scoped.define("module:Types", function() {
      */
     return {
         /**
+         * Returns whether argument is an object and is not null
+         *
+         * @param x argument
+         * @return true if x is an object
+         */
+        is_object_instance: function(x) {
+            return this.is_object(x) && !this.is_null(x);
+        },
+
+        /**
          * Returns whether argument is an object
          * 
          * @param x argument
@@ -8061,10 +8071,8 @@ Scoped.define("module:Types", function() {
          * @return integer value
          */
         parseDateTime: function(x) {
-            if (typeof x === "number")
+            if (typeof x === "number" || this.is_none(x))
                 return x;
-            if (x === null || x === undefined)
-                return 0;
             if (typeof x === "object")
                 x = x.toString();
             var d = new Date(x);
