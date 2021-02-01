@@ -410,7 +410,29 @@ Scoped.define("module:Promise", [
                 });
                 return resultPromise;
             };
+        },
+
+        aggregateExecution: function(promiseFunc, ctx, serializer, successCloner) {
+            var argMap = {};
+            return function() {
+                var args = arguments;
+                var serializedArgs = serializer ? serializer(args) : JSON.stringify(args);
+                var promise = argMap[serializedArgs];
+                if (!promise) {
+                    var keep = true;
+                    promise = promiseFunc.apply(ctx, args).callback(function() {
+                        keep = false;
+                        delete argMap[serializedArgs];
+                    }).mapSuccess(function(data) {
+                        return successCloner ? successCloner(data) : data;
+                    });
+                    if (keep)
+                        argMap[serializedArgs] = promise;
+                }
+                return promise;
+            };
         }
+
 
     };
 

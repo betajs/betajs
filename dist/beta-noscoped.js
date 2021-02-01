@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.219 - 2021-01-19
+betajs - v1.0.220 - 2021-02-01
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.219",
-    "datetime": 1611084456894
+    "version": "1.0.220",
+    "datetime": 1612205044284
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -11878,7 +11878,29 @@ Scoped.define("module:Promise", [
                 });
                 return resultPromise;
             };
+        },
+
+        aggregateExecution: function(promiseFunc, ctx, serializer, successCloner) {
+            var argMap = {};
+            return function() {
+                var args = arguments;
+                var serializedArgs = serializer ? serializer(args) : JSON.stringify(args);
+                var promise = argMap[serializedArgs];
+                if (!promise) {
+                    var keep = true;
+                    promise = promiseFunc.apply(ctx, args).callback(function() {
+                        keep = false;
+                        delete argMap[serializedArgs];
+                    }).mapSuccess(function(data) {
+                        return successCloner ? successCloner(data) : data;
+                    });
+                    if (keep)
+                        argMap[serializedArgs] = promise;
+                }
+                return promise;
+            };
         }
+
 
     };
 
