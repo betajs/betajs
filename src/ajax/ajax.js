@@ -325,18 +325,22 @@ Scoped.define("module:Ajax.HookedAjaxWrapper", [
              * @param {object} hookCallbackCtx hook callback ctx
              * @param {object} options common options for ajax calls
              */
-            constructor: function(ajaxWrapper, hookCallback, hookCallbackCtx, options) {
+            constructor: function(ajaxWrapper, hookCallback, hookCallbackCtx, options, promiseHook) {
                 inherited.constructor.call(this, options);
                 this.ajaxWrapper = ajaxWrapper;
                 this.hookCallback = hookCallback;
                 this.hookCallbackCtx = hookCallbackCtx;
+                this.promiseHook = promiseHook;
                 this.online = true;
             },
 
             _execute: function(options, progress, progressCtx) {
                 if (!this.online)
                     return Promise.error("offline");
-                return this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
+                var promise = this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
+                if (this.promiseHook)
+                    promise = this.promiseHook.call(this.hookCallbackCtx || this, promise);
+                return promise;
             }
 
         };

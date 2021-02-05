@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.220 - 2021-02-01
+betajs - v1.0.220 - 2021-02-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.220 - 2021-02-01
+betajs - v1.0.220 - 2021-02-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1022,7 +1022,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.220",
-    "datetime": 1612205044284
+    "datetime": 1612383477505
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1355,18 +1355,22 @@ Scoped.define("module:Ajax.HookedAjaxWrapper", [
              * @param {object} hookCallbackCtx hook callback ctx
              * @param {object} options common options for ajax calls
              */
-            constructor: function(ajaxWrapper, hookCallback, hookCallbackCtx, options) {
+            constructor: function(ajaxWrapper, hookCallback, hookCallbackCtx, options, promiseHook) {
                 inherited.constructor.call(this, options);
                 this.ajaxWrapper = ajaxWrapper;
                 this.hookCallback = hookCallback;
                 this.hookCallbackCtx = hookCallbackCtx;
+                this.promiseHook = promiseHook;
                 this.online = true;
             },
 
             _execute: function(options, progress, progressCtx) {
                 if (!this.online)
                     return Promise.error("offline");
-                return this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
+                var promise = this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
+                if (this.promiseHook)
+                    promise = this.promiseHook.call(this.hookCallbackCtx || this, promise);
+                return promise;
             }
 
         };
