@@ -11,7 +11,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.222",
-    "datetime": 1615218364772
+    "datetime": 1615218911068
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -181,6 +181,7 @@ Scoped.define("module:Ajax.Support", [
                 resilience: 1,
                 resilience_filter: null,
                 resilience_delay: 1000,
+                resilience_min_status: null,
                 cors: false,
                 sendContentType: true,
                 corscreds: false,
@@ -258,9 +259,15 @@ Scoped.define("module:Ajax.Support", [
                     return promise;
                 var returnPromise = Promise.create();
                 promise.forwardSuccess(returnPromise).error(function(err) {
-                    if (RequestException.is_class_instance(err) && options.resilience_filter && options.resilience_filter(err)) {
-                        returnPromise.error(err);
-                        return;
+                    if (RequestException.is_class_instance(err)) {
+                        if (options.resilience_filter && options.resilience_filter(err)) {
+                            returnPromise.error(err);
+                            return;
+                        }
+                        if (options.resilience_min_status && err.status_code() < options.resilience_min_status) {
+                            returnPromise.error(err);
+                            return;
+                        }
                     }
                     Async.eventually(function() {
                         helper(resilience - 1).forwardCallback(returnPromise);
