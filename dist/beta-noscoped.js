@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.220 - 2021-02-03
+betajs - v1.0.222 - 2021-03-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.220",
-    "datetime": 1612383477505
+    "version": "1.0.222",
+    "datetime": 1615218364772
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4380,6 +4380,15 @@ Scoped.define("module:Objs", [
                 i++;
             }
             return result;
+        },
+
+        getObjKeyByValue: function(obj, value) {
+            for (var prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    if (obj[prop] === value)
+                        return prop;
+                }
+            }
         }
 
     };

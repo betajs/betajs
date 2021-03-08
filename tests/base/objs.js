@@ -75,3 +75,9 @@ QUnit.test("test tree extend", function (assert) {
 		second1: 6
 	}));
 });
+
+QUnit.test("test get key by value object", function (assert) {
+	var obj = {"a":"d", "b":"e", "c":"f"};
+	assert.equal(BetaJS.Objs.getObjKeyByValue(obj, "e"), "b");
+	assert.equal(BetaJS.Objs.getObjKeyByValue(obj, "c"), null);
+});
