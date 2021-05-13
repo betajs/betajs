@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.222 - 2021-03-08
+betajs - v1.0.223 - 2021-05-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.222 - 2021-03-08
+betajs - v1.0.223 - 2021-05-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.222",
-    "datetime": 1615218911068
+    "version": "1.0.223",
+    "datetime": 1620929269996
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -8026,7 +8026,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
         format: function(timeFormat, time, timezone) {
             time = time || Time.now();
             var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
-            var bias = Time.timezoneBias(timezone);
+            var bias = Time.timezoneBias(timezone, time);
             var result = timeFormat;
             var replacers = [];
             Objs.iter(this.formatMappings, function(formatter, key) {
@@ -8073,7 +8073,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
          * @return {int} number of the week in a year
          */
         weekNumber: function(time, timezone) {
-            var base = new Date(time + Time.timezoneBias(timezone));
+            var base = new Date(time + Time.timezoneBias(timezone, time));
             var d = new Date(Date.UTC(base.getFullYear(), base.getMonth(), base.getDate()));
             var dayNum = d.getUTCDay() || 7;
             d.setUTCDate(d.getUTCDate() + 4 - dayNum);
@@ -8250,10 +8250,15 @@ Scoped.define("module:Time", [], function() {
         /**
          * Reads the current timezone offset.
          *
+         * @param {int} time time in milliseconds
+         *
          * @return {int} timezone offset in minutes
          */
-        getTimezoneOffset: function() {
-            return this.__timezoneOffset === undefined ? (new Date()).getTimezoneOffset() : this.__timezoneOffset;
+        getTimezoneOffset: function(time) {
+            if (this.__timezoneOffset !== undefined) {
+                return this.__timezoneOffset;
+            }
+            return time ? (new Date(time).getTimezoneOffset()) : new Date().getTimezoneOffset();
         },
 
         /**
@@ -8269,12 +8274,13 @@ Scoped.define("module:Time", [], function() {
          * Computes the timezone bias in milliseconds from UTC
          * 
          * @param {int} timezone bias in minutes; can be true to use current time zone; can be undefined to use UTC
+         * @param {int} time time in milliseconds
          * 
          * @return {int} timezone bias in milliseconds
          */
-        timezoneBias: function(timezone) {
+        timezoneBias: function(timezone, time) {
             if (timezone === true)
-                timezone = this.getTimezoneOffset();
+                timezone = this.getTimezoneOffset(time);
             if (typeof timezone == "undefined" || timezone === null || timezone === false)
                 timezone = 0;
             return timezone * 60 * 1000;
@@ -8289,7 +8295,7 @@ Scoped.define("module:Time", [], function() {
          * @return {object} Date object
          */
         timeToDate: function(t, timezone) {
-            return new Date(t + this.timezoneBias(timezone));
+            return new Date(t + this.timezoneBias(timezone, t));
         },
 
         /**
@@ -8301,7 +8307,7 @@ Scoped.define("module:Time", [], function() {
          * @return {int} UTC time in milliseconds
          */
         dateToTime: function(d, timezone) {
-            return d.getTime() - this.timezoneBias(timezone);
+            return d.getTime() - this.timezoneBias(timezone, d.getTime());
         },
 
         /**
@@ -8313,7 +8319,7 @@ Scoped.define("module:Time", [], function() {
          * @return {object} timezone-based Date object
          */
         timeToTimezoneBasedDate: function(t, timezone) {
-            return new Date(t - this.timezoneBias(timezone));
+            return new Date(t - this.timezoneBias(timezone, t));
         },
 
         /**
@@ -8325,7 +8331,7 @@ Scoped.define("module:Time", [], function() {
          * @return {int} UTC time in milliseconds
          */
         timezoneBasedDateToTime: function(d, timezone) {
-            return d.getTime() + this.timezoneBias(timezone);
+            return d.getTime() + this.timezoneBias(timezone, d.getTime());
         },
 
         /**
