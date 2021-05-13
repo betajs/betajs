@@ -45,6 +45,6 @@ module.exports = function(grunt) {
 	grunt.initConfig(gruntHelper.config);
 
 	grunt.registerTask('default', ['autoincreasepackage', 'package', 'githook', 'readme', 'license', 'codeclimate', 'travis', "jsbeautify", 'shell:tsbuild', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
-	grunt.registerTask('check', ['lint', 'qunitjs']);
+	grunt.registerTask('check', ['qunitjs', 'lint']);
 
 };
