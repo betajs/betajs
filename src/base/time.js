@@ -104,7 +104,10 @@ Scoped.define("module:Time", [], function() {
          * @return {int} timezone offset in minutes
          */
         getTimezoneOffset: function(time) {
-            return this.__timezoneOffset || (time ? (new Date(time).getTimezoneOffset()) : new Date().getTimezoneOffset());
+            if (this.__timezoneOffset !== undefined) {
+                return this.__timezoneOffset;
+            }
+            return time ? (new Date(time).getTimezoneOffset()) : new Date().getTimezoneOffset();
         },
 
         /**
