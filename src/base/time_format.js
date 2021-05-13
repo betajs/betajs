@@ -162,7 +162,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
         format: function(timeFormat, time, timezone) {
             time = time || Time.now();
             var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
-            var bias = Time.timezoneBias(timezone);
+            var bias = Time.timezoneBias(timezone, time);
             var result = timeFormat;
             var replacers = [];
             Objs.iter(this.formatMappings, function(formatter, key) {
@@ -209,7 +209,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
          * @return {int} number of the week in a year
          */
         weekNumber: function(time, timezone) {
-            var base = new Date(time + Time.timezoneBias(timezone));
+            var base = new Date(time + Time.timezoneBias(timezone, time));
             var d = new Date(Date.UTC(base.getFullYear(), base.getMonth(), base.getDate()));
             var dayNum = d.getUTCDay() || 7;
             d.setUTCDate(d.getUTCDate() + 4 - dayNum);

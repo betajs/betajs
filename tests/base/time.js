@@ -15,3 +15,7 @@ QUnit.test("test timezone conversion", function (assert) {
     assert.equal(utcDelta, estDelta);
 });
 
+QUnit.test("test timezone offset equal to zero", function(assert) {
+    BetaJS.Time.setTimezoneOffset(0);
+    assert.equal(BetaJS.Time.getTimezoneOffset(), 0);
+});
