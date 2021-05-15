@@ -81,3 +81,16 @@ QUnit.test("test get key by value object", function (assert) {
 	assert.equal(BetaJS.Objs.getObjKeyByValue(obj, "e"), "b");
 	assert.equal(BetaJS.Objs.getObjKeyByValue(obj, "c"), null);
 });
+
+QUnit.test("test bidirectional mapping", function (assert) {
+	var x = ["y", 2];
+	var obj = {
+        "a": x,
+        "b": 3,
+		"c": "z"
+    };
+	var map = BetaJS.Objs.bidirectionalMap(obj);
+	assert.equal(map.a, x);
+	assert.equal(map[3], "b");
+	assert.equal(map.z, "c");
+});
