@@ -54,8 +54,8 @@ QUnit.test("test tree extend", function (assert) {
 		level1: 2,
 		level2: {
 			level1: 4,
-            first1: 7,
-            second1: 8
+			first1: 7,
+			second1: 8
 		},
 		first1: 5,
 		second1: 6
@@ -80,4 +80,17 @@ QUnit.test("test get key by value object", function (assert) {
 	var obj = {"a":"d", "b":"e", "c":"f"};
 	assert.equal(BetaJS.Objs.getObjKeyByValue(obj, "e"), "b");
 	assert.equal(BetaJS.Objs.getObjKeyByValue(obj, "c"), null);
+});
+
+QUnit.test("test bidirectional mapping", function (assert) {
+	var x = ["y", 2];
+	var obj = {
+		"a": x,
+		"b": 3,
+		"c": "z"
+	};
+	var map = BetaJS.Objs.bidirectionalMap(obj);
+	assert.equal(map.a, x);
+	assert.equal(map[3], "b");
+	assert.equal(map.z, "c");
 });

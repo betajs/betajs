@@ -555,6 +555,27 @@ Scoped.define("module:Objs", [
         },
 
         /**
+         * Creates a bidirectional mapping of an object.
+         *
+         * @param {object} obj object
+         *
+         * @return {object} bidirectional map
+         */
+        bidirectionalMap: function(obj) {
+            reverseMap = {};
+            this.iter(obj, function(value, key) {
+                if (Types.is_array(value)) {
+                    for (var i = 0; i < value.length; ++i) {
+                        reverseMap[value[i]] = key;
+                    }
+                } else {
+                    reverseMap[value] = key;
+                }
+            });
+            return this.extend(obj, reverseMap);
+        },
+
+        /**
          * Returns all values of an object as an array.
          * 
          * @param {object} obj object
