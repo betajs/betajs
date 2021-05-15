@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.223 - 2021-05-13
+betajs - v1.0.224 - 2021-05-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.223",
-    "datetime": 1620929269996
+    "version": "1.0.224",
+    "datetime": 1621120868095
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4092,6 +4092,27 @@ Scoped.define("module:Objs", [
             for (var key in obj)
                 result[f.call(context, obj[key], key)] = obj[key];
             return result;
+        },
+
+        /**
+         * Creates a bidirectional mapping of an object.
+         *
+         * @param {object} obj object
+         *
+         * @return {object} bidirectional map
+         */
+        bidirectionalMap: function(obj) {
+            reverseMap = {};
+            this.iter(obj, function(value, key) {
+                if (Types.is_array(value)) {
+                    for (var i = 0; i < value.length; ++i) {
+                        reverseMap[value[i]] = key;
+                    }
+                } else {
+                    reverseMap[value] = key;
+                }
+            });
+            return this.extend(obj, reverseMap);
         },
 
         /**
