@@ -562,17 +562,18 @@ Scoped.define("module:Objs", [
          * @return {object} bidirectional map
          */
         bidirectionalMap: function(obj) {
-            reverseMap = {};
+            result = {};
             this.iter(obj, function(value, key) {
                 if (Types.is_array(value)) {
                     for (var i = 0; i < value.length; ++i) {
-                        reverseMap[value[i]] = key;
+                        result[value[i]] = key;
                     }
                 } else {
-                    reverseMap[value] = key;
+                    result[value] = key;
                 }
+                result[key] = value;
             });
-            return this.extend(obj, reverseMap);
+            return result;
         },
 
         /**
