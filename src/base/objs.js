@@ -706,7 +706,7 @@ Scoped.define("module:Objs", [
         },
 
         /**
-         * Merges to objects.
+         * Merges two objects.
          * 
          * @param {object} secondary Secondary object
          * @param {object} primary Primary object
