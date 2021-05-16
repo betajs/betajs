@@ -1,6 +1,6 @@
 QUnit.module("MediaTypes", function() {
 
-    var mime = new BetaJS.MediaTypes();
+    var mime = BetaJS.MediaTypes;
     
     QUnit.module("getExtension", function() {
 
