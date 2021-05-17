@@ -562,7 +562,7 @@ Scoped.define("module:Objs", [
          * @return {object} bidirectional map
          */
         bidirectionalMap: function(obj) {
-            result = {};
+            var result = {};
             this.iter(obj, function(value, key) {
                 if (Types.is_array(value)) {
                     for (var i = 0; i < value.length; ++i) {
