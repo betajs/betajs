@@ -94,3 +94,11 @@ QUnit.test("test bidirectional mapping", function (assert) {
 	assert.equal(map[3], "b");
 	assert.equal(map.z, "c");
 });
+
+QUnit.test("bidirectionalMap does not mutate original object", function (assert) {
+	var obj = {k1:"v1",k2:"v2",k3:"v3"};
+	BetaJS.Objs.bidirectionalMap(obj);
+	assert.equal(obj.k1, "v1");
+	assert.equal(obj.v1, undefined);
+
+});
