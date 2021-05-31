@@ -590,6 +590,32 @@ Scoped.define("module:Objs", [
             return result;
         },
 
+        flatten: function(arr) {
+            var result = [];
+            arr.forEach(function(inner) {
+                result = result.concat(Types.is_array(inner) ? inner : [inner]);
+            });
+            return result;
+        },
+
+        treeValues: function(obj) {
+            if (obj && Types.is_array(obj))
+                return this.flatten(obj.map(this.treeValues, this));
+            if (obj && Types.is_object(obj))
+                return this.treeValues(this.values(obj));
+            return [obj];
+        },
+
+        uniqueValues: function(obj) {
+            var occ = {};
+            return this.filter(obj, function(v) {
+                if (v in occ)
+                    return false;
+                occ[v] = true;
+                return true;
+            });
+        },
+
         /**
          * Filters all values of an object or array.
          * 

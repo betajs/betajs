@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.226 - 2021-05-17
+betajs - v1.0.227 - 2021-05-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.226",
-    "datetime": 1621261487262
+    "version": "1.0.227",
+    "datetime": 1622424604363
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -4225,6 +4225,32 @@ Scoped.define("module:Objs", [
             for (var key in obj)
                 result.push(obj[key]);
             return result;
+        },
+
+        flatten: function(arr) {
+            var result = [];
+            arr.forEach(function(inner) {
+                result = result.concat(Types.is_array(inner) ? inner : [inner]);
+            });
+            return result;
+        },
+
+        treeValues: function(obj) {
+            if (obj && Types.is_array(obj))
+                return this.flatten(obj.map(this.treeValues, this));
+            if (obj && Types.is_object(obj))
+                return this.treeValues(this.values(obj));
+            return [obj];
+        },
+
+        uniqueValues: function(obj) {
+            var occ = {};
+            return this.filter(obj, function(v) {
+                if (v in occ)
+                    return false;
+                occ[v] = true;
+                return true;
+            });
         },
 
         /**
