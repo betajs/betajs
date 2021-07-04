@@ -13,7 +13,7 @@ QUnit.test("test day format", function(assert) {
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Friday");
 	t = BetaJS.Time.updateTime(BetaJS.Time.now(), {weekday: 6});
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Saturday");
-	
+
 	t = 1470847573479;
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Wednesday");
 });
@@ -28,11 +28,12 @@ QUnit.test("test week number", function(assert) {
 });
 
 QUnit.test("test plus day format", function(assert) {
-	var t = BetaJS.Time.dateToTime(new Date(2018, 0, 1));
+	// Without time GMT+ timezones get wrong date
+	var t = BetaJS.Time.dateToTime(new Date(2018, 0, 1, 15));
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Monday");
 	t = BetaJS.Time.updateTime(t, {day: (BetaJS.Time.timeComponentGet(t,("day")) + 1)});
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Tuesday");
-	t = BetaJS.Time.dateToTime(new Date(2018, 0, 31)); //2018-1-31
+	t = BetaJS.Time.dateToTime(new Date(2018, 0, 31, 15)); //2018-1-31
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Wednesday");
 	t = BetaJS.Time.updateTime(t, {day: (BetaJS.Time.timeComponentGet(t,("day")) + 1)});
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Thursday");

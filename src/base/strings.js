@@ -6,6 +6,26 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
      */
     return {
 
+
+        /**
+         * Will act like ASP.NET format function
+         *
+         * Use Example
+         * BetaJS.Strings("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second");
+         * Result should be: "First formatted, and Second formatted! Also no format {2}"
+         *
+         * @param {String} stringToFormat
+         * @return {String}
+         */
+        format: function(stringToFormat) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            return stringToFormat.replace(/{(\d+)}/g, function(match, number) {
+                return typeof args[number] != 'undefined' ?
+                    args[number] :
+                    match;
+            });
+        },
+
         /**
          * Uppercases first character in string.
          *

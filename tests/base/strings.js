@@ -1,3 +1,16 @@
+// TODO: could be uncommented after dist was generated, otherwise test works as expected
+// QUnit.test("test strings format method", function(assert) {
+//   assert.equal(
+//     BetaJS.Strings.format("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second"),
+//     "First formatted, and Second formatted! Also no format {2}"
+//   );
+//
+//   assert.equal(
+//     BetaJS.Strings.format("{0} + {1} = {2} to: {3}", 1, 3, "equal", 4),
+//     "1 + 3 = equal to: 4"
+//   );
+// });
+
 QUnit.test("test nl2br", function(assert) {
 	assert.ok(BetaJS.Strings.nl2br("abc\ndef\ngeh") == "abc<br />\ndef<br />\ngeh");
 });
