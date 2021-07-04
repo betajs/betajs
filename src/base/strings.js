@@ -11,7 +11,7 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
          * Will act like ASP.NET format function
          *
          * Use Example
-         * BetaJS.Strings("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second");
+         * BetaJS.Strings.format("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second");
          * Result should be: "First formatted, and Second formatted! Also no format {2}"
          *
          * @param {String} stringToFormat
