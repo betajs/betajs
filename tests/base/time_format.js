@@ -28,7 +28,7 @@ QUnit.test("test week number", function(assert) {
 });
 
 QUnit.test("test plus day format", function(assert) {
-	// Without time GMT+ timezones get wrong date
+	// Without added hour GMT+ timezones get wrong date
 	var t = BetaJS.Time.dateToTime(new Date(2018, 0, 1, 15));
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Monday");
 	t = BetaJS.Time.updateTime(t, {day: (BetaJS.Time.timeComponentGet(t,("day")) + 1)});
