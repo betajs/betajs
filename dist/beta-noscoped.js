@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.227 - 2021-05-30
+betajs - v1.0.228 - 2021-07-05
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.227",
-    "datetime": 1622424604363
+    "version": "1.0.228",
+    "datetime": 1625517501432
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5729,6 +5729,26 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
      * @module BetaJS.Strings
      */
     return {
+
+
+        /**
+         * Will act like ASP.NET format function
+         *
+         * Use Example
+         * BetaJS.Strings.format("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second");
+         * Result should be: "First formatted, and Second formatted! Also no format {2}"
+         *
+         * @param {String} stringToFormat
+         * @return {String}
+         */
+        format: function(stringToFormat) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            return stringToFormat.replace(/{(\d+)}/g, function(match, number) {
+                return typeof args[number] != 'undefined' ?
+                    args[number] :
+                    match;
+            });
+        },
 
         /**
          * Uppercases first character in string.
