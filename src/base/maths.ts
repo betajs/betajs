@@ -20,6 +20,21 @@ Scoped.define("module:Maths", [], function() {
         discreteCeil: function(number: number, steps: number, max: number): number {
             var x = Math.ceil(number / steps) * steps;
             return max && x > max ? 0 : x;
+        },
+
+        /**
+         * Clamps number between an upper and lower bound.
+         *
+         * @param {number} number the number to clamp
+         * @param {number} lower the lower bound
+         * @param {number} upper the upper bound
+         *
+         * @returns {number} the clamped number
+         */
+        clamp: function(number: number, lower: number = -Infinity, upper: number = Infinity): number {
+            if (number < lower) return lower;
+            if (number > upper) return upper;
+            return number;
         }
 
     };
