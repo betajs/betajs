@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.228 - 2021-07-05
+betajs - v1.0.229 - 2021-07-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.228 - 2021-07-05
+betajs - v1.0.229 - 2021-07-19
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.228",
-    "datetime": 1625517501432
+    "version": "1.0.229",
+    "datetime": 1626704437592
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -17858,6 +17858,24 @@ Scoped.define("module:Maths", [], function () {
         discreteCeil: function (number, steps, max) {
             var x = Math.ceil(number / steps) * steps;
             return max && x > max ? 0 : x;
+        },
+        /**
+         * Clamps number between an upper and lower bound.
+         *
+         * @param {number} number the number to clamp
+         * @param {number} lower the lower bound
+         * @param {number} upper the upper bound
+         *
+         * @returns {number} the clamped number
+         */
+        clamp: function (number, lower, upper) {
+            if (lower === void 0) { lower = -Infinity; }
+            if (upper === void 0) { upper = Infinity; }
+            if (number < lower)
+                return lower;
+            if (number > upper)
+                return upper;
+            return number;
         }
     };
 });
