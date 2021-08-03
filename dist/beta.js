@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.229 - 2021-07-19
+betajs - v1.0.229 - 2021-08-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.229 - 2021-07-19
+betajs - v1.0.229 - 2021-08-03
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1022,7 +1022,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.229",
-    "datetime": 1626704437592
+    "datetime": 1628018028609
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1247,15 +1247,34 @@ Scoped.define("module:Ajax.Support", [
         },
 
         /**
+         * Create request object that can be executed with execute command
+         *
+         * @param {object} options Options or the Ajax command
+         * @returns {object} Request object
+         */
+        create: function(options) {
+            options = options || {};
+            var current = null;
+            this.__registry.forEach(function(candidate) {
+                if ((!current || current.priority < candidate.priority) && candidate.descriptor.supports.call(candidate.descriptor.context || candidate.descriptor, options))
+                    current = candidate;
+            }, this);
+            if (!current)
+                return Promise.error(new NoCandidateAjaxException());
+            return current.descriptor.create(options);
+        },
+
+        /**
          * Execute an Ajax command.
          * 
          * @param {object} options Options for the Ajax command
          * @param {function} progress Optional progress function
          * @param {object} progressCtx Optional progress context
+         * @param {object} request Optional request object
          * 
          * @return {object} Execution promise
          */
-        execute: function(options, progress, progressCtx) {
+        execute: function(options, progress, progressCtx, request) {
             options = this.preprocess(options);
             var current = null;
             this.__registry.forEach(function(candidate) {
@@ -1265,7 +1284,7 @@ Scoped.define("module:Ajax.Support", [
             if (!current)
                 return Promise.error(new NoCandidateAjaxException(options));
             var helper = function(resilience) {
-                var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options, progress, progressCtx);
+                var promise = current.descriptor.execute.call(current.descriptor.context || current.descriptor, options, progress, progressCtx, request);
                 if (!resilience || resilience <= 1)
                     return promise;
                 var returnPromise = Promise.create();
@@ -1324,13 +1343,14 @@ Scoped.define("module:Ajax.AbstractAjaxWrapper", [
              * @param {object} options options for ajax call
              * @param {function} progress Optional progress function
              * @param {object} progressCtx Optional progress context
+             * @param {object} request Optional request object
              * @return {object} promise for the ajax call
              */
-            execute: function(options, progress, progressCtx) {
-                return this._execute(Objs.extend(Objs.clone(this.options, 1), options), progress, progressCtx);
+            execute: function(options, progress, progressCtx, request) {
+                return this._execute(Objs.extend(Objs.clone(this.options, 1), options), progress, progressCtx, request);
             },
 
-            _execute: function(options, progress, progressCtx) {
+            _execute: function(options, progress, progressCtx, request) {
                 throw "Not implemented";
             }
 
@@ -1371,10 +1391,10 @@ Scoped.define("module:Ajax.HookedAjaxWrapper", [
                 this.online = true;
             },
 
-            _execute: function(options, progress, progressCtx) {
+            _execute: function(options, progress, progressCtx, request) {
                 if (!this.online)
                     return Promise.error("offline");
-                var promise = this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx);
+                var promise = this.ajaxWrapper.execute(this.hookCallback.call(this.hookCallbackCtx || this, options), progress, progressCtx, request);
                 if (this.promiseHook)
                     promise = this.promiseHook.call(this.hookCallbackCtx || this, promise);
                 return promise;
@@ -1397,8 +1417,8 @@ Scoped.define("module:Ajax.AjaxWrapper", [
     return AbstractAjaxWrapper.extend({
         scoped: scoped
     }, {
-        _execute: function(options, progress, progressCtx) {
-            return Support.execute(options, progress, progressCtx);
+        _execute: function(options, progress, progressCtx, request) {
+            return Support.execute(options, progress, progressCtx, request);
         }
     });
 });
