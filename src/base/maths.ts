@@ -29,7 +29,7 @@ Scoped.define("module:Maths", [], function() {
          * @param {number} lower the lower bound
          * @param {number} upper the upper bound
          *
-         * @returns {number} the clamped number
+         * @return {number} the clamped number
          */
         clamp: function(number: number, lower: number = -Infinity, upper: number = Infinity): number {
             if (number < lower) return lower;
