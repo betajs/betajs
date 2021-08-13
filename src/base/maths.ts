@@ -35,6 +35,29 @@ Scoped.define("module:Maths", [], function() {
             if (number < lower) return lower;
             if (number > upper) return upper;
             return number;
+        },
+
+        /**
+         * Creates an array of numbers that contains an arithmetic progression.
+         *
+         * @param {number} start initial term
+         * @param {number} end upper bound
+         * @param {number} step step between consecutive terms
+         *
+         * @return {Array} the arithmetic progression
+         */
+        range: function(start: number, end: number, step: number) {
+            var array = [];
+            var current = start;
+            if (!step) {
+                step = end < start ? -1 : 1;
+            }
+            if (Math.ceil((end - start) / step) < 0) return array;
+            while (start < end ? current <= end : current >= end) {
+                array.push(current);
+                current += step;
+            }
+            return array;
         }
 
     };
