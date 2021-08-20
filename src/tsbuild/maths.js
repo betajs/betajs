@@ -25,7 +25,7 @@ Scoped.define("module:Maths", [], function () {
          * @param {number} lower the lower bound
          * @param {number} upper the upper bound
          *
-         * @returns {number} the clamped number
+         * @return {number} the clamped number
          */
         clamp: function (number, lower, upper) {
             if (lower === void 0) { lower = -Infinity; }
@@ -35,6 +35,30 @@ Scoped.define("module:Maths", [], function () {
             if (number > upper)
                 return upper;
             return number;
+        },
+        /**
+         * Creates an array of numbers that contains an arithmetic progression.
+         *
+         * @param {number} start initial term
+         * @param {number} end upper bound
+         * @param {number} step step between consecutive terms
+         *
+         * @return {Array} the arithmetic progression
+         */
+        range: function (start, end, step) {
+            var array = [];
+            var current = start;
+            var sgn = end >= start ? 1 : -1;
+            if (!step)
+                step = sgn;
+            var stepsgn = step >= 0 ? 1 : -1;
+            if (stepsgn != sgn || step === 0)
+                return array;
+            while (start < end ? current <= end : current >= end) {
+                array.push(current);
+                current += step;
+            }
+            return array;
         }
     };
 });

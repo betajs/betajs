@@ -49,10 +49,12 @@ Scoped.define("module:Maths", [], function() {
         range: function(start: number, end: number, step: number) {
             var array = [];
             var current = start;
-            if (!step) {
-                step = end < start ? -1 : 1;
-            }
-            if (Math.ceil((end - start) / step) < 0) return array;
+            var sgn = end >= start ? 1 : -1;
+            if (!step)
+                step = sgn;
+            var stepsgn = step >= 0 ? 1 : -1;
+            if (stepsgn != sgn || step === 0)
+                return array;
             while (start < end ? current <= end : current >= end) {
                 array.push(current);
                 current += step;
