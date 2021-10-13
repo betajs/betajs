@@ -261,11 +261,11 @@ Scoped.define("module:Ajax.Support", [
                 promise.forwardSuccess(returnPromise).error(function(err) {
                     if (RequestException.is_class_instance(err)) {
                         if (options.resilience_filter && options.resilience_filter(err)) {
-                            returnPromise.error(err);
+                            returnPromise.asyncError(err);
                             return;
                         }
                         if (options.resilience_min_status && err.status_code() < options.resilience_min_status) {
-                            returnPromise.error(err);
+                            returnPromise.asyncError(err);
                             return;
                         }
                     }
