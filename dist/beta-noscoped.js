@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.231 - 2021-08-19
+betajs - v1.0.231 - 2021-10-18
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -11,7 +11,7 @@ Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
     "version": "1.0.231",
-    "datetime": 1629430237903
+    "datetime": 1634565016073
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -280,11 +280,11 @@ Scoped.define("module:Ajax.Support", [
                 promise.forwardSuccess(returnPromise).error(function(err) {
                     if (RequestException.is_class_instance(err)) {
                         if (options.resilience_filter && options.resilience_filter(err)) {
-                            returnPromise.error(err);
+                            returnPromise.asyncError(err);
                             return;
                         }
                         if (options.resilience_min_status && err.status_code() < options.resilience_min_status) {
-                            returnPromise.error(err);
+                            returnPromise.asyncError(err);
                             return;
                         }
                     }
