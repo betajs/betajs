@@ -1,4 +1,7 @@
-Scoped.define("module:Functions", ["module:Types"], function(Types) {
+Scoped.define("module:Functions", [
+    "module:Time",
+    "module:Types"
+], function(Time, Types) {
 
     /**
      * Function and Function Argument Support
@@ -156,6 +159,40 @@ Scoped.define("module:Functions", ["module:Types"], function(Types) {
             if (Types.is_string(method))
                 method = context[method];
             return method.apply(context, this.getArguments(arguments, 2));
+        },
+
+        /**
+         * Takes an argument function and returns a new function. If the returned function is called multiple times in sequence, the argument function will only be triggered once.
+         *
+         * @param {function} func - argument function
+         * @param {number} wait - time delay (in ms) that defines the end of a sequence
+         * @param {boolean} immediate - should trigger argument function immediately instead of waiting until the end of the sequence
+         * @return {function} returned function
+         */
+        debounce: function(func, wait, immediate) {
+            var args, context, timeout;
+
+            var later = function() {
+                var delay = Time.now() - lastCall;
+                if (delay < wait) {
+                    timeout = setTimeout(later, wait - delay);
+                    return;
+                }
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+
+            var debounced = function() {
+                context = this;
+                args = arguments;
+                lastCall = Time.now();
+                if (!timeout) {
+                    timeout = setTimeout(later, wait);
+                    if (immediate) func.apply(this, arguments);
+                }
+            };
+
+            return debounced;
         }
 
     };
