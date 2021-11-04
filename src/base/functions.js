@@ -162,6 +162,30 @@ Scoped.define("module:Functions", [
         },
 
         /**
+         * Takes an argument function and returns a new function. The returned function will trigger the argument function at most once every 'wait' ms, no matter how many times it's called.
+         *
+         * @param {function} func - the argument function
+         * @param {number} wait - delay (in ms) between each call to argument function
+         * @return {function} the returned function
+         */
+        throttle: function(func, wait) {
+            var args, context, previous = 0;
+
+            var throttled = function() {
+                var now = Time.now();
+                var nextCall = previous + wait - now;
+                context = this;
+                args = arguments;
+                if (nextCall <= 0) {
+                    previous = now;
+                    return func.apply(context, args);
+                }
+            };
+
+            return throttled;
+        },
+
+        /**
          * Takes an argument function and returns a new function. If the returned function is called multiple times in sequence, the argument function will only be triggered once.
          *
          * @param {function} func - argument function

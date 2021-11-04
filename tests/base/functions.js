@@ -11,6 +11,25 @@ QUnit.test("test as_method", function(assert) {
 	assert.ok(func() == 1);
 });
 
+QUnit.test("test throttle", function(assert) {
+	var done = assert.async();
+	var timeInterval;
+	var x = 0, n = 0;
+	var func = function() {
+		x++;
+	};
+	var throttled = BetaJS.Functions.throttle(func, 100);
+	timeInterval = setInterval(function() {
+		throttled();
+		n++;
+		if (n === 10) {
+			clearInterval(timeInterval);
+			assert.equal(x, 5, "failed to throttle function");
+			done();
+		}
+	}, 50);
+});
+
 QUnit.test("test debounce", function(assert) {
 	var done = assert.async();
 	var x = 0;
