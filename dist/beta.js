@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.231 - 2021-10-18
+betajs - v1.0.233 - 2021-11-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.231 - 2021-10-18
+betajs - v1.0.233 - 2021-11-06
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.231",
-    "datetime": 1634565016073
+    "version": "1.0.233",
+    "datetime": 1636237273138
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3412,7 +3412,10 @@ Scoped.define("module:Events.Listen", ["module:Class", "module:Events.ListenMixi
         scoped: scoped
     }, Mixin);
 });
-Scoped.define("module:Functions", ["module:Types"], function(Types) {
+Scoped.define("module:Functions", [
+    "module:Time",
+    "module:Types"
+], function(Time, Types) {
 
     /**
      * Function and Function Argument Support
@@ -3570,6 +3573,64 @@ Scoped.define("module:Functions", ["module:Types"], function(Types) {
             if (Types.is_string(method))
                 method = context[method];
             return method.apply(context, this.getArguments(arguments, 2));
+        },
+
+        /**
+         * Takes an argument function and returns a new function. The returned function will trigger the argument function at most once every 'wait' ms, no matter how many times it's called.
+         *
+         * @param {function} func - the argument function
+         * @param {number} wait - delay (in ms) between each call to argument function
+         * @return {function} the returned function
+         */
+        throttle: function(func, wait) {
+            var args, context, previous = 0;
+
+            var throttled = function() {
+                var now = Time.now();
+                var nextCall = previous + wait - now;
+                context = this;
+                args = arguments;
+                if (nextCall <= 0) {
+                    previous = now;
+                    return func.apply(context, args);
+                }
+            };
+
+            return throttled;
+        },
+
+        /**
+         * Takes an argument function and returns a new function. If the returned function is called multiple times in sequence, the argument function will only be triggered once.
+         *
+         * @param {function} func - argument function
+         * @param {number} wait - time delay (in ms) that defines the end of a sequence
+         * @param {boolean} immediate - should trigger argument function immediately instead of waiting until the end of the sequence
+         * @return {function} returned function
+         */
+        debounce: function(func, wait, immediate) {
+            var args, context, timeout;
+
+            var later = function() {
+                var delay = Time.now() - lastCall;
+                if (delay < wait) {
+                    timeout = setTimeout(later, wait - delay);
+                    return;
+                }
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+
+            var debounced = function() {
+                context = this;
+                args = arguments;
+                lastCall = Time.now();
+                if (!timeout) {
+                    timeout = setTimeout(later, wait);
+                    if (immediate) func.apply(this, arguments);
+                }
+            };
+
+            return debounced;
         }
 
     };
