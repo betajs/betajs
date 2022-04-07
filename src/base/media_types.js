@@ -58,6 +58,7 @@ Scoped.define("module:MediaTypes", [
         },
 
         _types: {
+            "application/vnd.apple.mpegurl": ["m3u8"],
             "audio/midi": ["midi", "mid", "kar"],
             "audio/mpeg": ["mp3"],
             "audio/ogg": ["ogg"],
