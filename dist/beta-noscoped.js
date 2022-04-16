@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.233 - 2021-11-06
+betajs - v1.0.234 - 2022-04-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.233",
-    "datetime": 1636237273138
+    "version": "1.0.234",
+    "datetime": 1649344742699
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3679,6 +3679,7 @@ Scoped.define("module:MediaTypes", [
         },
 
         _types: {
+            "application/vnd.apple.mpegurl": ["m3u8"],
             "audio/midi": ["midi", "mid", "kar"],
             "audio/mpeg": ["mp3"],
             "audio/ogg": ["ogg"],
