@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.235 - 2022-04-16
+betajs - v1.0.236 - 2022-08-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.235",
-    "datetime": 1650092026877
+    "version": "1.0.236",
+    "datetime": 1661830637330
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -1727,6 +1727,19 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
      * @module BetaJS.Comparators
      */
     return {
+
+
+
+        compound: function(comparators) {
+            return function(x, y) {
+                for (var i = 0; i < comparators.length; ++i) {
+                    var c = comparators[i](x, y);
+                    if (c != 0)
+                        return c;
+                }
+                return 0;
+            };
+        },
 
 
         /**

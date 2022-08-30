@@ -8,6 +8,19 @@ Scoped.define("module:Comparators", ["module:Types", "module:Properties.Properti
     return {
 
 
+
+        compound: function(comparators) {
+            return function(x, y) {
+                for (var i = 0; i < comparators.length; ++i) {
+                    var c = comparators[i](x, y);
+                    if (c != 0)
+                        return c;
+                }
+                return 0;
+            };
+        },
+
+
         /**
          * Creates a function that compares two json object w.r.t. a json object, mapping keys to a comparison order,
          * e.g. {'last_name': 1, 'first_name': -1, 'age': -1 }  
