@@ -41,7 +41,7 @@ Scoped.define("module:Maths", [], function() {
          * Creates an array of numbers that contains an arithmetic progression.
          *
          * @param {number} start initial term
-         * @param {number} end upper bound
+         * @param {number} end upper bound (inclusive)
          * @param {number} step step between consecutive terms
          *
          * @return {Array} the arithmetic progression
