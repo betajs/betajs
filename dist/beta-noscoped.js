@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.236 - 2022-08-29
+betajs - v1.0.237 - 2022-11-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.236",
-    "datetime": 1661830637330
+    "version": "1.0.237",
+    "datetime": 1669062840716
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -3755,8 +3755,7 @@ Scoped.define("module:Objs", [
             for (var key in obj) {
                 if (i <= 0)
                     return key;
-                else
-                    --i;
+                else --i;
             }
             return null;
         },
@@ -3774,8 +3773,7 @@ Scoped.define("module:Objs", [
             for (var key in obj) {
                 if (i <= 0)
                     return obj[key];
-                else
-                    --i;
+                else --i;
             }
             return null;
         },
@@ -16965,12 +16963,14 @@ Scoped.define("module:Maths", [], function () {
          * Creates an array of numbers that contains an arithmetic progression.
          *
          * @param {number} start initial term
-         * @param {number} end upper bound
+         * @param {number} end upper bound (inclusive)
          * @param {number} step step between consecutive terms
          *
          * @return {Array} the arithmetic progression
          */
         range: function (start, end, step) {
+            if (start === end)
+                return [start];
             var array = [];
             var current = start;
             var sgn = end >= start ? 1 : -1;
@@ -16979,7 +16979,7 @@ Scoped.define("module:Maths", [], function () {
             var stepsgn = step >= 0 ? 1 : -1;
             if (stepsgn != sgn || step === 0)
                 return array;
-            while (start < end ? current <= end : current >= end) {
+            while (start <= end ? current <= end : current >= end) {
                 array.push(current);
                 current += step;
             }
