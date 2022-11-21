@@ -23,8 +23,7 @@ Scoped.define("module:Objs", [
             for (var key in obj) {
                 if (i <= 0)
                     return key;
-                else
-                    --i;
+                else --i;
             }
             return null;
         },
@@ -42,8 +41,7 @@ Scoped.define("module:Objs", [
             for (var key in obj) {
                 if (i <= 0)
                     return obj[key];
-                else
-                    --i;
+                else --i;
             }
             return null;
         },
