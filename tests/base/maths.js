@@ -19,6 +19,7 @@ QUnit.test("clamp", function(assert) {
 
 QUnit.test("range", function(assert) {
 	assert.deepEqual(BetaJS.Maths.range(0, 10, -1), [], "returns empty array on invalid range");
+	assert.deepEqual(BetaJS.Maths.range(1, 1), [1], "can return range with length 1");
 	assert.deepEqual(BetaJS.Maths.range(1, 5), [1, 2, 3, 4, 5], "returns expected range");
 	assert.deepEqual(BetaJS.Maths.range(1, 8, 2), [1, 3, 5, 7], "returns expected range");
 	assert.deepEqual(BetaJS.Maths.range(0, -3), [0, -1, -2, -3], "returns expected range for negative numbers");

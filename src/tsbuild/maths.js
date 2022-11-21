@@ -46,6 +46,8 @@ Scoped.define("module:Maths", [], function () {
          * @return {Array} the arithmetic progression
          */
         range: function (start, end, step) {
+            if (start === end)
+                return [start];
             var array = [];
             var current = start;
             var sgn = end >= start ? 1 : -1;
