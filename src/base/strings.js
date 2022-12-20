@@ -175,6 +175,27 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
             return this.ends_with(s, needle) ? s.substring(0, s.length - needle.length) : s;
         },
 
+        /** Inserts substring inside string after an index or match
+         *
+         * @param str string in question
+         * @param delimiter index, string or regex after which substring should be inserted
+         * @param substr string that will be inserted inside str
+         */
+        insert: function(str, delimiter, substr) {
+            var index = 0;
+            if (typeof delimiter === "number") index = delimiter;
+            else if (typeof delimiter === "string") {
+                index = str.indexOf(delimiter);
+                if (index < 0) return str;
+                index += delimiter.length;
+            } else if (delimiter instanceof RegExp) {
+                var matches = str.match(delimiter);
+                if (!matches) return str;
+                index = matches.index + matches[0].length;
+            }
+            return str.slice(0, index) + substr + str.slice(index);
+        },
+
         /**
          * Returns the complete remaining part of a string after the last occurrence of a sub string
          *

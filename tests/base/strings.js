@@ -1,15 +1,14 @@
-// TODO: could be uncommented after dist was generated, otherwise test works as expected
-// QUnit.test("test strings format method", function(assert) {
-//   assert.equal(
-//     BetaJS.Strings.format("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second"),
-//     "First formatted, and Second formatted! Also no format {2}"
-//   );
-//
-//   assert.equal(
-//     BetaJS.Strings.format("{0} + {1} = {2} to: {3}", 1, 3, "equal", 4),
-//     "1 + 3 = equal to: 4"
-//   );
-// });
+QUnit.test("test strings format method", function(assert) {
+  assert.equal(
+    BetaJS.Strings.format("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second"),
+    "First formatted, and Second formatted! Also no format {2}"
+  );
+
+  assert.equal(
+    BetaJS.Strings.format("{0} + {1} = {2} to: {3}", 1, 3, "equal", 4),
+    "1 + 3 = equal to: 4"
+  );
+});
 
 QUnit.test("test nl2br", function(assert) {
 	assert.ok(BetaJS.Strings.nl2br("abc\ndef\ngeh") == "abc<br />\ndef<br />\ngeh");
@@ -112,4 +111,13 @@ QUnit.test("asterisk pattern escape", function (assert) {
 QUnit.test("normalize search text", function (assert) {
     assert.equal(BetaJS.Strings.normalizeSearchText("Foo\nBar"), "Foo Bar");
     assert.equal(BetaJS.Strings.normalizeSearchText("Question"), "Question");
+});
+
+QUnit.test("insert string", function(assert) {
+    assert.equal(BetaJS.Strings.insert("ello, world!", 0, "H"), "Hello, world!", "should work with index");
+    assert.equal(BetaJS.Strings.insert("Hello world!", 5, ","), "Hello, world!", "should work with index");
+    assert.equal(BetaJS.Strings.insert("Hello world!", "Hello", ","), "Hello, world!", "should work with string");
+    assert.equal(BetaJS.Strings.insert("<div></div><div itemscope></div>", /<div\s*itemscope[^>]*>/, "Hello, world!"), "<div></div><div itemscope>Hello, world!</div>", "should work with regex");
+    assert.equal(BetaJS.Strings.insert("Hello world!", "Hi!", ","), "Hello world!", "should return original str if no match");
+    assert.equal(BetaJS.Strings.insert("<div></div><div></div>", /<div\s*itemscope[^>]*>/, "Hello, world!"), "<div></div><div></div>", "should return original str if no match");
 });
