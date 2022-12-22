@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.237 - 2022-11-21
+betajs - v1.0.238 - 2022-12-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.237 - 2022-11-21
+betajs - v1.0.238 - 2022-12-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.237",
-    "datetime": 1669062840716
+    "version": "1.0.238",
+    "datetime": 1671734776385
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -7001,6 +7001,27 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
          */
         strip_end: function(s, needle) {
             return this.ends_with(s, needle) ? s.substring(0, s.length - needle.length) : s;
+        },
+
+        /** Inserts substring inside string after an index or match
+         *
+         * @param str string in question
+         * @param delimiter index, string or regex after which substring should be inserted
+         * @param substr string that will be inserted inside str
+         */
+        insert: function(str, delimiter, substr) {
+            var index = 0;
+            if (typeof delimiter === "number") index = delimiter;
+            else if (typeof delimiter === "string") {
+                index = str.indexOf(delimiter);
+                if (index < 0) return str;
+                index += delimiter.length;
+            } else if (delimiter instanceof RegExp) {
+                var matches = str.match(delimiter);
+                if (!matches) return str;
+                index = matches.index + matches[0].length;
+            }
+            return str.slice(0, index) + substr + str.slice(index);
         },
 
         /**
