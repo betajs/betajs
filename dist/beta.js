@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.238 - 2022-12-22
+betajs - v1.0.239 - 2023-02-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.238 - 2022-12-22
+betajs - v1.0.239 - 2023-02-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.238",
-    "datetime": 1671734776385
+    "version": "1.0.239",
+    "datetime": 1675795941005
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5511,14 +5511,18 @@ Scoped.define("module:Objs", [
          * 
          * @return {object} Recursively merged object
          */
-        tree_merge: function(secondary, primary) {
-            secondary = secondary || {};
-            primary = primary || {};
+        tree_merge: function(secondary, primary, array_support) {
+            if (array_support && (Types.is_array(secondary) || Types.is_array(primary)))
+                return Types.is_array(secondary) ? (Types.is_array(primary) ? secondary.concat(primary) : secondary) : primary;
+            if (!Types.is_object(secondary) || !secondary)
+                return primary;
+            if (!Types.is_object(primary) || !primary)
+                return secondary;
             var result = {};
             var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
             for (var key in keys) {
                 if (Types.is_object(primary[key]) && secondary[key])
-                    result[key] = this.tree_merge(secondary[key], primary[key]);
+                    result[key] = this.tree_merge(secondary[key], primary[key], array_support);
                 else
                     result[key] = key in primary ? primary[key] : secondary[key];
             }

@@ -768,14 +768,18 @@ Scoped.define("module:Objs", [
          * 
          * @return {object} Recursively merged object
          */
-        tree_merge: function(secondary, primary) {
-            secondary = secondary || {};
-            primary = primary || {};
+        tree_merge: function(secondary, primary, array_support) {
+            if (array_support && (Types.is_array(secondary) || Types.is_array(primary)))
+                return Types.is_array(secondary) ? (Types.is_array(primary) ? secondary.concat(primary) : secondary) : primary;
+            if (!Types.is_object(secondary) || !secondary)
+                return primary;
+            if (!Types.is_object(primary) || !primary)
+                return secondary;
             var result = {};
             var keys = this.extend(this.keys(secondary, true), this.keys(primary, true));
             for (var key in keys) {
                 if (Types.is_object(primary[key]) && secondary[key])
-                    result[key] = this.tree_merge(secondary[key], primary[key]);
+                    result[key] = this.tree_merge(secondary[key], primary[key], array_support);
                 else
                     result[key] = key in primary ? primary[key] : secondary[key];
             }
