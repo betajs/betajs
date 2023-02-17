@@ -61,6 +61,22 @@ Scoped.define("module:Maths", [], function() {
                 current += step;
             }
             return array;
+        },
+
+        /**
+         * Generates random integer between min and max
+         *
+         * @param {int} min minimum value for random integer
+         * @param {int} max maximum value for random integer
+         *
+         * @return {int} the random integer
+         */
+        randomInt: function(min, max) {
+            if (!max) {
+                max = min;
+                min = 0;
+            }
+            return Math.floor(Math.random() * (max - min + 1) + min);
         }
 
     };
