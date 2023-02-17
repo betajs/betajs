@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.239 - 2023-02-07
+betajs - v1.0.240 - 2023-02-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.239 - 2023-02-07
+betajs - v1.0.240 - 2023-02-17
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.239",
-    "datetime": 1675795941005
+    "version": "1.0.240",
+    "datetime": 1676645566347
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -18020,6 +18020,21 @@ Scoped.define("module:Maths", [], function () {
                 current += step;
             }
             return array;
+        },
+        /**
+         * Generates random integer between min and max
+         *
+         * @param {int} min minimum value for random integer
+         * @param {int} max maximum value for random integer
+         *
+         * @return {int} the random integer
+         */
+        randomInt: function (min, max) {
+            if (!max) {
+                max = min;
+                min = 0;
+            }
+            return Math.floor(Math.random() * (max - min + 1) + min);
         }
     };
 });
