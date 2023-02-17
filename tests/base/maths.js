@@ -26,3 +26,14 @@ QUnit.test("range", function(assert) {
 	assert.deepEqual(BetaJS.Maths.range(0, -3, -2), [0, -2], "returns expected range for negative numbers");
 	assert.deepEqual(BetaJS.Maths.range(1, 2, 0.25), [1, 1.25, 1.5, 1.75, 2], "returns expected range for float numbers");
 });
+
+QUnit.test("randomInt", function(assert) {
+	var random = BetaJS.Maths.randomInt(0,0);
+	assert.ok(random === 0, "returns value within boundaries");
+	random = BetaJS.Maths.randomInt(9, 12);
+	assert.ok(random >= 9 && random <= 12, "returns value within boundaries");
+	random = BetaJS.Maths.randomInt(1);
+	assert.ok(random === 0 || random === 1, "treats single argument as upper boundary");
+	random = BetaJS.Maths.randomInt(12);
+	assert.ok(random <= 12, "treats single argument as upper boundary");
+});
