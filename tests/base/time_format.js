@@ -1,3 +1,10 @@
+QUnit.test("test 0", function(assert) {
+	assert.equal(BetaJS.TimeFormat.format(BetaJS.TimeFormat.ELAPSED_HOURS_MINUTES_SECONDS, 0), "0:00:00");
+	assert.equal(BetaJS.TimeFormat.format(BetaJS.TimeFormat.ELAPSED_HOURS_MINUTES_SECONDS, 1000), "0:00:01");
+	assert.equal(BetaJS.TimeFormat.format(BetaJS.TimeFormat.ELAPSED_MINUTES_SECONDS, 0), "0:00");
+	assert.equal(BetaJS.TimeFormat.format(BetaJS.TimeFormat.ELAPSED_MINUTES_SECONDS, 1000), "0:01");
+});
+
 QUnit.test("test day format", function(assert) {
 	var t = BetaJS.Time.updateTime(BetaJS.Time.now(), {weekday: 0});
 	assert.equal(BetaJS.TimeFormat.format("dddd", t), "Sunday");

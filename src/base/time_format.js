@@ -160,7 +160,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
          * 
          */
         format: function(timeFormat, time, timezone) {
-            time = time || Time.now();
+            time = time === 0 ? time : time || Time.now();
             var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
             var bias = Time.timezoneBias(timezone, time);
             var result = timeFormat;
