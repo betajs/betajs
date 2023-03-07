@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.240 - 2023-02-17
+betajs - v1.0.241 - 2023-03-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.240 - 2023-02-17
+betajs - v1.0.241 - 2023-03-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.240",
-    "datetime": 1676645566347
+    "version": "1.0.241",
+    "datetime": 1678208653447
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -8307,7 +8307,7 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
          * 
          */
         format: function(timeFormat, time, timezone) {
-            time = time || Time.now();
+            time = time === 0 ? time : time || Time.now();
             var timezoneTime = Time.timeToTimezoneBasedDate(time, timezone);
             var bias = Time.timezoneBias(timezone, time);
             var result = timeFormat;

@@ -15,7 +15,7 @@
         "url": "https://github.com/betajs/betajs/issues"
     },
     "name": "betajs",
-    "version": "1.0.240",
+    "version": "1.0.241",
     "description": "BetaJS is a general-purpose JavaScript helper module. It contains a variety of helper functions and classes.",
     "contributors": [
         "Oliver Friedmann",
