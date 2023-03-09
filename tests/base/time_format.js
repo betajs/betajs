@@ -1,3 +1,14 @@
+QUnit.module("TimeFormat", function() {
+	var TimeFormat = BetaJS.TimeFormat;
+	QUnit.test("formatMappings", function(assert) {
+		assert.equal(TimeFormat.format("l", 1), "001", "Milliseconds 3 digits (1)");
+		assert.equal(TimeFormat.format("l", 100), "100", "Milliseconds 3 digits (100)");
+		assert.equal(TimeFormat.format("L", 1), "00", "Milliseconds 2 digits (1)");
+		assert.equal(TimeFormat.format("L", 10), "01", "Milliseconds 2 digits (10)");
+		assert.equal(TimeFormat.format("L", 100), "10", "Milliseconds 2 digits (100)");
+	});
+});
+
 QUnit.test("test 0", function(assert) {
 	assert.equal(BetaJS.TimeFormat.format(BetaJS.TimeFormat.ELAPSED_HOURS_MINUTES_SECONDS, 0), "0:00:00");
 	assert.equal(BetaJS.TimeFormat.format(BetaJS.TimeFormat.ELAPSED_HOURS_MINUTES_SECONDS, 1000), "0:00:01");

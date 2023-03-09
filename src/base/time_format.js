@@ -117,10 +117,10 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
                 return t.getTime();
             },
             "l": function(t) {
-                return Time.timeComponentGet(t, "millisecond");
+                return Strings.padZeros(Time.timeComponentGet(t, "millisecond"), 3);
             },
             "L": function(t) {
-                return Math.floor(Time.timeComponentGet(t, "millisecond") / 10);
+                return Strings.padZeros(Math.floor(Time.timeComponentGet(t, "millisecond") / 10), 2);
             },
             "tt": function(t) {
                 return Time.timeModulo(t, "hour", "floor") < 12 ? 'am' : 'pm';
