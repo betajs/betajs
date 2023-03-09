@@ -78,6 +78,21 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
         },
 
         /**
+         * Pads a string from the right with characters if necessary.
+         *
+         * @param {string} s string that should be padded
+         * @param {string} padding padding string that should be used (e.g. whitespace)
+         * @param {int} length minimum length of result string
+         *
+         * @return {string} padded string
+         */
+        padRight: function(s, padding, length) {
+            while (s.length < length)
+                s = s + padding;
+            return s;
+        },
+
+        /**
          * Pads a string from the left with zeros ('0') if necessary.
          *
          * @param {string} s string that should be padded

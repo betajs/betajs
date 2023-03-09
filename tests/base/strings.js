@@ -1,3 +1,16 @@
+QUnit.module("Strings", function() {
+    var Strings = BetaJS.Strings;
+    QUnit.test(".padZeros", function(assert) {
+        assert.equal(Strings.padZeros("A", 3), "00A", "should pad left with zeroes");
+    });
+    QUnit.test(".padLeft", function(assert) {
+        assert.equal(Strings.padLeft("A", "b", 3), "bbA", "should pad left");
+    });
+    QUnit.test(".padRight", function(assert) {
+        assert.equal(Strings.padRight("A", "b", 3), "Abb", "should pad right");
+    });
+});
+
 QUnit.test("test strings format method", function(assert) {
   assert.equal(
     BetaJS.Strings.format("{0} formatted, and {1} formatted! Also no format {2}", "First", "Second"),
