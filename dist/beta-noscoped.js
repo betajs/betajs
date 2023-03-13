@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.241 - 2023-03-07
+betajs - v1.0.242 - 2023-03-13
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.241",
-    "datetime": 1678208653447
+    "version": "1.0.242",
+    "datetime": 1678722143014
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -5899,6 +5899,21 @@ Scoped.define("module:Strings", ["module:Objs"], function(Objs) {
         },
 
         /**
+         * Pads a string from the right with characters if necessary.
+         *
+         * @param {string} s string that should be padded
+         * @param {string} padding padding string that should be used (e.g. whitespace)
+         * @param {int} length minimum length of result string
+         *
+         * @return {string} padded string
+         */
+        padRight: function(s, padding, length) {
+            while (s.length < length)
+                s = s + padding;
+            return s;
+        },
+
+        /**
          * Pads a string from the left with zeros ('0') if necessary.
          *
          * @param {string} s string that should be padded
@@ -7253,10 +7268,10 @@ Scoped.define("module:TimeFormat", ["module:Time", "module:Strings", "module:Obj
                 return t.getTime();
             },
             "l": function(t) {
-                return Time.timeComponentGet(t, "millisecond");
+                return Strings.padZeros(Time.timeComponentGet(t, "millisecond"), 3);
             },
             "L": function(t) {
-                return Math.floor(Time.timeComponentGet(t, "millisecond") / 10);
+                return Strings.padZeros(Math.floor(Time.timeComponentGet(t, "millisecond") / 10), 2);
             },
             "tt": function(t) {
                 return Time.timeModulo(t, "hour", "floor") < 12 ? 'am' : 'pm';
