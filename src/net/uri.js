@@ -100,6 +100,11 @@ Scoped.define("module:Net.Uri", [
             return Types.is_empty(arr) ? uri : (uri + (uri.indexOf("?") != -1 ? "&" : "?") + this.encodeUriParams(arr, prefix));
         },
 
+        upsertUriParams: function(uri, strongOverwrite, weakOverwrite) {
+            return this.mapUriQuery(uri, function(params) {
+                return Objs.weak_extend(Objs.extend(params, strongOverwrite), weakOverwrite);
+            });
+        },
 
         /**
          * Parses a given uri into decomposes it into its components.
@@ -147,6 +152,12 @@ Scoped.define("module:Net.Uri", [
             return source.host !== target.host || source.port !== target.port;
         },
 
+        mapUriQuery: function(uri, f, ctx) {
+            var q = uri.indexOf("?");
+            var params = f.call(ctx || this, q >= 0 ? this.decodeUriParams(uri.substring(q + 1)) : {});
+            return (q >= 0 ? uri.substring(0, q) : uri) + (!Types.is_empty(params) ? ("?" + this.encodeUriParams(params)) : "");
+        },
+
         /**
          * Normalizes the query of a uri by sorting keys alphabetically.
          *
@@ -155,10 +166,11 @@ Scoped.define("module:Net.Uri", [
          * @return {string} normalized uri
          */
         normalizeUri: function(uri) {
-            var q = uri.indexOf("?");
-            return q >= 0 ? uri.substring(0, q) + "?" + this.encodeUriParams(Sort.sort_object(this.decodeUriParams(uri.substring(q + 1)), function(x, y) {
-                return x.localeCompare(y);
-            })) : uri;
+            return this.mapUriQuery(uri, function(params) {
+                return Sort.sort_object(params, function(x, y) {
+                    return x.localeCompare(y);
+                });
+            });
         }
 
     };

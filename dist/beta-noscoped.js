@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.242 - 2023-03-13
+betajs - v1.0.243 - 2023-08-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -10,8 +10,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.242",
-    "datetime": 1678722143014
+    "version": "1.0.243",
+    "datetime": 1692209103738
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -14470,6 +14470,11 @@ Scoped.define("module:Net.Uri", [
             return Types.is_empty(arr) ? uri : (uri + (uri.indexOf("?") != -1 ? "&" : "?") + this.encodeUriParams(arr, prefix));
         },
 
+        upsertUriParams: function(uri, strongOverwrite, weakOverwrite) {
+            return this.mapUriQuery(uri, function(params) {
+                return Objs.weak_extend(Objs.extend(params, strongOverwrite), weakOverwrite);
+            });
+        },
 
         /**
          * Parses a given uri into decomposes it into its components.
@@ -14517,6 +14522,12 @@ Scoped.define("module:Net.Uri", [
             return source.host !== target.host || source.port !== target.port;
         },
 
+        mapUriQuery: function(uri, f, ctx) {
+            var q = uri.indexOf("?");
+            var params = f.call(ctx || this, q >= 0 ? this.decodeUriParams(uri.substring(q + 1)) : {});
+            return (q >= 0 ? uri.substring(0, q) : uri) + (!Types.is_empty(params) ? ("?" + this.encodeUriParams(params)) : "");
+        },
+
         /**
          * Normalizes the query of a uri by sorting keys alphabetically.
          *
@@ -14525,10 +14536,11 @@ Scoped.define("module:Net.Uri", [
          * @return {string} normalized uri
          */
         normalizeUri: function(uri) {
-            var q = uri.indexOf("?");
-            return q >= 0 ? uri.substring(0, q) + "?" + this.encodeUriParams(Sort.sort_object(this.decodeUriParams(uri.substring(q + 1)), function(x, y) {
-                return x.localeCompare(y);
-            })) : uri;
+            return this.mapUriQuery(uri, function(params) {
+                return Sort.sort_object(params, function(x, y) {
+                    return x.localeCompare(y);
+                });
+            });
         }
 
     };
