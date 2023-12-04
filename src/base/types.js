@@ -337,10 +337,10 @@ Scoped.define("module:Types", function() {
                 case "object":
                     if (!Array.isArray(data)) {
                         for (var key in data)
-                            data[key] = typefy(data[key]);
+                            data[key] = this.typefy(data[key]);
                         return data;
                     }
-                    return data.map(typefy);
+                    return data.map(this.typefy);
                 case "string":
                     data = simplify(data);
                     if (data === "true")
@@ -349,6 +349,9 @@ Scoped.define("module:Types", function() {
                         return false;
                     if (parseInt(data, 10) + "" === data)
                         return parseInt(data, 10);
+                    try {
+                        if (JSON.parse(data)) return this.typefy(JSON.parse(data));
+                    } catch (e) {}
                     return data;
                 default:
                     return data;
