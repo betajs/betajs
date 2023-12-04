@@ -1,3 +1,7 @@
+QUnit.test("typefy", function(assert) {
+	assert.deepEqual(BetaJS.Types.typefy(["false"]), [false], "works with arrays");
+});
+
 QUnit.test("test is_object", function(assert) {
 	assert.ok(BetaJS.Types.is_object({}));
 });
