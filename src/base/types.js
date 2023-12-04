@@ -349,6 +349,9 @@ Scoped.define("module:Types", function() {
                         return false;
                     if (parseInt(data, 10) + "" === data)
                         return parseInt(data, 10);
+                    try {
+                        if (JSON.parse(data)) return this.typefy(JSON.parse(data));
+                    } catch (e) {}
                     return data;
                 default:
                     return data;
