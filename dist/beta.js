@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.244 - 2023-08-16
+betajs - v1.0.245 - 2023-12-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1010,7 +1010,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs - v1.0.244 - 2023-08-16
+betajs - v1.0.245 - 2023-12-04
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache-2.0 Software License.
 */
@@ -1021,8 +1021,8 @@ Scoped.binding('module', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-    "version": "1.0.244",
-    "datetime": 1692218169634
+    "version": "1.0.245",
+    "datetime": 1701687200263
 };
 });
 Scoped.require(['module:'], function (mod) {
@@ -9510,10 +9510,10 @@ Scoped.define("module:Types", function() {
                 case "object":
                     if (!Array.isArray(data)) {
                         for (var key in data)
-                            data[key] = typefy(data[key]);
+                            data[key] = this.typefy(data[key]);
                         return data;
                     }
-                    return data.map(typefy);
+                    return data.map(this.typefy);
                 case "string":
                     data = simplify(data);
                     if (data === "true")
@@ -9522,6 +9522,9 @@ Scoped.define("module:Types", function() {
                         return false;
                     if (parseInt(data, 10) + "" === data)
                         return parseInt(data, 10);
+                    try {
+                        if (JSON.parse(data)) return this.typefy(JSON.parse(data));
+                    } catch (e) {}
                     return data;
                 default:
                     return data;
